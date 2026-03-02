@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Calculator from './pages/Calculator';
 import Progress from './pages/Progress';
 import Profile from './pages/Profile';
+import History from './pages/History';
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route path="/"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+        <Route path="/history"  element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/profile"  element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*"         element={<Navigate to="/" replace />} />
       </Routes>

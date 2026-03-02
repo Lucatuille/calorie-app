@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -47,8 +47,24 @@ export default function Progress() {
   const trendColor = summary?.weightTrend > 0 ? 'var(--accent-2)'
     : summary?.weightTrend < 0 ? 'var(--accent)' : 'var(--text-3)';
 
-  const trendLabel = summary?.weightTrend > 0 ? `+${summary.weightTrend} kg` 
+  const trendLabel = summary?.weightTrend > 0 ? `+${summary.weightTrend} kg`
     : summary?.weightTrend != null ? `${summary.weightTrend} kg` : null;
+
+  // Distribución de macros del período
+  const macroData = (() => {
+    const withMacros = data.filter(d => d.protein || d.carbs || d.fat);
+    if (!withMacros.length) return null;
+    const totalP = withMacros.reduce((s,e) => s + (e.protein||0), 0) * 4;
+    const totalC = withMacros.reduce((s,e) => s + (e.carbs  ||0), 0) * 4;
+    const totalF = withMacros.reduce((s,e) => s + (e.fat    ||0), 0) * 9;
+    const total  = totalP + totalC + totalF;
+    if (!total) return null;
+    return [
+      { name: 'Proteína', value: Math.round(totalP / total * 100), color: '#10b981' },
+      { name: 'Carbos',   value: Math.round(totalC / total * 100), color: '#f59e0b' },
+      { name: 'Grasa',    value: Math.round(totalF / total * 100), color: '#3b82f6' },
+    ].filter(m => m.value > 0);
+  })();
 
   if (loading) return (
     <div className="page" style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
@@ -131,6 +147,32 @@ export default function Progress() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Distribución de macros */}
+          {macroData && (
+            <div className="card" style={{ marginBottom: 12 }}>
+              <h2 className="title-md" style={{ marginBottom: 4 }}>Distribución de macros</h2>
+              <p className="body-sm" style={{ marginBottom: 16 }}>Media del período seleccionado</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <ResponsiveContainer width={140} height={140} style={{ flexShrink: 0 }}>
+                  <PieChart>
+                    <Pie data={macroData} cx="50%" cy="50%" innerRadius={38} outerRadius={60} paddingAngle={2} dataKey="value">
+                      {macroData.map((m, i) => <Cell key={i} fill={m.color} />)}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                  {macroData.map(m => (
+                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 3, background: m.color, flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 13, color: 'var(--text-2)' }}>{m.name}</span>
+                      <span style={{ fontWeight: 700, fontSize: 15 }}>{m.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Weight chart */}
           {data.some(d => d.weight) && (

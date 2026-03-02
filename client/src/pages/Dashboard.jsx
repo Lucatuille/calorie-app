@@ -3,9 +3,31 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
+// ── Donut de macros (conic-gradient, sin dependencias) ───────
+function MacroDonut({ protein, carbs, fat }) {
+  const p = (protein || 0) * 4;
+  const c = (carbs   || 0) * 4;
+  const f = (fat     || 0) * 9;
+  const total = p + c + f;
+  if (!total) return null;
+
+  const pEnd = (p / total) * 100;
+  const cEnd = pEnd + (c / total) * 100;
+
+  return (
+    <div style={{
+      width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
+      background: `conic-gradient(#10b981 0% ${pEnd}%, #f59e0b ${pEnd}% ${cEnd}%, #3b82f6 ${cEnd}% 100%)`,
+      WebkitMask: 'radial-gradient(transparent 16px, black 16px)',
+      mask:        'radial-gradient(transparent 16px, black 16px)',
+    }} />
+  );
+}
+
+// ── Barra de progreso de calorías ────────────────────────────
 function CalProgress({ consumed, target }) {
   if (!target) return null;
-  const pct = Math.min((consumed / target) * 100, 100);
+  const pct  = Math.min((consumed / target) * 100, 100);
   const over = consumed > target;
   return (
     <div style={{ marginTop: 14 }}>
@@ -19,7 +41,7 @@ function CalProgress({ consumed, target }) {
       <div style={{ marginTop: 6, fontSize: 12 }}>
         {over
           ? <span style={{ color: 'var(--accent-2)', fontWeight: 600 }}>+{(consumed - target).toLocaleString()} kcal sobre el objetivo</span>
-          : <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{(target - consumed).toLocaleString()} kcal restantes</span>
+          : <span style={{ color: 'var(--accent)',   fontWeight: 600 }}>{(target - consumed).toLocaleString()} kcal restantes</span>
         }
       </div>
     </div>
@@ -27,14 +49,14 @@ function CalProgress({ consumed, target }) {
 }
 
 const MACROS = [
-  { key: 'protein', label: 'Proteína', chipClass: 'chip-protein', dotColor: '#2d6a4f' },
-  { key: 'carbs',   label: 'Carbos',   chipClass: 'chip-carbs',   dotColor: '#b45309' },
-  { key: 'fat',     label: 'Grasa',    chipClass: 'chip-fat',     dotColor: '#1d4ed8' },
+  { key: 'protein', label: 'Proteína', chipClass: 'chip-protein' },
+  { key: 'carbs',   label: 'Carbos',   chipClass: 'chip-carbs'   },
+  { key: 'fat',     label: 'Grasa',    chipClass: 'chip-fat'     },
 ];
 
 const ACTIONS = [
   { to: '/calculator',      icon: '＋', label: 'Registrar día',  desc: 'Calorías y macros',    accent: 'rgba(45,106,79,0.1)',   iconColor: 'var(--accent)' },
-  { to: '/progress',        icon: '↗',  label: 'Ver progreso',   desc: 'Gráficos y tendencias', accent: 'rgba(59,91,219,0.1)',   iconColor: '#3b5bdb' },
+  { to: '/history',         icon: '↺',  label: 'Historial',      desc: 'Ver y editar entradas', accent: 'rgba(99,102,241,0.1)',  iconColor: '#6366f1' },
   { to: '/calculator#tdee', icon: '⚡', label: 'Calcular TDEE', desc: 'Tu objetivo calórico',  accent: 'rgba(180,83,9,0.1)',    iconColor: '#b45309' },
   { to: '/profile',         icon: '◎',  label: 'Mi perfil',      desc: 'Datos y objetivo',      accent: 'rgba(231,111,81,0.1)', iconColor: 'var(--accent-2)' },
 ];
@@ -78,6 +100,10 @@ export default function Dashboard() {
     </div>
   );
 
+  const weekDiff = summary?.avgThisWeek != null && summary?.avgLastWeek != null
+    ? summary.avgThisWeek - summary.avgLastWeek
+    : null;
+
   return (
     <div className="page stagger">
 
@@ -85,10 +111,21 @@ export default function Dashboard() {
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 2, textTransform: 'capitalize' }}>{todayLabel}</p>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 6 }}>{greeting()},</p>
-        <h1 className="title-xl">{user?.name}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <h1 className="title-xl">{user?.name}</h1>
+          {summary?.streak > 0 && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              background: 'rgba(245,158,11,0.12)', color: '#d97706',
+              padding: '4px 10px', borderRadius: 99, fontSize: 13, fontWeight: 600,
+            }}>
+              🔥 {summary.streak} {summary.streak === 1 ? 'día' : 'días'}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Today's entry */}
+      {/* Tarjeta de hoy */}
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
@@ -98,11 +135,7 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                   <span style={{
                     fontFamily: 'Plus Jakarta Sans, sans-serif',
-                    fontWeight: 700,
-                    fontSize: 46,
-                    lineHeight: 1,
-                    letterSpacing: '-0.03em',
-                    color: 'var(--text-1)',
+                    fontWeight: 700, fontSize: 46, lineHeight: 1, letterSpacing: '-0.03em',
                   }}>
                     {today.calories.toLocaleString()}
                   </span>
@@ -111,16 +144,19 @@ export default function Dashboard() {
 
                 <CalProgress consumed={today.calories} target={profile?.target_calories} />
 
-                {/* Macros chips */}
+                {/* Macros: donut + chips */}
                 {(today.protein || today.carbs || today.fat) && (
-                  <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-                    {MACROS.map(m => today[m.key] ? (
-                      <div key={m.key} className={`macro-chip ${m.chipClass}`}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
-                        <span style={{ fontWeight: 700 }}>{Math.round(today[m.key])}g</span>
-                        <span style={{ opacity: 0.7 }}>{m.label}</span>
-                      </div>
-                    ) : null)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
+                    <MacroDonut protein={today.protein} carbs={today.carbs} fat={today.fat} />
+                    <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                      {MACROS.map(m => today[m.key] ? (
+                        <div key={m.key} className={`macro-chip ${m.chipClass}`}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
+                          <span style={{ fontWeight: 700 }}>{Math.round(today[m.key])}g</span>
+                          <span style={{ opacity: 0.7 }}>{m.label}</span>
+                        </div>
+                      ) : null)}
+                    </div>
                   </div>
                 )}
               </>
@@ -133,12 +169,42 @@ export default function Dashboard() {
           </div>
 
           {today && (
-            <Link to="/calculator" className="btn btn-secondary btn-sm" style={{ marginLeft: 12, flexShrink: 0 }}>Editar</Link>
+            <Link to="/calculator" className="btn btn-secondary btn-sm" style={{ marginLeft: 12, flexShrink: 0 }}>
+              Editar
+            </Link>
           )}
         </div>
       </div>
 
-      {/* Summary stats */}
+      {/* Resumen semanal */}
+      {summary?.avgThisWeek != null && (
+        <div className="card" style={{ marginTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>
+                Esta semana
+              </p>
+              <span style={{ fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em' }}>
+                {summary.avgThisWeek.toLocaleString()}
+              </span>
+              <span style={{ color: 'var(--text-3)', fontSize: 12, marginLeft: 5 }}>kcal / día</span>
+            </div>
+            {weekDiff !== null && (
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>vs semana anterior</p>
+                <span style={{
+                  fontWeight: 700, fontSize: 15,
+                  color: weekDiff <= 0 ? 'var(--accent)' : 'var(--accent-2)',
+                }}>
+                  {weekDiff > 0 ? '+' : ''}{weekDiff.toLocaleString()} kcal
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Stats últimos 30 días */}
       {summary && (
         <>
           <h2 className="title-md" style={{ marginTop: 28, marginBottom: 12 }}>Últimos 30 días</h2>
@@ -171,22 +237,18 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Quick actions */}
+      {/* Acciones rápidas */}
       <h2 className="title-md" style={{ marginTop: 28, marginBottom: 12 }}>Acciones rápidas</h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {ACTIONS.map(a => (
           <Link key={a.to} to={a.to} className="card"
-            style={{ display: 'block', transition: 'transform 0.15s, box-shadow 0.15s', textDecoration: 'none', padding: 16 }}
+            style={{ display: 'block', transition: 'transform 0.15s, box-shadow 0.15s', padding: 16 }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}>
             <div style={{
-              width: 34, height: 34,
-              background: a.accent,
-              borderRadius: 9,
+              width: 34, height: 34, background: a.accent, borderRadius: 9,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 15,
-              marginBottom: 10,
-              color: a.iconColor,
+              fontSize: 15, marginBottom: 10, color: a.iconColor,
             }}>{a.icon}</div>
             <div style={{ fontWeight: 600, fontSize: 14 }}>{a.label}</div>
             <div className="body-sm" style={{ marginTop: 2, fontSize: 12 }}>{a.desc}</div>

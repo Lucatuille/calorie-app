@@ -29,9 +29,12 @@ export const api = {
   updateProfile: (body, token)  => request('PUT',  '/api/profile', body, token),
 
   // Entries
-  getEntries:   (token)        => request('GET',  '/api/entries', null, token),
-  getTodayEntry:(token)        => request('GET',  '/api/entries/today', null, token),
-  saveEntry:    (body, token)  => request('POST', '/api/entries', body, token),
+  getEntries:   (token)           => request('GET',    '/api/entries', null, token),
+  getAllEntries: (limit, token)    => request('GET',    `/api/entries?limit=${limit}`, null, token),
+  getTodayEntry:(token)           => request('GET',    '/api/entries/today', null, token),
+  saveEntry:    (body, token)     => request('POST',   '/api/entries', body, token),
+  updateEntry:  (id, body, token) => request('PUT',    `/api/entries/${id}`, body, token),
+  deleteEntry:  (id, token)       => request('DELETE', `/api/entries/${id}`, null, token),
 
   // Progress
   getSummary:   (token)        => request('GET',  '/api/progress/summary', null, token),

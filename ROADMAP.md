@@ -22,13 +22,13 @@
 ## 📊 Fase B — Funcionalidades core
 > Objetivo: que la app sea útil día a día para cualquier usuario
 
-- [ ] **Streak** — racha de días consecutivos registrados, mostrar en dashboard
-- [ ] **Historial** — página para ver, editar y eliminar entradas pasadas
-- [ ] **Objetivos por macros** — definir meta de proteína, carbos y grasa por separado
-- [ ] **Gráfico de macros** — donut chart diario con distribución proteína/carbos/grasa
-- [ ] **Peso corporal** — gráfico dedicado con línea de tendencia e IMC
-- [ ] **Exportar datos** — botón en perfil para descargar historial en CSV
-- [ ] **Resumen semanal** — tarjeta en dashboard con media y comparativa semana anterior
+- [x] **Streak** — racha de días consecutivos registrados, mostrar en dashboard
+- [x] **Historial** — página para ver, editar y eliminar entradas pasadas
+- [x] **Objetivos por macros** — definir meta de proteína, carbos y grasa por separado
+- [x] **Gráfico de macros** — donut chart diario con distribución proteína/carbos/grasa
+- [x] **Peso corporal** — gráfico dedicado con línea de tendencia e IMC
+- [x] **Exportar datos** — botón en perfil para descargar historial en CSV
+- [x] **Resumen semanal** — tarjeta en dashboard con media y comparativa semana anterior
 
 ---
 
