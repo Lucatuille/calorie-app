@@ -38,7 +38,8 @@
   --nav-bg:    rgba(17,17,16,0.92);
 }
 
-html { font-size: 16px; }
+html { font-size: 16px; overflow-x: hidden; }
+body { overflow-x: hidden; }
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -82,7 +83,7 @@ input, select, textarea { font-family: inherit; }
 .card + .card { margin-top: 12px; }
 
 /* ── Form fields ─────────────────────────────────────────── */
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 
 .field label {
   font-size: 12px;

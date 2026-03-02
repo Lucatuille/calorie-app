@@ -58,7 +58,7 @@ export default function Progress() {
 
   return (
     <div className="page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 className="title-xl" style={{ marginBottom: 4 }}>Progreso</h1>
           <p className="body-sm">Tu evolución en el tiempo</p>

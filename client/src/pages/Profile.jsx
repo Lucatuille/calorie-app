@@ -63,7 +63,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
             <div className="field">
               <label>Edad</label>
               <input type="number" value={form.age} onChange={e => set('age', e.target.value)} />

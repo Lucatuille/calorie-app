@@ -93,7 +93,7 @@ export default function Calculator() {
             <input type="number" placeholder="1800" value={log.calories} onChange={e => setL('calories', e.target.value)} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
             <div className="field">
               <label>Proteína (g)</label>
               <input type="number" placeholder="130" value={log.protein} onChange={e => setL('protein', e.target.value)} />
@@ -145,7 +145,7 @@ export default function Calculator() {
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
             <div className="field">
               <label>Edad</label>
               <input type="number" placeholder="25" value={tdee.age} onChange={e => setT('age', e.target.value)} />
@@ -175,7 +175,7 @@ export default function Calculator() {
             <div style={{
               background: 'var(--accent-lt)', border: '1px solid rgba(45,106,79,0.2)',
               borderRadius: 8, padding: '16px 20px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
             }}>
               <div>
                 <div style={{ fontFamily: 'Instrument Serif', fontSize: 36, color: 'var(--accent)', lineHeight: 1 }}>
