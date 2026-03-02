@@ -1,5 +1,5 @@
 /* ============================================================
-   CALORIE APP — Design System (Light Minimal)
+   CALORIE APP — Design System
    ============================================================ */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -9,7 +9,7 @@
   --surface:   #ffffff;
   --border:    #e8e5df;
   --border-2:  #d4d0c8;
-  --text-1:    #1a1916;
+  --text-1:    #252320;
   --text-2:    #6b6760;
   --text-3:    #a8a49e;
   --accent:    #2d6a4f;
@@ -19,6 +19,23 @@
   --radius:    10px;
   --shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --nav-bg:    rgba(247,246,243,0.92);
+}
+
+[data-theme="dark"] {
+  --bg:        #111110;
+  --surface:   #1c1c1a;
+  --border:    #2c2c29;
+  --border-2:  #3c3c38;
+  --text-1:    #f0ede7;
+  --text-2:    #9a9690;
+  --text-3:    #5a5750;
+  --accent:    #52b788;
+  --accent-lt: rgba(82,183,136,0.15);
+  --accent-2:  #f4845f;
+  --shadow:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --nav-bg:    rgba(17,17,16,0.92);
 }
 
 html { font-size: 16px; }
@@ -29,6 +46,7 @@ body {
   color: var(--text-1);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
 }
 
 h1, h2, h3 {
@@ -163,8 +181,8 @@ input, select, textarea { font-family: inherit; }
 
 .stat-box .stat-value {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 700;
   line-height: 1;
   color: var(--text-1);
   letter-spacing: -0.02em;
@@ -175,6 +193,23 @@ input, select, textarea { font-family: inherit; }
   color: var(--text-3);
   margin-top: 2px;
 }
+
+/* ── Macro chips ─────────────────────────────────────────── */
+.macro-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+}
+.chip-protein { background: rgba(45,106,79,0.1);  color: #2d6a4f; }
+.chip-carbs   { background: rgba(180,83,9,0.1);   color: #b45309; }
+.chip-fat     { background: rgba(29,78,216,0.1);  color: #1d4ed8; }
+
+[data-theme="dark"] .chip-protein { background: rgba(82,183,136,0.15); color: #52b788; }
+[data-theme="dark"] .chip-carbs   { background: rgba(251,191,36,0.15); color: #fbbf24; }
+[data-theme="dark"] .chip-fat     { background: rgba(96,165,250,0.15); color: #60a5fa; }
 
 /* ── Progress bar ────────────────────────────────────────── */
 .progress-track {
@@ -203,9 +238,9 @@ input, select, textarea { font-family: inherit; }
   font-size: 11px;
   font-weight: 500;
 }
-.badge-green { background: var(--accent-lt); color: var(--accent); }
-.badge-orange { background: #fde8e2; color: var(--accent-2); }
-.badge-gray { background: var(--border); color: var(--text-2); }
+.badge-green  { background: var(--accent-lt); color: var(--accent); }
+.badge-orange { background: rgba(231,111,81,0.15); color: var(--accent-2); }
+.badge-gray   { background: var(--border); color: var(--text-2); }
 
 /* ── Alerts ──────────────────────────────────────────────── */
 .alert {
@@ -214,7 +249,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 13px;
   margin-top: 12px;
 }
-.alert-error { background: #fde8e8; color: var(--danger); }
+.alert-error   { background: rgba(193,18,31,0.08); color: var(--danger); }
 .alert-success { background: var(--accent-lt); color: var(--accent); }
 
 /* ── Divider ─────────────────────────────────────────────── */
@@ -232,7 +267,6 @@ input, select, textarea { font-family: inherit; }
 
 .fade-up { animation: fadeUp 0.3s ease forwards; }
 
-/* staggered children */
 .stagger > *:nth-child(1) { animation: fadeUp 0.3s 0.05s ease both; }
 .stagger > *:nth-child(2) { animation: fadeUp 0.3s 0.10s ease both; }
 .stagger > *:nth-child(3) { animation: fadeUp 0.3s 0.15s ease both; }
@@ -248,3 +282,47 @@ input, select, textarea { font-family: inherit; }
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Navbar responsive ───────────────────────────────────── */
+.nav-hamburger { display: none; }
+
+@media (max-width: 600px) {
+  .nav-links    { display: none !important; }
+  .nav-username { display: none !important; }
+  .nav-logout   { display: none !important; }
+  .nav-hamburger { display: flex !important; }
+}
+
+.nav-mobile-menu {
+  padding: 8px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.nav-mobile-menu a,
+.nav-mobile-menu button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-align: left;
+  background: none;
+  border: none;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-mobile-menu a:hover,
+.nav-mobile-menu button:hover {
+  background: var(--bg);
+  color: var(--text-1);
+}
+
+.nav-mobile-menu a.active {
+  color: var(--accent);
+  background: var(--accent-lt);
+}

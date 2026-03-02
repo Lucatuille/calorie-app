@@ -11,11 +11,11 @@
 - [x] Renovar tipografía — buscar combinación más distintiva (Google Fonts)
 - [ ] Nueva paleta de colores — definir variables CSS coherentes
 - [x] Mejorar dashboard — más visual, datos más prominentes
-- [ ] Navbar responsive — menú hamburguesa en móvil
+- [x] Navbar responsive — menú hamburguesa en móvil
 - [ ] Animaciones de entrada en cada página (fadeUp escalonado)
 - [ ] Loading skeletons — reemplazar spinner genérico
 - [ ] Estados vacíos cuidados — ilustración o mensaje cuando no hay datos
-- [ ] Modo oscuro — toggle en navbar, guardar preferencia en localStorage
+- [x] Modo oscuro — toggle en navbar, guardar preferencia en localStorage
 
 ---
 

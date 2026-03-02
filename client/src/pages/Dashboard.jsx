@@ -27,16 +27,16 @@ function CalProgress({ consumed, target }) {
 }
 
 const MACROS = [
-  { key: 'protein', label: 'Proteína', color: '#2d6a4f', bg: '#e8f5ee' },
-  { key: 'carbs',   label: 'Carbos',   color: '#b45309', bg: '#fef3c7' },
-  { key: 'fat',     label: 'Grasa',    color: '#1d4ed8', bg: '#eff6ff' },
+  { key: 'protein', label: 'Proteína', chipClass: 'chip-protein', dotColor: '#2d6a4f' },
+  { key: 'carbs',   label: 'Carbos',   chipClass: 'chip-carbs',   dotColor: '#b45309' },
+  { key: 'fat',     label: 'Grasa',    chipClass: 'chip-fat',     dotColor: '#1d4ed8' },
 ];
 
 const ACTIONS = [
-  { to: '/calculator',       icon: '＋', label: 'Registrar día',   desc: 'Calorías y macros',      accent: '#d8f3dc', iconColor: '#2d6a4f' },
-  { to: '/progress',         icon: '↗',  label: 'Ver progreso',    desc: 'Gráficos y tendencias',   accent: '#e0eaff', iconColor: '#3b5bdb' },
-  { to: '/calculator#tdee',  icon: '⚡', label: 'Calcular TDEE',  desc: 'Tu objetivo calórico',    accent: '#fff3cd', iconColor: '#b45309' },
-  { to: '/profile',          icon: '◎',  label: 'Mi perfil',       desc: 'Datos y objetivo',        accent: '#fde8e2', iconColor: '#e76f51' },
+  { to: '/calculator',      icon: '＋', label: 'Registrar día',  desc: 'Calorías y macros',    accent: 'rgba(45,106,79,0.1)',   iconColor: 'var(--accent)' },
+  { to: '/progress',        icon: '↗',  label: 'Ver progreso',   desc: 'Gráficos y tendencias', accent: 'rgba(59,91,219,0.1)',   iconColor: '#3b5bdb' },
+  { to: '/calculator#tdee', icon: '⚡', label: 'Calcular TDEE', desc: 'Tu objetivo calórico',  accent: 'rgba(180,83,9,0.1)',    iconColor: '#b45309' },
+  { to: '/profile',         icon: '◎',  label: 'Mi perfil',      desc: 'Datos y objetivo',      accent: 'rgba(231,111,81,0.1)', iconColor: 'var(--accent-2)' },
 ];
 
 export default function Dashboard() {
@@ -98,15 +98,15 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                   <span style={{
                     fontFamily: 'Plus Jakarta Sans, sans-serif',
-                    fontWeight: 800,
-                    fontSize: 52,
+                    fontWeight: 700,
+                    fontSize: 46,
                     lineHeight: 1,
                     letterSpacing: '-0.03em',
-                    color: 'var(--text-1)'
+                    color: 'var(--text-1)',
                   }}>
                     {today.calories.toLocaleString()}
                   </span>
-                  <span style={{ fontSize: 16, color: 'var(--text-3)', fontWeight: 500 }}>kcal</span>
+                  <span style={{ fontSize: 15, color: 'var(--text-3)', fontWeight: 500 }}>kcal</span>
                 </div>
 
                 <CalProgress consumed={today.calories} target={profile?.target_calories} />
@@ -115,16 +115,10 @@ export default function Dashboard() {
                 {(today.protein || today.carbs || today.fat) && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
                     {MACROS.map(m => today[m.key] ? (
-                      <div key={m.key} style={{
-                        display: 'flex', alignItems: 'center', gap: 5,
-                        padding: '5px 10px',
-                        background: m.bg,
-                        borderRadius: 99,
-                        fontSize: 12,
-                      }}>
-                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: m.color, flexShrink: 0 }} />
-                        <span style={{ fontWeight: 700, color: m.color }}>{Math.round(today[m.key])}g</span>
-                        <span style={{ color: m.color, opacity: 0.7 }}>{m.label}</span>
+                      <div key={m.key} className={`macro-chip ${m.chipClass}`}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
+                        <span style={{ fontWeight: 700 }}>{Math.round(today[m.key])}g</span>
+                        <span style={{ opacity: 0.7 }}>{m.label}</span>
                       </div>
                     ) : null)}
                   </div>
@@ -181,19 +175,20 @@ export default function Dashboard() {
       <h2 className="title-md" style={{ marginTop: 28, marginBottom: 12 }}>Acciones rápidas</h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {ACTIONS.map(a => (
-          <Link key={a.to} to={a.to} className="card" style={{ display: 'block', transition: 'transform 0.15s, box-shadow 0.15s', textDecoration: 'none', padding: 16 }}
+          <Link key={a.to} to={a.to} className="card"
+            style={{ display: 'block', transition: 'transform 0.15s, box-shadow 0.15s', textDecoration: 'none', padding: 16 }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}>
             <div style={{
-              width: 36, height: 36,
+              width: 34, height: 34,
               background: a.accent,
-              borderRadius: 10,
+              borderRadius: 9,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16,
+              fontSize: 15,
               marginBottom: 10,
               color: a.iconColor,
             }}>{a.icon}</div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>{a.label}</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{a.label}</div>
             <div className="body-sm" style={{ marginTop: 2, fontSize: 12 }}>{a.desc}</div>
           </Link>
         ))}
