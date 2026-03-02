@@ -24,7 +24,7 @@
 html { font-size: 16px; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   background: var(--bg);
   color: var(--text-1);
   line-height: 1.5;
@@ -162,10 +162,12 @@ input, select, textarea { font-family: inherit; }
 }
 
 .stat-box .stat-value {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 28px;
+  font-weight: 800;
   line-height: 1;
   color: var(--text-1);
+  letter-spacing: -0.02em;
 }
 
 .stat-box .stat-unit {
