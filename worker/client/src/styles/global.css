@@ -1,0 +1,248 @@
+/* ============================================================
+   CALORIE APP — Design System (Light Minimal)
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f7f6f3;
+  --surface:   #ffffff;
+  --border:    #e8e5df;
+  --border-2:  #d4d0c8;
+  --text-1:    #1a1916;
+  --text-2:    #6b6760;
+  --text-3:    #a8a49e;
+  --accent:    #2d6a4f;
+  --accent-lt: #d8f3dc;
+  --accent-2:  #e76f51;
+  --danger:    #c1121f;
+  --radius:    10px;
+  --shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: 'Instrument Serif', serif;
+  line-height: 1.2;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+/* ── Layout ─────────────────────────────────────────────── */
+.page {
+  min-height: 100vh;
+  padding: 24px 20px 60px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.page-wide {
+  max-width: 900px;
+}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.card + .card { margin-top: 12px; }
+
+/* ── Form fields ─────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+.field input,
+.field select {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-1);
+  font-size: 15px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45,106,79,0.1);
+}
+
+.field input::placeholder { color: var(--text-3); }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover { background: #236040; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { border-color: var(--border-2); background: var(--bg); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+}
+.btn-ghost:hover { color: var(--text-1); background: var(--border); }
+
+.btn-full { width: 100%; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+
+/* ── Typography helpers ──────────────────────────────────── */
+.title-xl { font-size: clamp(28px, 5vw, 40px); }
+.title-lg  { font-size: 24px; }
+.title-md  { font-size: 18px; }
+.body-sm   { font-size: 13px; color: var(--text-2); }
+.muted     { color: var(--text-3); font-size: 12px; }
+
+/* ── Stat boxes ──────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.stat-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.stat-box .stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+.stat-box .stat-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text-1);
+}
+
+.stat-box .stat-unit {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.progress-fill.over { background: var(--accent-2); }
+
+/* ── Badge ───────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge-green { background: var(--accent-lt); color: var(--accent); }
+.badge-orange { background: #fde8e2; color: var(--accent-2); }
+.badge-gray { background: var(--border); color: var(--text-2); }
+
+/* ── Alerts ──────────────────────────────────────────────── */
+.alert {
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.alert-error { background: #fde8e8; color: var(--danger); }
+.alert-success { background: var(--accent-lt); color: var(--accent); }
+
+/* ── Divider ─────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up { animation: fadeUp 0.3s ease forwards; }
+
+/* staggered children */
+.stagger > *:nth-child(1) { animation: fadeUp 0.3s 0.05s ease both; }
+.stagger > *:nth-child(2) { animation: fadeUp 0.3s 0.10s ease both; }
+.stagger > *:nth-child(3) { animation: fadeUp 0.3s 0.15s ease both; }
+.stagger > *:nth-child(4) { animation: fadeUp 0.3s 0.20s ease both; }
+.stagger > *:nth-child(5) { animation: fadeUp 0.3s 0.25s ease both; }
+
+/* ── Loading spinner ──────────────────────────────────────── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
