@@ -35,14 +35,14 @@
 ## 📸 Fase C — IA con foto
 > Objetivo: registrar comidas con una foto en lugar de escribir manualmente
 
-- [ ] Botón "Analizar foto" en página Registrar
-- [ ] Componente de subida de imagen con preview
-- [ ] Endpoint en Worker — recibe imagen en base64
-- [ ] Integración Claude Vision API — prompt para estimar calorías y macros
-- [ ] Parser de respuesta — extraer valores numéricos del texto de Claude
-- [ ] Pre-relleno automático del formulario con los resultados estimados
-- [ ] Indicador de confianza — mostrar que son estimaciones aproximadas
-- [ ] Historial de fotos — thumbnail vinculado a cada entrada del día
+- [x] Botón "Analizar foto" en página Registrar
+- [x] Componente de subida de imagen con preview
+- [x] Endpoint en Worker — recibe imagen en base64
+- [x] Integración Claude Vision API — prompt para estimar calorías y macros
+- [x] Parser de respuesta — extraer valores numéricos del texto de Claude
+- [x] Pre-relleno automático del formulario con los resultados estimados
+- [x] Indicador de confianza — mostrar que son estimaciones aproximadas
+- [ ] *(opcional)* Historial de fotos — thumbnail vinculado a cada entrada (requiere Cloudflare R2)
 
 ---
 
