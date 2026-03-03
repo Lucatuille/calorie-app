@@ -12,13 +12,19 @@ export async function handleProgress(request, env, path) {
   if (path === '/api/progress/summary' && request.method === 'GET') {
     const profile = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(user.userId).first();
 
+    // Aggregate multiple meals into daily totals (last 30 days)
     const { results: entries } = await env.DB.prepare(
-      `SELECT * FROM entries WHERE user_id = ?
-       AND date >= date('now', '-30 days') ORDER BY date ASC`
+      `SELECT date,
+         SUM(calories) AS calories, SUM(protein) AS protein,
+         SUM(carbs) AS carbs, SUM(fat) AS fat, MAX(weight) AS weight
+       FROM entries WHERE user_id = ?
+       AND date >= date('now', '-30 days')
+       GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
 
+    // Streak: distinct dates (one per day even with multiple meals)
     const { results: streakRows } = await env.DB.prepare(
-      `SELECT date FROM entries WHERE user_id = ?
+      `SELECT DISTINCT date FROM entries WHERE user_id = ?
        AND date >= date('now', '-90 days') ORDER BY date DESC`
     ).bind(user.userId).all();
 
@@ -84,15 +90,17 @@ export async function handleProgress(request, env, path) {
     });
   }
 
-  // GET /api/progress/chart
+  // GET /api/progress/chart — aggregate meals per day
   if (path === '/api/progress/chart' && request.method === 'GET') {
     const url  = new URL(request.url);
     const days = parseInt(url.searchParams.get('days') || '30');
     const { results } = await env.DB.prepare(
-      `SELECT date, calories, weight, protein, carbs, fat
+      `SELECT date,
+         SUM(calories) AS calories, MAX(weight) AS weight,
+         SUM(protein) AS protein, SUM(carbs) AS carbs, SUM(fat) AS fat
        FROM entries WHERE user_id = ?
        AND date >= date('now', '-${days} days')
-       ORDER BY date ASC`
+       GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
     return jsonResponse(results);
   }

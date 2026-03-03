@@ -63,7 +63,7 @@ const ACTIONS = [
 
 export default function Dashboard() {
   const { user, token } = useAuth();
-  const [today,   setToday]   = useState(null);
+  const [today,   setToday]   = useState([]);
   const [summary, setSummary] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ export default function Dashboard() {
     async function load() {
       try {
         const [t, s, p] = await Promise.all([
-          api.getTodayEntry(token),
+          api.getTodayEntries(token),
           api.getSummary(token),
           api.getProfile(token),
         ]);
@@ -104,6 +104,14 @@ export default function Dashboard() {
     ? summary.avgThisWeek - summary.avgLastWeek
     : null;
 
+  const todayTotal = today.reduce((a, e) => ({
+    calories: a.calories + (e.calories || 0),
+    protein:  a.protein  + (e.protein  || 0),
+    carbs:    a.carbs    + (e.carbs    || 0),
+    fat:      a.fat      + (e.fat      || 0),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  const hasToday = today.length > 0;
+
   return (
     <div className="page stagger">
 
@@ -130,29 +138,32 @@ export default function Dashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
             <p className="muted" style={{ marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: 11 }}>Hoy</p>
-            {today ? (
+            {hasToday ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                   <span style={{
                     fontFamily: 'Plus Jakarta Sans, sans-serif',
                     fontWeight: 700, fontSize: 46, lineHeight: 1, letterSpacing: '-0.03em',
                   }}>
-                    {today.calories.toLocaleString()}
+                    {todayTotal.calories.toLocaleString()}
                   </span>
                   <span style={{ fontSize: 15, color: 'var(--text-3)', fontWeight: 500 }}>kcal</span>
                 </div>
+                <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>
+                  {today.length} {today.length === 1 ? 'comida' : 'comidas'}
+                </p>
 
-                <CalProgress consumed={today.calories} target={profile?.target_calories} />
+                <CalProgress consumed={todayTotal.calories} target={profile?.target_calories} />
 
                 {/* Macros: donut + chips */}
-                {(today.protein || today.carbs || today.fat) && (
+                {(todayTotal.protein > 0 || todayTotal.carbs > 0 || todayTotal.fat > 0) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
-                    <MacroDonut protein={today.protein} carbs={today.carbs} fat={today.fat} />
+                    <MacroDonut protein={todayTotal.protein} carbs={todayTotal.carbs} fat={todayTotal.fat} />
                     <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                      {MACROS.map(m => today[m.key] ? (
+                      {MACROS.map(m => todayTotal[m.key] > 0 ? (
                         <div key={m.key} className={`macro-chip ${m.chipClass}`}>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
-                          <span style={{ fontWeight: 700 }}>{Math.round(today[m.key])}g</span>
+                          <span style={{ fontWeight: 700 }}>{Math.round(todayTotal[m.key])}g</span>
                           <span style={{ opacity: 0.7 }}>{m.label}</span>
                         </div>
                       ) : null)}
@@ -168,9 +179,9 @@ export default function Dashboard() {
             )}
           </div>
 
-          {today && (
+          {hasToday && (
             <Link to="/calculator" className="btn btn-secondary btn-sm" style={{ marginLeft: 12, flexShrink: 0 }}>
-              Editar
+              Añadir
             </Link>
           )}
         </div>

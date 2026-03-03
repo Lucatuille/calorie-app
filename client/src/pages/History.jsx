@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { MEAL_TYPES, getMeal } from '../utils/meals';
 
 const MACROS = [
   { key: 'protein', label: 'Prot',  chipClass: 'chip-protein' },
@@ -14,7 +15,16 @@ function formatDate(dateStr) {
   });
 }
 
-const EMPTY_FORM = { calories: '', protein: '', carbs: '', fat: '', weight: '', notes: '' };
+function groupByDate(entries) {
+  const groups = {};
+  for (const e of entries) {
+    if (!groups[e.date]) groups[e.date] = [];
+    groups[e.date].push(e);
+  }
+  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+}
+
+const EMPTY_FORM = { meal_type: 'other', name: '', calories: '', protein: '', carbs: '', fat: '', weight: '', notes: '' };
 
 export default function History() {
   const { token } = useAuth();
@@ -24,15 +34,13 @@ export default function History() {
   const [editForm,   setEditForm]   = useState(EMPTY_FORM);
   const [deletingId, setDeletingId] = useState(null);
   const [saving,     setSaving]     = useState(false);
-  const [limit,      setLimit]      = useState(30);
-  const [total,      setTotal]      = useState(0);
+  const [limit,      setLimit]      = useState(90);
 
   async function load(lim = limit) {
     setLoading(true);
     try {
       const data = await api.getAllEntries(lim, token);
       setEntries(data);
-      setTotal(data.length);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }
@@ -43,12 +51,14 @@ export default function History() {
     setDeletingId(null);
     setEditingId(entry.id);
     setEditForm({
-      calories: entry.calories || '',
-      protein:  entry.protein  || '',
-      carbs:    entry.carbs    || '',
-      fat:      entry.fat      || '',
-      weight:   entry.weight   || '',
-      notes:    entry.notes    || '',
+      meal_type: entry.meal_type || 'other',
+      name:      entry.name      || '',
+      calories:  entry.calories  || '',
+      protein:   entry.protein   || '',
+      carbs:     entry.carbs     || '',
+      fat:       entry.fat       || '',
+      weight:    entry.weight    || '',
+      notes:     entry.notes     || '',
     });
   }
 
@@ -57,12 +67,14 @@ export default function History() {
     setSaving(true);
     try {
       await api.updateEntry(id, {
-        calories: parseInt(editForm.calories),
-        protein:  parseFloat(editForm.protein)  || null,
-        carbs:    parseFloat(editForm.carbs)    || null,
-        fat:      parseFloat(editForm.fat)      || null,
-        weight:   parseFloat(editForm.weight)   || null,
-        notes:    editForm.notes || null,
+        meal_type: editForm.meal_type,
+        name:      editForm.name     || null,
+        calories:  parseInt(editForm.calories),
+        protein:   parseFloat(editForm.protein) || null,
+        carbs:     parseFloat(editForm.carbs)   || null,
+        fat:       parseFloat(editForm.fat)     || null,
+        weight:    parseFloat(editForm.weight)  || null,
+        notes:     editForm.notes || null,
       }, token);
       setEditingId(null);
       load();
@@ -79,12 +91,13 @@ export default function History() {
   }
 
   async function loadMore() {
-    const newLimit = limit + 30;
+    const newLimit = limit + 90;
     setLimit(newLimit);
     load(newLimit);
   }
 
   const set = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
+  const groups = groupByDate(entries);
 
   if (loading && entries.length === 0) return (
     <div className="page" style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
@@ -96,147 +109,179 @@ export default function History() {
     <div className="page stagger">
       <div style={{ marginBottom: 28 }}>
         <h1 className="title-xl" style={{ marginBottom: 4 }}>Historial</h1>
-        <p className="body-sm">Todas tus entradas — edita o elimina si te equivocaste</p>
+        <p className="body-sm">Tus entradas agrupadas por día — edita o elimina si te equivocaste</p>
       </div>
 
       {entries.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
           <p style={{ fontSize: 32, marginBottom: 12 }}>📋</p>
           <p style={{ color: 'var(--text-2)' }}>Aún no hay entradas registradas.</p>
-          <p className="body-sm">Empieza registrando tu primer día.</p>
+          <p className="body-sm">Empieza registrando tu primera comida.</p>
         </div>
       ) : (
         <>
-          {entries.map(entry => (
-            <div key={entry.id} className="card" style={{ marginBottom: 10 }}>
-
-              {editingId === entry.id ? (
-                /* ── Inline edit form ── */
-                <form onSubmit={e => { e.preventDefault(); saveEdit(entry.id); }}>
-                  <p className="muted" style={{ marginBottom: 12, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    Editando — {formatDate(entry.date)}
+          {groups.map(([date, dayEntries]) => {
+            const dayTotal = dayEntries.reduce((a, e) => a + (e.calories || 0), 0);
+            return (
+              <div key={date} style={{ marginBottom: 16 }}>
+                {/* Date header */}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                  marginBottom: 6, padding: '0 2px',
+                }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', textTransform: 'capitalize' }}>
+                    {formatDate(date)}
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 10 }}>
-                    <div className="field">
-                      <label>Calorías *</label>
-                      <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required />
-                    </div>
-                    <div className="field">
-                      <label>Proteína (g)</label>
-                      <input type="number" value={editForm.protein} onChange={e => set('protein', e.target.value)} />
-                    </div>
-                    <div className="field">
-                      <label>Carbos (g)</label>
-                      <input type="number" value={editForm.carbs} onChange={e => set('carbs', e.target.value)} />
-                    </div>
-                    <div className="field">
-                      <label>Grasa (g)</label>
-                      <input type="number" value={editForm.fat} onChange={e => set('fat', e.target.value)} />
-                    </div>
-                    <div className="field">
-                      <label>Peso (kg)</label>
-                      <input type="number" step="0.1" value={editForm.weight} onChange={e => set('weight', e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="field" style={{ marginBottom: 12 }}>
-                    <label>Notas</label>
-                    <input value={editForm.notes} onChange={e => set('notes', e.target.value)} placeholder="Opcional..." />
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary btn-sm" type="submit" disabled={saving}>
-                      {saving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : 'Guardar'}
-                    </button>
-                    <button className="btn btn-secondary btn-sm" type="button" onClick={() => setEditingId(null)}>
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                /* ── Display mode ── */
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <p className="muted" style={{ marginBottom: 4, textTransform: 'capitalize' }}>
-                        {formatDate(entry.date)}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                        <span style={{ fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em' }}>
-                          {entry.calories.toLocaleString()}
-                        </span>
-                        <span style={{ color: 'var(--text-3)', fontSize: 12 }}>kcal</span>
-                        {entry.weight && (
-                          <span style={{ color: 'var(--text-3)', fontSize: 13, marginLeft: 4 }}>
-                            · {entry.weight} kg
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => { setDeletingId(null); startEdit(entry); }}
-                        style={{ fontSize: 12 }}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => { setEditingId(null); setDeletingId(d => d === entry.id ? null : entry.id); }}
-                        style={{ color: 'var(--text-3)', fontSize: 14, padding: '7px 10px' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                    {dayTotal.toLocaleString()} kcal
+                  </p>
+                </div>
 
-                  {/* Macro chips */}
-                  {(entry.protein || entry.carbs || entry.fat) && (
-                    <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                      {MACROS.map(m => entry[m.key] ? (
-                        <div key={m.key} className={`macro-chip ${m.chipClass}`} style={{ fontSize: 11 }}>
-                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
-                          <span style={{ fontWeight: 700 }}>{Math.round(entry[m.key])}g</span>
-                          <span style={{ opacity: 0.7 }}>{m.label}</span>
-                        </div>
-                      ) : null)}
+                {/* Individual meal entries */}
+                {dayEntries.map(entry => {
+                  const meal = getMeal(entry.meal_type);
+                  return (
+                    <div key={entry.id} className="card" style={{ marginBottom: 8, padding: '14px 16px' }}>
+
+                      {editingId === entry.id ? (
+                        /* ── Inline edit form ── */
+                        <form onSubmit={e => { e.preventDefault(); saveEdit(entry.id); }}>
+                          <p className="muted" style={{ marginBottom: 10, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                            Editando entrada
+                          </p>
+                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+                            {MEAL_TYPES.map(m => (
+                              <button key={m.id} type="button"
+                                className={`btn btn-sm ${editForm.meal_type === m.id ? 'btn-primary' : 'btn-secondary'}`}
+                                style={{ fontSize: 11 }}
+                                onClick={() => set('meal_type', m.id)}>
+                                {m.icon} {m.label}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="field" style={{ marginBottom: 10 }}>
+                            <label>Nombre</label>
+                            <input value={editForm.name} onChange={e => set('name', e.target.value)} placeholder="Opcional..." />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 10 }}>
+                            <div className="field">
+                              <label>Calorías *</label>
+                              <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required />
+                            </div>
+                            <div className="field">
+                              <label>Proteína (g)</label>
+                              <input type="number" value={editForm.protein} onChange={e => set('protein', e.target.value)} />
+                            </div>
+                            <div className="field">
+                              <label>Carbos (g)</label>
+                              <input type="number" value={editForm.carbs} onChange={e => set('carbs', e.target.value)} />
+                            </div>
+                            <div className="field">
+                              <label>Grasa (g)</label>
+                              <input type="number" value={editForm.fat} onChange={e => set('fat', e.target.value)} />
+                            </div>
+                            <div className="field">
+                              <label>Peso (kg)</label>
+                              <input type="number" step="0.1" value={editForm.weight} onChange={e => set('weight', e.target.value)} />
+                            </div>
+                          </div>
+                          <div className="field" style={{ marginBottom: 12 }}>
+                            <label>Notas</label>
+                            <input value={editForm.notes} onChange={e => set('notes', e.target.value)} placeholder="Opcional..." />
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn btn-primary btn-sm" type="submit" disabled={saving}>
+                              {saving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : 'Guardar'}
+                            </button>
+                            <button className="btn btn-secondary btn-sm" type="button" onClick={() => setEditingId(null)}>
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        /* ── Display mode ── */
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                              <span style={{ fontSize: 18, flexShrink: 0 }}>{meal.icon}</span>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+                                  <span style={{ fontWeight: 700, fontSize: 15 }}>
+                                    {entry.name || meal.label}
+                                  </span>
+                                  {entry.name && (
+                                    <span style={{ color: 'var(--text-3)', fontSize: 12 }}>{meal.label}</span>
+                                  )}
+                                  <span style={{ color: 'var(--text-3)', fontSize: 13 }}>
+                                    · {entry.calories.toLocaleString()} kcal
+                                  </span>
+                                  {entry.weight && (
+                                    <span style={{ color: 'var(--text-3)', fontSize: 12 }}>· {entry.weight} kg</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => { setDeletingId(null); startEdit(entry); }}
+                                style={{ fontSize: 12 }}
+                              >Editar</button>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => { setEditingId(null); setDeletingId(d => d === entry.id ? null : entry.id); }}
+                                style={{ color: 'var(--text-3)', fontSize: 14, padding: '7px 10px' }}
+                              >✕</button>
+                            </div>
+                          </div>
+
+                          {(entry.protein || entry.carbs || entry.fat) && (
+                            <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                              {MACROS.map(m => entry[m.key] ? (
+                                <div key={m.key} className={`macro-chip ${m.chipClass}`} style={{ fontSize: 11 }}>
+                                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
+                                  <span style={{ fontWeight: 700 }}>{Math.round(entry[m.key])}g</span>
+                                  <span style={{ opacity: 0.7 }}>{m.label}</span>
+                                </div>
+                              ) : null)}
+                            </div>
+                          )}
+
+                          {entry.notes && (
+                            <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic' }}>
+                              {entry.notes}
+                            </p>
+                          )}
+
+                          {deletingId === entry.id && (
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: 8, marginTop: 10,
+                              padding: '10px 12px', background: 'rgba(193,18,31,0.06)',
+                              borderRadius: 8, flexWrap: 'wrap',
+                            }}>
+                              <span style={{ flex: 1, fontSize: 13, color: 'var(--danger)' }}>
+                                ¿Eliminar esta entrada?
+                              </span>
+                              <button
+                                className="btn btn-sm"
+                                style={{ background: 'var(--danger)', color: 'white', border: 'none' }}
+                                onClick={() => confirmDelete(entry.id)}
+                              >Eliminar</button>
+                              <button className="btn btn-secondary btn-sm" onClick={() => setDeletingId(null)}>
+                                Cancelar
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                  )}
+                  );
+                })}
+              </div>
+            );
+          })}
 
-                  {/* Notes */}
-                  {entry.notes && (
-                    <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic' }}>
-                      {entry.notes}
-                    </p>
-                  )}
-
-                  {/* Delete confirm */}
-                  {deletingId === entry.id && (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 8, marginTop: 10,
-                      padding: '10px 12px', background: 'rgba(193,18,31,0.06)',
-                      borderRadius: 8, flexWrap: 'wrap',
-                    }}>
-                      <span style={{ flex: 1, fontSize: 13, color: 'var(--danger)' }}>
-                        ¿Eliminar esta entrada?
-                      </span>
-                      <button
-                        className="btn btn-sm"
-                        style={{ background: 'var(--danger)', color: 'white', border: 'none' }}
-                        onClick={() => confirmDelete(entry.id)}
-                      >
-                        Eliminar
-                      </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => setDeletingId(null)}>
-                        Cancelar
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-
-          {total === limit && (
+          {entries.length === limit && (
             <button
               className="btn btn-secondary btn-full"
               style={{ marginTop: 4 }}
