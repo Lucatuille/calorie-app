@@ -38,4 +38,7 @@ export const api = {
   // Progress
   getSummary:   (token)        => request('GET',  '/api/progress/summary', null, token),
   getChart:     (days, token)  => request('GET',  `/api/progress/chart?days=${days}`, null, token),
+
+  // AI photo analysis
+  analyzePhoto: (body, token)  => request('POST', '/api/analyze', body, token),
 };

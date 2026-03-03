@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
@@ -32,6 +32,12 @@ export default function Calculator() {
   const [error,      setError]      = useState('');
   const [saved,      setSaved]      = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+
+  // Photo analysis
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [analyzing,    setAnalyzing]    = useState(false);
+  const [aiResult,     setAiResult]     = useState(null);
+  const fileRef = useRef(null);
 
   // TDEE form
   const [tdee,       setTdee]       = useState({ age: '', weight: '', height: '', gender: 'male', activity: 1 });
@@ -83,6 +89,48 @@ export default function Calculator() {
       setDeletingId(null);
     } catch (err) { console.error(err); }
   }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl  = reader.result;
+      const base64   = dataUrl.split(',')[1];
+      setPhotoPreview(dataUrl);
+      setAiResult(null);
+      setAnalyzing(true);
+      try {
+        const result = await api.analyzePhoto({ image: base64, mediaType: file.type }, token);
+        setAiResult(result);
+      } catch (err) {
+        setAiResult({ error: err.message });
+      } finally { setAnalyzing(false); }
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  }
+
+  function applyAiResult() {
+    if (!aiResult || aiResult.error) return;
+    setForm(f => ({
+      ...f,
+      name:     aiResult.name     || f.name,
+      calories: aiResult.calories ? String(aiResult.calories) : f.calories,
+      protein:  aiResult.protein  ? String(aiResult.protein)  : f.protein,
+      carbs:    aiResult.carbs    ? String(aiResult.carbs)    : f.carbs,
+      fat:      aiResult.fat      ? String(aiResult.fat)      : f.fat,
+    }));
+    setPhotoPreview(null);
+    setAiResult(null);
+  }
+
+  const CONFIDENCE_STYLE = {
+    alta:  { bg: 'rgba(16,185,129,0.1)',  color: '#059669' },
+    media: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
+    baja:  { bg: 'rgba(193,18,31,0.1)',  color: 'var(--danger)' },
+  };
 
   function calcTdee() {
     const { age, weight, height, gender, activity } = tdee;
@@ -209,12 +257,83 @@ export default function Calculator() {
           <h2 className="title-md">Añadir comida</h2>
           <button
             type="button"
-            disabled
             className="btn btn-secondary btn-sm"
-            style={{ opacity: 0.45, cursor: 'not-allowed', fontSize: 12 }}
-            title="Próximamente — Fase C"
-          >📸 Foto</button>
+            style={{ fontSize: 12 }}
+            onClick={() => fileRef.current?.click()}
+            disabled={analyzing}
+          >
+            {analyzing ? <span className="spinner" style={{ width: 13, height: 13, marginRight: 4 }} /> : '📸 '}
+            {analyzing ? 'Analizando...' : 'Foto'}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={handlePhotoChange}
+          />
         </div>
+
+        {/* ── Photo preview & AI result ── */}
+        {photoPreview && (
+          <div style={{ marginBottom: 16 }}>
+            <img
+              src={photoPreview}
+              alt="preview"
+              style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, marginBottom: 10 }}
+            />
+            {analyzing && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-2)', fontSize: 13 }}>
+                <span className="spinner" style={{ width: 14, height: 14 }} />
+                Analizando con IA...
+              </div>
+            )}
+            {aiResult && !aiResult.error && (
+              <div style={{
+                background: 'var(--surface)', border: '1px solid var(--border)',
+                borderRadius: 10, padding: '14px 16px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14 }}>{aiResult.name}</p>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                    background: CONFIDENCE_STYLE[aiResult.confidence]?.bg || 'rgba(0,0,0,0.05)',
+                    color:      CONFIDENCE_STYLE[aiResult.confidence]?.color || 'var(--text-2)',
+                  }}>
+                    confianza {aiResult.confidence}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 14, fontSize: 13, marginBottom: 10, flexWrap: 'wrap' }}>
+                  <span><b>{aiResult.calories}</b> kcal</span>
+                  {aiResult.protein > 0 && <span style={{ color: '#059669' }}><b>{aiResult.protein}g</b> prot</span>}
+                  {aiResult.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{aiResult.carbs}g</b> carb</span>}
+                  {aiResult.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{aiResult.fat}g</b> grasa</span>}
+                </div>
+                {aiResult.notes && (
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic', marginBottom: 10 }}>
+                    {aiResult.notes}
+                  </p>
+                )}
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10 }}>
+                  ⚠️ Estimación aproximada — revisa y ajusta antes de guardar
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={applyAiResult}>
+                    Usar estimación
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm"
+                    onClick={() => { setPhotoPreview(null); setAiResult(null); }}>
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            )}
+            {aiResult?.error && (
+              <div className="alert alert-error">{aiResult.error}</div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={addMeal} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 

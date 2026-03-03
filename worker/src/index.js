@@ -6,6 +6,7 @@ import { handleAuth } from './routes/auth.js';
 import { handleEntries } from './routes/entries.js';
 import { handleProgress } from './routes/progress.js';
 import { handleProfile } from './routes/profile.js';
+import { handleAnalyze } from './routes/analyze.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 export default {
@@ -35,6 +36,10 @@ export default {
 
       if (path.startsWith('/api/profile')) {
         return await handleProfile(request, env, path);
+      }
+
+      if (path.startsWith('/api/analyze')) {
+        return await handleAnalyze(request, env, path);
       }
 
       // Health check
