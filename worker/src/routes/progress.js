@@ -61,7 +61,7 @@ export async function handleProgress(request, env, path) {
       ? +(weights[weights.length-1] - weights[0]).toFixed(1) : null;
 
     const adherence = targetCalories
-      ? Math.round((calories.filter(c => Math.abs(c - targetCalories) <= 200).length / calories.length) * 100)
+      ? Math.round((calories.filter(c => Math.abs(c - targetCalories) <= 250).length / calories.length) * 100)
       : null;
 
     // Weekly comparison

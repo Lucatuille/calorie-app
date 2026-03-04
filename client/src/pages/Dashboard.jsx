@@ -27,8 +27,14 @@ function MacroDonut({ protein, carbs, fat }) {
 // ── Barra de progreso de calorías ────────────────────────────
 function CalProgress({ consumed, target }) {
   if (!target) return null;
-  const pct  = Math.min((consumed / target) * 100, 100);
-  const over = consumed > target;
+  const pct     = Math.min((consumed / target) * 100, 100);
+  const diff    = consumed - target;
+  const inRange = Math.abs(diff) <= 250;
+  const over    = diff > 250;
+  // under: diff < -250
+
+  const fillColor = over ? 'var(--accent-2)' : inRange ? 'var(--accent)' : '#3b82f6';
+
   return (
     <div style={{ marginTop: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-3)', marginBottom: 6 }}>
@@ -36,12 +42,14 @@ function CalProgress({ consumed, target }) {
         <span>Objetivo: {target.toLocaleString()}</span>
       </div>
       <div className="progress-track">
-        <div className={`progress-fill ${over ? 'over' : ''}`} style={{ width: `${pct}%` }} />
+        <div className="progress-fill" style={{ width: `${pct}%`, background: fillColor }} />
       </div>
       <div style={{ marginTop: 6, fontSize: 12 }}>
         {over
-          ? <span style={{ color: 'var(--accent-2)', fontWeight: 600 }}>+{(consumed - target).toLocaleString()} kcal sobre el objetivo</span>
-          : <span style={{ color: 'var(--accent)',   fontWeight: 600 }}>{(target - consumed).toLocaleString()} kcal restantes</span>
+          ? <span style={{ color: 'var(--accent-2)', fontWeight: 600 }}>+{diff.toLocaleString()} kcal sobre el objetivo</span>
+          : inRange
+            ? <span style={{ color: 'var(--accent)',  fontWeight: 600 }}>En objetivo ✓ ({diff >= 0 ? '+' : ''}{diff.toLocaleString()} kcal)</span>
+            : <span style={{ color: '#3b82f6',        fontWeight: 600 }}>{Math.abs(diff).toLocaleString()} kcal por debajo del objetivo</span>
         }
       </div>
     </div>
