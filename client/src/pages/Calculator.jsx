@@ -35,6 +35,8 @@ export default function Calculator() {
 
   // Photo analysis
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoData,    setPhotoData]    = useState(null);   // { base64, mediaType }
+  const [photoContext, setPhotoContext] = useState('');
   const [analyzing,    setAnalyzing]    = useState(false);
   const [aiResult,     setAiResult]     = useState(null);
   const fileRef = useRef(null);
@@ -90,26 +92,33 @@ export default function Calculator() {
     } catch (err) { console.error(err); }
   }
 
-  async function handlePhotoChange(e) {
+  function handlePhotoChange(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl  = reader.result;
-      const base64   = dataUrl.split(',')[1];
+    reader.onload = () => {
+      const dataUrl = reader.result;
       setPhotoPreview(dataUrl);
+      setPhotoData({ base64: dataUrl.split(',')[1], mediaType: file.type });
       setAiResult(null);
-      setAnalyzing(true);
-      try {
-        const result = await api.analyzePhoto({ image: base64, mediaType: file.type }, token);
-        setAiResult(result);
-      } catch (err) {
-        setAiResult({ error: err.message });
-      } finally { setAnalyzing(false); }
+      setPhotoContext('');
     };
     reader.readAsDataURL(file);
-    // Reset input so same file can be re-selected
     e.target.value = '';
+  }
+
+  async function handleAnalyze() {
+    if (!photoData) return;
+    setAnalyzing(true);
+    setAiResult(null);
+    try {
+      const result = await api.analyzePhoto({
+        image: photoData.base64, mediaType: photoData.mediaType, context: photoContext.trim(),
+      }, token);
+      setAiResult(result);
+    } catch (err) {
+      setAiResult({ error: err.message });
+    } finally { setAnalyzing(false); }
   }
 
   function applyAiResult() {
@@ -123,6 +132,8 @@ export default function Calculator() {
       fat:      aiResult.fat      ? String(aiResult.fat)      : f.fat,
     }));
     setPhotoPreview(null);
+    setPhotoData(null);
+    setPhotoContext('');
     setAiResult(null);
   }
 
@@ -283,8 +294,32 @@ export default function Calculator() {
               alt="preview"
               style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 10, marginBottom: 10 }}
             />
+
+            {/* Textarea de contexto + botón Analizar (sólo antes de analizar) */}
+            {!aiResult && !analyzing && (
+              <>
+                <div className="field" style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                    <label style={{ margin: 0 }}>Contexto adicional (opcional)</label>
+                    <span style={{ fontSize: 11, color: 'var(--text-3)' }}>{photoContext.length}/300</span>
+                  </div>
+                  <textarea
+                    rows={2}
+                    maxLength={300}
+                    placeholder={'Ej: "son 2 raciones", "comida de restaurante", "lleva nata y bacon", "200g aproximadamente"...'}
+                    value={photoContext}
+                    onChange={e => setPhotoContext(e.target.value)}
+                    style={{ resize: 'vertical', fontSize: 13 }}
+                  />
+                </div>
+                <button type="button" className="btn btn-primary btn-full" onClick={handleAnalyze}>
+                  🔍 Analizar con IA
+                </button>
+              </>
+            )}
+
             {analyzing && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-2)', fontSize: 13 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-2)', fontSize: 13, marginTop: 8 }}>
                 <span className="spinner" style={{ width: 14, height: 14 }} />
                 Analizando con IA...
               </div>
@@ -323,7 +358,7 @@ export default function Calculator() {
                     Usar estimación
                   </button>
                   <button type="button" className="btn btn-secondary btn-sm"
-                    onClick={() => { setPhotoPreview(null); setAiResult(null); }}>
+                    onClick={() => { setPhotoPreview(null); setPhotoData(null); setPhotoContext(''); setAiResult(null); }}>
                     Descartar
                   </button>
                 </div>

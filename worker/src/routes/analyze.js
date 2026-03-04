@@ -25,10 +25,20 @@ export async function handleAnalyze(request, env, path) {
   if (!user) return errorResponse('No autorizado', 401);
 
   if (path === '/api/analyze' && request.method === 'POST') {
-    const { image, mediaType } = await request.json();
+    const { image, mediaType, context } = await request.json();
 
     if (!image) return errorResponse('Imagen requerida');
     if (!env.ANTHROPIC_API_KEY) return errorResponse('API key no configurada', 500);
+
+    const contextSection = context?.trim()
+      ? `\n\nContexto adicional del usuario: "${context.trim()}"\nTen en cuenta este contexto para ajustar las estimaciones, especialmente el tamaño de la ración, método de cocción e ingredientes no visibles.`
+      : '';
+
+    const userText = `Analiza esta comida y devuelve el JSON con la estimación nutricional.${contextSection}
+
+Si el contexto menciona número de raciones, multiplica todos los valores por ese número.
+Si menciona peso en gramos, úsalo para calibrar la estimación.
+Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -52,10 +62,7 @@ export async function handleAnalyze(request, env, path) {
                 data:       image,
               },
             },
-            {
-              type: 'text',
-              text: 'Analiza esta comida y devuelve el JSON con la estimación nutricional.',
-            },
+            { type: 'text', text: userText },
           ],
         }],
       }),
