@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import AdvancedAnalytics from '../components/AdvancedAnalytics';
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -23,10 +24,11 @@ function CustomTooltip({ active, payload, label }) {
 
 export default function Progress() {
   const { token } = useAuth();
-  const [data,    setData]    = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [days,    setDays]    = useState(30);
-  const [loading, setLoading] = useState(true);
+  const [data,          setData]          = useState([]);
+  const [summary,       setSummary]       = useState(null);
+  const [days,          setDays]          = useState(30);
+  const [loading,       setLoading]       = useState(true);
+  const [showAdvanced,  setShowAdvanced]  = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -119,6 +121,21 @@ export default function Progress() {
           </div>
         </div>
       )}
+
+      {/* Análisis detallado */}
+      <button
+        className="btn btn-secondary btn-full"
+        style={{ marginBottom: 20, fontWeight: 600 }}
+        onClick={() => setShowAdvanced(true)}
+      >
+        Análisis detallado →
+      </button>
+
+      <AdvancedAnalytics
+        isOpen={showAdvanced}
+        onClose={() => setShowAdvanced(false)}
+        userTarget={summary?.targetCalories}
+      />
 
       {data.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>

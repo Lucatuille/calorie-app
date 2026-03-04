@@ -24,6 +24,7 @@ export default function Profile() {
   const [form,      setForm]      = useState({
     name: '', age: '', weight: '', height: '', gender: 'male',
     target_calories: '', target_protein: '', target_carbs: '', target_fat: '',
+    goal_weight: '',
   });
   const [saved,     setSaved]     = useState(false);
   const [error,     setError]     = useState('');
@@ -44,6 +45,7 @@ export default function Profile() {
         target_protein:  p.target_protein  || '',
         target_carbs:    p.target_carbs    || '',
         target_fat:      p.target_fat      || '',
+        goal_weight:     p.goal_weight     || '',
       });
     }).catch(console.error);
   }, [token]);
@@ -109,6 +111,12 @@ export default function Profile() {
               <label>Altura (cm)</label>
               <input type="number" value={form.height} onChange={e => set('height', e.target.value)} />
             </div>
+          </div>
+
+          <div className="field">
+            <label>Peso objetivo (kg)</label>
+            <input type="number" step="0.1" placeholder="ej. 70"
+              value={form.goal_weight} onChange={e => set('goal_weight', e.target.value)} />
           </div>
 
           <div className="divider" />
