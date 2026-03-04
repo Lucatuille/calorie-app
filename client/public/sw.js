@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lucaeats-v1';
+const CACHE_NAME = 'lucaeats-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -25,27 +25,25 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — Cache First para assets, Network First para API
+// Fetch — Network First para todo (garantiza actualizaciones), Cache como fallback offline
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // API calls — siempre red, fallback a cache
+  // API calls — siempre red, nunca cache
   if (url.hostname.includes('workers.dev') || url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
+    event.respondWith(fetch(request));
     return;
   }
 
-  // Assets estáticos — cache first
+  // App shell y assets — Network First, fallback a cache si offline
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request))
+    fetch(request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        return response;
+      })
+      .catch(() => caches.match(request))
   );
 });
