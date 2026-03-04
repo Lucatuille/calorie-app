@@ -4,6 +4,49 @@
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 
+// ── Scientific projection helpers ──────────────────────────────
+function calcStdDev(arr) {
+  if (arr.length < 2) return 0;
+  const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return Math.sqrt(arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length);
+}
+
+function projectWeightScenario(startWeight, dailyDeficit, adherenceRate, days) {
+  if (startWeight <= 0) return startWeight;
+  let weight = startWeight;
+  for (let day = 1; day <= days; day++) {
+    const weightLost = startWeight - weight;
+    const adaptationFactor = Math.max(0.75, 1 - (weightLost / startWeight) * 0.15);
+    const tdeeReduction = weightLost * 22;
+    const adjustedDeficit = (dailyDeficit - tdeeReduction) * adaptationFactor * adherenceRate;
+    const tissueEnergyDensity = day < 14 ? 5000 : 7200;
+    weight -= Math.max(0, adjustedDeficit) / tissueEnergyDensity;
+  }
+  return Math.round(weight * 10) / 10;
+}
+
+function calcUncertaintyBands(proj, day, cv, adherenceRate) {
+  const total = Math.sqrt(day) * 0.08 + (1 - adherenceRate) * 2 + cv * 1.5;
+  return {
+    optimistic:   Math.round((proj - total * 0.5) * 10) / 10,
+    realistic:    proj,
+    conservative: Math.round((proj + total) * 10) / 10,
+  };
+}
+
+function calcPlateauPrediction(adherenceRate) {
+  if (adherenceRate < 0.70) {
+    return {
+      will_plateau: true,
+      estimated_day: Math.round(180 * adherenceRate),
+      reason: adherenceRate < 0.5
+        ? 'Tu adherencia actual sugiere un plateau pronto. Registrar más días mejorará la precisión.'
+        : 'Con tu adherencia actual, es probable un plateau antes de los 6 meses.',
+    };
+  }
+  return { will_plateau: false };
+}
+
 export async function handleProgress(request, env, path) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
@@ -199,67 +242,77 @@ export async function handleProgress(request, env, path) {
     const trendPerWeek  = (weightChange != null && weightEntries.length >= 2)
       ? +((weightChange / (days / 7)).toFixed(2)) : null;
 
-    // ── Linear regression on weight ────────────────────────────
-    let slopeKgPerDay = null;
-    if (weightVals.length >= 5) {
-      const n = weightVals.length;
-      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-      for (let i = 0; i < n; i++) {
-        sumX += i; sumY += weightVals[i];
-        sumXY += i * weightVals[i]; sumX2 += i * i;
-      }
-      const denom = n * sumX2 - sumX * sumX;
-      if (denom !== 0) slopeKgPerDay = (n * sumXY - sumX * sumY) / denom;
+    // ── Scientific projection (dynamic adaptive model) ─────────
+    // Calorie variability (coefficient of variation)
+    const calorieStdDev       = calcStdDev(calDays);
+    const calorieVariabilityCV = (avg && avg > 0) ? calorieStdDev / avg : 0;
+
+    // Weighted avg calories: 70% last 14 days, 30% older
+    let weightedAvgCal = avg;
+    if (calDays.length > 14) {
+      const last14 = calDays.slice(-14);
+      const older  = calDays.slice(0, -14);
+      weightedAvgCal = (last14.reduce((a,b)=>a+b,0)/last14.length) * 0.7
+                     + (older.reduce((a,b)=>a+b,0)/older.length)   * 0.3;
     }
 
-    // ── Caloric deficit projection ─────────────────────────────
-    let tdee = target;
-    if (!tdee && profile?.weight && profile?.height && profile?.age) {
+    // Dynamic TDEE via Mifflin-St Jeor (fallback to target calories)
+    let tdee = null;
+    if (profile?.weight && profile?.height && profile?.age) {
       const bmr = profile.gender === 'female'
         ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
         : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5;
-      tdee = Math.round(bmr * 1.55);
+      tdee = bmr * 1.55;
     }
-    const avgDeficit       = (tdee && avg) ? tdee - avg : null;
-    const deficitKgPerDay  = avgDeficit ? avgDeficit / 7700 : null;
+    if (!tdee && target) tdee = target;
 
-    // ── Combine regression + caloric deficit ───────────────────
-    let dailyRate = null;
-    if (slopeKgPerDay !== null && deficitKgPerDay !== null) {
-      dailyRate = 0.7 * slopeKgPerDay + 0.3 * deficitKgPerDay;
-    } else if (slopeKgPerDay !== null) {
-      dailyRate = slopeKgPerDay;
-    } else if (deficitKgPerDay !== null) {
-      dailyRate = deficitKgPerDay;
-    }
+    // Adherence rate: registered days / total period days
+    const adherenceRate    = calDays.length / days;
+    const dailyDeficitTheo = (tdee && weightedAvgCal) ? tdee - weightedAvgCal : null;
+    const dailyDeficitEff  = dailyDeficitTheo ? dailyDeficitTheo * adherenceRate : null;
 
-    // Safety cap: ±1.5 kg/week
-    let weeklyRate = null;
-    if (dailyRate !== null) {
-      const cap = 1.5 / 7;
-      dailyRate  = Math.max(-cap, Math.min(cap, dailyRate));
-      weeklyRate = +(dailyRate * 7).toFixed(2);
-    }
+    // Metabolic adaptation factor based on weight lost so far
+    const metabolicAdaptFactor = (startWeight && currentWeight && startWeight > 0)
+      ? Math.max(0.75, 1 - ((startWeight - currentWeight) / startWeight) * 0.15)
+      : 1.0;
 
-    // ── Projections ────────────────────────────────────────────
-    let proj30 = null, proj60 = null, proj90 = null, daysToGoal = null;
-    if (currentWeight !== null && dailyRate !== null) {
-      proj30 = +(currentWeight + dailyRate * 30).toFixed(1);
-      proj60 = +(currentWeight + dailyRate * 60).toFixed(1);
-      proj90 = +(currentWeight + dailyRate * 90).toFixed(1);
-    }
+    // Project 3 scenarios + uncertainty bands
+    let scenarios = null, plateauPrediction = { will_plateau: false };
+    let weeklyRateRealistic = null, daysToGoalRealistic = null;
     let goalWeight = null;
     try { goalWeight = profile?.goal_weight || null; } catch {}
-    if (goalWeight && currentWeight !== null && dailyRate) {
-      const d = (goalWeight - currentWeight) / dailyRate;
-      daysToGoal = d > 0 ? Math.round(d) : null;
+
+    if (currentWeight !== null && dailyDeficitTheo !== null) {
+      const r30 = projectWeightScenario(currentWeight, dailyDeficitTheo, adherenceRate, 30);
+      const r60 = projectWeightScenario(currentWeight, dailyDeficitTheo, adherenceRate, 60);
+      const r90 = projectWeightScenario(currentWeight, dailyDeficitTheo, adherenceRate, 90);
+      const b30 = calcUncertaintyBands(r30, 30, calorieVariabilityCV, adherenceRate);
+      const b60 = calcUncertaintyBands(r60, 60, calorieVariabilityCV, adherenceRate);
+      const b90 = calcUncertaintyBands(r90, 90, calorieVariabilityCV, adherenceRate);
+
+      scenarios = {
+        optimistic:   { '30d': b30.optimistic,   '60d': b60.optimistic,   '90d': b90.optimistic   },
+        realistic:    { '30d': b30.realistic,     '60d': b60.realistic,     '90d': b90.realistic     },
+        conservative: { '30d': b30.conservative, '60d': b60.conservative, '90d': b90.conservative },
+      };
+
+      plateauPrediction   = calcPlateauPrediction(adherenceRate);
+      weeklyRateRealistic = +((r30 - currentWeight) / (30 / 7)).toFixed(2);
+
+      const lossIn30 = currentWeight - r30;
+      if (goalWeight && lossIn30 > 0 && currentWeight > goalWeight) {
+        daysToGoalRealistic = Math.round((currentWeight - goalWeight) * (30 / lossIn30));
+      }
     }
 
-    // Confidence
+    // Confidence + data quality score
     const wPoints = weightVals.length;
     const dPoints = calDays.length;
     const confidence = (wPoints > 14 && dPoints > 20) ? 'high'
       : (wPoints >= 7 || dPoints >= 10) ? 'medium' : 'low';
+    const dataQualityScore = +Math.min(1,
+      (calDays.length / days) * 0.5 + (weightVals.length / days) * 0.5
+    ).toFixed(2);
 
     // ── Streak in period ───────────────────────────────────────
     const dates = daily.map(d => d.date);
@@ -322,14 +375,19 @@ export async function handleProgress(request, env, path) {
       },
 
       projection: {
-        daily_deficit_avg: avgDeficit ? Math.round(avgDeficit) : null,
-        weekly_loss_rate: weeklyRate,
-        projection_30d: proj30,
-        projection_60d: proj60,
-        projection_90d: proj90,
-        days_to_goal: daysToGoal,
+        model: 'dynamic-adaptive-v2',
+        daily_deficit_theoretical: dailyDeficitTheo ? Math.round(dailyDeficitTheo) : null,
+        daily_deficit_effective:   dailyDeficitEff  ? Math.round(dailyDeficitEff)  : null,
+        adherence_rate:            +adherenceRate.toFixed(2),
+        calorie_variability_cv:    +calorieVariabilityCV.toFixed(2),
+        metabolic_adaptation_factor: +metabolicAdaptFactor.toFixed(2),
+        scenarios,
+        plateau_prediction: plateauPrediction,
+        weekly_rate_realistic: weeklyRateRealistic,
+        days_to_goal_realistic: daysToGoalRealistic,
         goal_weight: goalWeight,
         confidence,
+        data_quality_score: dataQualityScore,
       },
 
       streaks: {
