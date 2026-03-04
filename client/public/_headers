@@ -1,0 +1,17 @@
+# index.html y sw.js — nunca cachear en el edge (garantiza versión fresca)
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Assets con hash de contenido — cachear indefinidamente (el hash cambia con cada deploy)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Iconos y manifest — revalidar en cada visita
+/manifest.json
+  Cache-Control: no-cache, must-revalidate
+
+/icons/*
+  Cache-Control: public, max-age=86400
