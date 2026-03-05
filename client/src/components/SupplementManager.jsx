@@ -45,11 +45,19 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
     }
   }, [isOpen]);
 
-  // Lock body scroll while open
+  // Lock body scroll while open (iOS-safe: position fixed preserves scroll position)
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
     }
   }, [isOpen]);
 
