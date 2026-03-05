@@ -10,20 +10,30 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
   const [newName,     setNewName]     = useState('');
   const [newEmoji,    setNewEmoji]    = useState('💊');
   const [nameError,   setNameError]   = useState('');
-  const [addingId,    setAddingId]    = useState(null); // common supplement being added
+  const [addingId,    setAddingId]    = useState(null);
   const [deletingId,  setDeletingId]  = useState(null);
   const [showPicker,  setShowPicker]  = useState(false);
 
-  // Render guard: only mount DOM after first open, delay unmount for close animation
+  // Render guard
   const [visible,  setVisible]  = useState(false);
   const [animOpen, setAnimOpen] = useState(false);
   const closeTimer = useRef(null);
+
+  // Responsive: bottom sheet on mobile, centered modal on desktop
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth <= 640
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       clearTimeout(closeTimer.current);
       setVisible(true);
-      // Double RAF so CSS transition fires after mount
       const raf = requestAnimationFrame(() =>
         requestAnimationFrame(() => setAnimOpen(true))
       );
@@ -35,8 +45,23 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
     }
   }, [isOpen]);
 
+  // Lock body scroll while open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) fetchSupplements();
+  }, [isOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && isOpen) onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
   }, [isOpen]);
 
   async function fetchSupplements() {
@@ -73,9 +98,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
       await fetchSupplements();
       onUpdate?.();
     } catch (err) {
-      if (!err.message?.includes('409') && !err.message?.includes('nombre')) {
-        console.error(err);
-      }
+      if (!err.message?.includes('409') && !err.message?.includes('nombre')) console.error(err);
     } finally { setAddingId(null); }
   }
 
@@ -88,51 +111,76 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
     } catch (err) { console.error(err); }
   }
 
-  const existingNames = new Set(supplements.map(s => s.name.toLowerCase()));
+  const existingNames  = new Set(supplements.map(s => s.name.toLowerCase()));
   const availableCommon = COMMON_SUPPLEMENTS.filter(s => !existingNames.has(s.name.toLowerCase()));
   const atMax = supplements.length >= 20;
 
   if (!visible) return null;
 
+  // ── Styles that differ between mobile and desktop ─────────────
+  const sheetStyle = isMobile ? {
+    position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
+    maxWidth: 600, marginLeft: 'auto', marginRight: 'auto',
+    background: 'var(--surface)',
+    borderRadius: '20px 20px 0 0',
+    maxHeight: '88vh', overflowY: 'auto',
+    transform: animOpen ? 'translateY(0)' : 'translateY(100%)',
+    transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)',
+    boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
+  } : {
+    position: 'fixed', top: '50%', left: '50%', zIndex: 999,
+    width: '90%', maxWidth: 480,
+    background: 'var(--surface)',
+    borderRadius: 16,
+    maxHeight: '85vh', overflowY: 'auto',
+    opacity: animOpen ? 1 : 0,
+    transform: animOpen ? 'translate(-50%, -50%)' : 'translate(-50%, calc(-50% - 16px))',
+    transition: 'opacity 0.22s ease, transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+    boxShadow: '0 8px 48px rgba(0,0,0,0.22)',
+  };
+
   return (
     <>
       {/* Overlay */}
-      <div onClick={onClose} style={{
-        position: 'fixed', inset: 0, zIndex: 998,
-        background: 'rgba(0,0,0,0.45)',
-        opacity: animOpen ? 1 : 0,
-        pointerEvents: animOpen ? 'auto' : 'none',
-        transition: 'opacity 0.3s',
-      }} />
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 998,
+          background: 'rgba(0,0,0,0.45)',
+          opacity: animOpen ? 1 : 0,
+          pointerEvents: animOpen ? 'auto' : 'none',
+          transition: 'opacity 0.3s',
+        }}
+      />
 
-      {/* Sheet */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
-        maxWidth: 600, marginLeft: 'auto', marginRight: 'auto',
-        background: 'var(--surface)',
-        borderRadius: '20px 20px 0 0',
-        maxHeight: '88vh', overflowY: 'auto',
-        transform: animOpen ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)',
-        boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
-      }}>
-        {/* Handle */}
-        <div style={{ padding: '12px 0 0', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--border)' }} />
-        </div>
+      {/* Sheet / Modal */}
+      <div style={sheetStyle}>
+
+        {/* Handle — mobile only */}
+        {isMobile && (
+          <div style={{ padding: '12px 0 0', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--border)' }} />
+          </div>
+        )}
 
         {/* Header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '14px 20px 12px',
+          padding: isMobile ? '14px 20px 12px' : '18px 20px 14px',
           borderBottom: '1px solid var(--border)',
           position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1,
         }}>
           <h2 style={{ fontWeight: 700, fontSize: 18 }}>Mis suplementos</h2>
-          <button onClick={onClose} style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-3)', fontSize: 22, padding: '4px 8px', lineHeight: 1,
-          }}>✕</button>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-3)', fontSize: 20, padding: '4px 8px', lineHeight: 1,
+              borderRadius: 8, transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--border)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+          >✕</button>
         </div>
 
         <div style={{ padding: '20px' }}>
@@ -155,8 +203,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     padding: '10px 12px', borderRadius: 10,
-                    background: 'var(--bg)',
-                    border: '1px solid var(--border)',
+                    background: 'var(--bg)', border: '1px solid var(--border)',
                   }}>
                     <span style={{ fontSize: 18 }}>{sup.emoji}</span>
                     <span style={{ flex: 1, fontWeight: 500, fontSize: 14 }}>{sup.name}</span>
@@ -166,12 +213,10 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
                     >🗑️</button>
                   </div>
 
-                  {/* Confirm delete */}
                   {deletingId === sup.id && (
                     <div style={{
                       padding: '10px 12px', background: 'rgba(193,18,31,0.06)',
-                      border: '1px solid rgba(193,18,31,0.2)', borderRadius: 10,
-                      marginTop: 4,
+                      border: '1px solid rgba(193,18,31,0.2)', borderRadius: 10, marginTop: 4,
                     }}>
                       <p style={{ fontSize: 13, color: 'var(--danger)', marginBottom: 8 }}>
                         ¿Eliminar {sup.name}? Se perderá el historial de este suplemento.
@@ -229,7 +274,6 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
               </p>
               <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  {/* Emoji picker button */}
                   <div style={{ position: 'relative' }}>
                     <button
                       type="button"
@@ -287,12 +331,14 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
             </div>
           )}
 
-          {/* Botón cerrar */}
-          <button
-            className="btn btn-secondary btn-full"
-            style={{ marginTop: 24 }}
-            onClick={onClose}
-          >Listo</button>
+          {/* Botón cerrar — solo en móvil */}
+          {isMobile && (
+            <button
+              className="btn btn-secondary btn-full"
+              style={{ marginTop: 24 }}
+              onClick={onClose}
+            >Listo</button>
+          )}
 
           <div style={{ height: 16 }} />
         </div>
