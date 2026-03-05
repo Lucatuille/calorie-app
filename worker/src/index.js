@@ -7,6 +7,7 @@ import { handleEntries } from './routes/entries.js';
 import { handleProgress } from './routes/progress.js';
 import { handleProfile } from './routes/profile.js';
 import { handleAnalyze } from './routes/analyze.js';
+import { handleSupplements } from './routes/supplements.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 export default {
@@ -40,6 +41,10 @@ export default {
 
       if (path.startsWith('/api/analyze')) {
         return await handleAnalyze(request, env, path);
+      }
+
+      if (path.startsWith('/api/supplements')) {
+        return await handleSupplements(request, env, path);
       }
 
       // Health check

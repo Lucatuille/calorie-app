@@ -44,4 +44,10 @@ export const api = {
 
   // Advanced analytics
   getAdvancedAnalytics: (period, token) => request('GET', `/api/progress/advanced?period=${period}`, null, token),
+
+  // Supplements
+  getSupplementsToday: (date, token)       => request('GET',    `/api/supplements/today?date=${date}`, null, token),
+  addSupplement:       (body, token)       => request('POST',   '/api/supplements', body, token),
+  deleteSupplement:    (id, token)         => request('DELETE', `/api/supplements/${id}`, null, token),
+  toggleSupplement:    (id, body, token)   => request('POST',   `/api/supplements/${id}/toggle`, body, token),
 };

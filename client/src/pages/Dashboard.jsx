@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import SupplementTracker from '../components/SupplementTracker';
 
 // ── Donut de macros (conic-gradient, sin dependencias) ───────
 function MacroDonut({ protein, carbs, fat }) {
@@ -222,6 +223,11 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Suplementos */}
+      <div className="card" style={{ marginTop: 10 }}>
+        <SupplementTracker />
+      </div>
 
       {/* Stats últimos 30 días */}
       {summary && (
