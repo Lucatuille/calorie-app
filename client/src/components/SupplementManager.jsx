@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { COMMON_SUPPLEMENTS, EMOJI_PICKER_OPTIONS } from '../utils/supplements';
@@ -110,6 +111,9 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
 
   if (!visible) return null;
 
+  // ── Render via portal so position:fixed is always relative to the viewport,
+  //    not to any animated ancestor (e.g. .stagger on Dashboard) ──────────────
+
   // ── Styles that differ between mobile and desktop ─────────────
   const sheetStyle = isMobile ? {
     position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
@@ -132,7 +136,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
     boxShadow: '0 8px 48px rgba(0,0,0,0.22)',
   };
 
-  return (
+  return createPortal(
     <>
       {/* Overlay */}
       <div
@@ -336,6 +340,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
           <div style={{ height: 16 }} />
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
