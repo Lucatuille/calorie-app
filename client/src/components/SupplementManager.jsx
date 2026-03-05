@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { COMMON_SUPPLEMENTS, EMOJI_PICKER_OPTIONS } from '../utils/supplements';
@@ -13,6 +13,27 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
   const [addingId,    setAddingId]    = useState(null); // common supplement being added
   const [deletingId,  setDeletingId]  = useState(null);
   const [showPicker,  setShowPicker]  = useState(false);
+
+  // Render guard: only mount DOM after first open, delay unmount for close animation
+  const [visible,  setVisible]  = useState(false);
+  const [animOpen, setAnimOpen] = useState(false);
+  const closeTimer = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      clearTimeout(closeTimer.current);
+      setVisible(true);
+      // Double RAF so CSS transition fires after mount
+      const raf = requestAnimationFrame(() =>
+        requestAnimationFrame(() => setAnimOpen(true))
+      );
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setAnimOpen(false);
+      closeTimer.current = setTimeout(() => setVisible(false), 350);
+      return () => clearTimeout(closeTimer.current);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) fetchSupplements();
@@ -71,14 +92,16 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
   const availableCommon = COMMON_SUPPLEMENTS.filter(s => !existingNames.has(s.name.toLowerCase()));
   const atMax = supplements.length >= 20;
 
+  if (!visible) return null;
+
   return (
     <>
       {/* Overlay */}
       <div onClick={onClose} style={{
         position: 'fixed', inset: 0, zIndex: 998,
         background: 'rgba(0,0,0,0.45)',
-        opacity: isOpen ? 1 : 0,
-        pointerEvents: isOpen ? 'auto' : 'none',
+        opacity: animOpen ? 1 : 0,
+        pointerEvents: animOpen ? 'auto' : 'none',
         transition: 'opacity 0.3s',
       }} />
 
@@ -89,7 +112,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
         background: 'var(--surface)',
         borderRadius: '20px 20px 0 0',
         maxHeight: '88vh', overflowY: 'auto',
-        transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+        transform: animOpen ? 'translateY(0)' : 'translateY(100%)',
         transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1)',
         boxShadow: '0 -8px 40px rgba(0,0,0,0.18)',
       }}>
