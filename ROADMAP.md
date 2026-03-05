@@ -42,7 +42,23 @@
 - [x] Parser de respuesta — extraer valores numéricos del texto de Claude
 - [x] Pre-relleno automático del formulario con los resultados estimados
 - [x] Indicador de confianza — mostrar que son estimaciones aproximadas
+- [x] Contexto adicional — textarea opcional para mejorar estimaciones (raciones, ingredientes ocultos)
 - [ ] *(opcional)* Historial de fotos — thumbnail vinculado a cada entrada (requiere Cloudflare R2)
+
+---
+
+## 💊 Fase C.2 — Suplementos
+> Objetivo: tracking diario de suplementos desde el dashboard
+
+- [x] Tablas D1 — `user_supplements` + `supplement_logs`
+- [x] Backend — 5 rutas (`GET today`, `POST`, `DELETE`, `POST toggle`, `PUT reorder`)
+- [x] `SupplementTracker` — grid responsive, toggle con optimistic update, animación bounce
+- [x] `SupplementManager` — bottom sheet con lista, chips frecuentes, emoji picker, validaciones
+- [x] Dashboard — sección entre "Esta semana" y "Últimos 30 días"
+- [x] Timezone safe — fecha viene siempre del cliente (`en-CA`)
+- [x] Reset automático al cambiar de día (`visibilitychange`)
+- [ ] *(opcional)* Notificación push recordatorio de suplementos a hora configurable
+- [ ] *(opcional)* Racha de días tomando todos los suplementos
 
 ---
 
@@ -60,7 +76,7 @@
 > Objetivo: app sólida, instalable y con dominio propio
 
 - [ ] Dominio personalizado — configurar en Cloudflare Pages
-- [ ] PWA — manifest.json + service worker, instalable en móvil
+- [x] PWA — manifest.json + service worker, instalable en móvil
 - [ ] Notificaciones push — recordatorio diario configurable
 - [ ] Panel de admin — ruta protegida `/admin` con lista de usuarios y stats globales
 - [ ] Tests básicos — verificar que rutas principales devuelven 200
