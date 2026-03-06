@@ -103,8 +103,10 @@ export default function Dashboard() {
     return 'Buenas noches';
   };
 
-  async function handleTDEESave(result) {
-    await api.updateProfile(result, token);
+  async function handleTDEESave(tdeeData) {
+    // Merge with existing profile so PUT doesn't wipe name/age/weight/etc.
+    const current = await api.getProfile(token);
+    await api.updateProfile({ ...current, ...tdeeData }, token);
     const p = await api.getProfile(token);
     setProfile(p);
   }
