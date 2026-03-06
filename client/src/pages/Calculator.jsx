@@ -3,14 +3,6 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 
-const ACTIVITY = [
-  { label: 'Sedentario',  mult: 1.2 },
-  { label: 'Ligero',      mult: 1.375 },
-  { label: 'Moderado',    mult: 1.55 },
-  { label: 'Activo',      mult: 1.725 },
-  { label: 'Muy activo',  mult: 1.9 },
-];
-
 const EMPTY_FORM = {
   meal_type: 'lunch', name: '', calories: '',
   protein: '', carbs: '', fat: '', weight: '', notes: '',
@@ -41,13 +33,7 @@ export default function Calculator() {
   const [aiResult,     setAiResult]     = useState(null);
   const fileRef = useRef(null);
 
-  // TDEE form
-  const [tdee,       setTdee]       = useState({ age: '', weight: '', height: '', gender: 'male', activity: 1 });
-  const [tdeeResult, setTdeeResult] = useState(null);
-  const [tdeeError,  setTdeeError]  = useState('');
-
-  const set  = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const setT = (k, v) => setTdee(f => ({ ...f, [k]: v }));
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   useEffect(() => {
     api.getTodayEntries(token).then(setEntries).catch(() => {});
@@ -142,28 +128,6 @@ export default function Calculator() {
     media: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
     baja:  { bg: 'rgba(193,18,31,0.1)',  color: 'var(--danger)' },
   };
-
-  function calcTdee() {
-    const { age, weight, height, gender, activity } = tdee;
-    if (!age || !weight || !height) {
-      setTdeeError('Rellena edad, peso y altura');
-      return;
-    }
-    setTdeeError('');
-    const a = parseFloat(age), w = parseFloat(weight), h = parseFloat(height);
-    const bmr = gender === 'male'
-      ? 10 * w + 6.25 * h - 5 * a + 5
-      : 10 * w + 6.25 * h - 5 * a - 161;
-    setTdeeResult(Math.round(bmr * ACTIVITY[activity].mult));
-  }
-
-  async function applyTarget() {
-    if (!tdeeResult) return;
-    try {
-      await api.updateProfile({ target_calories: tdeeResult }, token);
-      alert(`Objetivo de ${tdeeResult} kcal guardado en tu perfil ✓`);
-    } catch {}
-  }
 
   const todayLabel = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -436,71 +400,6 @@ export default function Calculator() {
         </form>
       </div>
 
-      {/* ── TDEE Calculator ───────────────────────────────────── */}
-      <div style={{ height: 8 }} />
-      <h2 className="title-md" style={{ marginBottom: 6 }}>Calculadora TDEE</h2>
-      <p className="body-sm" style={{ marginBottom: 16 }}>Calcula tu gasto calórico diario y guárdalo como objetivo</p>
-
-      <div className="card">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {['male','female'].map(g => (
-              <button key={g} type="button"
-                className={`btn btn-sm ${tdee.gender === g ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ flex: 1 }}
-                onClick={() => setT('gender', g)}>
-                {g === 'male' ? 'Hombre' : 'Mujer'}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
-            <div className="field">
-              <label>Edad</label>
-              <input type="number" placeholder="25" value={tdee.age} onChange={e => setT('age', e.target.value)} />
-            </div>
-            <div className="field">
-              <label>Peso (kg)</label>
-              <input type="number" placeholder="70" value={tdee.weight} onChange={e => setT('weight', e.target.value)} />
-            </div>
-            <div className="field">
-              <label>Altura (cm)</label>
-              <input type="number" placeholder="175" value={tdee.height} onChange={e => setT('height', e.target.value)} />
-            </div>
-          </div>
-
-          <div className="field">
-            <label>Actividad</label>
-            <select value={tdee.activity} onChange={e => setT('activity', parseInt(e.target.value))}>
-              {ACTIVITY.map((a, i) => <option key={i} value={i}>{a.label} (×{a.mult})</option>)}
-            </select>
-          </div>
-
-          {tdeeError && <div className="alert alert-error">{tdeeError}</div>}
-
-          <button className="btn btn-secondary btn-full" type="button" onClick={calcTdee}>
-            Calcular
-          </button>
-
-          {tdeeResult && (
-            <div style={{
-              background: 'var(--accent-lt)', border: '1px solid rgba(45,106,79,0.2)',
-              borderRadius: 8, padding: '16px 20px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
-            }}>
-              <div>
-                <div style={{ fontFamily: 'Instrument Serif', fontSize: 36, color: 'var(--accent)', lineHeight: 1 }}>
-                  {tdeeResult.toLocaleString()} kcal
-                </div>
-                <div className="muted" style={{ marginTop: 4 }}>para mantener tu peso actual</div>
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={applyTarget}>
-                Usar como objetivo
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
