@@ -15,21 +15,31 @@ export async function handleProfile(request, env, path) {
       profile = await env.DB.prepare(
         `SELECT id, name, email, age, weight, height, gender,
                 target_calories, target_protein, target_carbs, target_fat,
-                goal_weight, created_at
+                goal_weight, tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
+                created_at
          FROM users WHERE id = ?`
       ).bind(user.userId).first();
     } catch {
       try {
         profile = await env.DB.prepare(
           `SELECT id, name, email, age, weight, height, gender,
-                  target_calories, target_protein, target_carbs, target_fat, created_at
+                  target_calories, target_protein, target_carbs, target_fat,
+                  goal_weight, created_at
            FROM users WHERE id = ?`
         ).bind(user.userId).first();
       } catch {
-        profile = await env.DB.prepare(
-          `SELECT id, name, email, age, weight, height, gender, target_calories, created_at
-           FROM users WHERE id = ?`
-        ).bind(user.userId).first();
+        try {
+          profile = await env.DB.prepare(
+            `SELECT id, name, email, age, weight, height, gender,
+                    target_calories, target_protein, target_carbs, target_fat, created_at
+             FROM users WHERE id = ?`
+          ).bind(user.userId).first();
+        } catch {
+          profile = await env.DB.prepare(
+            `SELECT id, name, email, age, weight, height, gender, target_calories, created_at
+             FROM users WHERE id = ?`
+          ).bind(user.userId).first();
+        }
       }
     }
     if (!profile) return errorResponse('Usuario no encontrado', 404);
@@ -38,37 +48,58 @@ export async function handleProfile(request, env, path) {
 
   // PUT /api/profile
   if (path === '/api/profile' && request.method === 'PUT') {
-    const { name, age, weight, height, gender,
-            target_calories, target_protein, target_carbs, target_fat,
-            goal_weight } = await request.json();
+    const body = await request.json();
+    const {
+      name, age, weight, height, gender,
+      target_calories, target_protein, target_carbs, target_fat,
+      goal_weight,
+      tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
+    } = body;
 
+    // Try with all TDEE columns first, fall back progressively
     try {
       await env.DB.prepare(
         `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
                           target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
-                          goal_weight=?
+                          goal_weight=?,
+                          tdee=?, bmr=?, pal_factor=?, formula_used=?, tdee_calculated_at=?
          WHERE id=?`
       ).bind(
         name||null, age||null, weight||null, height||null, gender||null,
         target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
         goal_weight||null,
+        tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
         user.userId
       ).run();
     } catch {
       try {
         await env.DB.prepare(
           `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
-                            target_calories=?, target_protein=?, target_carbs=?, target_fat=?
+                            target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
+                            goal_weight=?
            WHERE id=?`
         ).bind(
           name||null, age||null, weight||null, height||null, gender||null,
           target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
+          goal_weight||null,
           user.userId
         ).run();
       } catch {
-        await env.DB.prepare(
-          `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?, target_calories=? WHERE id=?`
-        ).bind(name||null, age||null, weight||null, height||null, gender||null, target_calories||null, user.userId).run();
+        try {
+          await env.DB.prepare(
+            `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
+                              target_calories=?, target_protein=?, target_carbs=?, target_fat=?
+             WHERE id=?`
+          ).bind(
+            name||null, age||null, weight||null, height||null, gender||null,
+            target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
+            user.userId
+          ).run();
+        } catch {
+          await env.DB.prepare(
+            `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?, target_calories=? WHERE id=?`
+          ).bind(name||null, age||null, weight||null, height||null, gender||null, target_calories||null, user.userId).run();
+        }
       }
     }
 

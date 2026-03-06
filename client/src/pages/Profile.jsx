@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import TDEECalculator from '../components/TDEECalculator';
 
 function exportCSV(entries) {
   const header = 'Fecha,Calorías,Proteína(g),Carbos(g),Grasa(g),Peso(kg),Notas';
@@ -30,6 +31,7 @@ export default function Profile() {
   const [error,     setError]     = useState('');
   const [loading,   setLoading]   = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showTDEE,  setShowTDEE]  = useState(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -60,6 +62,18 @@ export default function Profile() {
     } catch (err) {
       setError(err.message);
     } finally { setLoading(false); }
+  }
+
+  async function handleTDEESave(result) {
+    await api.updateProfile(result, token);
+    const p = await api.getProfile(token);
+    setForm(f => ({
+      ...f,
+      target_calories: p.target_calories || '',
+      target_protein:  p.target_protein  || '',
+      target_carbs:    p.target_carbs    || '',
+      target_fat:      p.target_fat      || '',
+    }));
   }
 
   async function handleExport() {
@@ -122,10 +136,19 @@ export default function Profile() {
           <div className="divider" />
 
           {/* Objetivo calórico */}
-          <div className="field">
-            <label>Objetivo calórico diario (kcal)</label>
-            <input type="number" placeholder="ej. 2000 — o calcula en la página Registrar"
-              value={form.target_calories} onChange={e => set('target_calories', e.target.value)} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-2)' }}>Objetivo calórico diario (kcal)</label>
+              <button type="button" className="btn btn-secondary btn-sm"
+                style={{ fontSize: 11, padding: '3px 10px' }}
+                onClick={() => setShowTDEE(true)}>
+                ⚡ Calcular TDEE
+              </button>
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <input type="number" placeholder="ej. 2000"
+                value={form.target_calories} onChange={e => set('target_calories', e.target.value)} />
+            </div>
           </div>
 
           {/* Objetivos de macros */}
@@ -157,6 +180,12 @@ export default function Profile() {
           </button>
         </form>
       </div>
+
+      <TDEECalculator
+        isOpen={showTDEE}
+        onClose={() => setShowTDEE(false)}
+        onSave={handleTDEESave}
+      />
 
       {/* Exportar datos */}
       <div className="card" style={{ marginTop: 12 }}>

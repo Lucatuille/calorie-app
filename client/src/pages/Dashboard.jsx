@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import SupplementTracker from '../components/SupplementTracker';
+import TDEECalculator from '../components/TDEECalculator';
 
 // ── Donut de macros (conic-gradient, sin dependencias) ───────
 function MacroDonut({ protein, carbs, fat }) {
@@ -64,18 +65,19 @@ const MACROS = [
 ];
 
 const ACTIONS = [
-  { to: '/calculator',      icon: '＋', label: 'Registrar día',  desc: 'Calorías y macros',    accent: 'rgba(45,106,79,0.1)',   iconColor: 'var(--accent)' },
-  { to: '/history',         icon: '↺',  label: 'Historial',      desc: 'Ver y editar entradas', accent: 'rgba(99,102,241,0.1)',  iconColor: '#6366f1' },
-  { to: '/calculator#tdee', icon: '⚡', label: 'Calcular TDEE', desc: 'Tu objetivo calórico',  accent: 'rgba(180,83,9,0.1)',    iconColor: '#b45309' },
-  { to: '/profile',         icon: '◎',  label: 'Mi perfil',      desc: 'Datos y objetivo',      accent: 'rgba(231,111,81,0.1)', iconColor: 'var(--accent-2)' },
+  { to: '/calculator', icon: '＋', label: 'Registrar día',  desc: 'Calorías y macros',    accent: 'rgba(45,106,79,0.1)',   iconColor: 'var(--accent)' },
+  { to: '/history',    icon: '↺',  label: 'Historial',      desc: 'Ver y editar entradas', accent: 'rgba(99,102,241,0.1)',  iconColor: '#6366f1' },
+  { tdee: true,        icon: '⚡', label: 'Calcular TDEE', desc: 'Tu objetivo calórico',  accent: 'rgba(180,83,9,0.1)',    iconColor: '#b45309' },
+  { to: '/profile',    icon: '◎',  label: 'Mi perfil',      desc: 'Datos y objetivo',      accent: 'rgba(231,111,81,0.1)', iconColor: 'var(--accent-2)' },
 ];
 
 export default function Dashboard() {
   const { user, token } = useAuth();
-  const [today,   setToday]   = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [today,    setToday]    = useState([]);
+  const [summary,  setSummary]  = useState(null);
+  const [profile,  setProfile]  = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [showTDEE, setShowTDEE] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -100,6 +102,12 @@ export default function Dashboard() {
     if (h < 20) return 'Buenas tardes';
     return 'Buenas noches';
   };
+
+  async function handleTDEESave(result) {
+    await api.updateProfile(result, token);
+    const p = await api.getProfile(token);
+    setProfile(p);
+  }
 
   const todayLabel = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -265,21 +273,45 @@ export default function Dashboard() {
       {/* Acciones rápidas */}
       <h2 className="title-md" style={{ marginTop: 28, marginBottom: 12 }}>Acciones rápidas</h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {ACTIONS.map(a => (
-          <Link key={a.to} to={a.to} className="card"
-            style={{ display: 'block', transition: 'transform 0.15s, box-shadow 0.15s', padding: 16 }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}>
-            <div style={{
-              width: 34, height: 34, background: a.accent, borderRadius: 9,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 15, marginBottom: 10, color: a.iconColor,
-            }}>{a.icon}</div>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>{a.label}</div>
-            <div className="body-sm" style={{ marginTop: 2, fontSize: 12 }}>{a.desc}</div>
-          </Link>
-        ))}
+        {ACTIONS.map(a => {
+          const cardStyle = { transition: 'transform 0.15s, box-shadow 0.15s', padding: 16 };
+          const inner = (
+            <>
+              <div style={{
+                width: 34, height: 34, background: a.accent, borderRadius: 9,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 15, marginBottom: 10, color: a.iconColor,
+              }}>{a.icon}</div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{a.label}</div>
+              <div className="body-sm" style={{ marginTop: 2, fontSize: 12 }}>{a.desc}</div>
+            </>
+          );
+          if (a.tdee) {
+            return (
+              <button key="tdee" className="card" onClick={() => setShowTDEE(true)}
+                style={{ ...cardStyle, border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}>
+                {inner}
+              </button>
+            );
+          }
+          return (
+            <Link key={a.to} to={a.to} className="card"
+              style={{ display: 'block', ...cardStyle }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}>
+              {inner}
+            </Link>
+          );
+        })}
       </div>
+
+      <TDEECalculator
+        isOpen={showTDEE}
+        onClose={() => setShowTDEE(false)}
+        onSave={handleTDEESave}
+      />
     </div>
   );
 }
