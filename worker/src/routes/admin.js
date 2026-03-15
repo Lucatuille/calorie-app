@@ -63,9 +63,9 @@ export async function handleAdmin(request, env, path) {
       env.DB.prepare(`SELECT COUNT(*) as entries_today FROM entries WHERE date = date('now')`).first(),
       env.DB.prepare(`
         SELECT ROUND(AVG(daily_cal), 0) as avg_cal FROM (
-          SELECT SUM(calories) as daily_cal FROM entries
+          SELECT user_id, date, SUM(calories) as daily_cal FROM entries
           WHERE date >= date('now', '-7 days') AND date < date('now')
-          GROUP BY date
+          GROUP BY user_id, date
         )
       `).first(),
       env.DB.prepare(`
