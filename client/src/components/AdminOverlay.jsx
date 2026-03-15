@@ -27,13 +27,20 @@ function Skeleton({ h = 16 }) {
   );
 }
 
-function KPICard({ label, value, sub, valueColor, accent }) {
+function KPICard({ label, value, sub, valueColor, accent, onClick }) {
   return (
-    <div style={{
-      background: accent ? 'rgba(45,106,79,0.07)' : 'var(--bg)',
-      border: `1px solid ${accent ? 'rgba(45,106,79,0.3)' : 'var(--border)'}`,
-      borderRadius: 12, padding: '14px 16px',
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: accent ? 'rgba(45,106,79,0.07)' : 'var(--bg)',
+        border: `1px solid ${accent ? 'rgba(45,106,79,0.3)' : 'var(--border)'}`,
+        borderRadius: 12, padding: '14px 16px',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: onClick ? 'opacity 0.15s' : undefined,
+      }}
+      onMouseEnter={e => { if (onClick) e.currentTarget.style.opacity = '0.8'; }}
+      onMouseLeave={e => { if (onClick) e.currentTarget.style.opacity = '1'; }}
+    >
       <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>
         {label}
       </p>
@@ -47,7 +54,7 @@ function KPICard({ label, value, sub, valueColor, accent }) {
 
 // ── Tab 1: Overview ─────────────────────────────────────────
 
-function TabOverview({ data, loading }) {
+function TabOverview({ data, loading, onDrillCalories }) {
   if (loading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}><Skeleton h={80} /><Skeleton h={160} /><Skeleton h={100} /></div>;
   if (!data) return null;
 
@@ -63,7 +70,12 @@ function TabOverview({ data, loading }) {
         <KPICard label="Entradas BD"       value={platform.total_entries?.toLocaleString()} sub={`+${platform.entries_today} hoy`} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 24 }}>
-        <KPICard label="Media kcal plataforma" value={platform.avg_calories_7d ? `${platform.avg_calories_7d.toLocaleString()} kcal` : '—'} sub="últimos 7 días" />
+        <KPICard
+          label="Media kcal plataforma"
+          value={platform.avg_calories_7d ? `${platform.avg_calories_7d.toLocaleString()} kcal` : '—'}
+          sub="últimos 7 días · click para ver ranking"
+          onClick={onDrillCalories}
+        />
         <KPICard label="Racha máxima"
           value={platform.max_streak ? `🔥 ${platform.max_streak.days}d` : '—'}
           sub={platform.max_streak?.user || null}
@@ -127,10 +139,14 @@ function TabOverview({ data, loading }) {
 
 // ── Tab 2: Usuarios ──────────────────────────────────────────
 
-function TabUsers({ data, loading }) {
-  const [sortKey,    setSortKey]    = useState('last_entry');
+function TabUsers({ data, loading, defaultSort }) {
+  const [sortKey,    setSortKey]    = useState(defaultSort || 'last_entry');
   const [sortDir,    setSortDir]    = useState(-1);
   const [expanded,   setExpanded]   = useState(null);
+
+  useEffect(() => {
+    if (defaultSort) { setSortKey(defaultSort); setSortDir(-1); }
+  }, [defaultSort]);
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir(d => -d);
@@ -518,10 +534,11 @@ function TabAI({ data, loading }) {
 
 export default function AdminOverlay({ isOpen, onClose }) {
   const { token } = useAuth();
-  const [activeTab,  setActiveTab]  = useState('overview');
-  const [tabData,    setTabData]    = useState({});
-  const [loading,    setLoading]    = useState({});
-  const [lastUpdate, setLastUpdate] = useState(null);
+  const [activeTab,       setActiveTab]       = useState('overview');
+  const [tabData,         setTabData]         = useState({});
+  const [loading,         setLoading]         = useState({});
+  const [lastUpdate,      setLastUpdate]      = useState(null);
+  const [usersSortOverride, setUsersSortOverride] = useState(null);
 
   const fetchTab = useCallback(async (tab) => {
     setLoading(prev => ({ ...prev, [tab]: true }));
@@ -659,8 +676,8 @@ export default function AdminOverlay({ isOpen, onClose }) {
 
           {/* Content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px', scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}>
-            {activeTab === 'overview'   && <TabOverview   data={tabData.overview}   loading={!!loading.overview}   />}
-            {activeTab === 'users'      && <TabUsers       data={tabData.users}      loading={!!loading.users}      />}
+            {activeTab === 'overview'   && <TabOverview   data={tabData.overview}   loading={!!loading.overview}   onDrillCalories={() => { if (!tabData.users) fetchTab('users'); setUsersSortOverride('avg_cal_7d'); setActiveTab('users'); }} />}
+            {activeTab === 'users'      && <TabUsers       data={tabData.users}      loading={!!loading.users}      defaultSort={usersSortOverride} />}
             {activeTab === 'engagement' && <TabEngagement  data={tabData.engagement} loading={!!loading.engagement} />}
             {activeTab === 'ai'         && <TabAI          data={tabData.ai}         loading={!!loading.ai}         />}
           </div>
