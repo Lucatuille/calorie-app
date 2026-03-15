@@ -156,13 +156,13 @@ export async function handleProgress(request, env, path) {
 
     const profile = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(user.userId).first();
 
-    // Daily totals for the period
+    // Daily totals for the period — exclude today (partial day skews averages)
     const { results: daily } = await env.DB.prepare(
       `SELECT date,
          SUM(calories) AS calories, SUM(protein) AS protein,
          SUM(carbs) AS carbs, SUM(fat) AS fat, MAX(weight) AS weight
        FROM entries WHERE user_id = ?
-       AND date >= date('now', '-${days} days')
+       AND date >= date('now', '-${days} days') AND date < date('now')
        GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
 
@@ -174,7 +174,7 @@ export async function handleProgress(request, env, path) {
     const { results: mealRows } = await env.DB.prepare(
       `SELECT meal_type, SUM(calories) AS total_cal
        FROM entries WHERE user_id = ?
-       AND date >= date('now', '-${days} days')
+       AND date >= date('now', '-${days} days') AND date < date('now')
        GROUP BY meal_type`
     ).bind(user.userId).all();
 
@@ -190,7 +190,7 @@ export async function handleProgress(request, env, path) {
        FROM (
          SELECT date, SUM(calories) as daily_cal
          FROM entries WHERE user_id = ?
-         AND date >= date('now', '-${days} days')
+         AND date >= date('now', '-${days} days') AND date < date('now')
          GROUP BY date
        )
        GROUP BY strftime('%w', date) ORDER BY avg_cal ASC`
@@ -220,9 +220,25 @@ export async function handleProgress(request, env, path) {
       else if (trendPct >  5) trend = 'worsening';
     }
 
-    const bestDay     = dowStats.length ? dowStats[0].day_name : null;
-    const worstDay    = dowStats.length ? dowStats[dowStats.length - 1].day_name : null;
-    const worstDayAvg = dowStats.length ? Math.round(dowStats[dowStats.length - 1].avg_cal) : null;
+    // Best day = closest to target (if target set); otherwise fewest calories
+    // Worst day = furthest over target (if target set); otherwise most calories
+    let bestDay, worstDay, worstDayAvg;
+    if (target && dowStats.length) {
+      const sorted = [...dowStats].sort((a, b) =>
+        Math.abs(a.avg_cal - target) - Math.abs(b.avg_cal - target)
+      );
+      bestDay = sorted[0].day_name;
+      const overTarget = dowStats.filter(d => d.avg_cal > target);
+      const worstRow = overTarget.length
+        ? overTarget.reduce((a, b) => a.avg_cal > b.avg_cal ? a : b)
+        : dowStats[dowStats.length - 1];
+      worstDay    = worstRow.day_name;
+      worstDayAvg = Math.round(worstRow.avg_cal);
+    } else {
+      bestDay     = dowStats.length ? dowStats[0].day_name : null;
+      worstDay    = dowStats.length ? dowStats[dowStats.length - 1].day_name : null;
+      worstDayAvg = dowStats.length ? Math.round(dowStats[dowStats.length - 1].avg_cal) : null;
+    }
 
     // ── Meal distribution ──────────────────────────────────────
     const totalMealCal = mealRows.reduce((a,m) => a + m.total_cal, 0);
@@ -256,9 +272,11 @@ export async function handleProgress(request, env, path) {
                      + (older.reduce((a,b)=>a+b,0)/older.length)   * 0.3;
     }
 
-    // Dynamic TDEE via Mifflin-St Jeor (fallback to target calories)
+    // Dynamic TDEE: prefer wizard-calculated value, then Mifflin-St Jeor, then target_calories
     let tdee = null;
-    if (profile?.weight && profile?.height && profile?.age) {
+    if (profile?.tdee) {
+      tdee = profile.tdee;
+    } else if (profile?.weight && profile?.height && profile?.age) {
       const bmr = profile.gender === 'female'
         ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
         : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5;

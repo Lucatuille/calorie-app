@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import InstallPrompt from './components/InstallPrompt';
+import AdminOverlay from './components/AdminOverlay';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -24,11 +26,27 @@ function PublicRoute({ children }) {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const [adminOpen, setAdminOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user?.is_admin) return;
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setAdminOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [user]);
 
   return (
     <>
       {user && <Navbar />}
       <InstallPrompt />
+      {user?.is_admin === 1 && (
+        <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} />
+      )}
       <Routes>
         <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />

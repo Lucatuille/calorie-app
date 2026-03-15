@@ -29,9 +29,9 @@ export async function handleAuth(request, env, path) {
     ).bind(name, email.toLowerCase(), hashed, age || null, weight || null, height || null, gender || null).run();
 
     const userId = result.meta.last_row_id;
-    const token  = await signJWT({ userId, email, name }, env.JWT_SECRET);
+    const token  = await signJWT({ userId, email, name, is_admin: 0 }, env.JWT_SECRET);
 
-    return jsonResponse({ token, user: { id: userId, name, email } }, 201);
+    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0 } }, 201);
   }
 
   // POST /api/auth/login
@@ -49,11 +49,11 @@ export async function handleAuth(request, env, path) {
     const valid = await verifyPassword(password, user.password);
     if (!valid)  return errorResponse('Credenciales incorrectas', 401);
 
-    const token = await signJWT({ userId: user.id, email: user.email, name: user.name }, env.JWT_SECRET);
+    const token = await signJWT({ userId: user.id, email: user.email, name: user.name, is_admin: user.is_admin || 0 }, env.JWT_SECRET);
 
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: user.is_admin || 0 }
     });
   }
 

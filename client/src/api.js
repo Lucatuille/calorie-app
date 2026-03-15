@@ -50,4 +50,10 @@ export const api = {
   addSupplement:       (body, token)       => request('POST',   '/api/supplements', body, token),
   deleteSupplement:    (id, token)         => request('DELETE', `/api/supplements/${id}`, null, token),
   toggleSupplement:    (id, body, token)   => request('POST',   `/api/supplements/${id}/toggle`, body, token),
+
+  // Admin
+  getAdminOverview:   (token) => request('GET', '/api/admin/overview',   null, token),
+  getAdminUsers:      (token) => request('GET', '/api/admin/users',      null, token),
+  getAdminEngagement: (token) => request('GET', '/api/admin/engagement', null, token),
+  getAdminAIStats:    (token) => request('GET', '/api/admin/ai-stats',   null, token),
 };
