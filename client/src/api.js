@@ -56,4 +56,9 @@ export const api = {
   getAdminUsers:      (token) => request('GET', '/api/admin/users',      null, token),
   getAdminEngagement: (token) => request('GET', '/api/admin/engagement', null, token),
   getAdminAIStats:    (token) => request('GET', '/api/admin/ai-stats',   null, token),
+
+  // Calibración
+  saveAiCorrection:      (body, token) => request('POST',   '/api/calibration/correction', body, token),
+  getCalibrationProfile: (token)       => request('GET',    '/api/calibration/profile',    null, token),
+  resetCalibration:      (token)       => request('DELETE', '/api/calibration/profile',    null, token),
 };

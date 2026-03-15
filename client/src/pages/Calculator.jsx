@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
@@ -32,6 +32,8 @@ export default function Calculator() {
   const [analyzing,    setAnalyzing]    = useState(false);
   const [aiResult,     setAiResult]     = useState(null);
   const fileRef = useRef(null);
+  // Stores AI metadata between "Usar estimación" and final save (fire-and-forget)
+  const photoAnalysisRef = useRef(null);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -50,11 +52,14 @@ export default function Calculator() {
     e.preventDefault();
     if (!form.calories) { setError('Las calorías son obligatorias'); return; }
     setError(''); setSaving(true);
+    const finalCalories = parseInt(form.calories);
+    const finalMealType = form.meal_type;
+    const finalName     = form.name;
     try {
       const entry = await api.saveEntry({
-        meal_type: form.meal_type,
-        name:      form.name      || null,
-        calories:  parseInt(form.calories),
+        meal_type: finalMealType,
+        name:      finalName     || null,
+        calories:  finalCalories,
         protein:   parseFloat(form.protein)  || null,
         carbs:     parseFloat(form.carbs)    || null,
         fat:       parseFloat(form.fat)      || null,
@@ -65,6 +70,23 @@ export default function Calculator() {
       setForm(EMPTY_FORM);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+
+      // Fire-and-forget correction save if this came from a photo analysis
+      if (photoAnalysisRef.current) {
+        const pa = photoAnalysisRef.current;
+        api.saveAiCorrection({
+          entry_id:               entry.id,
+          ai_raw:                 pa.ai_raw,
+          ai_calibrated:          pa.ai_calibrated,
+          user_final:             finalCalories,
+          food_categories:        pa.categories,
+          meal_type:              finalMealType,
+          meal_name:              finalName || pa.name,
+          has_context:            pa.has_context,
+          accepted_without_change: finalCalories === pa.ai_calibrated,
+        }, token).catch(() => {});
+        photoAnalysisRef.current = null;
+      }
     } catch (err) {
       setError(err.message);
     } finally { setSaving(false); }
@@ -99,7 +121,10 @@ export default function Calculator() {
     setAiResult(null);
     try {
       const result = await api.analyzePhoto({
-        image: photoData.base64, mediaType: photoData.mediaType, context: photoContext.trim(),
+        image:     photoData.base64,
+        mediaType: photoData.mediaType,
+        context:   photoContext.trim(),
+        meal_type: form.meal_type,
       }, token);
       setAiResult(result);
     } catch (err) {
@@ -107,16 +132,25 @@ export default function Calculator() {
     } finally { setAnalyzing(false); }
   }
 
-  function applyAiResult() {
+  function applyAiResult(overrideCalories) {
     if (!aiResult || aiResult.error) return;
+    const calories = overrideCalories ?? aiResult.calories;
     setForm(f => ({
       ...f,
       name:     aiResult.name     || f.name,
-      calories: aiResult.calories ? String(aiResult.calories) : f.calories,
+      calories: calories          ? String(calories)          : f.calories,
       protein:  aiResult.protein  ? String(aiResult.protein)  : f.protein,
       carbs:    aiResult.carbs    ? String(aiResult.carbs)    : f.carbs,
       fat:      aiResult.fat      ? String(aiResult.fat)      : f.fat,
     }));
+    // Save AI metadata for correction tracking
+    photoAnalysisRef.current = {
+      ai_raw:       aiResult.ai_raw || aiResult.calories,
+      ai_calibrated: aiResult.calories,
+      categories:   aiResult.categories || [],
+      has_context:  photoContext.trim().length > 0,
+      name:         aiResult.name,
+    };
     setPhotoPreview(null);
     setPhotoData(null);
     setPhotoContext('');
@@ -303,14 +337,43 @@ export default function Calculator() {
                     confianza {aiResult.confidence}
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: 14, fontSize: 13, marginBottom: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 14, fontSize: 13, marginBottom: 8, flexWrap: 'wrap' }}>
                   <span><b>{aiResult.calories}</b> kcal</span>
                   {aiResult.protein > 0 && <span style={{ color: '#059669' }}><b>{aiResult.protein}g</b> prot</span>}
                   {aiResult.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{aiResult.carbs}g</b> carb</span>}
                   {aiResult.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{aiResult.fat}g</b> grasa</span>}
                 </div>
+
+                {/* Calibración aplicada */}
+                {aiResult.calibration_applied && aiResult.calibration_confidence > 0.3 && (
+                  <p style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 8 }}>
+                    🎯 Ajustado a tus hábitos · {aiResult.calibration_data_points} correcciones
+                  </p>
+                )}
+
+                {/* Comida similar del historial */}
+                {aiResult.similar_meal && (
+                  <div style={{
+                    padding: '8px 10px', background: 'var(--bg)', borderRadius: 8,
+                    marginBottom: 8, border: '1px solid var(--border)',
+                  }}>
+                    <p style={{ fontSize: 12, margin: '0 0 4px' }}>
+                      💡 Parece similar a <strong>{aiResult.similar_meal.name}</strong>
+                      {' '}({aiResult.similar_meal.avg_kcal} kcal · {aiResult.similar_meal.times}× registrada)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => applyAiResult(aiResult.similar_meal.avg_kcal)}
+                      style={{ fontSize: 11, color: 'var(--accent)', background: 'none',
+                               border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      Usar {aiResult.similar_meal.avg_kcal} kcal →
+                    </button>
+                  </div>
+                )}
+
                 {aiResult.notes && (
-                  <p style={{ fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic', marginBottom: 10 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic', marginBottom: 8 }}>
                     {aiResult.notes}
                   </p>
                 )}
@@ -318,7 +381,7 @@ export default function Calculator() {
                   ⚠️ Estimación aproximada — revisa y ajusta antes de guardar
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={applyAiResult}>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={() => applyAiResult()}>
                     Usar estimación
                   </button>
                   <button type="button" className="btn btn-secondary btn-sm"

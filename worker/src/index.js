@@ -9,6 +9,7 @@ import { handleProfile } from './routes/profile.js';
 import { handleAnalyze } from './routes/analyze.js';
 import { handleSupplements } from './routes/supplements.js';
 import { handleAdmin } from './routes/admin.js';
+import { handleCalibration } from './routes/calibration.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 export default {
@@ -50,6 +51,10 @@ export default {
 
       if (path.startsWith('/api/admin')) {
         return await handleAdmin(request, env, path);
+      }
+
+      if (path.startsWith('/api/calibration')) {
+        return await handleCalibration(request, env, path);
       }
 
       // Health check
