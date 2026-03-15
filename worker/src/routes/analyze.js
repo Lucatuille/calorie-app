@@ -18,7 +18,16 @@ Responde SOLO con un objeto JSON válido, sin texto adicional, con esta estructu
   "confidence": "alta" | "media" | "baja",
   "notes": "breve descripción de lo detectado y advertencias si la imagen no es clara"
 }
-Si no puedes identificar comida en la imagen, devuelve confidence: "baja" con valores estimados a 0.`;
+Si no puedes identificar comida en la imagen, devuelve confidence: "baja" con valores estimados a 0.
+
+Importante: NO seas conservador con las estimaciones calóricas. Los estudios muestran que las personas consistentemente subestiman las calorías de sus comidas. Asume siempre:
+- Raciones generosas — la mayoría de platos caseros y de restaurante son más grandes de lo que parecen en foto
+- Aceites y grasas — cualquier salteado, fritura o asado lleva más aceite del visible
+- Ingredientes ocultos — salsas, mantequilla, nata, queso rallado añaden calorías que no se ven
+- En caso de duda entre dos estimaciones, elige siempre la más alta
+- Si el usuario especifica "casero" o "restaurante", los platos de restaurante tienen de media un 30% más de calorías que los caseros por el uso más generoso de grasas
+
+El objetivo es que la estimación sea realista, no optimista.`;
 
 export async function handleAnalyze(request, env, path) {
   const user = await authenticate(request, env);
@@ -82,6 +91,14 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
 
     try {
       const result = JSON.parse(match[0]);
+
+      // Log AI usage for cost tracking (fire and forget)
+      const inputTokens  = claude.usage?.input_tokens  || 0;
+      const outputTokens = claude.usage?.output_tokens || 0;
+      env.DB.prepare(
+        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens) VALUES (?, ?, ?)'
+      ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
+
       return jsonResponse({
         name:       result.name       || '',
         calories:   Math.round(result.calories  || 0),

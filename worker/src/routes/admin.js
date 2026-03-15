@@ -297,33 +297,93 @@ export async function handleAdmin(request, env, path) {
 
   // ── GET /api/admin/ai-stats ─────────────────────────────
   if (path === '/api/admin/ai-stats' && request.method === 'GET') {
+    // Pricing: claude-haiku-4-5 — $0.80/MTok input, $4.00/MTok output
+    const INPUT_PRICE  = 0.80  / 1_000_000;
+    const OUTPUT_PRICE = 4.00  / 1_000_000;
 
     const [
       { results: allUsers },
       { results: usersWithEntries },
       { results: usersWithSupps },
       { results: usersWithTDEE },
+      aiTotal,
+      aiWeek,
+      aiMonth,
+      { results: aiPerUser },
+      { results: aiMonthlyTotals },
     ] = await Promise.all([
       env.DB.prepare('SELECT id, name FROM users').all(),
       env.DB.prepare('SELECT DISTINCT user_id FROM entries').all(),
       env.DB.prepare('SELECT DISTINCT user_id FROM user_supplements').all(),
       env.DB.prepare('SELECT id FROM users WHERE tdee IS NOT NULL').all(),
+      // Total AI calls + tokens
+      env.DB.prepare(`
+        SELECT COUNT(*) as calls, SUM(input_tokens) as input, SUM(output_tokens) as output
+        FROM ai_usage_logs
+      `).first(),
+      // This week
+      env.DB.prepare(`
+        SELECT COUNT(*) as calls, SUM(input_tokens) as input, SUM(output_tokens) as output
+        FROM ai_usage_logs WHERE created_at >= datetime('now', '-7 days')
+      `).first(),
+      // This month (30d)
+      env.DB.prepare(`
+        SELECT COUNT(*) as calls, SUM(input_tokens) as input, SUM(output_tokens) as output
+        FROM ai_usage_logs WHERE created_at >= datetime('now', '-30 days')
+      `).first(),
+      // Per user
+      env.DB.prepare(`
+        SELECT user_id, COUNT(*) as calls
+        FROM ai_usage_logs GROUP BY user_id
+      `).all(),
+      // Monthly breakdown (last 6 months)
+      env.DB.prepare(`
+        SELECT strftime('%Y-%m', created_at) as month,
+               COUNT(*) as calls,
+               SUM(input_tokens) as input, SUM(output_tokens) as output
+        FROM ai_usage_logs
+        GROUP BY month ORDER BY month DESC LIMIT 6
+      `).all(),
     ]);
 
-    const totalUsers = allUsers.length;
+    const calcCost = (inp, out) => +(((inp || 0) * INPUT_PRICE + (out || 0) * OUTPUT_PRICE).toFixed(4));
+
+    const totalUsers  = allUsers.length;
     const withEntries = new Set(usersWithEntries.map(r => r.user_id));
     const withSupps   = new Set(usersWithSupps.map(r => r.user_id));
     const withTDEE    = new Set(usersWithTDEE.map(r => r.id));
+    const withAI      = new Set(aiPerUser.map(r => r.user_id));
 
     const features = [
       { feature: 'Registro manual',      users: withEntries.size, total: totalUsers },
+      { feature: 'Análisis por foto',    users: withAI.size,      total: totalUsers },
       { feature: 'Calculadora TDEE',     users: withTDEE.size,    total: totalUsers },
       { feature: 'Suplementos',          users: withSupps.size,   total: totalUsers },
     ];
 
+    const totalCalls = aiTotal?.calls || 0;
+    const costTotal  = calcCost(aiTotal?.input, aiTotal?.output);
+    const costMonth  = calcCost(aiMonth?.input, aiMonth?.output);
+    const costPerPhoto = totalCalls > 0 ? +((costTotal / totalCalls).toFixed(4)) : null;
+
     return jsonResponse({
+      photos: {
+        total:       totalCalls,
+        this_week:   aiWeek?.calls  || 0,
+        this_month:  aiMonth?.calls || 0,
+        avg_per_user: totalUsers > 0 ? +((totalCalls / totalUsers).toFixed(1)) : 0,
+      },
+      cost: {
+        total:     costTotal,
+        this_month: costMonth,
+        per_photo: costPerPhoto,
+      },
+      monthly_breakdown: aiMonthlyTotals.map(r => ({
+        month: r.month,
+        calls: r.calls,
+        cost:  calcCost(r.input, r.output),
+      })),
       features,
-      ai_note: 'El uso de análisis por foto no se registra en BD aún — próximamente con sistema de feedback.',
     });
   }
 

@@ -419,15 +419,67 @@ function TabEngagement({ data, loading }) {
 // ── Tab 4: IA & Uso ──────────────────────────────────────────
 
 function TabAI({ data, loading }) {
-  if (loading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}><Skeleton h={80} /><Skeleton h={120} /></div>;
+  if (loading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}><Skeleton h={100} /><Skeleton h={80} /><Skeleton h={140} /></div>;
   if (!data) return null;
+
+  const { photos, cost, monthly_breakdown, features } = data;
 
   return (
     <>
-      {/* AI note */}
-      <div style={{ marginBottom: 20, padding: '12px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.2)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
-        🤖 {data.ai_note}
+      {/* Photos + Cost KPI cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+        <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>
+            Fotos analizadas
+          </p>
+          <p style={{ fontFamily: 'Instrument Serif', fontSize: 32, lineHeight: 1, color: 'var(--text)' }}>{photos.total}</p>
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Esta semana: <strong style={{ color: 'var(--text-2)' }}>{photos.this_week}</strong></p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Este mes: <strong style={{ color: 'var(--text-2)' }}>{photos.this_month}</strong></p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Media/usuario: <strong style={{ color: 'var(--text-2)' }}>{photos.avg_per_user}</strong></p>
+          </div>
+        </div>
+        <div style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 12, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>
+            Coste estimado API
+          </p>
+          <p style={{ fontFamily: 'Instrument Serif', fontSize: 32, lineHeight: 1, color: '#6366f1' }}>
+            ${cost.this_month?.toFixed(3)}
+          </p>
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Total acumulado: <strong style={{ color: 'var(--text-2)' }}>${cost.total?.toFixed(3)}</strong></p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Por foto: <strong style={{ color: 'var(--text-2)' }}>{cost.per_photo != null ? `$${cost.per_photo}` : '—'}</strong></p>
+            <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontStyle: 'italic' }}>Haiku 4.5: $0.80/$4.00 por MTok</p>
+          </div>
+        </div>
       </div>
+
+      {/* Monthly breakdown */}
+      {monthly_breakdown?.length > 0 && (
+        <>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
+            Historial mensual
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 24 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                {['Mes', 'Llamadas', 'Coste'].map(h => (
+                  <th key={h} style={{ padding: '6px 10px', textAlign: 'left', fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {monthly_breakdown.map(r => (
+                <tr key={r.month} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '8px 10px', color: 'var(--text-2)' }}>{r.month}</td>
+                  <td style={{ padding: '8px 10px', fontWeight: 700 }}>{r.calls}</td>
+                  <td style={{ padding: '8px 10px', fontWeight: 600, color: '#6366f1' }}>${r.cost?.toFixed(4)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       {/* Feature usage */}
       <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
@@ -442,7 +494,7 @@ function TabAI({ data, loading }) {
           </tr>
         </thead>
         <tbody>
-          {data.features?.map(f => (
+          {features?.map(f => (
             <tr key={f.feature} style={{ borderBottom: '1px solid var(--border)' }}>
               <td style={{ padding: '9px 10px', color: 'var(--text-2)' }}>{f.feature}</td>
               <td style={{ padding: '9px 10px', fontWeight: 700 }}>{f.users}/{f.total}</td>
@@ -458,14 +510,6 @@ function TabAI({ data, loading }) {
           ))}
         </tbody>
       </table>
-
-      {/* AI cost placeholder */}
-      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
-        Coste estimado IA
-      </p>
-      <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
-        Próximamente — registra las llamadas a la API para calcular el coste real por usuario
-      </div>
     </>
   );
 }
