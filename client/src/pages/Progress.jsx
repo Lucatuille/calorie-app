@@ -46,11 +46,29 @@ export default function Progress() {
       .finally(() => setLoading(false));
   }, [days, token]);
 
-  const trendColor = summary?.weightTrend > 0 ? 'var(--accent-2)'
-    : summary?.weightTrend < 0 ? 'var(--accent)' : 'var(--text-3)';
+  // ── Métricas del período seleccionado (calculadas desde data, no desde summary) ──
+  // summary siempre es de 30d fijos; data sí respeta el período activo.
+  const periodCalories = data.map(d => d.calories).filter(Boolean);
+  const periodWeights  = data.map(d => d.weight).filter(Boolean);
 
-  const trendLabel = summary?.weightTrend > 0 ? `+${summary.weightTrend} kg`
-    : summary?.weightTrend != null ? `${summary.weightTrend} kg` : null;
+  const periodAvgCal = periodCalories.length
+    ? Math.round(periodCalories.reduce((a, b) => a + b, 0) / periodCalories.length)
+    : null;
+
+  const periodWeightTrend = periodWeights.length >= 2
+    ? +((periodWeights[periodWeights.length - 1] - periodWeights[0]).toFixed(1))
+    : null;
+
+  const targetCal = summary?.targetCalories ?? null;
+  const periodAdherence = (targetCal && periodCalories.length)
+    ? Math.round(periodCalories.filter(c => Math.abs(c - targetCal) <= 250).length / periodCalories.length * 100)
+    : null;
+
+  const trendColor = periodWeightTrend > 0 ? 'var(--accent-2)'
+    : periodWeightTrend < 0 ? 'var(--accent)' : 'var(--text-3)';
+
+  const trendLabel = periodWeightTrend > 0 ? `+${periodWeightTrend} kg`
+    : periodWeightTrend != null ? `${periodWeightTrend} kg` : null;
 
   // Distribución de macros del período
   const macroData = (() => {
@@ -97,26 +115,26 @@ export default function Progress() {
         <div className="stat-grid stagger" style={{ marginBottom: 24 }}>
           <div className="stat-box">
             <div className="stat-label">Media calorías</div>
-            <div className="stat-value">{summary.avgCalories?.toLocaleString() ?? '—'}</div>
+            <div className="stat-value">{periodAvgCal?.toLocaleString() ?? '—'}</div>
             <div className="stat-unit">kcal/día</div>
           </div>
-          {summary.weightTrend != null && (
+          {periodWeightTrend != null && (
             <div className="stat-box">
               <div className="stat-label">Variación peso</div>
               <div className="stat-value" style={{ color: trendColor }}>{trendLabel ?? '—'}</div>
               <div className="stat-unit">en {days} días</div>
             </div>
           )}
-          {summary.adherence != null && (
+          {periodAdherence != null && (
             <div className="stat-box">
               <div className="stat-label">Adherencia</div>
-              <div className="stat-value">{summary.adherence}%</div>
+              <div className="stat-value">{periodAdherence}%</div>
               <div className="stat-unit">días en objetivo</div>
             </div>
           )}
           <div className="stat-box">
             <div className="stat-label">Días registrados</div>
-            <div className="stat-value">{summary.totalDaysLogged}</div>
+            <div className="stat-value">{data.length}</div>
             <div className="stat-unit">de {days}</div>
           </div>
         </div>
