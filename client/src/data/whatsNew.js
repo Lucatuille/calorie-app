@@ -24,7 +24,7 @@ export const RELEASES = [
   {
     version: '1.3.0',
     date: 'Marzo 2026',
-    title: 'Tres formas de registrar',
+    title: 'Lo nuevo en LucaEats',
     subtitle: 'La app que aprende cómo comes tú',
     items: [
       {
