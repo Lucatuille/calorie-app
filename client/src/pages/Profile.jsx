@@ -263,18 +263,41 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Comidas frecuentes (top 3) */}
-          {calibration.frequent_meals?.length > 0 && (
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 6 }}>Tus comidas más registradas:</p>
-              {calibration.frequent_meals.slice(0, 3).map(meal => (
-                <div key={meal.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                  <span style={{ color: 'var(--text-2)' }}>{meal.name}</span>
-                  <span style={{ color: 'var(--text-3)' }}>{meal.avg_kcal} kcal · {meal.times}×</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Comidas frecuentes (top 3, deduplicadas por nombre difuso) */}
+          {calibration.frequent_meals?.length > 0 && (() => {
+            // Fusionar entradas con nombre aproximado igual (datos legacy)
+            const merged = [];
+            for (const meal of calibration.frequent_meals) {
+              const words = meal.name.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+              const existing = merged.find(m => {
+                const mw = m.name.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                const hits = words.filter(w => mw.includes(w));
+                return hits.length >= 2 || (words.length === 1 && hits.length === 1);
+              });
+              if (existing) {
+                const total = existing.times + meal.times;
+                existing.avg_kcal = Math.round(
+                  (existing.avg_kcal * existing.times + meal.avg_kcal * meal.times) / total
+                );
+                existing.times = total;
+                if (meal.name.length < existing.name.length) existing.name = meal.name;
+              } else {
+                merged.push({ ...meal });
+              }
+            }
+            const top = merged.sort((a, b) => b.times - a.times).slice(0, 3);
+            return (
+              <div style={{ marginBottom: 14 }}>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 6 }}>Tus comidas más registradas:</p>
+                {top.map(meal => (
+                  <div key={meal.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                    <span style={{ color: 'var(--text-2)' }}>{meal.name}</span>
+                    <span style={{ color: 'var(--text-3)' }}>{meal.avg_kcal} kcal · {meal.times}×</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
 
           {/* Reset */}
           {!resetConfirm ? (

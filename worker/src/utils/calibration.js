@@ -190,18 +190,39 @@ export function findSimilarMeal(name, frequentMeals) {
   return null;
 }
 
+// ── Matching difuso entre nombres de comida ────────────────
+// "Pollo asado con patatas" y "Pollo asado al horno" → misma comida
+
+function isSameMeal(name1, name2) {
+  const words1 = name1.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const words2 = name2.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const matches = words1.filter(w => words2.includes(w));
+  return matches.length >= 2 || (words1.length === 1 && matches.length === 1);
+}
+
 // ── Actualizar lista de comidas frecuentes ─────────────────
 
 export function updateFrequentMeals(meals, mealName, kcal) {
   if (!mealName) return meals;
-  const existing = meals.find(m => m.name.toLowerCase() === mealName.toLowerCase());
+  const today = new Date().toISOString().split('T')[0];
+
+  // Buscar coincidencia exacta primero, luego difusa
+  const existing =
+    meals.find(m => m.name.toLowerCase() === mealName.toLowerCase()) ||
+    meals.find(m => isSameMeal(m.name, mealName));
+
   if (existing) {
-    existing.avg_kcal = Math.round((existing.avg_kcal * existing.times + kcal) / (existing.times + 1));
+    // Media ponderada acumulada
+    existing.avg_kcal = Math.round(
+      (existing.avg_kcal * existing.times + kcal) / (existing.times + 1)
+    );
     existing.times++;
-    existing.last_seen = new Date().toISOString().split('T')[0];
+    existing.last_seen = today;
+    // Mantener el nombre más corto/limpio entre los dos
+    if (mealName.length < existing.name.length) existing.name = mealName;
   } else {
-    meals.push({ name: mealName, avg_kcal: kcal, times: 1,
-                 last_seen: new Date().toISOString().split('T')[0] });
+    meals.push({ name: mealName, avg_kcal: kcal, times: 1, last_seen: today });
   }
+
   return meals.sort((a, b) => b.times - a.times).slice(0, 20);
 }
