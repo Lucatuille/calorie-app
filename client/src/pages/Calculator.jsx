@@ -298,7 +298,7 @@ export default function Calculator() {
           <button
             type="button"
             className="btn btn-secondary"
-            style={{ fontSize: 13, padding: '12px 8px' }}
+            style={{ fontSize: 12, padding: '8px 8px' }}
             onClick={() => fileRef.current?.click()}
             disabled={analyzing}
           >
@@ -308,7 +308,7 @@ export default function Calculator() {
           <button
             type="button"
             className="btn btn-secondary"
-            style={{ fontSize: 13, padding: '12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            style={{ fontSize: 12, padding: '8px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
             onClick={() => setScannerOpen(true)}
           >
             <BarcodeIcon />
@@ -441,7 +441,7 @@ export default function Calculator() {
         <form onSubmit={addMeal} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {/* Meal type */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
             {MEAL_TYPES.map(m => (
               <button key={m.id} type="button"
                 className={`btn btn-sm ${form.meal_type === m.id ? 'btn-primary' : 'btn-secondary'}`}
