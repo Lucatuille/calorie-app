@@ -13,7 +13,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   const [loadingSlow,   setLoadingSlow]   = useState(false);
   const [debugLines,    setDebugLines]    = useState([]);
   const [product,       setProduct]       = useState(null);
-  const [grams,         setGrams]         = useState(100);
+  const [gramsInput,    setGramsInput]    = useState('100');
   const [manualBarcode, setManualBarcode] = useState('');
   const [lastBarcode,   setLastBarcode]   = useState('');
   const [visible,       setVisible]       = useState(false);
@@ -40,7 +40,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
       clearTimeout(closeTimer.current);
       setStatus('scanning');
       setProduct(null);
-      setGrams(100);
+      setGramsInput('100');
       setManualBarcode('');
       setLastBarcode('');
       setLoadingSlow(false);
@@ -145,7 +145,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
       setStatus('error');
     } else {
       setProduct(result);
-      setGrams(result.quantity || 100);
+      setGramsInput(String(result.quantity || 100));
       setStatus('found');
     }
   }
@@ -187,6 +187,8 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
 
   // ── Derived ─────────────────────────────────────────────────
 
+  // Valor numérico para cálculos — gramsInput puede estar vacío mientras escribe
+  const grams = Math.max(1, parseInt(gramsInput) || 1);
   const nutrition = product ? calculateNutrition(product, grams) : null;
   const showManualInput = ['scanning', 'not_found', 'error', 'camera_error'].includes(status);
 
@@ -343,21 +345,25 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                 <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>¿Cuánto has comido?</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
-                    onClick={() => setGrams(g => Math.max(1, g - 10))}
+                    onClick={() => setGramsInput(s => String(Math.max(1, (parseInt(s) || 0) - 10)))}
                     style={{ width: 38, height: 38, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer', fontSize: 20, fontWeight: 600, flexShrink: 0 }}
                   >−</button>
                   <div style={{ flex: 1, position: 'relative' }}>
                     <input
-                      type="number"
-                      min="1"
-                      value={grams}
-                      onChange={e => setGrams(Math.max(1, parseInt(e.target.value) || 1))}
+                      type="text"
+                      inputMode="numeric"
+                      value={gramsInput}
+                      onChange={e => setGramsInput(e.target.value.replace(/[^0-9]/g, ''))}
+                      onBlur={e => {
+                        const n = parseInt(e.target.value);
+                        if (isNaN(n) || n < 1) setGramsInput('1');
+                      }}
                       style={{ width: '100%', textAlign: 'center', fontWeight: 700, fontSize: 20, paddingRight: 30 }}
                     />
                     <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)', fontSize: 13, pointerEvents: 'none' }}>g</span>
                   </div>
                   <button
-                    onClick={() => setGrams(g => g + 10)}
+                    onClick={() => setGramsInput(s => String((parseInt(s) || 0) + 10))}
                     style={{ width: 38, height: 38, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer', fontSize: 20, fontWeight: 600, flexShrink: 0 }}
                   >+</button>
                 </div>
