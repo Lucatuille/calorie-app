@@ -2,6 +2,42 @@
 //  CALIBRATION UTILS — Motor de auto-calibración personal
 // ============================================================
 
+// ── Normalización de categorías ────────────────────────────
+// Claude puede devolver variantes del mismo concepto; las mapeamos
+// a un token canónico antes de agrupar.
+
+const CATEGORY_MAP = {
+  pasta_italiana: 'pasta', italian_pasta: 'pasta', spaghetti: 'pasta',
+  pasta_dish: 'pasta', noodles: 'pasta', macarrones: 'pasta',
+  grilled_chicken: 'pollo', chicken: 'pollo', pollo_asado: 'pollo',
+  chicken_breast: 'pollo', pechuga: 'pollo',
+  ensalada: 'salad', mixed_salad: 'salad', green_salad: 'salad',
+  arroz: 'rice', white_rice: 'rice', brown_rice: 'rice',
+  beef: 'carne', red_meat: 'carne', carne_roja: 'carne',
+  fish: 'pescado', seafood: 'pescado', salmon: 'pescado', atun: 'pescado',
+  legumes: 'legumbres', beans: 'legumbres', lentils: 'legumbres',
+  pan: 'bread', white_bread: 'bread', baguette: 'bread',
+};
+
+function normalizeCategory(raw) {
+  const key = raw.toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_');
+  return CATEGORY_MAP[key] || key;
+}
+
+// ── Bias mixto (absoluto + relativo) ───────────────────────
+// Para meals pequeñas (<300 kcal) el error absoluto en kcal importa más.
+// Para meals grandes (>600 kcal) el error relativo en % importa más.
+// Promediar solo porcentajes mezcla señales de distinto peso incorrectamente.
+
+function calcMixedBias(correction) {
+  const base = correction.ai_calibrated;
+  if (!base) return 0;
+  const absErr = correction.user_final - base;
+  const relErr = absErr / base;
+  const mixWeight = Math.min(base / 500, 1); // 0 para meals pequeñas, 1 para grandes
+  return (relErr * mixWeight) + (absErr / 500 * (1 - mixWeight));
+}
+
 // ── Helpers ────────────────────────────────────────────────
 
 function calculateWeightedMean(values, weights = null) {
@@ -41,8 +77,12 @@ export function calculateCalibrationProfile(corrections) {
   // Así Math.pow(1.1, i) da MAYOR peso a las correcciones recientes
   const chronological = [...actual].reverse();
   const weights = chronological.map((_, i) => Math.pow(1.1, i));
+
+  // Bias mixto: combina error absoluto (relevante en meals pequeñas) y relativo
+  // (relevante en meals grandes) — evita que meals de 200 kcal distorsionen
+  // el promedio frente a meals de 800 kcal con el mismo error en kcal.
   const globalBias = calculateWeightedMean(
-    chronological.map(c => c.correction_pct),
+    chronological.map(c => calcMixedBias(c)),
     weights
   );
 
@@ -51,25 +91,29 @@ export function calculateCalibrationProfile(corrections) {
   for (const [meal, items] of Object.entries(groupBy(actual, 'meal_type'))) {
     if (items.length >= 2) {
       mealFactors[meal] = {
-        bias:       calculateWeightedMean(items.map(c => c.correction_pct)),
+        bias:       calculateWeightedMean(items.map(c => calcMixedBias(c))),
         samples:    items.length,
         confidence: Math.min(items.length / 8, 1),
       };
     }
   }
 
-  // Factores por categoría de comida (mínimo 2 muestras)
+  // Factores por categoría de comida — normalizadas para evitar duplicados
+  // ("grilled_chicken" y "chicken" se tratan como la misma categoría "pollo")
   const foodFactors = {};
   const allCats = [...new Set(actual.flatMap(c => {
-    try { return JSON.parse(c.food_categories || '[]'); } catch { return []; }
+    try { return JSON.parse(c.food_categories || '[]').map(normalizeCategory); } catch { return []; }
   }))];
   for (const cat of allCats) {
     const catItems = actual.filter(c => {
-      try { return JSON.parse(c.food_categories || '[]').includes(cat); } catch { return false; }
+      try {
+        const cats = JSON.parse(c.food_categories || '[]').map(normalizeCategory);
+        return cats.includes(cat);
+      } catch { return false; }
     });
     if (catItems.length >= 2) {
       foodFactors[cat] = {
-        bias:    calculateWeightedMean(catItems.map(c => c.correction_pct)),
+        bias:    calculateWeightedMean(catItems.map(c => calcMixedBias(c))),
         samples: catItems.length,
       };
     }
@@ -80,14 +124,15 @@ export function calculateCalibrationProfile(corrections) {
   const weekendItems  = actual.filter(c => c.is_weekend);
   const weekdayItems  = actual.filter(c => !c.is_weekend);
   if (weekendItems.length >= 2 && weekdayItems.length >= 2) {
-    const weekendBias = calculateWeightedMean(weekendItems.map(c => c.correction_pct));
-    const weekdayBias = calculateWeightedMean(weekdayItems.map(c => c.correction_pct));
+    const weekendBias = calculateWeightedMean(weekendItems.map(c => calcMixedBias(c)));
+    const weekdayBias = calculateWeightedMean(weekdayItems.map(c => calcMixedBias(c)));
     if (Math.abs(weekendBias - weekdayBias) > 0.05) {
       timeFactors.weekend_extra = weekendBias - weekdayBias;
     }
   }
 
-  const confidence = Math.min(actual.length / 15, 1);
+  // 5 muestras para activar, 20 para máxima confianza (más justificado que el 15 anterior)
+  const confidence = actual.length < 5 ? 0 : Math.min((actual.length - 5) / 15, 1);
 
   return { global_bias: globalBias, confidence, data_points: corrections.length,
            meal_factors: mealFactors, food_factors: foodFactors, time_factors: timeFactors };
