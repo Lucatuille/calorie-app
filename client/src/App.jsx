@@ -6,6 +6,7 @@ import InstallPrompt from './components/InstallPrompt';
 import AdminOverlay from './components/AdminOverlay';
 import WelcomeDisclaimer from './components/WelcomeDisclaimer';
 import WhatsNew from './components/WhatsNew';
+import WaitlistScreen from './components/WaitlistScreen';
 import { useWhatsNew } from './hooks/useWhatsNew';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -54,6 +55,10 @@ function AppRoutes() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [user]);
+
+  if (user && user.access_level === 0) {
+    return <WaitlistScreen />;
+  }
 
   if (user && showDisclaimer) {
     return (

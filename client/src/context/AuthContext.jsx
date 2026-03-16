@@ -24,8 +24,8 @@ export function AuthProvider({ children }) {
     const jwtPayload = decodeJWT(t);
     const storedUser = JSON.parse(u);
 
-    // Token has no is_admin field → silently refresh to get current schema
-    if (jwtPayload.is_admin === undefined) {
+    // Token missing fields → silently refresh to get current schema
+    if (jwtPayload.is_admin === undefined || jwtPayload.access_level === undefined) {
       fetch(`${BASE}/api/auth/refresh`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${t}` },
@@ -38,9 +38,9 @@ export function AuthProvider({ children }) {
             setToken(data.token);
             setUser(data.user);
           } else {
-            // Refresh failed — continue with old token, assume is_admin: 0
+            // Refresh failed — continue with old token, assume safe defaults
             setToken(t);
-            setUser({ ...storedUser, is_admin: 0 });
+            setUser({ ...storedUser, is_admin: 0, access_level: storedUser.access_level ?? 1 });
           }
         })
         .catch(() => {
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
     }
 
     setToken(t);
-    setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0 });
+    setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
     setReady(true);
   }, []);
 

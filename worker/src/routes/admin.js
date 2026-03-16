@@ -3,6 +3,7 @@
 // ============================================================
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
+import { LEVEL_CONFIG } from '../utils/levels.js';
 
 async function requireAdmin(request, env) {
   const user = await authenticate(request, env);
@@ -146,7 +147,7 @@ export async function handleAdmin(request, env, path) {
     ] = await Promise.all([
       env.DB.prepare(`
         SELECT u.id, u.name, u.email, u.created_at, u.weight, u.goal_weight,
-               u.target_calories, u.tdee,
+               u.target_calories, u.tdee, u.access_level,
                MAX(e.date) as last_entry,
                COUNT(DISTINCT e.date) as total_days
         FROM users u LEFT JOIN entries e ON u.id = e.user_id
@@ -402,6 +403,26 @@ export async function handleAdmin(request, env, path) {
     return jsonResponse({
       total_products: total?.n || 0,
       top_products: top,
+    });
+  }
+
+  // ── PUT /api/admin/users/:id/role ───────────────────────
+  const roleMatch = path.match(/^\/api\/admin\/users\/(\d+)\/role$/);
+  if (roleMatch && request.method === 'PUT') {
+    const userId = roleMatch[1];
+    const { access_level } = await request.json();
+    const validLevels = [0, 1, 2, 3]; // Admin no puede crear otros admins desde el panel
+    if (!validLevels.includes(access_level)) {
+      return errorResponse('Nivel inválido', 400);
+    }
+    await env.DB.prepare(
+      'UPDATE users SET access_level = ? WHERE id = ?'
+    ).bind(access_level, userId).run();
+    return jsonResponse({
+      success: true,
+      user_id: parseInt(userId),
+      new_level: access_level,
+      level_name: LEVEL_CONFIG[access_level]?.name || 'Unknown',
     });
   }
 

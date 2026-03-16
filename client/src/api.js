@@ -15,7 +15,12 @@ async function request(method, path, body, token) {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error en la petición');
+  if (!res.ok) {
+    const err = new Error(data.error || 'Error en la petición');
+    err.data   = data;
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -57,6 +62,8 @@ export const api = {
   getAdminUsers:      (token) => request('GET', '/api/admin/users',      null, token),
   getAdminEngagement: (token) => request('GET', '/api/admin/engagement', null, token),
   getAdminAIStats:    (token) => request('GET', '/api/admin/ai-stats',   null, token),
+  updateUserRole: (userId, accessLevel, token) =>
+    request('PUT', `/api/admin/users/${userId}/role`, { access_level: accessLevel }, token),
 
   // Calibración
   saveAiCorrection:      (body, token) => request('POST',   '/api/calibration/correction', body, token),

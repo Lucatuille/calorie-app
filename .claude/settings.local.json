@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(python3 -c \":*)",
-      "Bash(npm run deploy)"
+      "Bash(npm run deploy)",
+      "Bash(gh run list --limit 3)",
+      "Bash(npm run build)",
+      "Bash(npm run generate-icons)",
+      "Bash(npx wrangler d1 execute calorie-app-db --remote --command \"SELECT name FROM sqlite_master WHERE type=''table'' AND name IN \\(''user_supplements'',''supplement_logs''\\);\")",
+      "Bash(npx wrangler d1 execute calorie-app-db --command=\"ALTER TABLE users ADD COLUMN tdee INTEGER\" --remote)",
+      "Bash(npx wrangler d1 execute calorie-app-db --command=\"ALTER TABLE users ADD COLUMN bmr INTEGER\" --remote)",
+      "Bash(npx wrangler d1 execute calorie-app-db --command=\"ALTER TABLE users ADD COLUMN pal_factor REAL\" --remote)",
+      "Bash(npx wrangler d1 execute calorie-app-db --command=\"ALTER TABLE users ADD COLUMN formula_used TEXT\" --remote)",
+      "Bash(npx wrangler d1 execute calorie-app-db --command=\"ALTER TABLE users ADD COLUMN tdee_calculated_at TEXT\" --remote)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LEVEL_CONFIG, getBadgeStyle } from '../utils/levels';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -149,6 +150,22 @@ export default function Dashboard() {
               🔥 {summary.streak} {summary.streak === 1 ? 'día' : 'días'}
             </span>
           )}
+          {(() => {
+            const level = user?.access_level;
+            const info  = LEVEL_CONFIG[level];
+            const style = getBadgeStyle(level);
+            if (!info?.badge || !style) return null;
+            return (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center',
+                padding: '3px 10px', borderRadius: 99,
+                fontSize: 12, fontWeight: 500,
+                ...style,
+              }}>
+                {info.badge}
+              </span>
+            );
+          })()}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -139,10 +139,35 @@ function TabOverview({ data, loading, onDrillCalories }) {
 
 // ── Tab 2: Usuarios ──────────────────────────────────────────
 
+const ROLE_OPTIONS = [
+  { value: 0, label: '⏳ Waitlist'  },
+  { value: 3, label: '○  Free'      },
+  { value: 1, label: '🌱 Fundador'  },
+  { value: 2, label: '∞  Pro'       },
+];
+
 function TabUsers({ data, loading, defaultSort }) {
   const [sortKey,    setSortKey]    = useState(defaultSort || 'last_entry');
   const [sortDir,    setSortDir]    = useState(-1);
   const [expanded,   setExpanded]   = useState(null);
+  const [users,      setUsers]      = useState(null);
+  const [savingRole, setSavingRole] = useState(null);
+  const [savedRole,  setSavedRole]  = useState(null);
+  const { token } = useAuth();
+
+  useEffect(() => { if (data) setUsers(data); }, [data]);
+
+  async function handleRoleChange(userId, newLevel) {
+    setSavingRole(userId);
+    try {
+      await api.updateUserRole(userId, newLevel, token);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, access_level: newLevel } : u));
+      setSavedRole(userId);
+      setTimeout(() => setSavedRole(null), 2000);
+    } catch { /* silencioso */ } finally {
+      setSavingRole(null);
+    }
+  }
 
   useEffect(() => {
     if (defaultSort) { setSortKey(defaultSort); setSortDir(-1); }
@@ -154,9 +179,9 @@ function TabUsers({ data, loading, defaultSort }) {
   };
 
   if (loading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{[...Array(4)].map((_, i) => <Skeleton key={i} h={44} />)}</div>;
-  if (!data?.length) return <p style={{ color: 'var(--text-3)', fontSize: 13 }}>No hay usuarios</p>;
+  if (!users?.length) return <p style={{ color: 'var(--text-3)', fontSize: 13 }}>No hay usuarios</p>;
 
-  const sorted = [...data].sort((a, b) => {
+  const sorted = [...users].sort((a, b) => {
     const va = a[sortKey] ?? '';
     const vb = b[sortKey] ?? '';
     if (va < vb) return sortDir;
@@ -285,6 +310,27 @@ function TabUsers({ data, loading, defaultSort }) {
                       <p style={{ fontSize: 9, color: 'var(--text-3)', marginTop: 4 }}>
                         (Actividad exacta por día disponible en análisis avanzado por usuario)
                       </p>
+                    </div>
+                    {/* Selector de rol */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Rol:</span>
+                      <select
+                        value={u.access_level ?? 1}
+                        onChange={e => handleRoleChange(u.id, parseInt(e.target.value))}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          padding: '5px 10px', borderRadius: 8,
+                          border: '1px solid var(--border)',
+                          background: 'var(--surface)', fontSize: 12, cursor: 'pointer',
+                          color: 'var(--text)',
+                        }}
+                      >
+                        {ROLE_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                      {savingRole === u.id && <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Guardando...</span>}
+                      {savedRole  === u.id && <span style={{ fontSize: 11, color: 'var(--accent)' }}>✓ Guardado</span>}
                     </div>
                   </td>
                 </tr>

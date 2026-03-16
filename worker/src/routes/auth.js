@@ -24,14 +24,14 @@ export async function handleAuth(request, env, path) {
     const hashed = await hashPassword(password);
 
     const result = await env.DB.prepare(
-      `INSERT INTO users (name, email, password, age, weight, height, gender)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (name, email, password, age, weight, height, gender, access_level)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 3)`
     ).bind(name, email.toLowerCase(), hashed, age || null, weight || null, height || null, gender || null).run();
 
     const userId = result.meta.last_row_id;
-    const token  = await signJWT({ userId, email, name, is_admin: 0 }, env.JWT_SECRET);
+    const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 3 }, env.JWT_SECRET);
 
-    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0 } }, 201);
+    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3 } }, 201);
   }
 
   // POST /api/auth/login
@@ -49,11 +49,16 @@ export async function handleAuth(request, env, path) {
     const valid = await verifyPassword(password, user.password);
     if (!valid)  return errorResponse('Credenciales incorrectas', 401);
 
-    const token = await signJWT({ userId: user.id, email: user.email, name: user.name, is_admin: user.is_admin || 0 }, env.JWT_SECRET);
+    const accessLevel = user.access_level ?? 1;
+    const isAdmin     = user.is_admin || (accessLevel === 99 ? 1 : 0);
+    const token = await signJWT(
+      { userId: user.id, email: user.email, name: user.name, is_admin: isAdmin, access_level: accessLevel },
+      env.JWT_SECRET
+    );
 
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email, is_admin: user.is_admin || 0 }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel }
     });
   }
 
@@ -67,19 +72,21 @@ export async function handleAuth(request, env, path) {
     if (!payload) return errorResponse('Token inválido o expirado', 401);
 
     const user = await env.DB.prepare(
-      'SELECT id, name, email, is_admin FROM users WHERE id = ?'
+      'SELECT id, name, email, is_admin, access_level FROM users WHERE id = ?'
     ).bind(payload.userId).first();
 
     if (!user) return errorResponse('Usuario no encontrado', 404);
 
+    const accessLevel = user.access_level ?? 1;
+    const isAdmin     = user.is_admin || (accessLevel === 99 ? 1 : 0);
     const token = await signJWT(
-      { userId: user.id, email: user.email, name: user.name, is_admin: user.is_admin || 0 },
+      { userId: user.id, email: user.email, name: user.name, is_admin: isAdmin, access_level: accessLevel },
       env.JWT_SECRET
     );
 
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email, is_admin: user.is_admin || 0 }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel }
     });
   }
 

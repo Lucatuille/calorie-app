@@ -51,6 +51,7 @@ export default function Calculator() {
   const [photoContext, setPhotoContext] = useState('');
   const [analyzing,    setAnalyzing]    = useState(false);
   const [aiResult,     setAiResult]     = useState(null);
+  const [aiLimitData,  setAiLimitData]  = useState(null);  // { used, limit, hours_left }
   const fileRef = useRef(null);
   // Stores AI metadata between "Usar estimación" and final save (fire-and-forget)
   const photoAnalysisRef = useRef(null);
@@ -148,7 +149,11 @@ export default function Calculator() {
       }, token);
       setAiResult(result);
     } catch (err) {
-      setAiResult({ error: err.message });
+      if (err.data?.error === 'ai_limit_reached') {
+        setAiLimitData(err.data);
+      } else {
+        setAiResult({ error: err.message });
+      }
     } finally { setAnalyzing(false); }
   }
 
@@ -551,7 +556,66 @@ export default function Calculator() {
         onClose={() => setTextAnalyzerOpen(false)}
         mealType={form.meal_type}
         onResult={handleTextResult}
+        onAiLimit={(data) => { setTextAnalyzerOpen(false); setAiLimitData(data); }}
       />
+
+      {/* Bottom sheet: límite de IA alcanzado */}
+      {aiLimitData && (
+        <>
+          <div
+            onClick={() => setAiLimitData(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 8000 }}
+          />
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0,
+            background: 'var(--bg)', borderRadius: '20px 20px 0 0',
+            padding: '24px 24px 40px', zIndex: 8001,
+            boxShadow: '0 -4px 30px rgba(0,0,0,0.15)',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⚡</div>
+              <p style={{ fontWeight: 700, fontSize: 17, color: 'var(--text)', marginBottom: 6 }}>
+                Has usado tus {aiLimitData.limit} análisis de hoy
+              </p>
+              <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.5 }}>
+                Se renuevan a las 00:00 · Quedan ~{aiLimitData.hours_left}h
+              </p>
+            </div>
+
+            <div style={{
+              borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
+              padding: '16px 0', margin: '0 0 20px', textAlign: 'center',
+            }}>
+              <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 4 }}>¿Quieres análisis ilimitados?</p>
+              <p style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>∞ Pro — 1.99€/mes</p>
+              <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Sin límites · Sin anuncios</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
+              <button
+                onClick={() => { setAiLimitData(null); alert('Próximamente'); }}
+                style={{
+                  width: '100%', background: 'var(--accent)', color: 'white',
+                  border: 'none', padding: '13px', borderRadius: 100,
+                  fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                }}
+              >
+                Ver planes
+              </button>
+              <button
+                onClick={() => setAiLimitData(null)}
+                style={{
+                  width: '100%', background: 'none', border: '1px solid var(--border)',
+                  color: 'var(--text-2)', padding: '12px', borderRadius: 100,
+                  fontSize: 14, cursor: 'pointer',
+                }}
+              >
+                Registrar manualmente
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ const EXAMPLES = [
 const CONFIDENCE_COLOR = { high: '#059669', medium: '#d97706', low: 'var(--text-3)' };
 const CONFIDENCE_LABEL = { high: 'Alta', medium: 'Media', low: 'Baja' };
 
-export default function TextAnalyzer({ isOpen, onClose, mealType, onResult }) {
+export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAiLimit }) {
   const { token } = useAuth();
   const [text,      setText]   = useState('');
   const [status,    setStatus] = useState('idle');   // idle | loading | result | error
@@ -40,8 +40,12 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult }) {
       setAdjustedKcal(String(r.total.calories));
       setStatus('result');
     } catch (err) {
-      setErrorMsg(err.message || 'Error al analizar. Inténtalo de nuevo.');
-      setStatus('error');
+      if (err.data?.error === 'ai_limit_reached' && onAiLimit) {
+        onAiLimit(err.data);
+      } else {
+        setErrorMsg(err.message || 'Error al analizar. Inténtalo de nuevo.');
+        setStatus('error');
+      }
     }
   }
 

@@ -7,6 +7,7 @@
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 import { applyCalibration, findSimilarMeal } from '../utils/calibration.js';
+import { getAiLimit, canAccess } from '../utils/levels.js';
 
 const SYSTEM_PROMPT = `Eres un nutricionista experto. El usuario te envía una foto de su comida.
 Analiza visualmente los alimentos y estima sus valores nutricionales.
@@ -37,15 +38,52 @@ Importante: NO seas conservador con las estimaciones calóricas. Los estudios mu
 
 El objetivo es que la estimación sea realista, no optimista.`;
 
+async function checkAndIncrementAiLimit(env, userId, accessLevel) {
+  const limit = getAiLimit(accessLevel);
+  if (limit === null) return null; // ilimitado
+
+  const today = new Date().toLocaleDateString('en-CA');
+  const row = await env.DB.prepare(
+    'SELECT count FROM ai_usage_log WHERE user_id = ? AND date = ?'
+  ).bind(userId, today).first();
+
+  const current = row?.count || 0;
+  if (current >= limit) {
+    const hoursLeft = 24 - new Date().getHours();
+    return jsonResponse({
+      error: 'ai_limit_reached',
+      used: current,
+      limit,
+      hours_left: hoursLeft,
+      message: `Has usado tus ${limit} análisis de IA de hoy. Se renuevan a las 00:00.`,
+      upgrade_available: true,
+    }, 429);
+  }
+
+  await env.DB.prepare(`
+    INSERT INTO ai_usage_log (user_id, date, count) VALUES (?, ?, 1)
+    ON CONFLICT(user_id, date) DO UPDATE SET count = count + 1
+  `).bind(userId, today).run();
+
+  return null; // sin error → continuar
+}
+
 export async function handleAnalyze(request, env, path, ctx) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
+
+  if (!canAccess(user.access_level ?? 1)) {
+    return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
+  }
 
   if (path === '/api/analyze' && request.method === 'POST') {
     const { image, mediaType, context, meal_type } = await request.json();
 
     if (!image) return errorResponse('Imagen requerida');
     if (!env.ANTHROPIC_API_KEY) return errorResponse('API key no configurada', 500);
+
+    const limitErr = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+    if (limitErr) return limitErr;
 
     // Load calibration profile (non-blocking on failure)
     let calibrationProfile = null;
@@ -177,9 +215,16 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!user) return errorResponse('No autorizado', 401);
   if (request.method !== 'POST') return errorResponse('Method not allowed', 405);
 
+  if (!canAccess(user.access_level ?? 1)) {
+    return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
+  }
+
   const { text, meal_type } = await request.json();
   if (!text?.trim()) return errorResponse('Texto vacío', 400);
   if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
+
+  const limitErr = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+  if (limitErr) return limitErr;
 
   // Cargar perfil de calibración (mismo sistema que fotos)
   const calibrationRow = await env.DB.prepare(
