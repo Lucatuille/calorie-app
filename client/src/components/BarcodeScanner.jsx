@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { fetchProductByBarcode, calculateNutrition } from '../utils/openfoodfacts';
+import { useAuth } from '../context/AuthContext';
 
 const READER_ID = 'barcode-reader-container';
 
 export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
+  const { token } = useAuth();
   const [status,        setStatus]        = useState('scanning');
   // scanning | loading | found | not_found | error | camera_error
   const [loadingSlow,   setLoadingSlow]   = useState(false);
@@ -134,7 +136,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   async function lookupBarcode(code) {
     setLoadingSlow(false);
     const slowTimer = setTimeout(() => setLoadingSlow(true), 3000);
-    const result = await fetchProductByBarcode(code, addDebug);
+    const result = await fetchProductByBarcode(code, addDebug, token);
     clearTimeout(slowTimer);
     setLoadingSlow(false);
     if (result === null) {
@@ -314,6 +316,9 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                   </p>
                   {product.brand && (
                     <p style={{ fontSize: 13, color: 'var(--text-2)', margin: 0 }}>{product.brand}</p>
+                  )}
+                  {product.from_cache && (
+                    <p style={{ fontSize: 11, color: 'var(--accent)', margin: '3px 0 0' }}>⚡ Carga instantánea</p>
                   )}
                 </div>
               </div>

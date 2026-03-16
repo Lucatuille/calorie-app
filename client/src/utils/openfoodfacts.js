@@ -2,6 +2,64 @@
 //  OPEN FOOD FACTS — fetchProductByBarcode, calculateNutrition
 // ============================================================
 
+const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
+
+// ── D1 cache helpers ────────────────────────────────────────
+
+async function getCached(barcode, token) {
+  try {
+    const res = await fetch(`${BASE}/api/products/${barcode}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data) return null;
+    return {
+      barcode:       data.barcode,
+      name:          data.name,
+      brand:         data.brand,
+      image:         data.image_url,
+      quantity:      data.quantity,
+      quantity_unit: data.quantity_unit,
+      from_cache:    true,
+      per_100g: {
+        calories: data.calories_100g,
+        protein:  data.protein_100g,
+        carbs:    data.carbs_100g,
+        fat:      data.fat_100g,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveToCache(product, token) {
+  // Fire and forget — no bloquea el UX
+  fetch(`${BASE}/api/products/cache`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      barcode:       product.barcode,
+      name:          product.name,
+      brand:         product.brand,
+      image_url:     product.image,
+      quantity:      product.quantity,
+      quantity_unit: product.quantity_unit,
+      calories_100g: product.per_100g.calories,
+      protein_100g:  product.per_100g.protein  ?? 0,
+      carbs_100g:    product.per_100g.carbs    ?? 0,
+      fat_100g:      product.per_100g.fat      ?? 0,
+      source:        'openfoodfacts',
+    }),
+  }).catch(() => {});
+}
+
+// ── Open Food Facts fetch ───────────────────────────────────
+
 function fetchWithTimeout(url, ms) {
   const timeout = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('timeout')), ms)
@@ -22,7 +80,7 @@ async function fetchOnce(barcode, onDebug) {
   return data;
 }
 
-export async function fetchProductByBarcode(barcode, onDebug) {
+async function fetchFromOFF(barcode, onDebug) {
   let data;
   try {
     data = await fetchOnce(barcode, onDebug);
@@ -72,6 +130,29 @@ export async function fetchProductByBarcode(barcode, onDebug) {
     onDebug?.(`✗ Parse error: ${err.message}`);
     return 'error';
   }
+}
+
+// ── Public API ──────────────────────────────────────────────
+
+export async function fetchProductByBarcode(barcode, onDebug, token) {
+  // PASO 1 — Caché D1 (respuesta instantánea si existe)
+  if (token) {
+    const cached = await getCached(barcode, token);
+    if (cached) {
+      onDebug?.(`⚡ Desde caché D1`);
+      return cached;
+    }
+  }
+
+  // PASO 2 — Open Food Facts
+  const product = await fetchFromOFF(barcode, onDebug);
+
+  // PASO 3 — Guardar en caché si se encontró (fire and forget)
+  if (product && product !== 'timeout' && product !== 'error' && token) {
+    saveToCache(product, token);
+  }
+
+  return product;
 }
 
 export function calculateNutrition(product, grams) {

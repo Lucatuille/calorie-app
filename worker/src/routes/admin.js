@@ -387,5 +387,23 @@ export async function handleAdmin(request, env, path) {
     });
   }
 
+  // ── GET /api/admin/products ─────────────────────────────
+  if (path === '/api/admin/products' && request.method === 'GET') {
+    const [total, { results: top }] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) as n FROM products_cache').first(),
+      env.DB.prepare(`
+        SELECT name, brand, scan_count
+        FROM products_cache
+        ORDER BY scan_count DESC
+        LIMIT 10
+      `).all(),
+    ]);
+
+    return jsonResponse({
+      total_products: total?.n || 0,
+      top_products: top,
+    });
+  }
+
   return errorResponse('Not found', 404);
 }
