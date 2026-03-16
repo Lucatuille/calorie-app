@@ -8,6 +8,7 @@ const READER_ID = 'barcode-reader-container';
 export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   const [status,        setStatus]        = useState('scanning');
   // scanning | loading | found | not_found | error | camera_error
+  const [loadingSlow,   setLoadingSlow]   = useState(false);
   const [product,       setProduct]       = useState(null);
   const [grams,         setGrams]         = useState(100);
   const [manualBarcode, setManualBarcode] = useState('');
@@ -39,6 +40,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
       setGrams(100);
       setManualBarcode('');
       setLastBarcode('');
+      setLoadingSlow(false);
       isProcessing.current = false;
       scanStarted.current  = false;
       setVisible(true);
@@ -92,6 +94,9 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
             Html5QrcodeSupportedFormats.UPC_A,
             Html5QrcodeSupportedFormats.UPC_E,
             Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.RSS_14,
           ],
         },
         async (decodedText) => {
@@ -120,7 +125,11 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   }
 
   async function lookupBarcode(code) {
+    setLoadingSlow(false);
+    const slowTimer = setTimeout(() => setLoadingSlow(true), 3000);
     const result = await fetchProductByBarcode(code);
+    clearTimeout(slowTimer);
+    setLoadingSlow(false);
     if (result === null) {
       setStatus('not_found');
     } else if (result === 'timeout' || result === 'error') {
@@ -251,6 +260,11 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
               <span className="spinner" style={{ width: 32, height: 32, borderWidth: 3, display: 'inline-block' }} />
               <p style={{ marginTop: 16, color: 'var(--text-2)', margin: '16px 0 0' }}>Buscando producto...</p>
+              {loadingSlow && (
+                <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-3)' }}>
+                  Buscando en la base de datos...
+                </p>
+              )}
             </div>
           )}
 
