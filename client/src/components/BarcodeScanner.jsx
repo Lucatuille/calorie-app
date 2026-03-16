@@ -9,6 +9,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   const [status,        setStatus]        = useState('scanning');
   // scanning | loading | found | not_found | error | camera_error
   const [loadingSlow,   setLoadingSlow]   = useState(false);
+  const [debugLines,    setDebugLines]    = useState([]);
   const [product,       setProduct]       = useState(null);
   const [grams,         setGrams]         = useState(100);
   const [manualBarcode, setManualBarcode] = useState('');
@@ -41,6 +42,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
       setManualBarcode('');
       setLastBarcode('');
       setLoadingSlow(false);
+      setDebugLines([]);
       isProcessing.current = false;
       scanStarted.current  = false;
       setVisible(true);
@@ -104,6 +106,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
           isProcessing.current = true;
           await stopScanner();
           setLastBarcode(decodedText);
+          setDebugLines([`Código detectado: ${decodedText}`]);
           setStatus('loading');
           await lookupBarcode(decodedText);
         },
@@ -124,10 +127,14 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
     }
   }
 
+  function addDebug(line) {
+    setDebugLines(prev => [...prev, line]);
+  }
+
   async function lookupBarcode(code) {
     setLoadingSlow(false);
     const slowTimer = setTimeout(() => setLoadingSlow(true), 3000);
-    const result = await fetchProductByBarcode(code);
+    const result = await fetchProductByBarcode(code, addDebug);
     clearTimeout(slowTimer);
     setLoadingSlow(false);
     if (result === null) {
@@ -164,6 +171,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
     await stopScanner();
     isProcessing.current = true;
     setLastBarcode(code);
+    setDebugLines([`Código manual: ${code}`]);
     setStatus('loading');
     await lookupBarcode(code);
   }
@@ -252,12 +260,17 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
               <p style={{ textAlign: 'center', color: 'var(--text-2)', fontSize: 13, margin: 0 }}>
                 Apunta al código de barras del producto
               </p>
+              {lastBarcode && (
+                <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-3)', marginTop: 6, fontFamily: 'monospace' }}>
+                  Último detectado: {lastBarcode}
+                </p>
+              )}
             </div>
           )}
 
           {/* ── LOADING ───────────────────────────────────── */}
           {status === 'loading' && (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <div style={{ textAlign: 'center', padding: '48px 0 24px' }}>
               <span className="spinner" style={{ width: 32, height: 32, borderWidth: 3, display: 'inline-block' }} />
               <p style={{ marginTop: 16, color: 'var(--text-2)', margin: '16px 0 0' }}>Buscando producto...</p>
               {loadingSlow && (
@@ -265,6 +278,20 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                   Buscando en la base de datos...
                 </p>
               )}
+            </div>
+          )}
+
+          {/* ── DEBUG LOG (temporal) ──────────────────────── */}
+          {debugLines.length > 0 && (
+            <div style={{
+              background: '#111', borderRadius: 8, padding: '10px 12px',
+              marginTop: 8, marginBottom: 8,
+            }}>
+              {debugLines.map((line, i) => (
+                <p key={i} style={{ fontFamily: 'monospace', fontSize: 11, color: '#7fff7f', margin: '2px 0', wordBreak: 'break-all' }}>
+                  {line}
+                </p>
+              ))}
             </div>
           )}
 

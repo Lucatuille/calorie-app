@@ -2,25 +2,31 @@
 //  OPEN FOOD FACTS — fetchProductByBarcode, calculateNutrition
 // ============================================================
 
-async function fetchOnce(barcode) {
-  const response = await fetch(
-    `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`,
-    { signal: AbortSignal.timeout(10000) }
-  );
-  if (!response.ok) throw new Error('Network error');
-  return response.json();
+async function fetchOnce(barcode, onDebug) {
+  const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
+  onDebug?.(`→ GET ${url}`);
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  onDebug?.(`← HTTP ${response.status}`);
+
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  onDebug?.(`JSON status: ${data.status} (1=encontrado, 0=no encontrado)`);
+  return data;
 }
 
-export async function fetchProductByBarcode(barcode) {
+export async function fetchProductByBarcode(barcode, onDebug) {
   let data;
   try {
-    data = await fetchOnce(barcode);
+    data = await fetchOnce(barcode, onDebug);
   } catch (err) {
-    // Un reintento automático si fue timeout
+    onDebug?.(`✗ Error: ${err.name} — ${err.message}`);
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      onDebug?.('Reintentando...');
       try {
-        data = await fetchOnce(barcode);
-      } catch {
+        data = await fetchOnce(barcode, onDebug);
+      } catch (err2) {
+        onDebug?.(`✗ Reintento fallido: ${err2.message}`);
         return 'timeout';
       }
     } else {
@@ -29,7 +35,7 @@ export async function fetchProductByBarcode(barcode) {
   }
 
   try {
-    if (data.status !== 1) return null; // producto no encontrado
+    if (data.status !== 1) return null;
 
     const product    = data.product;
     const nutriments = product.nutriments ?? {};
@@ -39,6 +45,8 @@ export async function fetchProductByBarcode(barcode) {
       : nutriments['energy_100g'] != null
         ? Math.round(nutriments['energy_100g'] / 4.184)
         : undefined;
+
+    onDebug?.(`✓ Producto: "${product.product_name}" — ${kcal100 ?? '?'} kcal/100g`);
 
     return {
       barcode,
@@ -53,7 +61,8 @@ export async function fetchProductByBarcode(barcode) {
         fat:      nutriments['fat_100g']           != null ? Math.round(nutriments['fat_100g']           * 10) / 10 : undefined,
       },
     };
-  } catch {
+  } catch (err) {
+    onDebug?.(`✗ Parse error: ${err.message}`);
     return 'error';
   }
 }
