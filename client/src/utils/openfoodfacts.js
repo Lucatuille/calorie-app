@@ -2,11 +2,18 @@
 //  OPEN FOOD FACTS — fetchProductByBarcode, calculateNutrition
 // ============================================================
 
+function fetchWithTimeout(url, ms) {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), ms)
+  );
+  return Promise.race([fetch(url), timeout]);
+}
+
 async function fetchOnce(barcode, onDebug) {
   const url = `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`;
   onDebug?.(`→ GET ${url}`);
 
-  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  const response = await fetchWithTimeout(url, 12000);
   onDebug?.(`← HTTP ${response.status}`);
 
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -21,7 +28,7 @@ export async function fetchProductByBarcode(barcode, onDebug) {
     data = await fetchOnce(barcode, onDebug);
   } catch (err) {
     onDebug?.(`✗ Error: ${err.name} — ${err.message}`);
-    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError' || err.message === 'timeout') {
       onDebug?.('Reintentando...');
       try {
         data = await fetchOnce(barcode, onDebug);
