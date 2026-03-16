@@ -345,6 +345,20 @@ export default function Profile() {
         <br />
         <Link to="/privacy" style={{ color: 'var(--text-3)' }}>Política de privacidad</Link>
       </p>
+
+      {user?.access_level === 99 && (
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-admin'))}
+          style={{
+            background: 'none', border: 'none',
+            color: 'var(--text-3)', fontSize: 11,
+            opacity: 0.3, cursor: 'pointer',
+            padding: 8, display: 'block', margin: '0 auto',
+          }}
+        >
+          ⚙️ admin
+        </button>
+      )}
     </div>
   );
 }

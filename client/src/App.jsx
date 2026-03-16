@@ -52,8 +52,13 @@ function AppRoutes() {
         setAdminOpen(prev => !prev);
       }
     };
+    const handleOpenAdmin = () => setAdminOpen(true);
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('open-admin', handleOpenAdmin);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('open-admin', handleOpenAdmin);
+    };
   }, [user]);
 
   if (user && user.access_level === 0) {
