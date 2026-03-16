@@ -532,7 +532,7 @@ function TabAI({ data, loading }) {
 
 // ── Main component ───────────────────────────────────────────
 
-export default function AdminOverlay({ isOpen, onClose }) {
+export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
   const { token } = useAuth();
   const [activeTab,       setActiveTab]       = useState('overview');
   const [tabData,         setTabData]         = useState({});
@@ -637,6 +637,13 @@ export default function AdminOverlay({ isOpen, onClose }) {
                 <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
                   {relativeUpdateTime}
                 </span>
+              )}
+              {forceWhatsNew && (
+                <button
+                  onClick={forceWhatsNew}
+                  title="Preview What's New"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: 13, padding: '4px 6px', opacity: 0.5 }}
+                >✨</button>
               )}
               <button
                 onClick={() => fetchTab(activeTab)}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { CURRENT_VERSION } from '../data/whatsNew';
 
 export default function Register() {
   const [form, setForm]   = useState({ name: '', email: '', password: '', age: '', weight: '', height: '', gender: 'male' });
@@ -20,6 +21,8 @@ export default function Register() {
     try {
       const data = await api.register(form);
       login(data.token, data.user);
+      // Nuevo usuario — ya tiene el onboarding, no mostrar What's New
+      localStorage.setItem('lucaeats_whats_new_seen', CURRENT_VERSION);
       navigate('/');
     } catch (err) {
       setError(err.message);

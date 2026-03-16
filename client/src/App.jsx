@@ -5,6 +5,8 @@ import Navbar from './components/Navbar';
 import InstallPrompt from './components/InstallPrompt';
 import AdminOverlay from './components/AdminOverlay';
 import WelcomeDisclaimer from './components/WelcomeDisclaimer';
+import WhatsNew from './components/WhatsNew';
+import { useWhatsNew } from './hooks/useWhatsNew';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -29,6 +31,7 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   const { user } = useAuth();
   const [adminOpen, setAdminOpen] = useState(false);
+  const whatsNew = useWhatsNew();
   const [showDisclaimer, setShowDisclaimer] = useState(
     () => user && !localStorage.getItem('lucaeats_disclaimer_v1')
   );
@@ -66,7 +69,14 @@ function AppRoutes() {
       {user && <Navbar />}
       <InstallPrompt />
       {user?.is_admin === 1 && (
-        <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} />
+        <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} forceWhatsNew={whatsNew.forceOpen} />
+      )}
+      {user && whatsNew.isOpen && whatsNew.releaseToShow && (
+        <WhatsNew
+          release={whatsNew.releaseToShow}
+          onDismiss={whatsNew.dismiss}
+          isClosing={whatsNew.isClosing}
+        />
       )}
       <Routes>
         <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
