@@ -2,6 +2,18 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
+import BarcodeScanner from '../components/BarcodeScanner';
+
+const BarcodeIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+    <rect x="1" y="4" width="2" height="16"/>
+    <rect x="5" y="4" width="1" height="16"/>
+    <rect x="8" y="4" width="2" height="16"/>
+    <rect x="12" y="4" width="1" height="16"/>
+    <rect x="15" y="4" width="3" height="16"/>
+    <rect x="20" y="4" width="2" height="16"/>
+  </svg>
+);
 
 const EMPTY_FORM = {
   meal_type: 'lunch', name: '', calories: '',
@@ -24,6 +36,10 @@ export default function Calculator() {
   const [error,      setError]      = useState('');
   const [saved,      setSaved]      = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+
+  // Barcode scanner
+  const [scannerOpen,    setScannerOpen]    = useState(false);
+  const [scanFeedback,   setScanFeedback]   = useState(false);
 
   // Photo analysis
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -130,6 +146,20 @@ export default function Calculator() {
     } catch (err) {
       setAiResult({ error: err.message });
     } finally { setAnalyzing(false); }
+  }
+
+  function handleAddScannedProduct(product, nutrition) {
+    const name = product.brand ? `${product.name} (${product.brand})` : product.name;
+    setForm(f => ({
+      ...f,
+      name,
+      calories: nutrition.calories != null ? String(nutrition.calories) : f.calories,
+      protein:  nutrition.protein  != null ? String(nutrition.protein)  : f.protein,
+      carbs:    nutrition.carbs    != null ? String(nutrition.carbs)    : f.carbs,
+      fat:      nutrition.fat      != null ? String(nutrition.fat)      : f.fat,
+    }));
+    setScanFeedback(true);
+    setTimeout(() => setScanFeedback(false), 3000);
   }
 
   function applyAiResult(overrideCalories) {
@@ -264,16 +294,27 @@ export default function Calculator() {
       <div className="card" style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 className="title-md">Añadir comida</h2>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: 12 }}
-            onClick={() => fileRef.current?.click()}
-            disabled={analyzing}
-          >
-            {analyzing ? <span className="spinner" style={{ width: 13, height: 13, marginRight: 4 }} /> : '📸 '}
-            {analyzing ? 'Analizando...' : 'Foto'}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: 12 }}
+              onClick={() => fileRef.current?.click()}
+              disabled={analyzing}
+            >
+              {analyzing ? <span className="spinner" style={{ width: 13, height: 13, marginRight: 4 }} /> : '📸 '}
+              {analyzing ? 'Analizando...' : 'Foto'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}
+              onClick={() => setScannerOpen(true)}
+            >
+              <BarcodeIcon />
+              Escanear
+            </button>
+          </div>
           <input
             ref={fileRef}
             type="file"
@@ -454,8 +495,9 @@ export default function Calculator() {
             </div>
           </div>
 
-          {error && <div className="alert alert-error">{error}</div>}
-          {saved  && <div className="alert alert-success">✓ Comida añadida</div>}
+          {error        && <div className="alert alert-error">  {error}</div>}
+          {saved        && <div className="alert alert-success">✓ Comida añadida</div>}
+          {scanFeedback && <div className="alert alert-success">▦ Producto añadido al formulario — revisa y guarda</div>}
 
           <button className="btn btn-primary btn-full" type="submit" disabled={saving}>
             {saving ? <span className="spinner" /> : '+ Añadir comida'}
@@ -463,6 +505,11 @@ export default function Calculator() {
         </form>
       </div>
 
+      <BarcodeScanner
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onAddProduct={handleAddScannedProduct}
+      />
     </div>
   );
 }

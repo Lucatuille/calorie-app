@@ -284,6 +284,26 @@ input, select, textarea { font-family: inherit; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Barcode scanner ─────────────────────────────────────── */
+@keyframes scanLine {
+  0%   { top: 6%; }
+  100% { top: 88%; }
+}
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: #2d6a4f;
+  box-shadow: 0 0 6px rgba(45,106,79,0.6);
+  animation: scanLine 1.5s ease-in-out infinite alternate;
+}
+/* Hide html5-qrcode default UI chrome */
+#barcode-reader-container img,
+#barcode-reader-container select,
+#barcode-reader-container button:not(.btn) {
+  display: none !important;
+}
+
 /* ── Navbar responsive ───────────────────────────────────── */
 .nav-hamburger { display: none; }
 
