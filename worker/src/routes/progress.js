@@ -108,8 +108,9 @@ export async function handleProgress(request, env, path) {
       : null;
 
     // Weekly comparison
-    const weekAgoStr     = new Date(Date.now() - 7  * 86400000).toISOString().split('T')[0];
-    const twoWeeksAgoStr = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
+    // Ventana móvil exacta: últimos 7 días (sin incluir el límite de hace 7 días)
+    const weekAgoStr     = new Date(Date.now() - 6  * 86400000).toISOString().split('T')[0]; // >hoy-7 = >=hoy-6
+    const twoWeeksAgoStr = new Date(Date.now() - 13 * 86400000).toISOString().split('T')[0];
     const thisWeek = entries.filter(e => e.date >= weekAgoStr);
     const lastWeek = entries.filter(e => e.date >= twoWeeksAgoStr && e.date < weekAgoStr);
 

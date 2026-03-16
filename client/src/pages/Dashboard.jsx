@@ -229,7 +229,7 @@ export default function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <div>
               <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>
-                Esta semana
+                Últimos 7 días
               </p>
               <span style={{ fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em' }}>
                 {summary.avgThisWeek.toLocaleString()}
@@ -238,7 +238,7 @@ export default function Dashboard() {
             </div>
             {weekDiff !== null && (
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>vs semana anterior</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>vs 7 días anteriores</p>
                 <span style={{
                   fontWeight: 700, fontSize: 15,
                   color: weekDiff <= 0 ? 'var(--accent)' : 'var(--accent-2)',
