@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
+const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
+
 const AuthContext = createContext(null);
 
 function decodeJWT(token) {
@@ -17,12 +19,40 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const t = localStorage.getItem('token');
     const u = localStorage.getItem('user');
-    if (t && u) {
-      const jwtPayload = decodeJWT(t);
-      const storedUser = JSON.parse(u);
-      setToken(t);
-      setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0 });
+    if (!t || !u) { setReady(true); return; }
+
+    const jwtPayload = decodeJWT(t);
+    const storedUser = JSON.parse(u);
+
+    // Token has no is_admin field → silently refresh to get current schema
+    if (jwtPayload.is_admin === undefined) {
+      fetch(`${BASE}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${t}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            setToken(data.token);
+            setUser(data.user);
+          } else {
+            // Refresh failed — continue with old token, assume is_admin: 0
+            setToken(t);
+            setUser({ ...storedUser, is_admin: 0 });
+          }
+        })
+        .catch(() => {
+          setToken(t);
+          setUser({ ...storedUser, is_admin: 0 });
+        })
+        .finally(() => setReady(true));
+      return;
     }
+
+    setToken(t);
+    setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0 });
     setReady(true);
   }, []);
 

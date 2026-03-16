@@ -2,7 +2,7 @@
 //  AUTH ROUTES — /api/auth/register  /api/auth/login
 // ============================================================
 
-import { jsonResponse, errorResponse, hashPassword, verifyPassword, signJWT } from '../utils.js';
+import { jsonResponse, errorResponse, hashPassword, verifyPassword, signJWT, verifyJWT } from '../utils.js';
 
 export async function handleAuth(request, env, path) {
 
@@ -50,6 +50,32 @@ export async function handleAuth(request, env, path) {
     if (!valid)  return errorResponse('Credenciales incorrectas', 401);
 
     const token = await signJWT({ userId: user.id, email: user.email, name: user.name, is_admin: user.is_admin || 0 }, env.JWT_SECRET);
+
+    return jsonResponse({
+      token,
+      user: { id: user.id, name: user.name, email: user.email, is_admin: user.is_admin || 0 }
+    });
+  }
+
+  // POST /api/auth/refresh — exchange any valid token for a fresh one with current schema
+  if (path === '/api/auth/refresh' && request.method === 'POST') {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) return errorResponse('Token requerido', 401);
+
+    const oldToken = authHeader.slice(7);
+    const payload = await verifyJWT(oldToken, env.JWT_SECRET);
+    if (!payload) return errorResponse('Token inválido o expirado', 401);
+
+    const user = await env.DB.prepare(
+      'SELECT id, name, email, is_admin FROM users WHERE id = ?'
+    ).bind(payload.userId).first();
+
+    if (!user) return errorResponse('Usuario no encontrado', 404);
+
+    const token = await signJWT(
+      { userId: user.id, email: user.email, name: user.name, is_admin: user.is_admin || 0 },
+      env.JWT_SECRET
+    );
 
     return jsonResponse({
       token,
