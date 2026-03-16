@@ -7,6 +7,7 @@ export default function Register() {
   const [form, setForm]   = useState({ name: '', email: '', password: '', age: '', weight: '', height: '', gender: 'male' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const { login } = useAuth();
   const navigate  = useNavigate();
 
@@ -89,7 +90,22 @@ export default function Register() {
 
             {error && <div className="alert alert-error">{error}</div>}
 
-            <button className="btn btn-primary btn-full" type="submit" disabled={loading} style={{ marginTop: 4 }}>
+            {/* Terms checkbox */}
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: 'var(--text-2)' }}>
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={e => setTermsAccepted(e.target.checked)}
+                style={{ marginTop: 2, flexShrink: 0, accentColor: 'var(--accent)' }}
+              />
+              <span>
+                He leído y acepto los Términos de uso y la{' '}
+                <Link to="/privacy" style={{ color: 'var(--accent)' }}>Política de privacidad</Link>
+                {' '}de LucaEats
+              </span>
+            </label>
+
+            <button className="btn btn-primary btn-full" type="submit" disabled={loading || !termsAccepted} style={{ marginTop: 4 }}>
               {loading ? <span className="spinner" /> : 'Crear cuenta'}
             </button>
           </form>

@@ -859,9 +859,14 @@ export default function TDEECalculator({ isOpen, onClose, onSave }) {
             </button>
           )}
           {!saved && (
-            <button className="btn btn-secondary btn-full" onClick={() => goTo(4, -1)}>
-              ↩ Recalcular
-            </button>
+            <>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5, textAlign: 'center' }}>
+                ℹ️ Estos valores son estimaciones orientativas basadas en fórmulas estadísticas (±150-200 kcal de margen inherente). No constituyen prescripción dietética. Consulta con un nutricionista para un plan personalizado.
+              </p>
+              <button className="btn btn-secondary btn-full" onClick={() => goTo(4, -1)}>
+                ↩ Recalcular
+              </button>
+            </>
           )}
         </div>
       );

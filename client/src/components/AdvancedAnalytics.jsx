@@ -565,9 +565,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     {/* Scientific disclaimer */}
                     <p style={{
                       fontSize: 11, color: 'var(--text-3)', marginTop: 16, lineHeight: 1.5,
-                      fontStyle: 'italic', borderTop: '1px solid var(--border)', paddingTop: 12,
+                      borderTop: '1px solid var(--border)', paddingTop: 12,
                     }}>
-                      Las proyecciones son estimaciones orientativas basadas en tus datos actuales. El peso corporal fluctúa ±1-2 kg diariamente por agua y glucógeno — esto no refleja cambios reales en grasa. Consulta con un profesional de la salud para objetivos médicos.
+                      Las proyecciones son estimaciones orientativas con un margen de error de ±150-200 kcal. El peso fluctúa ±1-2 kg diariamente por agua y glucógeno — esto no refleja cambios reales en grasa. No uses estos datos para decisiones médicas. Consulta con un profesional de la salud para objetivos terapéuticos.
                     </p>
                   </>
                 )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import TDEECalculator from '../components/TDEECalculator';
@@ -308,6 +309,19 @@ export default function Profile() {
           </button>
         </div>
       </div>
+
+      {/* Legal footer */}
+      <p style={{
+        marginTop: 32, marginBottom: 8,
+        fontSize: 11, color: 'var(--text-3)', opacity: 0.7,
+        lineHeight: 1.6, textAlign: 'center',
+      }}>
+        LucaEats v1.0 · Herramienta de tracking nutricional personal
+        <br />
+        No es un dispositivo médico ni sustituye asesoramiento clínico.
+        <br />
+        <Link to="/privacy" style={{ color: 'var(--text-3)' }}>Política de privacidad</Link>
+      </p>
     </div>
   );
 }

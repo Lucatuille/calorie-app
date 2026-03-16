@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import InstallPrompt from './components/InstallPrompt';
 import AdminOverlay from './components/AdminOverlay';
+import WelcomeDisclaimer from './components/WelcomeDisclaimer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -11,6 +12,7 @@ import Calculator from './pages/Calculator';
 import Progress from './pages/Progress';
 import Profile from './pages/Profile';
 import History from './pages/History';
+import Privacy from './pages/Privacy';
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -27,6 +29,16 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   const { user } = useAuth();
   const [adminOpen, setAdminOpen] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(
+    () => user && !localStorage.getItem('lucaeats_disclaimer_v1')
+  );
+
+  // Re-evaluate when user logs in/registers
+  useEffect(() => {
+    if (user && !localStorage.getItem('lucaeats_disclaimer_v1')) {
+      setShowDisclaimer(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user?.is_admin) return;
@@ -40,6 +52,15 @@ function AppRoutes() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [user]);
 
+  if (user && showDisclaimer) {
+    return (
+      <WelcomeDisclaimer onAccept={() => {
+        localStorage.setItem('lucaeats_disclaimer_v1', 'true');
+        setShowDisclaimer(false);
+      }} />
+    );
+  }
+
   return (
     <>
       {user && <Navbar />}
@@ -50,6 +71,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+        <Route path="/privacy"  element={<Privacy />} />
         <Route path="/"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
