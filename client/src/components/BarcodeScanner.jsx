@@ -87,9 +87,9 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
       await scanner.start(
         { facingMode: 'environment' },
         {
-          fps: 10,
-          qrbox: { width: 260, height: 110 },
-          aspectRatio: 1.5,
+          fps: 15,
+          // qrbox como función: 85% del ancho, 35% del alto — se adapta a cada móvil
+          qrbox: (w, h) => ({ width: Math.floor(w * 0.85), height: Math.floor(h * 0.35) }),
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
