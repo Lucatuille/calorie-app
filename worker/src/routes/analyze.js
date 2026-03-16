@@ -289,9 +289,15 @@ Responde ÚNICAMENTE con JSON válido, sin texto ni markdown adicional:
     }),
   });
 
-  if (!response.ok) return errorResponse('Error de IA', 500);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    return errorResponse(err?.error?.message || 'Error de IA (upstream)', 502);
+  }
 
-  const aiData = await response.json();
+  let aiData;
+  try { aiData = await response.json(); } catch {
+    return errorResponse('Respuesta no-JSON de Claude', 502);
+  }
   const rawText = aiData.content?.[0]?.text || '';
 
   let result;
