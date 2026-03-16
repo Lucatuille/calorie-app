@@ -292,38 +292,38 @@ export default function Calculator() {
 
       {/* ── Add meal form ─────────────────────────────────────── */}
       <div className="card" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 className="title-md">Añadir comida</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: 12 }}
-              onClick={() => fileRef.current?.click()}
-              disabled={analyzing}
-            >
-              {analyzing ? <span className="spinner" style={{ width: 13, height: 13, marginRight: 4 }} /> : '📸 '}
-              {analyzing ? 'Analizando...' : 'Foto'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}
-              onClick={() => setScannerOpen(true)}
-            >
-              <BarcodeIcon />
-              Escanear
-            </button>
-          </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: 'none' }}
-            onChange={handlePhotoChange}
-          />
+        <h2 className="title-md" style={{ marginBottom: 12 }}>Añadir comida</h2>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: 13, padding: '12px 8px' }}
+            onClick={() => fileRef.current?.click()}
+            disabled={analyzing}
+          >
+            {analyzing ? <span className="spinner" style={{ width: 13, height: 13, marginRight: 6 }} /> : '📸 '}
+            {analyzing ? 'Analizando...' : 'Foto con IA'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: 13, padding: '12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            onClick={() => setScannerOpen(true)}
+          >
+            <BarcodeIcon />
+            Escanear producto
+          </button>
         </div>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={handlePhotoChange}
+        />
 
         {/* ── Photo preview & AI result ── */}
         {photoPreview && (
