@@ -37,7 +37,7 @@ Importante: NO seas conservador con las estimaciones calóricas. Los estudios mu
 
 El objetivo es que la estimación sea realista, no optimista.`;
 
-export async function handleAnalyze(request, env, path) {
+export async function handleAnalyze(request, env, path, ctx) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
 
@@ -119,12 +119,14 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
     try {
       const result = JSON.parse(match[0]);
 
-      // Log AI usage (fire and forget)
+      // Log AI usage — ctx.waitUntil garantiza que el INSERT se completa
+      // aunque el Worker ya haya enviado la respuesta al cliente
       const inputTokens  = claude.usage?.input_tokens  || 0;
       const outputTokens = claude.usage?.output_tokens || 0;
-      env.DB.prepare(
-        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens) VALUES (?, ?, ?)'
+      const logPromise = env.DB.prepare(
+        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
       ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
+      if (ctx?.waitUntil) ctx.waitUntil(logPromise);
 
       const aiRaw      = Math.round(result.calories || 0);
       const categories = Array.isArray(result.categories) ? result.categories : [];

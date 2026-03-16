@@ -43,7 +43,7 @@ export default {
       }
 
       if (path.startsWith('/api/analyze')) {
-        return await handleAnalyze(request, env, path);
+        return await handleAnalyze(request, env, path, ctx);
       }
 
       if (path.startsWith('/api/supplements')) {
