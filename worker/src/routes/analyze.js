@@ -167,3 +167,136 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
 
   return errorResponse('Not found', 404);
 }
+
+// ── POST /api/entries/analyze-text ─────────────────────────
+// Análisis por descripción de texto libre — mismo sistema de
+// calibración que las fotos, pero sin imagen (más barato).
+
+export async function handleAnalyzeText(request, env, ctx) {
+  const user = await authenticate(request, env);
+  if (!user) return errorResponse('No autorizado', 401);
+  if (request.method !== 'POST') return errorResponse('Method not allowed', 405);
+
+  const { text, meal_type } = await request.json();
+  if (!text?.trim()) return errorResponse('Texto vacío', 400);
+  if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
+
+  // Cargar perfil de calibración (mismo sistema que fotos)
+  const calibrationRow = await env.DB.prepare(
+    'SELECT * FROM user_calibration WHERE user_id = ?'
+  ).bind(user.userId).first();
+
+  const calibrationProfile = calibrationRow ? {
+    global_bias:    calibrationRow.global_bias,
+    confidence:     calibrationRow.confidence,
+    data_points:    calibrationRow.data_points,
+    meal_factors:   JSON.parse(calibrationRow.meal_factors   || '{}'),
+    food_factors:   JSON.parse(calibrationRow.food_factors   || '{}'),
+    time_factors:   JSON.parse(calibrationRow.time_factors   || '{}'),
+    frequent_meals: JSON.parse(calibrationRow.frequent_meals || '[]'),
+  } : null;
+
+  // Contexto de calibración para el prompt (si hay suficiente confianza)
+  let calibrationContext = '';
+  if (calibrationProfile?.confidence > 0.2) {
+    const biasPct = Math.round(Math.abs(calibrationProfile.global_bias) * 100);
+    const dir     = calibrationProfile.global_bias > 0 ? 'más' : 'menos';
+    calibrationContext = `\n\nIMPORTANTE — Calibración personal del usuario: este usuario tiende a consumir un ${biasPct}% ${dir} de lo que estiman los modelos genéricos. Ajusta tus estimaciones en consecuencia.`;
+  }
+
+  const prompt = `Eres un nutricionista experto. El usuario describe lo que ha comido en lenguaje natural.
+Analiza la descripción y estima los valores nutricionales con precisión.
+
+Descripción: "${text}"
+${calibrationContext}
+
+Reglas de estimación:
+- Si se indica cantidad específica (gramos, unidades), úsala exactamente
+- Sin cantidad → asume ración normal española (no americana)
+- Casero: estimar con moderación en aceites
+- Restaurante: añadir 25-35% extra por aceites y porciones generosas
+- Múltiples alimentos: analiza cada uno y suma
+- NO seas conservador — las personas subestiman consistentemente
+
+Responde ÚNICAMENTE con JSON válido, sin texto ni markdown adicional:
+{
+  "name": "nombre descriptivo del conjunto",
+  "items": [
+    { "name": "nombre", "quantity": "cantidad estimada", "calories": entero, "protein": decimal, "carbs": decimal, "fat": decimal }
+  ],
+  "total": { "calories": entero, "protein": decimal, "carbs": decimal, "fat": decimal },
+  "categories": ["cat1", "cat2"],
+  "confidence": "high" | "medium" | "low",
+  "notes": "observaciones breves si las hay"
+}`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) return errorResponse('Error de IA', 500);
+
+  const aiData = await response.json();
+  const rawText = aiData.content?.[0]?.text || '';
+
+  let result;
+  try {
+    const clean = rawText.replace(/```json|```/g, '').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('no json');
+    result = JSON.parse(match[0]);
+  } catch {
+    return errorResponse('Respuesta inválida de Claude', 502);
+  }
+
+  // Aplicar calibración solo a calorías (no escalar macros)
+  const rawCalories = result.total?.calories || 0;
+  const isWeekend   = [0, 6].includes(new Date().getDay());
+  const calibratedCalories = applyCalibration(rawCalories, calibrationProfile, {
+    meal_type:       meal_type || 'other',
+    food_categories: result.categories || [],
+    is_weekend:      isWeekend,
+  });
+
+  // Buscar comida similar en historial
+  const similarMeal = findSimilarMeal(text, calibrationProfile?.frequent_meals);
+
+  // Log tokens (fire-and-forget con ctx.waitUntil)
+  const inputTokens  = aiData.usage?.input_tokens  || 0;
+  const outputTokens = aiData.usage?.output_tokens || 0;
+  const logPromise = env.DB.prepare(
+    "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime('now'))"
+  ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
+  if (ctx?.waitUntil) ctx.waitUntil(logPromise);
+
+  const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.1;
+
+  return jsonResponse({
+    name:       result.name  || '',
+    items:      result.items || [],
+    total: {
+      calories: calibratedCalories,
+      protein:  parseFloat((result.total?.protein || 0).toFixed(1)),
+      carbs:    parseFloat((result.total?.carbs   || 0).toFixed(1)),
+      fat:      parseFloat((result.total?.fat     || 0).toFixed(1)),
+    },
+    categories:               result.categories || [],
+    confidence:               result.confidence || 'medium',
+    notes:                    result.notes      || '',
+    ai_raw_calories:          rawCalories,
+    calibration_applied:      calibrationApplied,
+    calibration_confidence:   calibrationProfile?.confidence || 0,
+    calibration_data_points:  calibrationProfile?.data_points || 0,
+    similar_meal:             similarMeal,
+  });
+}

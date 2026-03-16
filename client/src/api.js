@@ -41,6 +41,7 @@ export const api = {
 
   // AI photo analysis
   analyzePhoto: (body, token)  => request('POST', '/api/analyze', body, token),
+  analyzeText:  (body, token)  => request('POST', '/api/entries/analyze-text', body, token),
 
   // Advanced analytics
   getAdvancedAnalytics: (period, token) => request('GET', `/api/progress/advanced?period=${period}`, null, token),

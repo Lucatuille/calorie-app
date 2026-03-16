@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import BarcodeScanner from '../components/BarcodeScanner';
+import TextAnalyzer   from '../components/TextAnalyzer';
 
 const BarcodeIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
@@ -40,6 +41,9 @@ export default function Calculator() {
   // Barcode scanner
   const [scannerOpen,    setScannerOpen]    = useState(false);
   const [scanFeedback,   setScanFeedback]   = useState(false);
+
+  // Text analyzer
+  const [textAnalyzerOpen, setTextAnalyzerOpen] = useState(false);
 
   // Photo analysis
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -146,6 +150,29 @@ export default function Calculator() {
     } catch (err) {
       setAiResult({ error: err.message });
     } finally { setAnalyzing(false); }
+  }
+
+  function handleTextResult(r) {
+    setForm(f => ({
+      ...f,
+      name:     r.name     || f.name,
+      calories: r.calories ? String(r.calories) : f.calories,
+      protein:  r.protein  ? String(r.protein)  : f.protein,
+      carbs:    r.carbs    ? String(r.carbs)    : f.carbs,
+      fat:      r.fat      ? String(r.fat)      : f.fat,
+    }));
+    // Save AI metadata for correction tracking (same fire-and-forget as photos)
+    if (r._ai) {
+      photoAnalysisRef.current = {
+        ai_raw:        r._ai.ai_raw,
+        ai_calibrated: r._ai.ai_calibrated,
+        categories:    r._ai.categories,
+        has_context:   true,
+        name:          r.name,
+      };
+    }
+    setScanFeedback(true);
+    setTimeout(() => setScanFeedback(false), 3000);
   }
 
   function handleAddScannedProduct(product, nutrition) {
@@ -294,25 +321,33 @@ export default function Calculator() {
       <div className="card" style={{ marginBottom: 12 }}>
         <h2 className="title-md" style={{ marginBottom: 12 }}>Añadir comida</h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
           <button
             type="button"
             className="btn btn-secondary"
-            style={{ fontSize: 12, padding: '8px 8px' }}
+            style={{ fontSize: 11, padding: '8px 4px' }}
             onClick={() => fileRef.current?.click()}
             disabled={analyzing}
           >
-            {analyzing ? <span className="spinner" style={{ width: 13, height: 13, marginRight: 6 }} /> : '📸 '}
-            {analyzing ? 'Analizando...' : 'Foto con IA'}
+            {analyzing ? <span className="spinner" style={{ width: 12, height: 12, marginRight: 4 }} /> : '📸 '}
+            {analyzing ? 'Analizando...' : 'Foto'}
           </button>
           <button
             type="button"
             className="btn btn-secondary"
-            style={{ fontSize: 12, padding: '8px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            style={{ fontSize: 11, padding: '8px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
             onClick={() => setScannerOpen(true)}
           >
             <BarcodeIcon />
-            Escanear producto
+            Escanear
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: 11, padding: '8px 4px' }}
+            onClick={() => setTextAnalyzerOpen(true)}
+          >
+            ✏️ Describir
           </button>
         </div>
 
@@ -509,6 +544,13 @@ export default function Calculator() {
         isOpen={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onAddProduct={handleAddScannedProduct}
+      />
+
+      <TextAnalyzer
+        isOpen={textAnalyzerOpen}
+        onClose={() => setTextAnalyzerOpen(false)}
+        mealType={form.meal_type}
+        onResult={handleTextResult}
       />
     </div>
   );

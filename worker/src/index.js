@@ -6,7 +6,7 @@ import { handleAuth } from './routes/auth.js';
 import { handleEntries } from './routes/entries.js';
 import { handleProgress } from './routes/progress.js';
 import { handleProfile } from './routes/profile.js';
-import { handleAnalyze } from './routes/analyze.js';
+import { handleAnalyze, handleAnalyzeText } from './routes/analyze.js';
 import { handleSupplements } from './routes/supplements.js';
 import { handleAdmin } from './routes/admin.js';
 import { handleCalibration } from './routes/calibration.js';
@@ -30,6 +30,10 @@ export default {
       }
 
       // Protected routes
+      if (path === '/api/entries/analyze-text') {
+        return await handleAnalyzeText(request, env, ctx);
+      }
+
       if (path.startsWith('/api/entries')) {
         return await handleEntries(request, env, path);
       }
