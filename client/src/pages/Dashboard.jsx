@@ -96,12 +96,12 @@ export default function Dashboard() {
     load();
   }, [token]);
 
-  const greeting = () => {
-    const h = new Date().getHours();
-    if (h < 13) return 'Buenos días';
-    if (h < 20) return 'Buenas tardes';
+  function getGreeting() {
+    const hour = new Date().getHours();
+    if (hour >= 6  && hour < 14) return 'Buenos días';
+    if (hour >= 14 && hour < 21) return 'Buenas tardes';
     return 'Buenas noches';
-  };
+  }
 
   async function handleTDEESave(tdeeData) {
     // Merge with existing profile so PUT doesn't wipe name/age/weight/etc.
@@ -137,7 +137,7 @@ export default function Dashboard() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 2, textTransform: 'capitalize' }}>{todayLabel}</p>
-        <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 6 }}>{greeting()},</p>
+        <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 6 }}>{getGreeting()},</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <h1 className="title-xl">{user?.name}</h1>
           {summary?.streak > 0 && (
