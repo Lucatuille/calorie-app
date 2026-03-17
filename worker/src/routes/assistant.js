@@ -29,7 +29,8 @@ const ALLOWED_LEVELS = [1, 2, 99];
 
 // ── Límites diarios por nivel ───────────────────────────────
 
-const DAILY_LIMITS = { 1: 30, 2: 20, 99: 999 };
+// Beta(1): 15 mensajes/día | Pro(2): 30 mensajes/día | Admin(99): sin límite práctico
+const DAILY_LIMITS = { 1: 15, 2: 30, 99: 999 };
 
 // ── System prompt del asistente ────────────────────────────
 

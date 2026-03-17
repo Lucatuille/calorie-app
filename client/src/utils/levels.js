@@ -6,6 +6,14 @@ export const LEVEL_CONFIG = {
   99: { name: 'Admin',    badge: '👑 Admin',     ai_limit: null, can_access: true  },
 };
 
+// null = ilimitado, número = límite diario
+// IMPORTANTE: no usar .ai_limit ?? N directamente — null es valor válido (ilimitado).
+export function getAiLimit(access_level) {
+  const config = LEVEL_CONFIG[access_level];
+  if (!config) return 3;
+  return config.ai_limit;
+}
+
 export function getBadgeStyle(level) {
   switch (level) {
     case 99: return { background: '#1a1a1a', color: '#ffffff' };
