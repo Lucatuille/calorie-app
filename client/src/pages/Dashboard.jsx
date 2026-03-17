@@ -326,8 +326,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Card asistente — Pro si tiene acceso, preview si es Free */}
-      {(user?.access_level ?? 0) >= 2 ? (
+      {/* Card asistente — Fundador(1), Pro(2) y Admin(99) tienen acceso */}
+      {[1, 2, 99].includes(user?.access_level ?? 0) ? (
         <Link to="/asistente" style={{ display: 'block', textDecoration: 'none', marginTop: 16 }}>
           <div className="card" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
