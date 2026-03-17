@@ -572,6 +572,30 @@ function TabAI({ data, loading }) {
           ))}
         </tbody>
       </table>
+
+      {/* Asistente nutricional */}
+      {data?.assistant && (
+        <>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
+            🤖 Asistente nutricional
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+            {[
+              { label: 'Conversaciones', value: data.assistant.conversations },
+              { label: 'Mensajes totales', value: data.assistant.messages },
+              { label: 'Usuarios activos', value: data.assistant.users },
+              { label: 'Mensajes hoy', value: data.assistant.today },
+              { label: 'Últimos 7 días', value: data.assistant.this_week },
+              { label: 'Haiku / Sonnet', value: `${data.assistant.haiku_pct}% / ${data.assistant.sonnet_pct}%` },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px' }}>
+                <p style={{ fontSize: 10, color: 'var(--text-3)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+                <p style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{value}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </>
   );
 }

@@ -367,6 +367,32 @@ export async function handleAdmin(request, env, path) {
     const costMonth  = calcCost(aiMonth?.input, aiMonth?.output);
     const costPerPhoto = totalCalls > 0 ? +((costTotal / totalCalls).toFixed(4)) : null;
 
+    // Assistant stats (tabla puede no existir aún si el SQL no se ha ejecutado)
+    let assistantStats = { conversations: 0, messages: 0, users: 0, today: 0, this_week: 0, haiku_pct: 0, sonnet_pct: 0 };
+    try {
+      const [aConvs, aMsgs, aToday, aWeek, aModels] = await Promise.all([
+        env.DB.prepare('SELECT COUNT(*) as n FROM assistant_conversations').first(),
+        env.DB.prepare('SELECT COUNT(DISTINCT user_id) as u, COUNT(*) as m FROM assistant_messages WHERE role = "user"').first(),
+        env.DB.prepare("SELECT COUNT(*) as n FROM assistant_messages WHERE role='user' AND created_at >= date('now')").first(),
+        env.DB.prepare("SELECT COUNT(*) as n FROM assistant_messages WHERE role='user' AND created_at >= datetime('now', '-7 days')").first(),
+        env.DB.prepare("SELECT model_used, COUNT(*) as n FROM assistant_messages WHERE role='assistant' GROUP BY model_used").all(),
+      ]);
+      const totalMsgs  = aMsgs?.m || 0;
+      const modelRows  = aModels?.results || [];
+      const haikuN     = modelRows.find(r => r.model_used?.includes('haiku'))?.n || 0;
+      const sonnetN    = modelRows.find(r => r.model_used?.includes('sonnet'))?.n || 0;
+      const modelTotal = haikuN + sonnetN;
+      assistantStats = {
+        conversations: aConvs?.n || 0,
+        messages:      totalMsgs,
+        users:         aMsgs?.u  || 0,
+        today:         aToday?.n || 0,
+        this_week:     aWeek?.n  || 0,
+        haiku_pct:  modelTotal > 0 ? Math.round(haikuN  / modelTotal * 100) : 0,
+        sonnet_pct: modelTotal > 0 ? Math.round(sonnetN / modelTotal * 100) : 0,
+      };
+    } catch { /* tablas aún no creadas */ }
+
     return jsonResponse({
       photos: {
         total:       totalCalls,
@@ -385,6 +411,7 @@ export async function handleAdmin(request, env, path) {
         cost:  calcCost(r.input, r.output),
       })),
       features,
+      assistant: assistantStats,
     });
   }
 
