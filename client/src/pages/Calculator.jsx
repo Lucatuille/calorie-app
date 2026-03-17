@@ -32,14 +32,6 @@ const PenIcon = () => (
   </svg>
 );
 
-// Color por tipo de comida (solo cuando está activo)
-const MEAL_COLORS = {
-  breakfast: { bg: '#fef3c7', color: '#92400e', activeBg: '#f59e0b', activeColor: '#fff' },
-  lunch:     { bg: '#d1fae5', color: '#065f46', activeBg: '#10b981', activeColor: '#fff' },
-  dinner:    { bg: '#ede9fe', color: '#3730a3', activeBg: '#6366f1', activeColor: '#fff' },
-  snack:     { bg: '#fce7f3', color: '#9d174d', activeBg: '#ec4899', activeColor: '#fff' },
-  other:     { bg: 'var(--surface-2)', color: 'var(--text-secondary)', activeBg: 'var(--surface-3)', activeColor: 'var(--text-primary)' },
-};
 
 function getDefaultMealType() {
   const h = new Date().getHours();
@@ -274,15 +266,10 @@ export default function Calculator() {
 
   const todayLabel = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
   const contextHint = getContextHint(form.meal_type);
-  const activeMealColor = MEAL_COLORS[form.meal_type] || MEAL_COLORS.other;
 
-  // Calorie input color hint
+  // Calorie hint (no red — never punish)
   const kcalTyped = parseInt(form.calories) || 0;
-  const kcalColor = kcalTyped === 0
-    ? 'var(--text-primary)'
-    : targetCalories > 0 && (total.calories + kcalTyped) > targetCalories
-      ? '#ef4444'
-      : 'var(--accent)';
+  const kcalOver  = targetCalories > 0 && (total.calories + kcalTyped) > targetCalories;
 
   // ── Shared styles ─────────────────────────────────────────────
   const cardStyle = {
@@ -372,14 +359,9 @@ export default function Calculator() {
               {analyzing
                 ? <span className="spinner" style={{ width: 18, height: 18 }} />
                 : <CameraIcon />}
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>
-                  {analyzing ? 'Analizando con IA…' : 'Foto con IA'}
-                </div>
-                <div style={{ fontSize: 10, opacity: 0.7, marginTop: 1 }}>
-                  {analyzing ? 'Esto tarda unos segundos' : 'Saca foto y calcula automáticamente'}
-                </div>
-              </div>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>
+                {analyzing ? 'Analizando con IA…' : 'Foto con IA'}
+              </span>
             </button>
 
             {/* Escanear */}
@@ -579,10 +561,9 @@ export default function Calculator() {
           {/* Formulario */}
           <form onSubmit={addMeal} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-            {/* Tipo de comida — pills con color individual */}
+            {/* Tipo de comida — ghost pills, activo en accent */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {MEAL_TYPES.map(m => {
-                const mc = MEAL_COLORS[m.id] || MEAL_COLORS.other;
                 const isActive = form.meal_type === m.id;
                 return (
                   <button
@@ -592,11 +573,12 @@ export default function Calculator() {
                     style={{
                       padding: '5px 14px',
                       borderRadius: 'var(--radius-full)',
-                      fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                      border: 'none', fontFamily: 'var(--font-sans)',
-                      background: isActive ? mc.activeBg : mc.bg,
-                      color: isActive ? mc.activeColor : mc.color,
-                      transition: 'background 0.15s, color 0.15s',
+                      fontSize: 12, fontWeight: isActive ? 600 : 400,
+                      cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                      border: `0.5px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                      background: isActive ? 'rgba(45,106,79,0.1)' : 'transparent',
+                      color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                      transition: 'all 0.15s',
                     }}
                   >
                     {m.label}
@@ -617,16 +599,16 @@ export default function Calculator() {
             <div style={{ position: 'relative' }}>
               <input
                 type="number"
+                min="0"
                 placeholder="0"
                 value={form.calories}
-                onChange={e => set('calories', e.target.value)}
+                onChange={e => set('calories', Math.max(0, parseInt(e.target.value) || 0) || '')}
                 style={{
                   ...inputStyle,
                   fontSize: 32, fontWeight: 700,
                   padding: '12px 56px 12px 16px',
                   letterSpacing: '-1px',
-                  color: kcalColor,
-                  transition: 'color 0.2s',
+                  color: 'var(--text-primary)',
                 }}
               />
               <span style={{
@@ -636,17 +618,17 @@ export default function Calculator() {
               }}>
                 kcal
               </span>
-              {/* Feedback de progreso si hay objetivo */}
+              {/* Hint contextual — nunca rojo */}
               {kcalTyped > 0 && targetCalories > 0 && (
                 <div style={{
                   position: 'absolute', bottom: -18, left: 0,
-                  fontSize: 10, color: kcalColor,
+                  fontSize: 10,
+                  color: kcalOver ? '#d97706' : 'var(--accent)',
                   fontFamily: 'var(--font-sans)',
-                  transition: 'color 0.2s',
                 }}>
-                  {total.calories + kcalTyped > targetCalories
-                    ? `+${(total.calories + kcalTyped - targetCalories).toLocaleString('es')} sobre el objetivo`
-                    : `${(targetCalories - total.calories - kcalTyped).toLocaleString('es')} restantes tras guardar`}
+                  {kcalOver
+                    ? `${(total.calories + kcalTyped - targetCalories).toLocaleString('es')} sobre el objetivo`
+                    : `${(targetCalories - total.calories - kcalTyped).toLocaleString('es')} restantes`}
                 </div>
               )}
             </div>
@@ -754,10 +736,8 @@ export default function Calculator() {
               disabled={saving || !form.calories}
               style={{
                 width: '100%',
-                background: form.calories ? activeMealColor.activeBg : 'var(--surface-3)',
-                color: form.calories
-                  ? (activeMealColor.activeBg === 'var(--surface-3)' ? 'var(--text-primary)' : activeMealColor.activeColor)
-                  : 'var(--text-tertiary)',
+                background: form.calories ? 'var(--accent)' : 'var(--surface-3)',
+                color: form.calories ? 'white' : 'var(--text-tertiary)',
                 border: 'none', borderRadius: 'var(--radius-sm)',
                 padding: '13px', fontSize: 14, fontWeight: 500,
                 cursor: form.calories && !saving ? 'pointer' : 'default',
