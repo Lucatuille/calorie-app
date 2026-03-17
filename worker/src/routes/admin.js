@@ -24,18 +24,6 @@ function relativeTime(dateStr) {
   return `hace ${days}d`;
 }
 
-function computeLongestStreak(dates) {
-  if (!dates.length) return 0;
-  const sorted = [...new Set(dates)].sort();
-  let longest = 1, cur = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(sorted[i - 1] + 'T12:00:00Z');
-    const curr = new Date(sorted[i]     + 'T12:00:00Z');
-    if ((curr - prev) / 86400000 === 1) { cur++; longest = Math.max(longest, cur); }
-    else cur = 1;
-  }
-  return longest;
-}
 
 export async function handleAdmin(request, env, path) {
   const admin = await requireAdmin(request, env);
@@ -54,7 +42,7 @@ export async function handleAdmin(request, env, path) {
       avgRow,
       { results: dailyActivity },
       { results: alertRows },
-      { results: recentDates },
+      streakRow,
     ] = await Promise.all([
       env.DB.prepare('SELECT COUNT(*) as total_users FROM users').first(),
       env.DB.prepare(`SELECT COUNT(DISTINCT user_id) as active_today FROM entries WHERE date = date('now')`).first(),
@@ -85,29 +73,29 @@ export async function handleAdmin(request, env, path) {
         ORDER BY last_entry ASC
       `).all(),
       env.DB.prepare(`
-        SELECT user_id, date FROM entries
-        WHERE date >= date('now', '-90 days')
-        ORDER BY user_id, date ASC
-      `).all(),
+        WITH dated AS (
+          SELECT DISTINCT user_id, date FROM entries
+          WHERE date >= date('now', '-90 days')
+        ),
+        ranked AS (
+          SELECT user_id, date,
+            julianday(date) - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY date) AS grp
+          FROM dated
+        ),
+        streaks AS (
+          SELECT user_id, COUNT(*) as streak_len FROM ranked GROUP BY user_id, grp
+        ),
+        best AS (
+          SELECT user_id, MAX(streak_len) as max_streak
+          FROM streaks GROUP BY user_id ORDER BY max_streak DESC LIMIT 1
+        )
+        SELECT u.name, best.user_id, best.max_streak
+        FROM best JOIN users u ON u.id = best.user_id
+      `).first(),
     ]);
 
-    // Compute max streak per user
-    const datesByUser = {};
-    for (const r of recentDates) {
-      if (!datesByUser[r.user_id]) datesByUser[r.user_id] = [];
-      datesByUser[r.user_id].push(r.date);
-    }
-    let maxStreakDays = 0, maxStreakUser = null;
-    for (const [uid, dates] of Object.entries(datesByUser)) {
-      const s = computeLongestStreak(dates);
-      if (s > maxStreakDays) { maxStreakDays = s; maxStreakUser = uid; }
-    }
-    // Get name for max streak user
-    let maxStreakName = null;
-    if (maxStreakUser) {
-      const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(maxStreakUser).first();
-      maxStreakName = u?.name || null;
-    }
+    const maxStreakDays = streakRow?.max_streak || 0;
+    const maxStreakName = streakRow?.name || null;
 
     const alerts = alertRows.map(r => ({
       user_id: r.id,
@@ -169,6 +157,7 @@ export async function handleAdmin(request, env, path) {
         SELECT user_id, name, COUNT(*) as cnt
         FROM entries
         WHERE name IS NOT NULL AND name != '' AND LENGTH(name) > 1
+          AND date >= date('now', '-90 days')
         GROUP BY user_id, name
         ORDER BY user_id, cnt DESC
       `).all(),
@@ -217,7 +206,7 @@ export async function handleAdmin(request, env, path) {
       { results: mealTypes },
       { results: topFoods },
       { results: heatmapData },
-      { results: cohortUsers },
+      { results: cohortData },
     ] = await Promise.all([
       env.DB.prepare(`
         SELECT meal_type, SUM(calories) as total_cal, COUNT(*) as entry_count
@@ -236,48 +225,51 @@ export async function handleAdmin(request, env, path) {
         GROUP BY date ORDER BY date ASC
       `).all(),
       env.DB.prepare(`
-        SELECT id, created_at FROM users ORDER BY created_at DESC
+        WITH cohort_users AS (
+          SELECT id, created_at,
+            date(created_at, '-' || ((strftime('%w', created_at) + 6) % 7) || ' days') as cohort_week
+          FROM users
+        ),
+        top_cohorts AS (
+          SELECT cohort_week FROM cohort_users
+          GROUP BY cohort_week ORDER BY cohort_week DESC LIMIT 6
+        ),
+        filtered_users AS (
+          SELECT cu.id, cu.created_at, cu.cohort_week
+          FROM cohort_users cu
+          WHERE cu.cohort_week IN (SELECT cohort_week FROM top_cohorts)
+        ),
+        user_activity AS (
+          SELECT fu.id, fu.cohort_week, fu.created_at,
+            MAX(CASE WHEN e.date >= date(fu.created_at) AND e.date <= date(fu.created_at, '+7 days')  THEN 1 ELSE 0 END) as ret_d7,
+            MAX(CASE WHEN e.date >= date(fu.created_at) AND e.date <= date(fu.created_at, '+14 days') THEN 1 ELSE 0 END) as ret_d14,
+            MAX(CASE WHEN e.date >= date(fu.created_at) AND e.date <= date(fu.created_at, '+30 days') THEN 1 ELSE 0 END) as ret_d30
+          FROM filtered_users fu
+          LEFT JOIN entries e ON e.user_id = fu.id
+          GROUP BY fu.id
+        )
+        SELECT cohort_week,
+          COUNT(*) as total,
+          SUM(ret_d7)  as active_d7,
+          SUM(ret_d14) as active_d14,
+          SUM(ret_d30) as active_d30
+        FROM user_activity
+        GROUP BY cohort_week ORDER BY cohort_week DESC
       `).all(),
     ]);
 
-    // Cohort retention: group users by registration week
-    const cohorts = {};
-    for (const u of cohortUsers) {
-      const d = new Date(u.created_at);
-      const weekStart = new Date(d);
-      weekStart.setUTCDate(d.getUTCDate() - d.getUTCDay() + 1); // Monday
-      const key = weekStart.toISOString().split('T')[0];
-      if (!cohorts[key]) cohorts[key] = [];
-      cohorts[key].push({ id: u.id, created_at: u.created_at });
-    }
-
-    // For each cohort, check activity at D+7, D+14, D+30
-    const cohortRows = [];
-    for (const [week, users] of Object.entries(cohorts).sort().reverse().slice(0, 6)) {
-      const userIds = users.map(u => u.id);
-      if (!userIds.length) continue;
-      const regDate = new Date(users[0].created_at);
-      const d7  = new Date(regDate.getTime() + 7  * 86400000).toISOString().split('T')[0];
-      const d14 = new Date(regDate.getTime() + 14 * 86400000).toISOString().split('T')[0];
-      const d30 = new Date(regDate.getTime() + 30 * 86400000).toISOString().split('T')[0];
-
-      const placeholders = userIds.map(() => '?').join(',');
-      const [a7, a14, a30] = await Promise.all([
-        env.DB.prepare(`SELECT COUNT(DISTINCT user_id) as n FROM entries WHERE user_id IN (${placeholders}) AND date >= ? AND date <= ?`).bind(...userIds, regDate.toISOString().split('T')[0], d7).first(),
-        env.DB.prepare(`SELECT COUNT(DISTINCT user_id) as n FROM entries WHERE user_id IN (${placeholders}) AND date >= ? AND date <= ?`).bind(...userIds, regDate.toISOString().split('T')[0], d14).first(),
-        new Date() > new Date(d30)
-          ? env.DB.prepare(`SELECT COUNT(DISTINCT user_id) as n FROM entries WHERE user_id IN (${placeholders}) AND date >= ? AND date <= ?`).bind(...userIds, regDate.toISOString().split('T')[0], d30).first()
-          : Promise.resolve(null),
-      ]);
-
-      cohortRows.push({
-        week,
-        total: userIds.length,
-        d7_pct:  a7  ? Math.round(a7.n  / userIds.length * 100) : null,
-        d14_pct: a14 ? Math.round(a14.n / userIds.length * 100) : null,
-        d30_pct: a30 ? Math.round(a30.n / userIds.length * 100) : null,
-      });
-    }
+    // Cohort retention: map SQL results, mark d30 as null if window hasn't elapsed
+    const cohortRows = cohortData.map(r => {
+      const d30cutoff = new Date(r.cohort_week + 'T00:00:00Z');
+      d30cutoff.setUTCDate(d30cutoff.getUTCDate() + 30);
+      return {
+        week:    r.cohort_week,
+        total:   r.total,
+        d7_pct:  r.total > 0 ? Math.round(r.active_d7  / r.total * 100) : null,
+        d14_pct: r.total > 0 ? Math.round(r.active_d14 / r.total * 100) : null,
+        d30_pct: r.total > 0 && new Date() > d30cutoff ? Math.round(r.active_d30 / r.total * 100) : null,
+      };
+    });
 
     // Meal type total for pct
     const totalCal = mealTypes.reduce((a, m) => a + m.total_cal, 0);

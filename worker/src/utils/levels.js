@@ -12,7 +12,7 @@ export const ACCESS_LEVELS = {
 
 export const LEVEL_CONFIG = {
   0:  { name: 'Waitlist', badge: null,          ai_limit: 0,    can_access: false },
-  1:  { name: 'Fundador', badge: '🌱 Fundador', ai_limit: 15,   can_access: true  },
+  1:  { name: 'Beta',     badge: '🌱 Beta',     ai_limit: 15,   can_access: true  },
   2:  { name: 'Pro',      badge: '∞ Pro',        ai_limit: 30,   can_access: true  },
   3:  { name: 'Free',     badge: null,           ai_limit: 3,    can_access: true  },
   99: { name: 'Admin',    badge: '👑 Admin',     ai_limit: null, can_access: true  },
