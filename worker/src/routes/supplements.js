@@ -66,7 +66,7 @@ export async function handleSupplements(request, env, path) {
     ).bind(id, user.userId).first();
     if (!existing) return errorResponse('Suplemento no encontrado', 404);
 
-    await env.DB.prepare('DELETE FROM user_supplements WHERE id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM user_supplements WHERE id = ? AND user_id = ?').bind(id, user.userId).run();
     return jsonResponse({ success: true });
   }
 

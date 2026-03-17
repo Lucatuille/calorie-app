@@ -56,52 +56,23 @@ export async function handleProfile(request, env, path) {
       tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
     } = body;
 
-    // Try with all TDEE columns first, fall back progressively
-    try {
-      await env.DB.prepare(
-        `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
-                          target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
-                          goal_weight=?,
-                          tdee=?, bmr=?, pal_factor=?, formula_used=?, tdee_calculated_at=?
-         WHERE id=?`
-      ).bind(
-        name||null, age||null, weight||null, height||null, gender||null,
-        target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
-        goal_weight||null,
-        tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
-        user.userId
-      ).run();
-    } catch {
-      try {
-        await env.DB.prepare(
-          `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
-                            target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
-                            goal_weight=?
-           WHERE id=?`
-        ).bind(
-          name||null, age||null, weight||null, height||null, gender||null,
-          target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
-          goal_weight||null,
-          user.userId
-        ).run();
-      } catch {
-        try {
-          await env.DB.prepare(
-            `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
-                              target_calories=?, target_protein=?, target_carbs=?, target_fat=?
-             WHERE id=?`
-          ).bind(
-            name||null, age||null, weight||null, height||null, gender||null,
-            target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
-            user.userId
-          ).run();
-        } catch {
-          await env.DB.prepare(
-            `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?, target_calories=? WHERE id=?`
-          ).bind(name||null, age||null, weight||null, height||null, gender||null, target_calories||null, user.userId).run();
-        }
-      }
-    }
+    // TDEE fields use COALESCE so that sending null (e.g. from the profile
+    // edit form that doesn't include wizard fields) never overwrites existing values.
+    await env.DB.prepare(
+      `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
+                        target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
+                        goal_weight=?,
+                        tdee=COALESCE(?,tdee), bmr=COALESCE(?,bmr),
+                        pal_factor=COALESCE(?,pal_factor), formula_used=COALESCE(?,formula_used),
+                        tdee_calculated_at=COALESCE(?,tdee_calculated_at)
+       WHERE id=?`
+    ).bind(
+      name||null, age||null, weight||null, height||null, gender||null,
+      target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
+      goal_weight||null,
+      tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
+      user.userId
+    ).run();
 
     return jsonResponse({ message: 'Perfil actualizado' });
   }

@@ -79,7 +79,7 @@ export async function handleEntries(request, env, path) {
     ).bind(id, user.userId).first();
     if (!entry) return errorResponse('Entrada no encontrada', 404);
 
-    await env.DB.prepare('DELETE FROM entries WHERE id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM entries WHERE id = ? AND user_id = ?').bind(id, user.userId).run();
     return jsonResponse({ message: 'Entrada eliminada' });
   }
 
