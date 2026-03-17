@@ -333,7 +333,7 @@ export default function Assistant() {
                 flex: 1, resize: 'none', padding: '10px 14px',
                 border: '1px solid var(--border)', borderRadius: 12,
                 background: 'var(--surface)', color: 'var(--text)',
-                fontSize: 14, lineHeight: 1.5,
+                fontSize: 16, lineHeight: 1.5,
                 fontFamily: 'inherit', outline: 'none',
               }}
             />
