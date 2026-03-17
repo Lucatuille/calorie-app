@@ -326,7 +326,7 @@ export default function Calculator() {
             <span style={{ ...sectionLabelStyle, marginBottom: 0 }}>Añadir comida</span>
             {contextHint && (
               <span style={{
-                fontSize: 10, color: activeMealColor.activeBg === 'var(--surface-3)' ? 'var(--text-tertiary)' : activeMealColor.activeBg,
+                fontSize: 10, color: 'var(--accent)',
                 fontFamily: 'var(--font-sans)', fontStyle: 'italic',
               }}>
                 {contextHint}
