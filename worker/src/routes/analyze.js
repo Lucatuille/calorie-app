@@ -1,72 +1,80 @@
 // ============================================================
-//  ANALYZE ROUTE — /api/analyze
-//  Receives a base64 image, calls Claude Vision, returns
-//  estimated calories + macros for the food in the photo.
-//  Applies personal calibration profile if available.
+//  ANALYZE ROUTE — /api/analyze  y  /api/entries/analyze-text
+//  Análisis visual y textual de comidas con Claude Haiku Vision
 // ============================================================
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 import { applyCalibration, findSimilarMeal } from '../utils/calibration.js';
 import { getAiLimit, canAccess } from '../utils/levels.js';
 
-const SYSTEM_PROMPT = `Eres un nutricionista experto. El usuario te envía una foto de su comida.
-Analiza visualmente los alimentos y estima sus valores nutricionales.
-Responde SOLO con un objeto JSON válido, sin texto adicional, con esta estructura exacta:
-{
-  "name": "nombre descriptivo del plato",
-  "calories": número entero,
-  "protein": número decimal (gramos),
-  "carbs": número decimal (gramos),
-  "fat": número decimal (gramos),
-  "confidence": "alta" | "media" | "baja",
-  "notes": "breve descripción de lo detectado y advertencias si la imagen no es clara",
-  "categories": ["categoría1", "categoría2", "categoría3"]
-}
+// Tamaño máximo de imagen permitido (base64, ~2 MB de imagen original)
+const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
 
-Para "categories": máximo 4 categorías en inglés snake_case que describan el plato.
-Ejemplos: ["pasta", "italian", "homemade"], ["grilled_chicken", "protein", "light"],
-["salad", "vegetables", "dressing_likely"], ["rice", "asian", "soy_sauce"]
+// ── System prompt fotos — estático, apto para prompt caching ─
+// ~200 tokens (antes ~420)
 
-Si no puedes identificar comida en la imagen, devuelve confidence: "baja" con valores estimados a 0.
+const PHOTO_SYSTEM_PROMPT = `Eres un nutricionista experto. Analiza la foto de comida y devuelve SOLO JSON válido con esta estructura exacta:
+{"name":"nombre descriptivo","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal,"confidence":"alta"|"media"|"baja","notes":"observaciones breves","categories":["cat1","cat2"]}
 
-Importante: NO seas conservador con las estimaciones calóricas. Los estudios muestran que las personas consistentemente subestiman las calorías de sus comidas. Asume siempre:
-- Raciones generosas — la mayoría de platos caseros y de restaurante son más grandes de lo que parecen en foto
-- Aceites y grasas — cualquier salteado, fritura o asado lleva más aceite del visible
-- Ingredientes ocultos — salsas, mantequilla, nata, queso rallado añaden calorías que no se ven
-- En caso de duda entre dos estimaciones, elige siempre la más alta
-- Si el usuario especifica "casero" o "restaurante", los platos de restaurante tienen de media un 30% más de calorías que los caseros por el uso más generoso de grasas
+Reglas de estimación (no seas conservador):
+- Asume raciones generosas y aceites/grasas ocultos
+- Restaurante: +30% vs casero por uso de grasas
+- En duda entre dos cifras, elige la más alta
+- categories: máx 4, en inglés snake_case
+- Si no hay comida identificable: confidence "baja", valores 0`;
 
-El objetivo es que la estimación sea realista, no optimista.`;
+// ── System prompt texto — estático, apto para prompt caching ─
+// ~150 tokens (antes ~380 en user message)
+
+const TEXT_SYSTEM_PROMPT = `Eres un nutricionista experto. El usuario describe su comida en texto. Devuelve SOLO JSON válido:
+{"name":"nombre descriptivo","items":[{"name":"nombre","quantity":"cantidad","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal}],"total":{"calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal},"categories":["cat1","cat2"],"confidence":"high"|"medium"|"low","notes":"observaciones breves"}
+
+Reglas: ración normal española si no se especifica cantidad | casero: moderado en aceites | restaurante: +25-35% | múltiples alimentos: analiza y suma | no seas conservador.`;
+
+// ── Rate limiting con incremento atómico previo ─────────────
+// FIX: incremento ANTES de llamar a Claude, rollback si falla.
 
 async function checkAndIncrementAiLimit(env, userId, accessLevel) {
   const limit = getAiLimit(accessLevel);
-  if (limit === null) return null; // ilimitado
+  if (limit === null) return { error: null, used: 0, limit: Infinity }; // ilimitado (solo admin)
 
-  const today = new Date().toLocaleDateString('en-CA');
-  const row = await env.DB.prepare(
+  const today   = new Date().toLocaleDateString('en-CA');
+  const row     = await env.DB.prepare(
     'SELECT count FROM ai_usage_log WHERE user_id = ? AND date = ?'
   ).bind(userId, today).first();
-
   const current = row?.count || 0;
+
   if (current >= limit) {
     const hoursLeft = 24 - new Date().getHours();
-    return jsonResponse({
-      error: 'ai_limit_reached',
-      used: current,
-      limit,
-      hours_left: hoursLeft,
-      message: `Has usado tus ${limit} análisis de IA de hoy. Se renuevan a las 00:00.`,
-      upgrade_available: true,
-    }, 429);
+    return {
+      error: jsonResponse({
+        error: 'ai_limit_reached',
+        used: current,
+        limit,
+        hours_left: hoursLeft,
+        message: `Has usado tus ${limit} análisis de IA de hoy. Se renuevan a las 00:00.`,
+        upgrade_available: true,
+      }, 429),
+    };
   }
 
+  // Incremento atómico ANTES de la llamada a Claude
   await env.DB.prepare(`
     INSERT INTO ai_usage_log (user_id, date, count) VALUES (?, ?, 1)
     ON CONFLICT(user_id, date) DO UPDATE SET count = count + 1
   `).bind(userId, today).run();
 
-  return null; // sin error → continuar
+  return { error: null, used: current, limit };
 }
+
+async function rollbackAiLimit(env, userId) {
+  const today = new Date().toLocaleDateString('en-CA');
+  await env.DB.prepare(
+    'UPDATE ai_usage_log SET count = MAX(0, count - 1) WHERE user_id = ? AND date = ?'
+  ).bind(userId, today).run().catch(() => {});
+}
+
+// ── POST /api/analyze — análisis por foto ───────────────────
 
 export async function handleAnalyze(request, env, path, ctx) {
   const user = await authenticate(request, env);
@@ -82,10 +90,15 @@ export async function handleAnalyze(request, env, path, ctx) {
     if (!image) return errorResponse('Imagen requerida');
     if (!env.ANTHROPIC_API_KEY) return errorResponse('API key no configurada', 500);
 
-    const limitErr = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
-    if (limitErr) return limitErr;
+    // Guard de tamaño de imagen
+    if (image.length > MAX_IMAGE_B64_CHARS) {
+      return errorResponse(`Imagen demasiado grande. Reduce la resolución antes de enviar (máx ~2 MB).`, 413);
+    }
 
-    // Load calibration profile (non-blocking on failure)
+    const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+    if (limitCheck.error) return limitCheck.error;
+
+    // Calibración (no-blocking)
     let calibrationProfile = null;
     try {
       const calRow = await env.DB.prepare(
@@ -96,23 +109,19 @@ export async function handleAnalyze(request, env, path, ctx) {
           global_bias:    calRow.global_bias,
           confidence:     calRow.confidence,
           data_points:    calRow.data_points,
-          meal_factors:   JSON.parse(calRow.meal_factors  || '{}'),
-          food_factors:   JSON.parse(calRow.food_factors  || '{}'),
-          time_factors:   JSON.parse(calRow.time_factors  || '{}'),
+          meal_factors:   JSON.parse(calRow.meal_factors   || '{}'),
+          food_factors:   JSON.parse(calRow.food_factors   || '{}'),
+          time_factors:   JSON.parse(calRow.time_factors   || '{}'),
           frequent_meals: JSON.parse(calRow.frequent_meals || '[]'),
         };
       }
     } catch {}
 
     const contextSection = context?.trim()
-      ? `\n\nContexto adicional del usuario: "${context.trim()}"\nTen en cuenta este contexto para ajustar las estimaciones, especialmente el tamaño de la ración, método de cocción e ingredientes no visibles.`
+      ? `\nContexto: "${context.trim().slice(0, 200)}"`
       : '';
 
-    const userText = `Analiza esta comida y devuelve el JSON con la estimación nutricional.${contextSection}
-
-Si el contexto menciona número de raciones, multiplica todos los valores por ese número.
-Si menciona peso en gramos, úsalo para calibrar la estimación.
-Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
+    const userText = `Analiza esta comida y devuelve el JSON.${contextSection}`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -122,19 +131,15 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        system: SYSTEM_PROMPT,
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system:     PHOTO_SYSTEM_PROMPT,
         messages: [{
           role: 'user',
           content: [
             {
-              type: 'image',
-              source: {
-                type:       'base64',
-                media_type: mediaType || 'image/jpeg',
-                data:       image,
-              },
+              type:   'image',
+              source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: image },
             },
             { type: 'text', text: userText },
           ],
@@ -143,6 +148,7 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
     });
 
     if (!response.ok) {
+      await rollbackAiLimit(env, user.userId);
       const err = await response.json().catch(() => ({}));
       return errorResponse(err.error?.message || 'Error al llamar a Claude', 502);
     }
@@ -150,19 +156,19 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
     const claude = await response.json();
     const text   = claude.content?.[0]?.text || '';
 
-    // Extract JSON from the response (Claude may wrap it in markdown)
     const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return errorResponse('No se pudo parsear la respuesta de Claude', 502);
+    if (!match) {
+      await rollbackAiLimit(env, user.userId);
+      return errorResponse('No se pudo parsear la respuesta de Claude', 502);
+    }
 
     try {
       const result = JSON.parse(match[0]);
 
-      // Log AI usage — ctx.waitUntil garantiza que el INSERT se completa
-      // aunque el Worker ya haya enviado la respuesta al cliente
       const inputTokens  = claude.usage?.input_tokens  || 0;
       const outputTokens = claude.usage?.output_tokens || 0;
       const logPromise = env.DB.prepare(
-        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
+        "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime('now'))"
       ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
       if (ctx?.waitUntil) ctx.waitUntil(logPromise);
 
@@ -170,17 +176,14 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
       const categories = Array.isArray(result.categories) ? result.categories : [];
       const isWeekend  = [0, 6].includes(new Date().getDay());
 
-      // Apply calibration
       const calibrated = applyCalibration(aiRaw, calibrationProfile, {
-        meal_type: meal_type || 'other',
+        meal_type:       meal_type || 'other',
         food_categories: categories,
-        is_weekend: isWeekend,
+        is_weekend:      isWeekend,
       });
 
       const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.1;
-
-      // Find similar meal from user's history
-      const similarMeal = findSimilarMeal(result.name, calibrationProfile?.frequent_meals);
+      const similarMeal        = findSimilarMeal(result.name, calibrationProfile?.frequent_meals);
 
       return jsonResponse({
         name:       result.name       || '',
@@ -191,14 +194,15 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
         confidence: result.confidence || 'media',
         notes:      result.notes      || '',
         categories,
-        // Calibration metadata
-        ai_raw:                   aiRaw,
-        calibration_applied:      calibrationApplied,
-        calibration_confidence:   calibrationProfile?.confidence || 0,
-        calibration_data_points:  calibrationProfile?.data_points || 0,
-        similar_meal:             similarMeal,
+        ai_raw:                  aiRaw,
+        calibration_applied:     calibrationApplied,
+        calibration_confidence:  calibrationProfile?.confidence   || 0,
+        calibration_data_points: calibrationProfile?.data_points  || 0,
+        similar_meal:            similarMeal,
+        usage: { used: limitCheck.used + 1, limit: limitCheck.limit },
       });
     } catch {
+      await rollbackAiLimit(env, user.userId);
       return errorResponse('Respuesta JSON inválida de Claude', 502);
     }
   }
@@ -207,8 +211,6 @@ Si menciona ingredientes adicionales no visibles, inclúyelos en el cálculo.`;
 }
 
 // ── POST /api/entries/analyze-text ─────────────────────────
-// Análisis por descripción de texto libre — mismo sistema de
-// calibración que las fotos, pero sin imagen (más barato).
 
 export async function handleAnalyzeText(request, env, ctx) {
   const user = await authenticate(request, env);
@@ -223,79 +225,64 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!text?.trim()) return errorResponse('Texto vacío', 400);
   if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
 
-  const limitErr = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
-  if (limitErr) return limitErr;
+  const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+  if (limitCheck.error) return limitCheck.error;
 
-  // Cargar perfil de calibración (mismo sistema que fotos)
-  const calibrationRow = await env.DB.prepare(
-    'SELECT * FROM user_calibration WHERE user_id = ?'
-  ).bind(user.userId).first();
+  // Calibración — solo si hay confianza suficiente
+  let calibrationRow = null;
+  let calibrationProfile = null;
+  try {
+    calibrationRow = await env.DB.prepare(
+      'SELECT global_bias, confidence, data_points, meal_factors, food_factors, time_factors, frequent_meals FROM user_calibration WHERE user_id = ?'
+    ).bind(user.userId).first();
+  } catch {}
 
-  const calibrationProfile = calibrationRow ? {
-    global_bias:    calibrationRow.global_bias,
-    confidence:     calibrationRow.confidence,
-    data_points:    calibrationRow.data_points,
-    meal_factors:   JSON.parse(calibrationRow.meal_factors   || '{}'),
-    food_factors:   JSON.parse(calibrationRow.food_factors   || '{}'),
-    time_factors:   JSON.parse(calibrationRow.time_factors   || '{}'),
-    frequent_meals: JSON.parse(calibrationRow.frequent_meals || '[]'),
-  } : null;
+  if (calibrationRow) {
+    calibrationProfile = {
+      global_bias:    calibrationRow.global_bias,
+      confidence:     calibrationRow.confidence,
+      data_points:    calibrationRow.data_points,
+      meal_factors:   JSON.parse(calibrationRow.meal_factors   || '{}'),
+      food_factors:   JSON.parse(calibrationRow.food_factors   || '{}'),
+      time_factors:   JSON.parse(calibrationRow.time_factors   || '{}'),
+      frequent_meals: JSON.parse(calibrationRow.frequent_meals || '[]'),
+    };
+  }
 
-  // Contexto de calibración para el prompt (si hay suficiente confianza)
-  let calibrationContext = '';
+  // Nota de calibración — solo si confidence > 0.2 (y es corta)
+  let calibNote = '';
   if (calibrationProfile?.confidence > 0.2) {
     const biasPct = Math.round(Math.abs(calibrationProfile.global_bias) * 100);
     const dir     = calibrationProfile.global_bias > 0 ? 'más' : 'menos';
-    calibrationContext = `\n\nIMPORTANTE — Calibración personal del usuario: este usuario tiende a consumir un ${biasPct}% ${dir} de lo que estiman los modelos genéricos. Ajusta tus estimaciones en consecuencia.`;
+    calibNote = ` [Calibración: usuario consume ${biasPct}% ${dir} de lo estimado]`;
   }
 
-  const prompt = `Eres un nutricionista experto. El usuario describe lo que ha comido en lenguaje natural.
-Analiza la descripción y estima los valores nutricionales con precisión.
-
-Descripción: "${text}"
-${calibrationContext}
-
-Reglas de estimación:
-- Si se indica cantidad específica (gramos, unidades), úsala exactamente
-- Sin cantidad → asume ración normal española (no americana)
-- Casero: estimar con moderación en aceites
-- Restaurante: añadir 25-35% extra por aceites y porciones generosas
-- Múltiples alimentos: analiza cada uno y suma
-- NO seas conservador — las personas subestiman consistentemente
-
-Responde ÚNICAMENTE con JSON válido, sin texto ni markdown adicional:
-{
-  "name": "nombre descriptivo del conjunto",
-  "items": [
-    { "name": "nombre", "quantity": "cantidad estimada", "calories": entero, "protein": decimal, "carbs": decimal, "fat": decimal }
-  ],
-  "total": { "calories": entero, "protein": decimal, "carbs": decimal, "fat": decimal },
-  "categories": ["cat1", "cat2"],
-  "confidence": "high" | "medium" | "low",
-  "notes": "observaciones breves si las hay"
-}`;
+  const userMessage = `${text.trim()}${calibNote}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
+      'Content-Type':      'application/json',
+      'x-api-key':         env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
-      messages: [{ role: 'user', content: prompt }],
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      system:     TEXT_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: userMessage }],
     }),
   });
 
   if (!response.ok) {
+    await rollbackAiLimit(env, user.userId);
     const err = await response.json().catch(() => ({}));
     return errorResponse(err?.error?.message || 'Error de IA (upstream)', 502);
   }
 
   let aiData;
   try { aiData = await response.json(); } catch {
+    await rollbackAiLimit(env, user.userId);
     return errorResponse('Respuesta no-JSON de Claude', 502);
   }
   const rawText = aiData.content?.[0]?.text || '';
@@ -307,10 +294,10 @@ Responde ÚNICAMENTE con JSON válido, sin texto ni markdown adicional:
     if (!match) throw new Error('no json');
     result = JSON.parse(match[0]);
   } catch {
+    await rollbackAiLimit(env, user.userId);
     return errorResponse('Respuesta inválida de Claude', 502);
   }
 
-  // Aplicar calibración solo a calorías (no escalar macros)
   const rawCalories = result.total?.calories || 0;
   const isWeekend   = [0, 6].includes(new Date().getDay());
   const calibratedCalories = applyCalibration(rawCalories, calibrationProfile, {
@@ -319,10 +306,8 @@ Responde ÚNICAMENTE con JSON válido, sin texto ni markdown adicional:
     is_weekend:      isWeekend,
   });
 
-  // Buscar comida similar en historial
   const similarMeal = findSimilarMeal(text, calibrationProfile?.frequent_meals);
 
-  // Log tokens (fire-and-forget con ctx.waitUntil)
   const inputTokens  = aiData.usage?.input_tokens  || 0;
   const outputTokens = aiData.usage?.output_tokens || 0;
   const logPromise = env.DB.prepare(
@@ -341,13 +326,14 @@ Responde ÚNICAMENTE con JSON válido, sin texto ni markdown adicional:
       carbs:    parseFloat((result.total?.carbs   || 0).toFixed(1)),
       fat:      parseFloat((result.total?.fat     || 0).toFixed(1)),
     },
-    categories:               result.categories || [],
-    confidence:               result.confidence || 'medium',
-    notes:                    result.notes      || '',
-    ai_raw_calories:          rawCalories,
-    calibration_applied:      calibrationApplied,
-    calibration_confidence:   calibrationProfile?.confidence || 0,
-    calibration_data_points:  calibrationProfile?.data_points || 0,
-    similar_meal:             similarMeal,
+    categories:              result.categories || [],
+    confidence:              result.confidence || 'medium',
+    notes:                   result.notes      || '',
+    ai_raw_calories:         rawCalories,
+    calibration_applied:     calibrationApplied,
+    calibration_confidence:  calibrationProfile?.confidence  || 0,
+    calibration_data_points: calibrationProfile?.data_points || 0,
+    similar_meal:            similarMeal,
+    usage: { used: limitCheck.used + 1, limit: limitCheck.limit },
   });
 }

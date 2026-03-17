@@ -126,9 +126,25 @@ export default function Calculator() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result;
-      setPhotoPreview(dataUrl);
-      setPhotoData({ base64: dataUrl.split(',')[1], mediaType: file.type });
+      const original = reader.result;
+      setPhotoPreview(original);
+      // Redimensionar y comprimir antes de enviar a la API (máx 900px, calidad 0.82)
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 900;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+          else                { width = Math.round(width * MAX / height); height = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width  = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        setPhotoData({ base64: compressed.split(',')[1], mediaType: 'image/jpeg' });
+      };
+      img.src = original;
       setAiResult(null);
       setPhotoContext('');
     };
