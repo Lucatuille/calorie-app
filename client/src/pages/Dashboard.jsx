@@ -16,13 +16,45 @@ function getGreeting() {
   return 'Buenas noches';
 }
 
+// ── Macro mini-card ────────────────────────────────────────────
+function MacroCard({ val, target, label, color }) {
+  const pct     = target > 0 ? Math.min((val / target) * 100, 100) : 0;
+  const overMac = target > 0 && val > target;
+  return (
+    <div style={{
+      padding: '10px 8px 9px',
+      background: 'var(--surface-2)',
+      borderRadius: 'var(--radius-sm)',
+      textAlign: 'center',
+      display: 'flex', flexDirection: 'column', gap: 4,
+    }}>
+      <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1 }}>
+        {Math.round(val)}g
+      </div>
+      <div style={{ fontSize: 9, color: 'var(--text-tertiary)', letterSpacing: '0.2px' }}>
+        {label}{target > 0 ? ` · ${target}g` : ''}
+      </div>
+      {target > 0 && (
+        <div style={{ height: 2, background: 'var(--surface-3)', borderRadius: 100, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%', width: `${pct}%`,
+            background: overMac ? '#ef4444' : color,
+            borderRadius: 100,
+            transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
+          }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  const [entries,  setEntries]  = useState([]);
-  const [summary,  setSummary]  = useState(null);
-  const [profile,  setProfile]  = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [entries, setEntries] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -52,19 +84,52 @@ export default function Dashboard() {
     </div>
   );
 
-  // ── Computed values ────────────────────────────────────────
+  // ── Totales del día ────────────────────────────────────────
   const todayCalories = entries.reduce((a, e) => a + (e.calories || 0), 0);
   const todayProtein  = entries.reduce((a, e) => a + (e.protein  || 0), 0);
   const todayCarbs    = entries.reduce((a, e) => a + (e.carbs    || 0), 0);
   const todayFat      = entries.reduce((a, e) => a + (e.fat      || 0), 0);
 
+  // ── Objetivos ─────────────────────────────────────────────
   const targetCalories = profile?.target_calories || user?.target_calories || 0;
   const targetProtein  = profile?.target_protein  || user?.target_protein  || 0;
-  const remaining      = Math.max(0, targetCalories - todayCalories);
-  const isOver         = todayCalories > targetCalories;
-  const filledSegments = targetCalories > 0
-    ? Math.min(Math.round((todayCalories / targetCalories) * 10), 10)
-    : 0;
+  const targetCarbs    = profile?.target_carbs    || 0;
+  const targetFat      = profile?.target_fat      || 0;
+
+  // ── Estado calórico ────────────────────────────────────────
+  const isOver         = targetCalories > 0 && todayCalories > targetCalories;
+  const overage        = isOver ? todayCalories - targetCalories : 0;
+  const remaining      = isOver ? 0 : Math.max(0, targetCalories - todayCalories);
+  const pct            = targetCalories > 0 ? todayCalories / targetCalories : 0;
+  const filledSegments = targetCalories > 0 ? Math.min(Math.round(pct * 10), 10) : 0;
+
+  // Número hero: muestra lo más útil según el estado
+  const heroNumber = isOver
+    ? `+${overage.toLocaleString('es')}`
+    : targetCalories > 0
+      ? remaining.toLocaleString('es')
+      : todayCalories.toLocaleString('es');
+
+  const heroLabel = isOver
+    ? 'kcal sobre el objetivo'
+    : targetCalories > 0
+      ? remaining === 0 ? 'objetivo alcanzado' : 'kcal libres hoy'
+      : 'kcal registradas hoy';
+
+  const heroColor = isOver ? '#ef4444' : 'var(--text-primary)';
+
+  // Texto de estado bajo la barra
+  const barStatus = targetCalories > 0
+    ? isOver
+      ? `${overage.toLocaleString('es')} kcal sobre el objetivo`
+      : pct >= 0.95
+        ? 'En objetivo ✓'
+        : pct >= 0.70
+          ? `Bien encaminado · ${remaining.toLocaleString('es')} kcal restantes`
+          : todayCalories === 0
+            ? 'Aún no has registrado nada hoy'
+            : `${Math.round(pct * 100)}% del objetivo · ${remaining.toLocaleString('es')} kcal restantes`
+    : null;
 
   const streak = summary?.streak || 0;
 
@@ -72,7 +137,7 @@ export default function Dashboard() {
     ? getEstadoCalorico({ todayCalories, todayProtein }, targetCalories, targetProtein)
     : 'Tu nutricionista con IA';
 
-  // ── Level badge ────────────────────────────────────────────
+  // ── Badge de nivel ─────────────────────────────────────────
   const levelBadge = (() => {
     const info  = LEVEL_CONFIG[user?.access_level];
     const style = getBadgeStyle(user?.access_level);
@@ -91,15 +156,15 @@ export default function Dashboard() {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
 
-      {/* ── Sección 1: Saludo ── */}
-      <div style={{ padding: '20px 24px 0' }}>
+      {/* ── 1. Saludo ── */}
+      <div style={{ padding: '20px 20px 0' }}>
         <p style={{
           fontSize: 11, color: 'var(--text-secondary)',
-          margin: '0 0 2px', fontFamily: 'var(--font-sans)',
+          margin: '0 0 4px', fontFamily: 'var(--font-sans)',
         }}>
           {getGreeting()},
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
           <h1 style={{
             fontFamily: 'var(--font-serif)',
             fontSize: 32, fontStyle: 'italic',
@@ -110,100 +175,103 @@ export default function Dashboard() {
           </h1>
           {streak > 0 && (
             <span style={{
-              fontSize: 11, color: 'var(--accent)',
-              background: 'var(--accent-light)',
-              border: '0.5px solid var(--accent-border)',
+              fontSize: 11, color: '#d97706',
+              background: 'rgba(245,158,11,0.1)',
+              border: '0.5px solid rgba(245,158,11,0.25)',
               padding: '3px 10px', borderRadius: 'var(--radius-full)',
               fontWeight: 500,
             }}>
-              🔥 {streak} días
+              🔥 {streak} {streak === 1 ? 'día' : 'días'}
             </span>
           )}
           {levelBadge}
         </div>
       </div>
 
-      {/* ── Sección 2: Hero calórico ── */}
+      {/* ── 2. Hero calórico ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
-          background: 'var(--surface)',
-          border: '0.5px solid var(--border)',
+          background: isOver ? 'rgba(239,68,68,0.02)' : 'var(--surface)',
+          border: `0.5px solid ${isOver ? 'rgba(239,68,68,0.15)' : 'var(--border)'}`,
           borderRadius: 'var(--radius-lg)',
-          padding: 16,
+          padding: '18px 16px 14px',
+          transition: 'background 0.3s, border-color 0.3s',
         }}>
+
           {/* Número grande + consumido/objetivo */}
           <div style={{
             display: 'flex', justifyContent: 'space-between',
-            alignItems: 'flex-start', marginBottom: 12,
+            alignItems: 'flex-start', marginBottom: 14,
           }}>
             <div>
               <div style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: 52, color: 'var(--text-primary)',
-                lineHeight: 1, letterSpacing: '-2px',
+                fontSize: 56, color: heroColor,
+                lineHeight: 1, letterSpacing: '-3px',
+                transition: 'color 0.3s',
               }}>
-                {targetCalories > 0 ? remaining.toLocaleString('es') : todayCalories.toLocaleString('es')}
+                {heroNumber}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3 }}>
-                {targetCalories > 0 ? 'kcal libres hoy' : 'kcal registradas hoy'}
+              <div style={{
+                fontSize: 11,
+                color: isOver ? '#ef4444' : 'var(--text-secondary)',
+                marginTop: 4,
+                transition: 'color 0.3s',
+              }}>
+                {heroLabel}
               </div>
             </div>
+
             {targetCalories > 0 && (
-              <div style={{ textAlign: 'right', paddingTop: 4 }}>
-                <div style={{ fontSize: 18, fontWeight: 500, color: 'var(--text-primary)' }}>
+              <div style={{ textAlign: 'right', paddingTop: 6 }}>
+                <div style={{ fontSize: 20, fontWeight: 500, color: 'var(--text-primary)', lineHeight: 1 }}>
                   {todayCalories.toLocaleString('es')}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-                  de {targetCalories.toLocaleString('es')}
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 3 }}>
+                  de {targetCalories.toLocaleString('es')} kcal
                 </div>
               </div>
             )}
           </div>
 
-          {/* Barra segmentada — 10 segmentos */}
+          {/* Barra segmentada */}
           {targetCalories > 0 && (
-            <div style={{ display: 'flex', gap: 3, marginBottom: 12 }}>
-              {Array.from({ length: 10 }, (_, i) => (
-                <div key={i} style={{
-                  flex: 1, height: 3, borderRadius: 100,
-                  background: i < filledSegments
-                    ? (isOver ? '#ef4444' : 'var(--accent)')
-                    : 'var(--surface-3)',
-                  transition: 'background 0.3s ease',
-                }} />
-              ))}
-            </div>
+            <>
+              <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+                {Array.from({ length: 10 }, (_, i) => (
+                  <div key={i} style={{
+                    flex: 1, height: 4, borderRadius: 100,
+                    background: i < filledSegments
+                      ? isOver ? '#ef4444' : pct >= 0.95 ? 'var(--accent)' : 'var(--accent)'
+                      : 'var(--surface-3)',
+                    transition: 'background 0.3s',
+                    opacity: i < filledSegments ? 1 : 1,
+                  }} />
+                ))}
+              </div>
+              {barStatus && (
+                <div style={{
+                  fontSize: 10,
+                  color: isOver ? '#ef4444' : pct >= 0.95 ? 'var(--accent)' : 'var(--text-tertiary)',
+                  marginBottom: 14,
+                  transition: 'color 0.3s',
+                }}>
+                  {barStatus}
+                </div>
+              )}
+            </>
           )}
 
-          {/* Macros — grid 3 columnas */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-            border: '0.5px solid var(--border)',
-            borderRadius: 'var(--radius-sm)', overflow: 'hidden',
-          }}>
-            {[
-              { val: todayProtein, label: 'proteína' },
-              { val: todayCarbs,   label: 'carbos' },
-              { val: todayFat,     label: 'grasa' },
-            ].map((m, i) => (
-              <div key={m.label} style={{
-                padding: '9px 8px', textAlign: 'center',
-                background: 'var(--surface-2)',
-                borderLeft: i > 0 ? '0.5px solid var(--border)' : 'none',
-              }}>
-                <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-primary)' }}>
-                  {Math.round(m.val)}g
-                </div>
-                <div style={{ fontSize: 9, color: 'var(--text-tertiary)', marginTop: 2, letterSpacing: '0.2px' }}>
-                  {m.label}
-                </div>
-              </div>
-            ))}
+          {/* Macros — cards individuales con mini-barra */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            <MacroCard val={todayProtein} target={targetProtein} label="proteína" color="var(--accent)" />
+            <MacroCard val={todayCarbs}   target={targetCarbs}   label="carbos"   color="#f59e0b" />
+            <MacroCard val={todayFat}     target={targetFat}     label="grasa"    color="#60a5fa" />
           </div>
         </div>
       </div>
 
-      {/* ── Sección 3: Comidas de hoy ── */}
+      {/* ── 3. Comidas de hoy ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
           background: 'var(--surface)',
@@ -211,79 +279,97 @@ export default function Dashboard() {
           borderRadius: 'var(--radius-lg)',
           padding: '14px 16px',
         }}>
-          {/* Header */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             marginBottom: entries.length > 0 ? 10 : 0,
           }}>
             <span style={{
               fontSize: 9, color: 'var(--text-secondary)',
-              textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: 500,
+              textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
             }}>
               Hoy · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
             <button
               onClick={() => navigate('/calculator')}
               style={{
-                width: 22, height: 22, background: 'var(--accent)',
+                width: 24, height: 24, background: 'var(--accent)',
                 border: 'none', borderRadius: '50%', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}
             >
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                <path d="M4 1v6M1 4h6" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
 
-          {/* Lista */}
           {entries.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
-              Sin registros hoy — empieza añadiendo tu primera comida.
-            </p>
+            <button
+              onClick={() => navigate('/calculator')}
+              style={{
+                width: '100%', background: 'none',
+                border: '0.5px dashed var(--border-strong)',
+                borderRadius: 'var(--radius-sm)', padding: '13px 16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                cursor: 'pointer', color: 'var(--text-secondary)',
+                fontSize: 13, fontFamily: 'var(--font-sans)',
+              }}
+            >
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              Añadir primera comida
+            </button>
           ) : (
             <div>
-              {entries.map((entry, i) => (
-                <div key={entry.id} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '8px 0',
-                  borderBottom: i < entries.length - 1 ? '0.5px solid var(--border)' : 'none',
-                }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 0 }}>
-                    <span style={{
-                      fontSize: 12, color: 'var(--text-primary)',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {entry.name || entry.meal_type}
-                    </span>
-                    <span style={{ fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'capitalize' }}>
-                      {MEAL_TYPES.find(m => m.id === entry.meal_type)?.label || entry.meal_type}
-                    </span>
+              {entries.map((entry, i) => {
+                const mealInfo = MEAL_TYPES.find(m => m.id === entry.meal_type);
+                return (
+                  <div key={entry.id} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '9px 0',
+                    borderBottom: i < entries.length - 1 ? '0.5px solid var(--border)' : 'none',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                        <span style={{
+                          fontSize: 13, color: 'var(--text-primary)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {entry.name || mealInfo?.label || entry.meal_type}
+                        </span>
+                        {entry.protein > 0 && (
+                          <span style={{ fontSize: 9, color: 'var(--text-tertiary)' }}>
+                            {Math.round(entry.protein)}g prot · {Math.round(entry.carbs || 0)}g carbos · {Math.round(entry.fat || 0)}g grasa
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 8 }}>
+                      <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>
+                        {entry.calories}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(entry.id)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: 'var(--text-tertiary)', fontSize: 16,
+                          padding: '0 2px', lineHeight: 1,
+                          borderRadius: 4,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                    <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 500 }}>
-                      {entry.calories} kcal
-                    </span>
-                    <button
-                      onClick={() => handleDelete(entry.id)}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        color: 'var(--text-tertiary)', fontSize: 16,
-                        padding: 0, lineHeight: 1,
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Sección 4: Suplementos ── */}
+      {/* ── 4. Suplementos ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
           background: 'var(--surface)',
@@ -295,36 +381,54 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Sección 5: Card del asistente ── */}
+      {/* ── 5. Card del asistente ── */}
       <div style={{ padding: '0 16px 32px' }}>
         {isPro(user?.access_level) ? (
           <button
             onClick={() => navigate('/asistente')}
             style={{
-              width: '100%', background: '#111',
-              border: 'none', borderRadius: 'var(--radius-lg)',
-              padding: 16, display: 'flex', alignItems: 'center',
+              width: '100%',
+              background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',
+              border: '0.5px solid rgba(255,255,255,0.06)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '18px 16px',
+              display: 'flex', alignItems: 'center',
               justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{
                 fontSize: 10, background: 'var(--accent)',
                 color: 'white', padding: '2px 8px',
                 borderRadius: 'var(--radius-full)', fontWeight: 600,
-                alignSelf: 'flex-start', marginBottom: 2,
+                alignSelf: 'flex-start',
                 fontFamily: 'var(--font-sans)',
+                letterSpacing: '0.3px',
               }}>
                 Pro
               </span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: '#fff', fontFamily: 'var(--font-sans)' }}>
+              <span style={{
+                fontSize: 15, fontWeight: 500, color: '#ffffff',
+                fontFamily: 'var(--font-sans)', marginTop: 2,
+              }}>
                 Asistente personal
               </span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-sans)' }}>
+              <span style={{
+                fontSize: 11, color: 'rgba(255,255,255,0.4)',
+                fontFamily: 'var(--font-sans)', lineHeight: 1.4,
+                maxWidth: 280,
+              }}>
                 {assistantPreview}
               </span>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 16 }}>→</span>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, marginLeft: 12,
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>→</span>
+            </div>
           </button>
         ) : (
           <button
@@ -332,7 +436,7 @@ export default function Dashboard() {
             style={{
               width: '100%', background: 'var(--surface-2)',
               border: '0.5px solid var(--border)',
-              borderRadius: 'var(--radius-lg)', padding: 16,
+              borderRadius: 'var(--radius-lg)', padding: '16px',
               display: 'flex', alignItems: 'center',
               justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left',
             }}
@@ -342,7 +446,7 @@ export default function Dashboard() {
                 Asistente personal
               </span>
               <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
-                Tu nutricionista con IA · Pro
+                Tu nutricionista con IA · Plan Pro
               </span>
             </div>
             <span style={{ fontSize: 16 }}>🔒</span>
