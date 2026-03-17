@@ -447,18 +447,19 @@ export async function handleAssistant(request, env, path, ctx) {
     const [usageRow, todayRow, profileRow] = await Promise.all([
       env.DB.prepare('SELECT messages FROM assistant_usage WHERE user_id = ? AND date = ?').bind(user.id, today).first(),
       env.DB.prepare('SELECT SUM(calories) as cal, SUM(protein) as prot FROM entries WHERE user_id = ? AND date = ?').bind(user.id, today).first(),
-      env.DB.prepare('SELECT target_calories FROM users WHERE id = ?').bind(user.id).first(),
+      env.DB.prepare('SELECT target_calories, target_protein FROM users WHERE id = ?').bind(user.id).first(),
     ]);
 
-    const used      = usageRow?.messages || 0;
-    const cal       = Math.round(todayRow?.cal  || 0);
-    const prot      = Math.round(todayRow?.prot || 0);
-    const target    = profileRow?.target_calories || 0;
-    const remaining = Math.max(0, target - cal);
+    const used           = usageRow?.messages || 0;
+    const cal            = Math.round(todayRow?.cal  || 0);
+    const prot           = Math.round(todayRow?.prot || 0);
+    const target         = profileRow?.target_calories || 0;
+    const targetProtein  = profileRow?.target_protein  || null;
+    const remaining      = Math.max(0, target - cal);
 
     return jsonResponse({
       usage: { used, limit, remaining: Math.max(0, limit - used) },
-      today: { cal, prot, target, remaining_cal: remaining },
+      today: { cal, prot, target, target_protein: targetProtein, remaining_cal: remaining },
     });
   }
 

@@ -1,0 +1,83 @@
+// ── Mensajes de bienvenida del asistente ───────────────────
+// Sin llamadas a la API — todo calculado en el cliente.
+
+export function buildWelcomeMessage(userName, todayData, targetCalories, targetProtein) {
+  const day    = new Date().getDay();
+  const saludo = getSaludo(day, userName);
+  const estado = getEstadoCalorico(todayData, targetCalories, targetProtein);
+  const cierre = getCierre(day);
+  return `${saludo} ${estado}\n${cierre}`;
+}
+
+function getSaludo(day, name) {
+  const saludos = {
+    0: `¡Domingo, ${name}! 🌅`,
+    1: `Nueva semana, ${name}.`,
+    2: `¡Hola ${name}!`,
+    3: `Mitad de semana, ${name}.`,
+    4: `¡Casi viernes, ${name}!`,
+    5: `¡Por fin viernes, ${name}!`,
+    6: `¡Sábado, ${name}!`,
+  };
+  return saludos[day];
+}
+
+function getEstadoCalorico(todayData, targetCalories, targetProtein) {
+  const { todayCalories = 0, todayProtein = 0 } = todayData;
+  const remaining        = targetCalories - todayCalories;
+  const remainingProtein = (targetProtein && targetProtein > 0)
+    ? Math.round(targetProtein - todayProtein)
+    : null;
+  const pct = todayCalories / targetCalories;
+
+  const fmt = (n) => Math.round(n).toLocaleString('es');
+
+  // ESTADO 1 — Sin registros
+  if (todayCalories === 0) {
+    return `Todavía no has registrado nada hoy. Tienes ${fmt(targetCalories)} kcal para trabajar.`;
+  }
+
+  // ESTADO 2 — Inicio del día, bien encaminado (< 70%)
+  if (pct < 0.70) {
+    const proteinText = (remainingProtein && remainingProtein > 0)
+      ? ` y ${remainingProtein}g de proteína`
+      : '';
+    return `Llevas ${fmt(todayCalories)} kcal — te quedan ${fmt(remaining)} kcal${proteinText} para hoy.`;
+  }
+
+  // ESTADO 3 — Cerca del objetivo, ve pensando en la cena (70-95%)
+  if (pct < 0.95) {
+    const proteinText = (remainingProtein && remainingProtein > 0)
+      ? ` Aún te faltan ${remainingProtein}g de proteína.`
+      : '';
+    return `Llevas ${fmt(todayCalories)} kcal, cerca del objetivo. Quedan ${fmt(remaining)} kcal — ve pensando en la cena.${proteinText}`;
+  }
+
+  // ESTADO 4 — Justo en objetivo (95-105%)
+  if (pct <= 1.05) {
+    return `${fmt(todayCalories)} kcal hoy — prácticamente en el objetivo. 🎯`;
+  }
+
+  // ESTADO 5 — Superado moderadamente (105-120%)
+  if (pct <= 1.20) {
+    const excess = fmt(todayCalories - targetCalories);
+    return `Llevas ${fmt(todayCalories)} kcal, ${excess} por encima del objetivo. No pasa nada — la semana se valora en conjunto.`;
+  }
+
+  // ESTADO 6 — Superado bastante (> 120%)
+  const excess = fmt(todayCalories - targetCalories);
+  return `${fmt(todayCalories)} kcal hoy, ${excess} sobre el objetivo. Días así pasan. ¿Quieres que miremos la semana completa?`;
+}
+
+function getCierre(day) {
+  const cierres = {
+    0: `¿Hoy también cuidamos la alimentación?`,
+    1: `Buen momento para empezar fuerte. ¿Qué necesitas?`,
+    2: `¿En qué te ayudo hoy?`,
+    3: `¿Cómo lo llevas?`,
+    4: `¿Revisamos algo?`,
+    5: `El finde se acerca — ¿alguna duda antes?`,
+    6: `Los fines de semana también cuentan 😄`,
+  };
+  return cierres[day];
+}

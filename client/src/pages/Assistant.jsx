@@ -2,36 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
-
-// ── Saludo local — sin llamada a Claude ────────────────────
-
-const GREETING_TEMPLATES = [
-  (n, d) => `¡Hola, ${n}! ${d}. ¿En qué puedo ayudarte hoy?`,
-  (n, d) => `Hola, ${n}. ${d}. ¿Qué quieres saber?`,
-  (n, d) => `¡Buenas, ${n}! ${d}. ¿Empezamos?`,
-  (n, d) => `Hola, ${n}. ${d}. Pregúntame lo que necesites.`,
-  (n, d) => `¡Hola, ${n}! ${d}. ¿Revisamos algo?`,
-  (n, d) => `Hola, ${n}. ${d}. ¿Qué te gustaría analizar hoy?`,
-  (n, d) => `¡Hola, ${n}! ${d}. Aquí estoy para ayudarte.`,
-];
-
-function buildGreeting(name, today) {
-  const day = new Date().getDay();
-  const tpl = GREETING_TEMPLATES[day];
-  if (!today || !today.target) {
-    return tpl(name || 'ahí', 'Tengo tus datos listos');
-  }
-  const { cal, target, remaining_cal, prot } = today;
-  let dataLine;
-  if (cal === 0) {
-    dataLine = `Aún no has registrado nada hoy (objetivo: ${target} kcal)`;
-  } else if (remaining_cal > 0) {
-    dataLine = `Llevas ${cal} kcal de ${target} — te quedan ${remaining_cal} kcal y ${prot}g de proteína`;
-  } else {
-    dataLine = `Llevas ${cal} kcal hoy, ${Math.abs(remaining_cal)} por encima de tu objetivo`;
-  }
-  return tpl(name || 'ahí', dataLine);
-}
+import { buildWelcomeMessage } from '../utils/assistantMessages';
 
 // ── Markdown mínimo ────────────────────────────────────────
 
@@ -192,21 +163,25 @@ export default function Assistant() {
     if (user && (user.access_level ?? 0) < 2) navigate('/');
   }, [user]);
 
-  // Cargar mensaje de bienvenida (con caché por día)
+  // Cargar mensaje de bienvenida con datos reales del día
   useEffect(() => {
-    // Saludo inmediato con nombre (sin datos aún)
-    setMessages([{ role: 'assistant', content: buildGreeting(user?.name, null), isWelcome: true }]);
-    setIntroLoading(false);
-
-    // Cargar datos reales del día y actualizar saludo + contador
+    setIntroLoading(true);
     api.getAssistantUsage(token)
       .then(res => {
         if (res?.usage) setUsage(res.usage);
-        if (res?.today) {
-          setMessages([{ role: 'assistant', content: buildGreeting(user?.name, res.today), isWelcome: true }]);
-        }
+        const t = res?.today;
+        const welcome = buildWelcomeMessage(
+          user?.name,
+          { todayCalories: t?.cal || 0, todayProtein: t?.prot || 0 },
+          t?.target         || 0,
+          t?.target_protein || null,
+        );
+        setMessages([{ role: 'assistant', content: welcome, isWelcome: true, timestamp: new Date().toISOString() }]);
       })
-      .catch(() => {});
+      .catch(() => {
+        setMessages([{ role: 'assistant', content: buildWelcomeMessage(user?.name, {}, 0, null), isWelcome: true }]);
+      })
+      .finally(() => setIntroLoading(false));
   }, []);
 
   // Scroll al fondo al añadir mensajes
@@ -260,14 +235,20 @@ export default function Assistant() {
   function startNewConversation() {
     setConversationId(null);
     setError('');
-    // Mostrar saludo actualizado con datos reales
     api.getAssistantUsage(token)
       .then(res => {
         if (res?.usage) setUsage(res.usage);
-        setMessages([{ role: 'assistant', content: buildGreeting(user?.name, res?.today || null), isWelcome: true }]);
+        const t = res?.today;
+        const welcome = buildWelcomeMessage(
+          user?.name,
+          { todayCalories: t?.cal || 0, todayProtein: t?.prot || 0 },
+          t?.target         || 0,
+          t?.target_protein || null,
+        );
+        setMessages([{ role: 'assistant', content: welcome, isWelcome: true, timestamp: new Date().toISOString() }]);
       })
       .catch(() => {
-        setMessages([{ role: 'assistant', content: buildGreeting(user?.name, null), isWelcome: true }]);
+        setMessages([{ role: 'assistant', content: buildWelcomeMessage(user?.name, {}, 0, null), isWelcome: true }]);
       });
   }
 
