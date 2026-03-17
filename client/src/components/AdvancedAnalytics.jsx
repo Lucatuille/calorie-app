@@ -44,7 +44,11 @@ function Skeleton({ h = 16, mb = 0 }) {
 function Section({ title, children, style }) {
   return (
     <div style={{ marginBottom: 28, ...style }}>
-      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 14 }}>
+      <p style={{
+        fontSize: 9, fontWeight: 600, letterSpacing: '0.7px',
+        textTransform: 'uppercase', color: 'var(--text-secondary)',
+        marginBottom: 14, fontFamily: 'var(--font-sans)',
+      }}>
         {title}
       </p>
       {children}
@@ -58,10 +62,14 @@ function EmptyMsg({ text = 'Registra más días para ver este análisis' }) {
 
 function StatBox({ label, value, sub, valueColor }) {
   return (
-    <div style={{ background: 'var(--bg)', borderRadius: 12, padding: '14px 16px' }}>
-      <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>{label}</p>
-      <p style={{ fontWeight: 700, fontSize: 22, lineHeight: 1.1, color: valueColor || 'inherit' }}>{value}</p>
-      {sub && <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{sub}</p>}
+    <div style={{
+      background: 'var(--surface-2)',
+      border: '0.5px solid var(--border)',
+      borderRadius: 'var(--radius-md)', padding: '12px 14px',
+    }}>
+      <p style={{ fontSize: 9, color: 'var(--text-secondary)', marginBottom: 6, fontFamily: 'var(--font-sans)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{label}</p>
+      <p style={{ fontWeight: 600, fontSize: 20, lineHeight: 1.1, color: valueColor || 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>{value}</p>
+      {sub && <p style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 3, fontFamily: 'var(--font-sans)' }}>{sub}</p>}
     </div>
   );
 }
@@ -182,7 +190,10 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
           borderBottom: '1px solid var(--border)',
           position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1,
         }}>
-          <h2 style={{ fontWeight: 700, fontSize: 18 }}>Análisis detallado</h2>
+          <h2 style={{
+            fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+            fontWeight: 400, fontSize: 22, color: 'var(--text-primary)',
+          }}>Análisis profundo</h2>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             color: 'var(--text-3)', fontSize: 22, padding: '4px 8px', lineHeight: 1,
@@ -190,17 +201,27 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
         </div>
 
         {/* Period selector */}
-        <div style={{ display: 'flex', gap: 6, padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
-          {PERIOD_OPTIONS.map(p => (
-            <button
-              key={p.value}
-              className={`btn btn-sm ${period === p.value ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ flex: 1 }}
-              onClick={() => setPeriod(p.value)}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: 6, padding: '10px 20px', borderBottom: '0.5px solid var(--border)' }}>
+          {PERIOD_OPTIONS.map(p => {
+            const isActive = period === p.value;
+            return (
+              <button
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
+                style={{
+                  flex: 1, padding: '6px 0',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: 12, fontWeight: isActive ? 600 : 400,
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                  border: `0.5px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                  background: isActive ? 'rgba(45,106,79,0.1)' : 'transparent',
+                  color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                }}
+              >
+                {p.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Content */}
@@ -386,7 +407,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
               )}
 
               {/* ── Sección 4: Proyección de peso ── */}
-              <Section title="📈 Proyección de peso">
+              <Section title="Proyección de peso">
                 {data.weight?.current == null ? (
                   <EmptyMsg text="Registra tu peso en las entradas para ver proyecciones" />
                 ) : (
