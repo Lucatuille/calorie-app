@@ -168,7 +168,7 @@ export default function Assistant() {
 
   // Redirigir a usuarios Free
   useEffect(() => {
-    if (user && (user.access_level ?? 0) < 1) navigate('/');
+    if (user && (user.access_level ?? 0) < 2) navigate('/');
   }, [user]);
 
   // Cargar mensaje de bienvenida (con caché por día)

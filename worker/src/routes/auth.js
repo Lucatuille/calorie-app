@@ -25,13 +25,13 @@ export async function handleAuth(request, env, path) {
 
     const result = await env.DB.prepare(
       `INSERT INTO users (name, email, password, age, weight, height, gender, access_level)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 3)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`
     ).bind(name, email.toLowerCase(), hashed, age || null, weight || null, height || null, gender || null).run();
 
     const userId = result.meta.last_row_id;
-    const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 3 }, env.JWT_SECRET);
+    const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 1 }, env.JWT_SECRET);
 
-    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3 } }, 201);
+    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 1 } }, 201);
   }
 
   // POST /api/auth/login

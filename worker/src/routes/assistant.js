@@ -14,13 +14,13 @@ async function requireProAccess(request, env) {
   const row = await env.DB.prepare(
     'SELECT id, name, access_level FROM users WHERE id = ?'
   ).bind(user.userId).first();
-  if (!row || row.access_level < 1) return null;
+  if (!row || row.access_level < 2) return null;
   return { ...user, ...row };
 }
 
 // ── Límites diarios por nivel ───────────────────────────────
 
-const DAILY_LIMITS = { 1: 20, 2: 40, 99: 999 };
+const DAILY_LIMITS = { 2: 20, 3: 40, 99: 999 };
 
 // ── System prompt del asistente ────────────────────────────
 

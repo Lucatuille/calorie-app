@@ -327,7 +327,7 @@ export default function Dashboard() {
       </div>
 
       {/* Card asistente — Pro si tiene acceso, preview si es Free */}
-      {(user?.access_level ?? 0) >= 1 ? (
+      {(user?.access_level ?? 0) >= 2 ? (
         <Link to="/asistente" style={{ display: 'block', textDecoration: 'none', marginTop: 16 }}>
           <div className="card" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
