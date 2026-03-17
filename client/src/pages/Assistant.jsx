@@ -3,13 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
-// ── Helpers ────────────────────────────────────────────────
+// ── Saludo local — sin llamada a Claude ────────────────────
 
-function getWeekKey() {
-  const d = new Date();
-  const jan1 = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${week}`;
+const GREETING_TEMPLATES = [
+  (n, d) => `¡Hola, ${n}! ${d}. ¿En qué puedo ayudarte hoy?`,
+  (n, d) => `Hola, ${n}. ${d}. ¿Qué quieres saber?`,
+  (n, d) => `¡Buenas, ${n}! ${d}. ¿Empezamos?`,
+  (n, d) => `Hola, ${n}. ${d}. Pregúntame lo que necesites.`,
+  (n, d) => `¡Hola, ${n}! ${d}. ¿Revisamos algo?`,
+  (n, d) => `Hola, ${n}. ${d}. ¿Qué te gustaría analizar hoy?`,
+  (n, d) => `¡Hola, ${n}! ${d}. Aquí estoy para ayudarte.`,
+];
+
+function buildGreeting(name, today) {
+  const day = new Date().getDay();
+  const tpl = GREETING_TEMPLATES[day];
+  if (!today || !today.target) {
+    return tpl(name || 'ahí', 'Tengo tus datos listos');
+  }
+  const { cal, target, remaining_cal, prot } = today;
+  let dataLine;
+  if (cal === 0) {
+    dataLine = `Aún no has registrado nada hoy (objetivo: ${target} kcal)`;
+  } else if (remaining_cal > 0) {
+    dataLine = `Llevas ${cal} kcal de ${target} — te quedan ${remaining_cal} kcal y ${prot}g de proteína`;
+  } else {
+    dataLine = `Llevas ${cal} kcal hoy, ${Math.abs(remaining_cal)} por encima de tu objetivo`;
+  }
+  return tpl(name || 'ahí', dataLine);
 }
 
 // ── Markdown mínimo ────────────────────────────────────────
@@ -173,28 +194,19 @@ export default function Assistant() {
 
   // Cargar mensaje de bienvenida (con caché por día)
   useEffect(() => {
-    const today    = new Date().toLocaleDateString('en-CA');
-    const cacheKey = `lucaeats_daily_intro_${today}`;
-    const cached   = localStorage.getItem(cacheKey);
+    // Saludo inmediato con nombre (sin datos aún)
+    setMessages([{ role: 'assistant', content: buildGreeting(user?.name, null), isWelcome: true }]);
+    setIntroLoading(false);
 
-    if (cached) {
-      setMessages([{ role: 'assistant', content: cached, isWelcome: true }]);
-      setIntroLoading(false);
-      return;
-    }
-
-    api.sendAssistantMessage({ message: 'intro', is_intro: true }, token)
+    // Cargar datos reales del día y actualizar saludo + contador
+    api.getAssistantUsage(token)
       .then(res => {
-        if (res?.message) {
-          localStorage.setItem(cacheKey, res.message);
-          setMessages([{ role: 'assistant', content: res.message, isWelcome: true }]);
-        }
         if (res?.usage) setUsage(res.usage);
+        if (res?.today) {
+          setMessages([{ role: 'assistant', content: buildGreeting(user?.name, res.today), isWelcome: true }]);
+        }
       })
-      .catch(() => {
-        setMessages([{ role: 'assistant', content: '¡Hola! ¿En qué puedo ayudarte hoy?', isWelcome: true }]);
-      })
-      .finally(() => setIntroLoading(false));
+      .catch(() => {});
   }, []);
 
   // Scroll al fondo al añadir mensajes
@@ -246,13 +258,17 @@ export default function Assistant() {
   }
 
   function startNewConversation() {
-    setMessages([]);
     setConversationId(null);
     setError('');
-    const today    = new Date().toLocaleDateString('en-CA');
-    const cacheKey = `lucaeats_daily_intro_${today}`;
-    const cached   = localStorage.getItem(cacheKey);
-    if (cached) setMessages([{ role: 'assistant', content: cached, isWelcome: true }]);
+    // Mostrar saludo actualizado con datos reales
+    api.getAssistantUsage(token)
+      .then(res => {
+        if (res?.usage) setUsage(res.usage);
+        setMessages([{ role: 'assistant', content: buildGreeting(user?.name, res?.today || null), isWelcome: true }]);
+      })
+      .catch(() => {
+        setMessages([{ role: 'assistant', content: buildGreeting(user?.name, null), isWelcome: true }]);
+      });
   }
 
   const showSuggestions = messages.length <= 1 && !loading;

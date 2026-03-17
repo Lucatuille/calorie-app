@@ -72,6 +72,7 @@ export const api = {
 
   // Asistente (Pro)
   sendAssistantMessage:      (body, token)    => request('POST', '/api/assistant/chat', body, token),
+  getAssistantUsage:         (token)          => request('GET',  '/api/assistant/usage', null, token),
   getAssistantConversations: (token)          => request('GET',  '/api/assistant/conversations', null, token),
   getConversationMessages:   (convId, token)  => request('GET',  `/api/assistant/conversations/${convId}`, null, token),
 };

@@ -436,6 +436,32 @@ export async function handleAssistant(request, env, path, ctx) {
     });
   }
 
+  // GET /api/assistant/usage — contador diario + resumen de hoy (para el saludo)
+  if (path === '/api/assistant/usage' && request.method === 'GET') {
+    const user = await requireProAccess(request, env);
+    if (!user) return errorResponse('Pro requerido', 403);
+
+    const today = new Date().toLocaleDateString('en-CA');
+    const limit = DAILY_LIMITS[user.access_level] ?? 20;
+
+    const [usageRow, todayRow, profileRow] = await Promise.all([
+      env.DB.prepare('SELECT messages FROM assistant_usage WHERE user_id = ? AND date = ?').bind(user.id, today).first(),
+      env.DB.prepare('SELECT SUM(calories) as cal, SUM(protein) as prot FROM entries WHERE user_id = ? AND date = ?').bind(user.id, today).first(),
+      env.DB.prepare('SELECT target_calories FROM users WHERE id = ?').bind(user.id).first(),
+    ]);
+
+    const used      = usageRow?.messages || 0;
+    const cal       = Math.round(todayRow?.cal  || 0);
+    const prot      = Math.round(todayRow?.prot || 0);
+    const target    = profileRow?.target_calories || 0;
+    const remaining = Math.max(0, target - cal);
+
+    return jsonResponse({
+      usage: { used, limit, remaining: Math.max(0, limit - used) },
+      today: { cal, prot, target, remaining_cal: remaining },
+    });
+  }
+
   // GET /api/assistant/conversations
   if (path === '/api/assistant/conversations' && request.method === 'GET') {
     const user = await requireProAccess(request, env);
