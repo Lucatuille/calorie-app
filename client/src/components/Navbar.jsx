@@ -22,13 +22,12 @@ function useTheme() {
 }
 
 const linkStyle = ({ isActive }) => ({
-  padding: '6px 14px',
-  borderRadius: 8,
+  padding: '4px 2px',
   fontSize: 14,
-  fontWeight: 500,
-  color: isActive ? 'var(--accent)' : 'var(--text-2)',
-  background: isActive ? 'var(--accent-lt)' : 'transparent',
-  transition: 'all 0.15s',
+  fontWeight: isActive ? 500 : 400,
+  color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+  textDecoration: 'none',
+  transition: 'color 0.15s',
 });
 
 export default function Navbar() {
@@ -48,23 +47,27 @@ export default function Navbar() {
       position: 'sticky', top: 0, zIndex: 100,
       background: 'var(--nav-bg)',
       backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid var(--border)',
+      borderBottom: '0.5px solid var(--border)',
     }}>
       <div style={{
         maxWidth: 900, margin: '0 auto',
-        padding: '0 20px',
-        height: 56,
+        padding: '0 24px',
+        height: 52,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
         {/* Logo */}
-        <span style={{ fontFamily: 'Instrument Serif', fontSize: 20, color: 'var(--accent)' }}>
+        <span style={{
+          fontSize: 13, color: 'var(--text-primary)',
+          fontWeight: 400, letterSpacing: '2px',
+          fontFamily: 'var(--font-sans)',
+        }}>
           kcal
         </span>
 
         {/* Desktop links */}
-        <div className="nav-links" style={{ display: 'flex', gap: 4 }}>
+        <div className="nav-links" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
           {links.map(l => (
             <NavLink key={l.to} to={l.to} end={l.to === '/'} style={linkStyle}>
               {l.label}
@@ -72,37 +75,50 @@ export default function Navbar() {
           ))}
           {[1, 2, 99].includes(user?.access_level ?? 0) && (
             <NavLink to="/asistente" style={linkStyle}>
-              🤖 Asistente
+              Asistente
             </NavLink>
           )}
         </div>
 
         {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span className="nav-username" style={{ fontSize: 13, color: 'var(--text-3)', marginRight: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span className="nav-username" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             {user?.name}
           </span>
 
           {/* Theme toggle */}
           <button
-            className="btn btn-ghost btn-sm"
             onClick={toggleTheme}
-            style={{ fontSize: 15, padding: '6px 8px', lineHeight: 1 }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 14, color: 'var(--text-secondary)', padding: '4px',
+              lineHeight: 1,
+            }}
             title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
           >
             {theme === 'dark' ? '☀' : '☽'}
           </button>
 
           {/* Logout — desktop */}
-          <button className="btn btn-ghost btn-sm nav-logout" onClick={handleLogout}>
+          <button
+            className="nav-logout"
+            onClick={handleLogout}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 13, color: 'var(--text-secondary)', padding: '4px',
+            }}
+          >
             Salir
           </button>
 
           {/* Hamburger — mobile */}
           <button
-            className="btn btn-ghost btn-sm nav-hamburger"
+            className="nav-hamburger"
             onClick={() => setMenuOpen(o => !o)}
-            style={{ fontSize: 18, padding: '6px 8px', lineHeight: 1 }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 18, color: 'var(--text-primary)', padding: '4px', lineHeight: 1,
+            }}
           >
             {menuOpen ? '✕' : '☰'}
           </button>

@@ -28,7 +28,7 @@ function getSaludo(day, name) {
   return saludos[day];
 }
 
-function getEstadoCalorico(todayData, targetCalories, targetProtein) {
+export function getEstadoCalorico(todayData, targetCalories, targetProtein) {
   const { todayCalories = 0, todayProtein = 0 } = todayData;
   const remaining        = targetCalories - todayCalories;
   const remainingProtein = (targetProtein && targetProtein > 0)
