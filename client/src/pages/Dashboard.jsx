@@ -326,6 +326,31 @@ export default function Dashboard() {
         })}
       </div>
 
+      {/* Card asistente — Pro si tiene acceso, preview si es Free */}
+      {(user?.access_level ?? 0) >= 1 ? (
+        <Link to="/asistente" style={{ display: 'block', textDecoration: 'none', marginTop: 16 }}>
+          <div className="card" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pro</p>
+              <strong style={{ fontSize: 15 }}>🤖 Asistente nutricional</strong>
+              <p style={{ fontSize: 13, color: 'var(--text-2)', margin: '3px 0 0' }}>Pregúntale sobre tus datos reales</p>
+            </div>
+            <span style={{ fontSize: 20, color: 'var(--text-3)' }}>›</span>
+          </div>
+        </Link>
+      ) : (
+        <div className="card" style={{ marginTop: 16, padding: '16px 20px', opacity: 0.6,
+                                       border: '1px dashed var(--border)', display: 'flex',
+                                       justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 600, margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pro</p>
+            <strong style={{ fontSize: 15 }}>🤖 Asistente nutricional</strong>
+            <p style={{ fontSize: 13, color: 'var(--text-3)', margin: '3px 0 0' }}>Pregúntale sobre tus datos reales</p>
+          </div>
+          <span style={{ fontSize: 20 }}>🔒</span>
+        </div>
+      )}
+
       <TDEECalculator
         isOpen={showTDEE}
         onClose={() => setShowTDEE(false)}

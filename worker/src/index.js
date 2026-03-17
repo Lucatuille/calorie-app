@@ -11,6 +11,7 @@ import { handleSupplements } from './routes/supplements.js';
 import { handleAdmin } from './routes/admin.js';
 import { handleCalibration } from './routes/calibration.js';
 import { handleProducts } from './routes/products.js';
+import { handleAssistant } from './routes/assistant.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 export default {
@@ -64,6 +65,10 @@ export default {
 
       if (path.startsWith('/api/products')) {
         return await handleProducts(request, env, path);
+      }
+
+      if (path.startsWith('/api/assistant')) {
+        return await handleAssistant(request, env, path, ctx);
       }
 
       // Health check

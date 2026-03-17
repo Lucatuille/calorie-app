@@ -70,6 +70,11 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
+          {(user?.access_level ?? 0) >= 1 && (
+            <NavLink to="/asistente" style={linkStyle}>
+              🤖 Asistente
+            </NavLink>
+          )}
         </div>
 
         {/* Right side */}
@@ -118,6 +123,11 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
+          {(user?.access_level ?? 0) >= 1 && (
+            <NavLink to="/asistente" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
+              🤖 Asistente
+            </NavLink>
+          )}
           <button onClick={handleLogout}>Salir</button>
         </div>
       )}

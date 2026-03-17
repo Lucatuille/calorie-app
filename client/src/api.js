@@ -69,4 +69,9 @@ export const api = {
   saveAiCorrection:      (body, token) => request('POST',   '/api/calibration/correction', body, token),
   getCalibrationProfile: (token)       => request('GET',    '/api/calibration/profile',    null, token),
   resetCalibration:      (token)       => request('DELETE', '/api/calibration/profile',    null, token),
+
+  // Asistente (Pro)
+  sendAssistantMessage:      (body, token)    => request('POST', '/api/assistant/chat', body, token),
+  getAssistantConversations: (token)          => request('GET',  '/api/assistant/conversations', null, token),
+  getConversationMessages:   (convId, token)  => request('GET',  `/api/assistant/conversations/${convId}`, null, token),
 };
