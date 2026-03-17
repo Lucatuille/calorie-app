@@ -277,7 +277,7 @@ export async function handleAssistant(request, env, path, ctx) {
     }
 
     const today = new Date().toLocaleDateString('en-CA');
-    const limit = DAILY_LIMITS[user.access_level] ?? 20;
+    const limit = DAILY_LIMITS[user.access_level] ?? 0; // fail-safe: nivel desconocido = sin acceso
 
     // FIX #1: Validación server-side de intro (máx 1/usuario/día)
     if (is_intro) {
@@ -449,7 +449,7 @@ export async function handleAssistant(request, env, path, ctx) {
     if (!user) return errorResponse('Pro requerido', 403);
 
     const today = new Date().toLocaleDateString('en-CA');
-    const limit = DAILY_LIMITS[user.access_level] ?? 20;
+    const limit = DAILY_LIMITS[user.access_level] ?? 0; // fail-safe: nivel desconocido = sin acceso
 
     const [usageRow, todayRow, profileRow] = await Promise.all([
       env.DB.prepare('SELECT messages FROM assistant_usage WHERE user_id = ? AND date = ?').bind(user.id, today).first(),
