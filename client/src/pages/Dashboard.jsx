@@ -191,11 +191,10 @@ export default function Dashboard() {
       {/* ── 2. Hero calórico ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
-          background: isOver ? 'rgba(239,68,68,0.02)' : 'var(--surface)',
-          border: `0.5px solid ${isOver ? 'rgba(239,68,68,0.15)' : 'var(--border)'}`,
+          background: 'var(--surface)',
+          border: '0.5px solid var(--border)',
           borderRadius: 'var(--radius-lg)',
           padding: '18px 16px 14px',
-          transition: 'background 0.3s, border-color 0.3s',
         }}>
 
           {/* Número grande + consumido/objetivo */}
@@ -216,7 +215,6 @@ export default function Dashboard() {
                 fontSize: 11,
                 color: isOver ? '#ef4444' : 'var(--text-secondary)',
                 marginTop: 4,
-                transition: 'color 0.3s',
               }}>
                 {heroLabel}
               </div>
@@ -242,10 +240,8 @@ export default function Dashboard() {
                   <div key={i} style={{
                     flex: 1, height: 4, borderRadius: 100,
                     background: i < filledSegments
-                      ? isOver ? '#ef4444' : pct >= 0.95 ? 'var(--accent)' : 'var(--accent)'
+                      ? isOver ? '#ef4444' : 'var(--accent)'
                       : 'var(--surface-3)',
-                    transition: 'background 0.3s',
-                    opacity: i < filledSegments ? 1 : 1,
                   }} />
                 ))}
               </div>
@@ -254,7 +250,6 @@ export default function Dashboard() {
                   fontSize: 10,
                   color: isOver ? '#ef4444' : pct >= 0.95 ? 'var(--accent)' : 'var(--text-tertiary)',
                   marginBottom: 14,
-                  transition: 'color 0.3s',
                 }}>
                   {barStatus}
                 </div>
