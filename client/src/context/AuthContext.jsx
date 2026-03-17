@@ -30,19 +30,33 @@ export function AuthProvider({ children }) {
       method: 'POST',
       headers: { Authorization: `Bearer ${t}` },
     })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.token) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-          setToken(data.token);
-          setUser(data.user);
-        } else {
-          // Servidor no disponible — usar token almacenado como fallback
-          const jwtPayload = decodeJWT(t);
-          setToken(t);
-          setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
+      .then(async r => {
+        if (r.ok) {
+          const data = await r.json();
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            setToken(data.token);
+            setUser(data.user);
+            return;
+          }
         }
+
+        if (r.status === 401) {
+          // Token expirado o inválido — forzar logout limpio.
+          // NO usar el token caducado como fallback; causaría "No autorizado"
+          // en cada llamada a la API hasta que el usuario recargue o reinicie sesión.
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          // setUser y setToken permanecen null → app redirige a /login
+          return;
+        }
+
+        // Error de servidor (5xx) o respuesta inesperada — modo offline:
+        // usar el JWT almacenado como fallback temporal.
+        const jwtPayload = decodeJWT(t);
+        setToken(t);
+        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
       })
       .catch(() => {
         // Sin red — usar token almacenado (offline mode)

@@ -19,8 +19,12 @@ export const LEVEL_CONFIG = {
 };
 
 // null = ilimitado, número = límite diario
+// IMPORTANTE: usar esta función en vez de acceder .ai_limit directamente.
+// El operador ?? no sirve aquí porque null es un valor válido (ilimitado).
 export function getAiLimit(access_level) {
-  return LEVEL_CONFIG[access_level]?.ai_limit ?? 3;
+  const config = LEVEL_CONFIG[access_level];
+  if (!config) return 3;          // nivel desconocido → límite Free
+  return config.ai_limit;         // null = ilimitado, número = límite diario
 }
 
 export function canAccess(access_level) {
