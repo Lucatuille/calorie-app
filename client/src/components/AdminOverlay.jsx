@@ -142,7 +142,7 @@ function TabOverview({ data, loading, onDrillCalories }) {
 const ROLE_OPTIONS = [
   { value: 0, label: '⏳ Waitlist'  },
   { value: 3, label: '○  Free'      },
-  { value: 1, label: '🌱 Fundador'  },
+  { value: 1, label: '🌱 Beta'      },
   { value: 2, label: '∞  Pro'       },
 ];
 
