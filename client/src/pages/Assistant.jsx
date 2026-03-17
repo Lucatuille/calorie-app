@@ -159,7 +159,7 @@ export default function Assistant() {
   const [loading, setLoading]               = useState(false);
   const [introLoading, setIntroLoading]     = useState(true);
   const [conversationId, setConversationId] = useState(null);
-  const [usage, setUsage]                   = useState({ used: 0, limit: 20, remaining: 20 });
+  const [usage, setUsage]                   = useState(null);
   const [showHistory, setShowHistory]       = useState(false);
   const [conversations, setConversations]   = useState([]);
   const [error, setError]                   = useState('');
@@ -189,6 +189,7 @@ export default function Assistant() {
           localStorage.setItem(cacheKey, res.message);
           setMessages([{ role: 'assistant', content: res.message, isWelcome: true }]);
         }
+        if (res?.usage) setUsage(res.usage);
       })
       .catch(() => {
         setMessages([{ role: 'assistant', content: '¡Hola! ¿En qué puedo ayudarte hoy?', isWelcome: true }]);
@@ -216,7 +217,7 @@ export default function Assistant() {
       setMessages(prev => [...prev, { role: 'assistant', content: res.message }]);
     } catch (err) {
       if (err.status === 429) {
-        setError(`Límite diario alcanzado (${usage.limit} mensajes). Se renueva mañana.`);
+        setError(`Límite diario alcanzado (${usage?.limit ?? ''} mensajes). Se renueva mañana.`);
       } else {
         setError('Error al conectar con el asistente. Inténtalo de nuevo.');
       }
@@ -353,16 +354,18 @@ export default function Assistant() {
           </div>
 
           {/* Contador de mensajes */}
-          <p style={{
-            fontSize: 11, textAlign: 'center', marginTop: 6,
-            color: usage.remaining < 5 ? 'var(--accent-2)' : 'var(--text-3)',
-          }}>
-            {usage.remaining > 5
-              ? `${usage.remaining} mensajes restantes hoy`
-              : usage.remaining > 0
-              ? `⚠ Solo quedan ${usage.remaining} mensajes hoy`
-              : 'Límite diario alcanzado · Se renueva mañana'}
-          </p>
+          {usage && (
+            <p style={{
+              fontSize: 11, textAlign: 'center', marginTop: 6,
+              color: usage.remaining < 5 ? 'var(--accent-2)' : 'var(--text-3)',
+            }}>
+              {usage.remaining > 5
+                ? `${usage.remaining} mensajes restantes hoy`
+                : usage.remaining > 0
+                ? `⚠ Solo quedan ${usage.remaining} mensajes hoy`
+                : 'Límite diario alcanzado · Se renueva mañana'}
+            </p>
+          )}
 
           {/* Disclaimer */}
           <p style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'center', marginTop: 2 }}>

@@ -424,8 +424,16 @@ export async function handleAssistant(request, env, path, ctx) {
       });
     }
 
-    // Respuesta de intro (sin conversation_id, sin usage)
-    return jsonResponse({ message: assistantText, is_intro: true });
+    // Respuesta de intro — incluye usage real para que el frontend muestre el contador correcto
+    const introUsageRow = await env.DB.prepare(
+      'SELECT messages FROM assistant_usage WHERE user_id = ? AND date = ?'
+    ).bind(user.id, today).first();
+    const introUsed = introUsageRow?.messages || 0;
+    return jsonResponse({
+      message: assistantText,
+      is_intro: true,
+      usage: { used: introUsed, limit, remaining: Math.max(0, limit - introUsed) },
+    });
   }
 
   // GET /api/assistant/conversations
