@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
+import { useAuth as useAuthProfile } from '../context/AuthContext';
 import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
 
 const BarcodeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
     <rect x="1" y="4" width="2" height="16"/>
     <rect x="5" y="4" width="1" height="16"/>
     <rect x="8" y="4" width="2" height="16"/>
@@ -17,18 +19,27 @@ const BarcodeIcon = () => (
 );
 
 const CameraIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
     <circle cx="12" cy="13" r="4"/>
   </svg>
 );
 
 const PenIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 20h9"/>
     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
   </svg>
 );
+
+// Color por tipo de comida (solo cuando está activo)
+const MEAL_COLORS = {
+  breakfast: { bg: '#fef3c7', color: '#92400e', activeBg: '#f59e0b', activeColor: '#fff' },
+  lunch:     { bg: '#d1fae5', color: '#065f46', activeBg: '#10b981', activeColor: '#fff' },
+  dinner:    { bg: '#ede9fe', color: '#3730a3', activeBg: '#6366f1', activeColor: '#fff' },
+  snack:     { bg: '#fce7f3', color: '#9d174d', activeBg: '#ec4899', activeColor: '#fff' },
+  other:     { bg: 'var(--surface-2)', color: 'var(--text-secondary)', activeBg: 'var(--surface-3)', activeColor: 'var(--text-primary)' },
+};
 
 function getDefaultMealType() {
   const h = new Date().getHours();
@@ -39,6 +50,15 @@ function getDefaultMealType() {
   return 'other';
 }
 
+function getContextHint(mealType) {
+  const h = new Date().getHours();
+  if (mealType === 'breakfast') return h < 9 ? 'Buen comienzo del día' : 'Desayuno tardío';
+  if (mealType === 'lunch')     return 'A por la comida';
+  if (mealType === 'dinner')    return h >= 22 ? 'Cena tardía — intenta algo ligero' : 'Hora de cenar';
+  if (mealType === 'snack')     return 'Un snack inteligente';
+  return null;
+}
+
 const emptyForm = () => ({
   meal_type: getDefaultMealType(), name: '', calories: '',
   protein: '', carbs: '', fat: '', weight: '', notes: '',
@@ -47,13 +67,14 @@ const emptyForm = () => ({
 const CONFIDENCE_STYLE = {
   alta:  { bg: 'rgba(16,185,129,0.1)',  color: '#059669' },
   media: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
-  baja:  { bg: 'rgba(193,18,31,0.1)',  color: 'var(--danger)' },
+  baja:  { bg: 'rgba(193,18,31,0.1)',  color: '#ef4444' },
 };
 
 export default function Calculator() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [entries,    setEntries]    = useState([]);
+  const [profile,    setProfile]    = useState(null);
   const [form,       setForm]       = useState(emptyForm);
   const [saving,     setSaving]     = useState(false);
   const [error,      setError]      = useState('');
@@ -78,6 +99,7 @@ export default function Calculator() {
 
   useEffect(() => {
     api.getTodayEntries(token).then(setEntries).catch(() => {});
+    api.getProfile(token).then(setProfile).catch(() => {});
   }, [token]);
 
   const total = entries.reduce((a, e) => ({
@@ -86,6 +108,8 @@ export default function Calculator() {
     carbs:    a.carbs    + (e.carbs    || 0),
     fat:      a.fat      + (e.fat      || 0),
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  const targetCalories = profile?.target_calories || user?.target_calories || 0;
 
   async function addMeal(e) {
     e.preventDefault();
@@ -108,8 +132,7 @@ export default function Calculator() {
       setEntries(prev => [...prev, entry]);
       setForm(emptyForm());
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-
+      setTimeout(() => setSaved(false), 2500);
       if (photoAnalysisRef.current) {
         const pa = photoAnalysisRef.current;
         api.saveAiCorrection({
@@ -250,6 +273,16 @@ export default function Calculator() {
   }
 
   const todayLabel = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  const contextHint = getContextHint(form.meal_type);
+  const activeMealColor = MEAL_COLORS[form.meal_type] || MEAL_COLORS.other;
+
+  // Calorie input color hint
+  const kcalTyped = parseInt(form.calories) || 0;
+  const kcalColor = kcalTyped === 0
+    ? 'var(--text-primary)'
+    : targetCalories > 0 && (total.calories + kcalTyped) > targetCalories
+      ? '#ef4444'
+      : 'var(--accent)';
 
   // ── Shared styles ─────────────────────────────────────────────
   const cardStyle = {
@@ -275,12 +308,6 @@ export default function Calculator() {
     outline: 'none', boxSizing: 'border-box',
   };
 
-  const macroInputStyle = {
-    ...inputStyle,
-    textAlign: 'center',
-    padding: '9px 8px',
-  };
-
   return (
     <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
 
@@ -303,149 +330,95 @@ export default function Calculator() {
         </h1>
       </div>
 
-      {/* ── 1. Resumen de hoy ── */}
+      {/* ── 1. Formulario — primero ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={cardStyle}>
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: entries.length > 0 ? 10 : 0,
-          }}>
-            <span style={sectionLabelStyle}>
-              {entries.length === 0
-                ? 'Sin registros hoy'
-                : `Hoy · ${total.calories.toLocaleString('es')} kcal · ${entries.length} ${entries.length === 1 ? 'comida' : 'comidas'}`}
-            </span>
+
+          {/* Header del formulario: label + hint contextual */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ ...sectionLabelStyle, marginBottom: 0 }}>Añadir comida</span>
+            {contextHint && (
+              <span style={{
+                fontSize: 10, color: activeMealColor.activeBg === 'var(--surface-3)' ? 'var(--text-tertiary)' : activeMealColor.activeBg,
+                fontFamily: 'var(--font-sans)', fontStyle: 'italic',
+              }}>
+                {contextHint}
+              </span>
+            )}
           </div>
 
-          {entries.length === 0 ? (
-            <p style={{
-              fontSize: 13, color: 'var(--text-tertiary)',
-              padding: '6px 0 2px', margin: 0,
-              fontFamily: 'var(--font-sans)',
-            }}>
-              Aún no has registrado nada — empieza abajo.
-            </p>
-          ) : (
-            <div>
-              {entries.map((entry, i) => {
-                const meal = getMeal(entry.meal_type);
-                const isDeleting = deletingId === entry.id;
-                return (
-                  <div key={entry.id}>
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '9px 0',
-                      borderBottom: (i < entries.length - 1 || isDeleting) ? '0.5px solid var(--border)' : 'none',
-                    }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{
-                          fontSize: 13, color: 'var(--text-primary)',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block',
-                        }}>
-                          {entry.name || meal.label}
-                        </span>
-                        {entry.protein > 0 && (
-                          <span style={{ fontSize: 9, color: 'var(--text-tertiary)' }}>
-                            {Math.round(entry.protein)}g prot · {Math.round(entry.carbs || 0)}g carbos · {Math.round(entry.fat || 0)}g grasa
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 8 }}>
-                        <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>
-                          {entry.calories}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingId(d => d === entry.id ? null : entry.id)}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: 'var(--text-tertiary)', fontSize: 16,
-                            padding: '0 2px', lineHeight: 1, borderRadius: 4,
-                          }}
-                        >×</button>
-                      </div>
-                    </div>
-                    {isDeleting && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '8px 0', borderBottom: i < entries.length - 1 ? '0.5px solid var(--border)' : 'none',
-                      }}>
-                        <span style={{ flex: 1, fontSize: 12, color: '#ef4444' }}>¿Eliminar esta entrada?</span>
-                        <button
-                          onClick={() => removeMeal(entry.id)}
-                          style={{
-                            background: '#ef4444', color: 'white', border: 'none',
-                            borderRadius: 6, padding: '4px 12px', fontSize: 12, cursor: 'pointer',
-                            fontFamily: 'var(--font-sans)',
-                          }}
-                        >Eliminar</button>
-                        <button
-                          onClick={() => setDeletingId(null)}
-                          style={{
-                            background: 'none', border: '0.5px solid var(--border)',
-                            borderRadius: 6, padding: '4px 12px', fontSize: 12, cursor: 'pointer',
-                            color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
-                          }}
-                        >Cancelar</button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+          {/* Métodos de captura — Foto como hero, los otros secundarios */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+            {/* Foto — hero */}
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={analyzing}
+              style={{
+                gridColumn: '1 / -1',
+                background: analyzing
+                  ? 'var(--surface-2)'
+                  : 'linear-gradient(135deg, rgba(45,106,79,0.12) 0%, rgba(45,106,79,0.06) 100%)',
+                border: `0.5px solid ${analyzing ? 'var(--border)' : 'rgba(45,106,79,0.25)'}`,
+                borderRadius: 'var(--radius-md)',
+                padding: '13px 16px',
+                display: 'flex', alignItems: 'center', gap: 10,
+                cursor: analyzing ? 'default' : 'pointer',
+                color: analyzing ? 'var(--text-tertiary)' : 'var(--accent)',
+                fontFamily: 'var(--font-sans)',
+                opacity: analyzing ? 0.7 : 1,
+              }}
+            >
+              {analyzing
+                ? <span className="spinner" style={{ width: 18, height: 18 }} />
+                : <CameraIcon />}
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>
+                  {analyzing ? 'Analizando con IA…' : 'Foto con IA'}
+                </div>
+                <div style={{ fontSize: 10, opacity: 0.7, marginTop: 1 }}>
+                  {analyzing ? 'Esto tarda unos segundos' : 'Saca foto y calcula automáticamente'}
+                </div>
+              </div>
+            </button>
 
-      {/* ── 2. Formulario ── */}
-      <div style={{ padding: '0 16px', marginBottom: 10 }}>
-        <div style={cardStyle}>
-          <span style={sectionLabelStyle}>Añadir comida</span>
+            {/* Escanear */}
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              style={{
+                background: 'var(--surface-2)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '11px 12px',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 5,
+                cursor: 'pointer', color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-sans)',
+              }}
+            >
+              <BarcodeIcon />
+              <span style={{ fontSize: 11, fontWeight: 500 }}>Escanear</span>
+            </button>
 
-          {/* Métodos de captura */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
-            {[
-              {
-                label: analyzing ? 'Analizando…' : 'Foto',
-                icon: analyzing
-                  ? <span className="spinner" style={{ width: 16, height: 16 }} />
-                  : <CameraIcon />,
-                onClick: () => fileRef.current?.click(),
-                disabled: analyzing,
-              },
-              {
-                label: 'Escanear',
-                icon: <BarcodeIcon />,
-                onClick: () => setScannerOpen(true),
-              },
-              {
-                label: 'Describir',
-                icon: <PenIcon />,
-                onClick: () => setTextAnalyzerOpen(true),
-              },
-            ].map(({ label, icon, onClick, disabled }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={onClick}
-                disabled={disabled}
-                style={{
-                  background: 'var(--surface-2)',
-                  border: '0.5px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '12px 8px 10px',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', gap: 6,
-                  cursor: disabled ? 'default' : 'pointer',
-                  color: 'var(--text-secondary)',
-                  opacity: disabled ? 0.6 : 1,
-                  fontFamily: 'var(--font-sans)',
-                }}
-              >
-                {icon}
-                <span style={{ fontSize: 11, fontWeight: 500 }}>{label}</span>
-              </button>
-            ))}
+            {/* Describir */}
+            <button
+              type="button"
+              onClick={() => setTextAnalyzerOpen(true)}
+              style={{
+                background: 'var(--surface-2)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '11px 12px',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 5,
+                cursor: 'pointer', color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-sans)',
+              }}
+            >
+              <PenIcon />
+              <span style={{ fontSize: 11, fontWeight: 500 }}>Describir</span>
+            </button>
           </div>
 
           <input
@@ -457,9 +430,9 @@ export default function Calculator() {
             onChange={handlePhotoChange}
           />
 
-          {/* Foto preview + resultado IA */}
+          {/* Foto preview + AI result */}
           {photoPreview && (
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 14 }}>
               <img
                 src={photoPreview}
                 alt="preview"
@@ -473,14 +446,14 @@ export default function Calculator() {
                   <div style={{ marginBottom: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
                       <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
-                        Contexto adicional (opcional)
+                        Contexto (opcional)
                       </span>
                       <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>{photoContext.length}/300</span>
                     </div>
                     <textarea
                       rows={2}
                       maxLength={300}
-                      placeholder='Ej: "son 2 raciones", "comida de restaurante", "200g aprox"…'
+                      placeholder='Ej: "son 2 raciones", "200g aprox", "comida de restaurante"…'
                       value={photoContext}
                       onChange={e => setPhotoContext(e.target.value)}
                       style={{ ...inputStyle, resize: 'vertical', fontSize: 13 }}
@@ -503,7 +476,7 @@ export default function Calculator() {
               {analyzing && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 8,
-                  color: 'var(--text-secondary)', fontSize: 13, marginTop: 8,
+                  color: 'var(--text-secondary)', fontSize: 13,
                   fontFamily: 'var(--font-sans)',
                 }}>
                   <span className="spinner" style={{ width: 14, height: 14 }} />
@@ -512,8 +485,7 @@ export default function Calculator() {
               )}
               {aiResult && !aiResult.error && (
                 <div style={{
-                  background: 'var(--surface-2)',
-                  border: '0.5px solid var(--border)',
+                  background: 'var(--surface-2)', border: '0.5px solid var(--border)',
                   borderRadius: 'var(--radius-md)', padding: '12px 14px',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
@@ -527,13 +499,13 @@ export default function Calculator() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--text-primary)' }}><b>{aiResult.calories}</b> kcal</span>
+                    <span><b>{aiResult.calories}</b> kcal</span>
                     {aiResult.protein > 0 && <span style={{ color: '#059669' }}><b>{aiResult.protein}g</b> prot</span>}
                     {aiResult.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{aiResult.carbs}g</b> carb</span>}
                     {aiResult.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{aiResult.fat}g</b> grasa</span>}
                   </div>
                   {aiResult.calibration_applied && aiResult.calibration_confidence > 0.3 && (
-                    <p style={{ fontSize: 11, color: 'var(--accent)', marginBottom: 8, margin: '0 0 8px' }}>
+                    <p style={{ fontSize: 11, color: 'var(--accent)', margin: '0 0 8px' }}>
                       Ajustado a tus hábitos · {aiResult.calibration_data_points} correcciones
                     </p>
                   )}
@@ -604,29 +576,33 @@ export default function Calculator() {
             </div>
           )}
 
-          {/* Formulario principal */}
+          {/* Formulario */}
           <form onSubmit={addMeal} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-            {/* Tipo de comida — pills sin emoji */}
+            {/* Tipo de comida — pills con color individual */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {MEAL_TYPES.map(m => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => set('meal_type', m.id)}
-                  style={{
-                    padding: '5px 14px',
-                    borderRadius: 'var(--radius-full)',
-                    fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                    border: 'none', fontFamily: 'var(--font-sans)',
-                    background: form.meal_type === m.id ? 'var(--accent)' : 'var(--surface-2)',
-                    color: form.meal_type === m.id ? 'white' : 'var(--text-secondary)',
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  {m.label}
-                </button>
-              ))}
+              {MEAL_TYPES.map(m => {
+                const mc = MEAL_COLORS[m.id] || MEAL_COLORS.other;
+                const isActive = form.meal_type === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => set('meal_type', m.id)}
+                    style={{
+                      padding: '5px 14px',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                      border: 'none', fontFamily: 'var(--font-sans)',
+                      background: isActive ? mc.activeBg : mc.bg,
+                      color: isActive ? mc.activeColor : mc.color,
+                      transition: 'background 0.15s, color 0.15s',
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Nombre */}
@@ -637,7 +613,7 @@ export default function Calculator() {
               style={inputStyle}
             />
 
-            {/* Calorías — campo principal */}
+            {/* Calorías — protagonista con color contextual */}
             <div style={{ position: 'relative' }}>
               <input
                 type="number"
@@ -646,27 +622,42 @@ export default function Calculator() {
                 onChange={e => set('calories', e.target.value)}
                 style={{
                   ...inputStyle,
-                  fontSize: 28, fontWeight: 600,
-                  padding: '12px 52px 12px 16px',
-                  letterSpacing: '-0.5px',
+                  fontSize: 32, fontWeight: 700,
+                  padding: '12px 56px 12px 16px',
+                  letterSpacing: '-1px',
+                  color: kcalColor,
+                  transition: 'color 0.2s',
                 }}
               />
               <span style={{
                 position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
-                fontSize: 13, color: 'var(--text-tertiary)',
+                fontSize: 12, color: 'var(--text-tertiary)',
                 fontFamily: 'var(--font-sans)', pointerEvents: 'none',
               }}>
                 kcal
               </span>
+              {/* Feedback de progreso si hay objetivo */}
+              {kcalTyped > 0 && targetCalories > 0 && (
+                <div style={{
+                  position: 'absolute', bottom: -18, left: 0,
+                  fontSize: 10, color: kcalColor,
+                  fontFamily: 'var(--font-sans)',
+                  transition: 'color 0.2s',
+                }}>
+                  {total.calories + kcalTyped > targetCalories
+                    ? `+${(total.calories + kcalTyped - targetCalories).toLocaleString('es')} sobre el objetivo`
+                    : `${(targetCalories - total.calories - kcalTyped).toLocaleString('es')} restantes tras guardar`}
+                </div>
+              )}
             </div>
 
-            {/* Macros */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {/* Macros con padding top para el hint flotante */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, paddingTop: kcalTyped > 0 && targetCalories > 0 ? 10 : 0 }}>
               {[
-                { key: 'protein', label: 'Proteína', color: 'var(--accent)', placeholder: '0g' },
-                { key: 'carbs',   label: 'Carbos',   color: '#f59e0b',        placeholder: '0g' },
-                { key: 'fat',     label: 'Grasa',    color: '#60a5fa',        placeholder: '0g' },
-              ].map(({ key, label, color, placeholder }) => (
+                { key: 'protein', label: 'Proteína', borderColor: 'var(--accent)' },
+                { key: 'carbs',   label: 'Carbos',   borderColor: '#f59e0b' },
+                { key: 'fat',     label: 'Grasa',    borderColor: '#60a5fa' },
+              ].map(({ key, label, borderColor }) => (
                 <div key={key}>
                   <label style={{
                     fontSize: 9, color: 'var(--text-tertiary)',
@@ -682,15 +673,17 @@ export default function Calculator() {
                     value={form[key]}
                     onChange={e => set(key, e.target.value)}
                     style={{
-                      ...macroInputStyle,
-                      borderBottom: `2px solid ${color}`,
+                      ...inputStyle,
+                      textAlign: 'center',
+                      padding: '9px 8px',
+                      borderBottom: `2px solid ${borderColor}`,
                     }}
                   />
                 </div>
               ))}
             </div>
 
-            {/* Más detalles (peso + notas) */}
+            {/* Más detalles */}
             <button
               type="button"
               onClick={() => setShowExtra(v => !v)}
@@ -701,47 +694,43 @@ export default function Calculator() {
                 textAlign: 'left', alignSelf: 'flex-start',
               }}
             >
-              {showExtra ? '− Menos campos' : '+ Peso corporal / Notas'}
+              {showExtra ? '− Ocultar' : '+ Peso corporal / Notas'}
             </button>
 
             {showExtra && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <label style={{
-                    fontSize: 9, color: 'var(--text-tertiary)',
-                    textTransform: 'uppercase', letterSpacing: '0.4px',
-                    fontWeight: 600, display: 'block', marginBottom: 4,
+                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 4,
                     fontFamily: 'var(--font-sans)',
                   }}>
                     Peso corporal (kg)
                   </label>
                   <input
                     type="number" step="0.1" placeholder="74.5"
-                    value={form.weight}
-                    onChange={e => set('weight', e.target.value)}
+                    value={form.weight} onChange={e => set('weight', e.target.value)}
                     style={inputStyle}
                   />
                 </div>
                 <div>
                   <label style={{
-                    fontSize: 9, color: 'var(--text-tertiary)',
-                    textTransform: 'uppercase', letterSpacing: '0.4px',
-                    fontWeight: 600, display: 'block', marginBottom: 4,
+                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 4,
                     fontFamily: 'var(--font-sans)',
                   }}>
                     Notas
                   </label>
                   <input
                     placeholder="Opcional…"
-                    value={form.notes}
-                    onChange={e => set('notes', e.target.value)}
+                    value={form.notes} onChange={e => set('notes', e.target.value)}
                     style={inputStyle}
                   />
                 </div>
               </div>
             )}
 
-            {error        && (
+            {error && (
               <div style={{
                 background: 'rgba(239,68,68,0.08)', border: '0.5px solid rgba(239,68,68,0.2)',
                 borderRadius: 'var(--radius-sm)', padding: '9px 12px',
@@ -762,13 +751,16 @@ export default function Calculator() {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || !form.calories}
               style={{
-                width: '100%', background: form.calories ? 'var(--accent)' : 'var(--surface-3)',
-                color: form.calories ? 'white' : 'var(--text-tertiary)',
+                width: '100%',
+                background: form.calories ? activeMealColor.activeBg : 'var(--surface-3)',
+                color: form.calories
+                  ? (activeMealColor.activeBg === 'var(--surface-3)' ? 'var(--text-primary)' : activeMealColor.activeColor)
+                  : 'var(--text-tertiary)',
                 border: 'none', borderRadius: 'var(--radius-sm)',
                 padding: '13px', fontSize: 14, fontWeight: 500,
-                cursor: form.calories ? 'pointer' : 'default',
+                cursor: form.calories && !saving ? 'pointer' : 'default',
                 fontFamily: 'var(--font-sans)',
                 transition: 'background 0.2s, color 0.2s',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -781,6 +773,85 @@ export default function Calculator() {
           </form>
         </div>
       </div>
+
+      {/* ── 2. Historial de hoy — debajo ── */}
+      {entries.length > 0 && (
+        <div style={{ padding: '0 16px', marginBottom: 10 }}>
+          <div style={cardStyle}>
+            <span style={sectionLabelStyle}>
+              Hoy · {total.calories.toLocaleString('es')} kcal · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
+            </span>
+            <div>
+              {entries.map((entry, i) => {
+                const meal = getMeal(entry.meal_type);
+                const isDeleting = deletingId === entry.id;
+                return (
+                  <div key={entry.id}>
+                    <div style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '9px 0',
+                      borderBottom: (i < entries.length - 1 || isDeleting) ? '0.5px solid var(--border)' : 'none',
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{
+                          fontSize: 13, color: 'var(--text-primary)',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block',
+                        }}>
+                          {entry.name || meal.label}
+                        </span>
+                        {entry.protein > 0 && (
+                          <span style={{ fontSize: 9, color: 'var(--text-tertiary)' }}>
+                            {Math.round(entry.protein)}g prot · {Math.round(entry.carbs || 0)}g carbos · {Math.round(entry.fat || 0)}g grasa
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>
+                          {entry.calories}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingId(d => d === entry.id ? null : entry.id)}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: 'var(--text-tertiary)', fontSize: 16,
+                            padding: '0 2px', lineHeight: 1, borderRadius: 4,
+                          }}
+                        >×</button>
+                      </div>
+                    </div>
+                    {isDeleting && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '8px 0',
+                        borderBottom: i < entries.length - 1 ? '0.5px solid var(--border)' : 'none',
+                      }}>
+                        <span style={{ flex: 1, fontSize: 12, color: '#ef4444' }}>¿Eliminar esta entrada?</span>
+                        <button
+                          onClick={() => removeMeal(entry.id)}
+                          style={{
+                            background: '#ef4444', color: 'white', border: 'none',
+                            borderRadius: 6, padding: '4px 12px', fontSize: 12,
+                            cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                          }}
+                        >Eliminar</button>
+                        <button
+                          onClick={() => setDeletingId(null)}
+                          style={{
+                            background: 'none', border: '0.5px solid var(--border)',
+                            borderRadius: 6, padding: '4px 12px', fontSize: 12,
+                            cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                          }}
+                        >Cancelar</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <BarcodeScanner
         isOpen={scannerOpen}
