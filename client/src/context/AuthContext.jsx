@@ -21,39 +21,36 @@ export function AuthProvider({ children }) {
     const u = localStorage.getItem('user');
     if (!t || !u) { setReady(true); return; }
 
-    const jwtPayload = decodeJWT(t);
     const storedUser = JSON.parse(u);
 
-    // Token missing fields → silently refresh to get current schema
-    if (jwtPayload.is_admin === undefined || jwtPayload.access_level === undefined) {
-      fetch(`${BASE}/api/auth/refresh`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${t}` },
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.token) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            setToken(data.token);
-            setUser(data.user);
-          } else {
-            // Refresh failed — continue with old token, assume safe defaults
-            setToken(t);
-            setUser({ ...storedUser, is_admin: 0, access_level: storedUser.access_level ?? 1 });
-          }
-        })
-        .catch(() => {
+    // Siempre refrescar el token desde la BD al cargar.
+    // Garantiza que cambios de rol hechos desde el admin se reflejen
+    // sin que el usuario tenga que desloguearse.
+    fetch(`${BASE}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${t}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setToken(data.token);
+          setUser(data.user);
+        } else {
+          // Servidor no disponible — usar token almacenado como fallback
+          const jwtPayload = decodeJWT(t);
           setToken(t);
-          setUser({ ...storedUser, is_admin: 0 });
-        })
-        .finally(() => setReady(true));
-      return;
-    }
-
-    setToken(t);
-    setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
-    setReady(true);
+          setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
+        }
+      })
+      .catch(() => {
+        // Sin red — usar token almacenado (offline mode)
+        const jwtPayload = decodeJWT(t);
+        setToken(t);
+        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
+      })
+      .finally(() => setReady(true));
   }, []);
 
   function login(token, user) {
