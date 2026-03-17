@@ -167,7 +167,7 @@ export default function History() {
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                     <span style={{
                       fontFamily: 'var(--font-serif)',
-                      fontSize: 18, fontStyle: 'italic', fontWeight: 400,
+                      fontSize: 21, fontStyle: 'italic', fontWeight: 400,
                       color: today ? 'var(--accent)' : 'var(--text-primary)',
                     }}>
                       {today ? 'Hoy' : weekday}
@@ -179,7 +179,7 @@ export default function History() {
                     )}
                   </div>
                   <span style={{
-                    fontSize: 12, color: 'var(--text-secondary)',
+                    fontSize: 13, color: 'var(--text-secondary)',
                     fontFamily: 'var(--font-sans)', fontWeight: 500,
                   }}>
                     {dayTotal.toLocaleString('es')} kcal
@@ -305,7 +305,7 @@ export default function History() {
                           <div>
                             <div style={{
                               display: 'flex', alignItems: 'center',
-                              padding: '10px 16px',
+                              padding: '12px 16px',
                               borderBottom: showDivider ? '0.5px solid var(--border)' : 'none',
                               gap: 10,
                             }}>
@@ -313,14 +313,14 @@ export default function History() {
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
                                   <span style={{
-                                    fontSize: 13, fontWeight: 500, color: 'var(--text-primary)',
+                                    fontSize: 14, fontWeight: 500, color: 'var(--text-primary)',
                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                   }}>
                                     {entry.name || meal.label}
                                   </span>
                                   {entry.name && (
                                     <span style={{
-                                      fontSize: 10, color: 'var(--text-tertiary)',
+                                      fontSize: 11, color: 'var(--text-tertiary)',
                                       fontFamily: 'var(--font-sans)',
                                     }}>
                                       {meal.label}
@@ -332,12 +332,12 @@ export default function History() {
                                   <div style={{ display: 'flex', gap: 8, marginTop: 3 }}>
                                     {MACRO_META.map(m => entry[m.key] > 0 ? (
                                       <span key={m.key} style={{
-                                        fontSize: 9, fontFamily: 'var(--font-sans)',
+                                        fontSize: 10, fontFamily: 'var(--font-sans)',
                                         color: 'var(--text-tertiary)',
-                                        display: 'flex', alignItems: 'center', gap: 2,
+                                        display: 'flex', alignItems: 'center', gap: 3,
                                       }}>
                                         <span style={{
-                                          width: 4, height: 4, borderRadius: '50%',
+                                          width: 5, height: 5, borderRadius: '50%',
                                           background: m.color, display: 'inline-block', flexShrink: 0,
                                         }} />
                                         {Math.round(entry[m.key])}g
@@ -354,7 +354,7 @@ export default function History() {
 
                               {/* Calorías + acciones */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                                <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500, fontFamily: 'var(--font-sans)' }}>
+                                <span style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 500, fontFamily: 'var(--font-sans)' }}>
                                   {entry.calories.toLocaleString('es')}
                                 </span>
                                 <button
