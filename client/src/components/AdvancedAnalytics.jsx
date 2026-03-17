@@ -464,19 +464,22 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           Escenarios a 30 / 60 / 90 días
                         </p>
                         {[
-                          { key: 'optimistic',   icon: '🟢', label: 'Optimista',   sub: 'adherencia perfecta',   color: '#10b981', border: 'rgba(16,185,129,0.25)' },
-                          { key: 'realistic',    icon: '🎯', label: 'Realista',    sub: 'basado en tus hábitos', color: 'var(--accent)', border: 'rgba(45,106,79,0.4)', highlight: true },
-                          { key: 'conservative', icon: '🔵', label: 'Conservador', sub: 'adherencia 20% menor',  color: '#6366f1', border: 'rgba(99,102,241,0.25)' },
+                          { key: 'optimistic',   label: 'Optimista',   sub: 'adherencia perfecta',   color: '#10b981', border: 'rgba(16,185,129,0.2)' },
+                          { key: 'realistic',    label: 'Realista',    sub: 'basado en tus hábitos', color: 'var(--accent)', border: 'rgba(45,106,79,0.35)', highlight: true },
+                          { key: 'conservative', label: 'Conservador', sub: 'adherencia 20% menor',  color: '#6366f1', border: 'rgba(99,102,241,0.2)' },
                         ].map(s => (
                           <div key={s.key} style={{
-                            marginBottom: 8, padding: '12px 14px', borderRadius: 12,
-                            background: s.highlight ? 'rgba(45,106,79,0.06)' : 'var(--bg)',
-                            border: `1px solid ${s.border}`,
+                            marginBottom: 8, padding: '12px 14px', borderRadius: 'var(--radius-md)',
+                            background: s.highlight ? 'rgba(45,106,79,0.05)' : 'var(--surface-2)',
+                            border: `0.5px solid ${s.border}`,
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                               <div>
-                                <p style={{ fontSize: 13, fontWeight: 600, color: s.color, marginBottom: 2 }}>{s.icon} {s.label}</p>
-                                <p style={{ fontSize: 11, color: 'var(--text-3)' }}>{s.sub}</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
+                                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                                  <p style={{ fontSize: 13, fontWeight: 600, color: s.color, margin: 0 }}>{s.label}</p>
+                                </div>
+                                <p style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)', marginLeft: 14 }}>{s.sub}</p>
                               </div>
                               <div style={{ display: 'flex', gap: 12, textAlign: 'right' }}>
                                 {['30d', '60d', '90d'].map(t => (
@@ -501,7 +504,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)',
                       }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: '#d97706', marginBottom: 4 }}>
-                          ⚠️ Plateau probable hacia el día {data.projection.plateau_prediction.estimated_day}
+                          Plateau probable hacia el día {data.projection.plateau_prediction.estimated_day}
                         </p>
                         <p style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
                           {data.projection.plateau_prediction.reason}
@@ -516,7 +519,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         background: 'rgba(45,106,79,0.08)', border: '1px solid rgba(45,106,79,0.2)',
                       }}>
                         <p style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
-                          🎯 A tu objetivo ({data.projection.goal_weight} kg) le quedan ~{data.projection.days_to_goal_realistic} días
+                          A tu objetivo ({data.projection.goal_weight} kg) le quedan ~{data.projection.days_to_goal_realistic} días
                         </p>
                         <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>escenario realista</p>
                       </div>

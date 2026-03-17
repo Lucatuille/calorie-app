@@ -73,7 +73,7 @@ export default function Progress() {
   const { token } = useAuth();
   const [data,         setData]         = useState([]);
   const [summary,      setSummary]      = useState(null);
-  const [days,         setDays]         = useState(30);
+  const [days,         setDays]         = useState(7);
   const [loading,      setLoading]      = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -186,53 +186,63 @@ export default function Progress() {
               Media · {days} días
             </span>
 
-            {/* Big hero number */}
-            <div style={{
-              fontFamily: 'var(--font-serif)',
-              fontSize: 52, fontStyle: 'italic',
-              fontWeight: 400, color: 'var(--text-primary)',
-              lineHeight: 1, letterSpacing: '-2px',
-            }}>
-              {periodAvgCal?.toLocaleString('es') ?? '—'}
-            </div>
-            <div style={{
-              fontSize: 11, color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-sans)', marginTop: 4, marginBottom: 14,
-            }}>
-              kcal/día de media
-            </div>
-
-            {/* Secondary metrics inline */}
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {periodAdherence != null && (
-                <div>
-                  <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 3 }}>Adherencia</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                    <span style={{ fontSize: 20, fontWeight: 600, color: periodAdherence >= 70 ? 'var(--accent)' : periodAdherence >= 40 ? '#f59e0b' : 'var(--text-primary)' }}>
-                      {periodAdherence}%
-                    </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>en objetivo</span>
-                  </div>
+            {/* Hero izquierda + métricas derecha */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Número grande */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: 52, fontStyle: 'italic',
+                  fontWeight: 400, color: 'var(--text-primary)',
+                  lineHeight: 1, letterSpacing: '-2px',
+                }}>
+                  {periodAvgCal?.toLocaleString('es') ?? '—'}
                 </div>
-              )}
-              {trendLabel && (
-                <div>
-                  <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 3 }}>Variación peso</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                    <span style={{ fontSize: 20, fontWeight: 600, color: periodWeightTrend < 0 ? 'var(--accent)' : periodWeightTrend > 0 ? '#e76f51' : 'var(--text-primary)' }}>
+                <div style={{
+                  fontSize: 11, color: 'var(--text-secondary)',
+                  fontFamily: 'var(--font-sans)', marginTop: 4,
+                }}>
+                  kcal/día de media
+                </div>
+              </div>
+
+              {/* Métricas secundarias — columna derecha */}
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: 10,
+                borderLeft: '0.5px solid var(--border)',
+                paddingLeft: 16, flexShrink: 0,
+              }}>
+                {periodAdherence != null && (
+                  <div>
+                    <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 2 }}>Adherencia</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                      <span style={{
+                        fontSize: 18, fontWeight: 600,
+                        color: periodAdherence >= 70 ? 'var(--accent)' : periodAdherence >= 40 ? '#f59e0b' : 'var(--text-primary)',
+                      }}>
+                        {periodAdherence}%
+                      </span>
+                      <span style={{ fontSize: 9, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>objetivo</span>
+                    </div>
+                  </div>
+                )}
+                {trendLabel && (
+                  <div>
+                    <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 2 }}>Peso</div>
+                    <span style={{
+                      fontSize: 18, fontWeight: 600,
+                      color: periodWeightTrend < 0 ? 'var(--accent)' : periodWeightTrend > 0 ? '#e76f51' : 'var(--text-primary)',
+                    }}>
                       {trendLabel}
                     </span>
-                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>en {days}d</span>
                   </div>
-                </div>
-              )}
-              <div>
-                <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 3 }}>Días registrados</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {data.length}
-                  </span>
-                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>de {days}</span>
+                )}
+                <div>
+                  <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 2 }}>Días</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                    <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)' }}>{data.length}</span>
+                    <span style={{ fontSize: 9, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>de {days}</span>
+                  </div>
                 </div>
               </div>
             </div>
