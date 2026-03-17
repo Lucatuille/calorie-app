@@ -4,6 +4,36 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { buildWelcomeMessage } from '../utils/assistantMessages';
 
+// ── Card de acceso Pro (403) ────────────────────────────────
+
+function ProOnlyCard({ onNavigate }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 12 }}>
+      <span style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 3, paddingLeft: 4 }}>Asistente</span>
+      <div style={{
+        maxWidth: '85%', padding: '14px 16px',
+        borderRadius: '18px 18px 18px 4px',
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        fontSize: 14, lineHeight: 1.65,
+      }}>
+        <p style={{ margin: '0 0 12px' }}>
+          El asistente es una feature exclusiva de Pro. Chatea con tu nutricionista personal basado en tus datos reales.
+        </p>
+        <button
+          onClick={onNavigate}
+          style={{
+            background: 'var(--accent)', color: '#fff', border: 'none',
+            borderRadius: 8, padding: '7px 14px', fontSize: 13,
+            fontWeight: 500, cursor: 'pointer',
+          }}
+        >
+          Ver planes →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Markdown mínimo ────────────────────────────────────────
 
 function MarkdownText({ content }) {
@@ -155,6 +185,7 @@ export default function Assistant() {
   const [showHistory, setShowHistory]       = useState(false);
   const [conversations, setConversations]   = useState([]);
   const [error, setError]                   = useState('');
+  const [blocked, setBlocked]               = useState(false);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
@@ -178,8 +209,12 @@ export default function Assistant() {
         );
         setMessages([{ role: 'assistant', content: welcome, isWelcome: true, timestamp: new Date().toISOString() }]);
       })
-      .catch(() => {
-        setMessages([{ role: 'assistant', content: buildWelcomeMessage(user?.name, {}, 0, null), isWelcome: true }]);
+      .catch(err => {
+        if (err?.status === 403) {
+          setBlocked(true);
+        } else {
+          setMessages([{ role: 'assistant', content: buildWelcomeMessage(user?.name, {}, 0, null), isWelcome: true }]);
+        }
       })
       .finally(() => setIntroLoading(false));
   }, []);
@@ -203,12 +238,16 @@ export default function Assistant() {
       if (res.usage) setUsage(res.usage);
       setMessages(prev => [...prev, { role: 'assistant', content: res.message }]);
     } catch (err) {
-      if (err.status === 429) {
+      if (err.status === 403) {
+        setBlocked(true);
+        setMessages(prev => prev.slice(0, -1));
+      } else if (err.status === 429) {
         setError(`Límite diario alcanzado (${usage?.limit ?? ''} mensajes). Se renueva mañana.`);
+        setMessages(prev => prev.slice(0, -1));
       } else {
         setError('Error al conectar con el asistente. Inténtalo de nuevo.');
+        setMessages(prev => prev.slice(0, -1));
       }
-      setMessages(prev => prev.slice(0, -1)); // quitar el mensaje del usuario si falla
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -299,9 +338,10 @@ export default function Assistant() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 8px' }}>
           {introLoading && <TypingDots />}
 
-          {messages.map((msg, i) => (
-            <MessageBubble key={i} msg={msg} />
-          ))}
+          {blocked
+            ? <ProOnlyCard onNavigate={() => navigate('/planes')} />
+            : messages.map((msg, i) => <MessageBubble key={i} msg={msg} />)
+          }
 
           {loading && <TypingDots />}
 

@@ -4,8 +4,14 @@
 export function buildWelcomeMessage(userName, todayData, targetCalories, targetProtein) {
   const day    = new Date().getDay();
   const saludo = getSaludo(day, userName);
-  const estado = getEstadoCalorico(todayData, targetCalories, targetProtein);
   const cierre = getCierre(day);
+
+  // Sin objetivo configurado → fallback suave
+  if (!targetCalories || targetCalories <= 0) {
+    return `${saludo} Configura tu objetivo calórico en Perfil para ver tus datos aquí.\n${cierre}`;
+  }
+
+  const estado = getEstadoCalorico(todayData, targetCalories, targetProtein);
   return `${saludo} ${estado}\n${cierre}`;
 }
 
