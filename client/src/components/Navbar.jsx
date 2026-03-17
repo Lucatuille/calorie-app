@@ -70,7 +70,7 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          {(user?.access_level ?? 0) >= 2 && (
+          {[1, 2, 99].includes(user?.access_level ?? 0) && (
             <NavLink to="/asistente" style={linkStyle}>
               🤖 Asistente
             </NavLink>
@@ -123,7 +123,7 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          {(user?.access_level ?? 0) >= 2 && (
+          {[1, 2, 99].includes(user?.access_level ?? 0) && (
             <NavLink to="/asistente" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
               🤖 Asistente
             </NavLink>

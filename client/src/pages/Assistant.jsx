@@ -160,7 +160,7 @@ export default function Assistant() {
 
   // Redirigir a usuarios Free
   useEffect(() => {
-    if (user && (user.access_level ?? 0) < 2) navigate('/');
+    if (user && ![1, 2, 99].includes(user.access_level ?? 0)) navigate('/');
   }, [user]);
 
   // Cargar mensaje de bienvenida con datos reales del día

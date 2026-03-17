@@ -8,7 +8,8 @@
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 
-// ── Auth helper: verifica access_level >= 2 en BD ──────────
+// ── Auth helper: solo Fundador(1), Pro(2) y Admin(99) ───────
+// Free(3) NO tiene acceso al asistente.
 
 async function requireProAccess(request, env) {
   const user = await authenticate(request, env);
@@ -17,13 +18,18 @@ async function requireProAccess(request, env) {
   const row = await env.DB.prepare(
     'SELECT id, name, access_level FROM users WHERE id = ?'
   ).bind(user.userId).first();
-  if (!row || row.access_level < 2) return null;
+  if (!row || !ALLOWED_LEVELS.includes(row.access_level)) return null;
   return { ...user, ...row };
 }
 
+// ── Niveles con acceso al asistente ────────────────────────
+// 1=Fundador, 2=Pro, 99=Admin. Free(3) excluido.
+
+const ALLOWED_LEVELS = [1, 2, 99];
+
 // ── Límites diarios por nivel ───────────────────────────────
 
-const DAILY_LIMITS = { 2: 20, 3: 40, 99: 999 };
+const DAILY_LIMITS = { 1: 30, 2: 20, 99: 999 };
 
 // ── System prompt del asistente ────────────────────────────
 
