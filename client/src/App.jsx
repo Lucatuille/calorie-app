@@ -77,6 +77,17 @@ function AppRoutes() {
 
   return (
     <>
+      {import.meta.env.VITE_ENV === 'preview' && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0,
+          background: '#e76f51', color: 'white',
+          textAlign: 'center', fontSize: '12px', fontWeight: 600,
+          padding: '4px', zIndex: 99999,
+          fontFamily: 'DM Sans, sans-serif', letterSpacing: '0.5px',
+        }}>
+          ⚗️ PREVIEW — Los cambios aquí no afectan a lucaeats.org
+        </div>
+      )}
       {user && <Navbar />}
       <InstallPrompt />
       {user?.is_admin === 1 && (
