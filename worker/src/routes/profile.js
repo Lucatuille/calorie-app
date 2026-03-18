@@ -54,6 +54,7 @@ export async function handleProfile(request, env, path) {
       target_calories, target_protein, target_carbs, target_fat,
       goal_weight,
       tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
+      onboarding_completed,
     } = body;
 
     // TDEE fields use COALESCE so that sending null (e.g. from the profile
@@ -64,13 +65,15 @@ export async function handleProfile(request, env, path) {
                         goal_weight=?,
                         tdee=COALESCE(?,tdee), bmr=COALESCE(?,bmr),
                         pal_factor=COALESCE(?,pal_factor), formula_used=COALESCE(?,formula_used),
-                        tdee_calculated_at=COALESCE(?,tdee_calculated_at)
+                        tdee_calculated_at=COALESCE(?,tdee_calculated_at),
+                        onboarding_completed=COALESCE(?,onboarding_completed)
        WHERE id=?`
     ).bind(
       name||null, age||null, weight||null, height||null, gender||null,
       target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
       goal_weight||null,
       tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
+      onboarding_completed ?? null,
       user.userId
     ).run();
 

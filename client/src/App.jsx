@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import History from './pages/History';
 import Privacy from './pages/Privacy';
 import Assistant from './pages/Assistant';
+import Onboarding from './pages/Onboarding';
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -73,6 +74,10 @@ function AppRoutes() {
         setShowDisclaimer(false);
       }} />
     );
+  }
+
+  if (user && user.onboarding_completed === 0) {
+    return <Onboarding />;
   }
 
   return (
