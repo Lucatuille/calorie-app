@@ -573,6 +573,44 @@ function TabAI({ data, loading }) {
         </tbody>
       </table>
 
+      {/* Per-user AI usage */}
+      {data?.per_user?.length > 0 && (
+        <>
+          <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
+            Uso por usuario
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 24 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                {['Usuario', 'Hoy', '7 días', 'Total'].map(h => (
+                  <th key={h} style={{ padding: '6px 10px', textAlign: h === 'Usuario' ? 'left' : 'right', fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.per_user.map(u => {
+                const todayHigh = u.today >= 10;
+                const weekHigh  = u.this_week >= 30;
+                return (
+                  <tr key={u.user_id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '8px 10px', fontWeight: 500, color: 'var(--text-2)' }}>{u.name}</td>
+                    <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: todayHigh ? 700 : 400, color: todayHigh ? '#ef4444' : 'var(--text-2)' }}>
+                      {u.today || '—'}
+                    </td>
+                    <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: weekHigh ? 700 : 400, color: weekHigh ? '#f59e0b' : 'var(--text-2)' }}>
+                      {u.this_week || '—'}
+                    </td>
+                    <td style={{ padding: '8px 10px', textAlign: 'right', color: 'var(--text-3)' }}>
+                      {u.total}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
+      )}
+
       {/* Asistente nutricional */}
       {data?.assistant && (
         <>

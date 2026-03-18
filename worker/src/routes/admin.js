@@ -304,6 +304,8 @@ export async function handleAdmin(request, env, path) {
       aiMonth,
       { results: aiPerUser },
       { results: aiMonthlyTotals },
+      { results: aiPerUserToday },
+      { results: aiPerUserWeek },
     ] = await Promise.all([
       env.DB.prepare('SELECT id, name FROM users').all(),
       env.DB.prepare('SELECT DISTINCT user_id FROM entries').all(),
@@ -324,7 +326,7 @@ export async function handleAdmin(request, env, path) {
         SELECT COUNT(*) as calls, SUM(input_tokens) as input, SUM(output_tokens) as output
         FROM ai_usage_logs WHERE created_at >= datetime('now', '-30 days')
       `).first(),
-      // Per user
+      // Per user (total calls)
       env.DB.prepare(`
         SELECT user_id, COUNT(*) as calls
         FROM ai_usage_logs GROUP BY user_id
@@ -337,11 +339,39 @@ export async function handleAdmin(request, env, path) {
         FROM ai_usage_logs
         GROUP BY month ORDER BY month DESC LIMIT 6
       `).all(),
+      // Per-user: today
+      env.DB.prepare(`
+        SELECT u.id, u.name, COALESCE(a.count, 0) as today_calls
+        FROM users u
+        LEFT JOIN ai_usage_log a ON u.id = a.user_id AND a.date = date('now')
+        ORDER BY today_calls DESC
+      `).all(),
+      // Per-user: this week
+      env.DB.prepare(`
+        SELECT user_id, SUM(count) as week_calls
+        FROM ai_usage_log
+        WHERE date >= date('now', '-7 days')
+        GROUP BY user_id
+      `).all(),
     ]);
 
     const calcCost = (inp, out) => +(((inp || 0) * INPUT_PRICE + (out || 0) * OUTPUT_PRICE).toFixed(4));
 
     const totalUsers  = allUsers.length;
+
+    // Build per-user AI usage breakdown
+    const totalByUser = Object.fromEntries(aiPerUser.map(r => [r.user_id, r.calls]));
+    const weekByUser  = Object.fromEntries(aiPerUserWeek.map(r => [r.user_id, r.week_calls]));
+    const perUserBreakdown = aiPerUserToday
+      .filter(r => totalByUser[r.id] > 0 || r.today_calls > 0)
+      .map(r => ({
+        user_id:    r.id,
+        name:       r.name,
+        today:      r.today_calls || 0,
+        this_week:  weekByUser[r.id] || 0,
+        total:      totalByUser[r.id] || 0,
+      }))
+      .sort((a, b) => b.this_week - a.this_week || b.total - a.total);
     const withEntries = new Set(usersWithEntries.map(r => r.user_id));
     const withSupps   = new Set(usersWithSupps.map(r => r.user_id));
     const withTDEE    = new Set(usersWithTDEE.map(r => r.id));
@@ -402,6 +432,7 @@ export async function handleAdmin(request, env, path) {
         calls: r.calls,
         cost:  calcCost(r.input, r.output),
       })),
+      per_user: perUserBreakdown,
       features,
       assistant: assistantStats,
     });
