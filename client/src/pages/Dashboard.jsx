@@ -274,32 +274,38 @@ export default function Dashboard() {
           borderRadius: 'var(--radius-lg)',
           padding: '14px 16px',
         }}>
-          <div style={{ marginBottom: entries.length > 0 ? 10 : 0 }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: entries.length > 0 ? 10 : 0,
+          }}>
             <span style={{
               fontSize: 9, color: 'var(--text-secondary)',
               textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
             }}>
               Hoy · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
-          </div>
-
-          {entries.length === 0 ? (
             <button
               onClick={() => navigate('/calculator')}
               style={{
-                width: '100%', background: 'none',
-                border: '0.5px dashed var(--border-strong)',
-                borderRadius: 'var(--radius-sm)', padding: '13px 16px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                cursor: 'pointer', color: 'var(--text-secondary)',
-                fontSize: 13, fontFamily: 'var(--font-sans)',
+                width: 24, height: 24, background: 'var(--accent)',
+                border: 'none', borderRadius: '50%', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}
             >
-              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
               </svg>
-              Añadir primera comida
             </button>
+          </div>
+
+          {entries.length === 0 ? (
+            <p style={{
+              fontSize: 12, color: 'var(--text-tertiary)',
+              fontFamily: 'var(--font-sans)', fontStyle: 'italic',
+              textAlign: 'center', padding: '10px 0',
+            }}>
+              Nada registrado aún hoy
+            </p>
           ) : (
             <div>
               {entries.map((entry, i) => {
