@@ -347,13 +347,13 @@ export async function handleAdmin(request, env, path) {
       env.DB.prepare(`
         SELECT u.id, u.name, COALESCE(a.count, 0) as today_calls
         FROM users u
-        LEFT JOIN ai_usage_logs a ON u.id = a.user_id AND a.date = date('now')
+        LEFT JOIN ai_usage_log a ON u.id = a.user_id AND a.date = date('now')
         ORDER BY today_calls DESC
       `).all(),
       // Per-user: this week
       env.DB.prepare(`
         SELECT user_id, SUM(count) as week_calls
-        FROM ai_usage_logs
+        FROM ai_usage_log
         WHERE date >= date('now', '-7 days')
         GROUP BY user_id
       `).all(),
