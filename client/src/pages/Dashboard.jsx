@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LEVEL_CONFIG, getBadgeStyle } from '../utils/levels';
+import { LEVEL_CONFIG, getBadgeStyle, isPro } from '../utils/levels';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -327,7 +327,7 @@ export default function Dashboard() {
       </div>
 
       {/* Card asistente — Fundador(1), Pro(2) y Admin(99) tienen acceso */}
-      {[1, 2, 99].includes(user?.access_level ?? 0) ? (
+      {isPro(user?.access_level) ? (
         <Link to="/asistente" style={{ display: 'block', textDecoration: 'none', marginTop: 16 }}>
           <div className="card" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>

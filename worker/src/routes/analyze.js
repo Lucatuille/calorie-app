@@ -80,7 +80,7 @@ export async function handleAnalyze(request, env, path, ctx) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
 
-  if (!canAccess(user.access_level ?? 1)) {
+  if (!canAccess(user.access_level ?? 3)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
 
@@ -95,7 +95,7 @@ export async function handleAnalyze(request, env, path, ctx) {
       return errorResponse(`Imagen demasiado grande. Reduce la resolución antes de enviar (máx ~2 MB).`, 413);
     }
 
-    const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+    const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 3);
     if (limitCheck.error) return limitCheck.error;
 
     // Calibración (no-blocking)
@@ -217,7 +217,7 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!user) return errorResponse('No autorizado', 401);
   if (request.method !== 'POST') return errorResponse('Method not allowed', 405);
 
-  if (!canAccess(user.access_level ?? 1)) {
+  if (!canAccess(user.access_level ?? 3)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
 
@@ -225,7 +225,7 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!text?.trim()) return errorResponse('Texto vacío', 400);
   if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
 
-  const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+  const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 3);
   if (limitCheck.error) return limitCheck.error;
 
   // Calibración — solo si hay confianza suficiente
