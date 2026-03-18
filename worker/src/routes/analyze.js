@@ -36,7 +36,7 @@ Reglas: ración normal española si no se especifica cantidad | casero: moderado
 
 async function checkAndIncrementAiLimit(env, userId, accessLevel) {
   const limit = getAiLimit(accessLevel);
-  if (limit === null) return { error: null, used: 0, limit: Infinity }; // ilimitado (solo admin)
+  if (limit === null) return { error: null, used: 0, limit: null }; // null = ilimitado (admin)
 
   const today   = new Date().toLocaleDateString('en-CA');
   const row     = await env.DB.prepare(
@@ -80,7 +80,13 @@ export async function handleAnalyze(request, env, path, ctx) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
 
-  if (!canAccess(user.access_level ?? 1)) {
+  // Verificar access_level desde BD — nunca confiar solo en el JWT (puede estar desactualizado)
+  const dbUser = await env.DB.prepare(
+    'SELECT access_level FROM users WHERE id = ?'
+  ).bind(user.userId).first();
+  const accessLevel = dbUser?.access_level ?? 1;
+
+  if (!canAccess(accessLevel)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
 
@@ -95,7 +101,7 @@ export async function handleAnalyze(request, env, path, ctx) {
       return errorResponse(`Imagen demasiado grande. Reduce la resolución antes de enviar (máx ~2 MB).`, 413);
     }
 
-    const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+    const limitCheck = await checkAndIncrementAiLimit(env, user.userId, accessLevel);
     if (limitCheck.error) return limitCheck.error;
 
     // Calibración (no-blocking)
@@ -199,7 +205,7 @@ export async function handleAnalyze(request, env, path, ctx) {
         calibration_confidence:  calibrationProfile?.confidence   || 0,
         calibration_data_points: calibrationProfile?.data_points  || 0,
         similar_meal:            similarMeal,
-        usage: { used: limitCheck.used + 1, limit: limitCheck.limit },
+        usage: { used: limitCheck.used + 1, limit: limitCheck.limit ?? null },
       });
     } catch {
       await rollbackAiLimit(env, user.userId);
@@ -217,7 +223,13 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!user) return errorResponse('No autorizado', 401);
   if (request.method !== 'POST') return errorResponse('Method not allowed', 405);
 
-  if (!canAccess(user.access_level ?? 1)) {
+  // Verificar access_level desde BD — nunca confiar solo en el JWT (puede estar desactualizado)
+  const dbUser = await env.DB.prepare(
+    'SELECT access_level FROM users WHERE id = ?'
+  ).bind(user.userId).first();
+  const accessLevel = dbUser?.access_level ?? 1;
+
+  if (!canAccess(accessLevel)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
 
@@ -225,7 +237,7 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!text?.trim()) return errorResponse('Texto vacío', 400);
   if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
 
-  const limitCheck = await checkAndIncrementAiLimit(env, user.userId, user.access_level ?? 1);
+  const limitCheck = await checkAndIncrementAiLimit(env, user.userId, accessLevel);
   if (limitCheck.error) return limitCheck.error;
 
   // Calibración — solo si hay confianza suficiente
@@ -334,6 +346,6 @@ export async function handleAnalyzeText(request, env, ctx) {
     calibration_confidence:  calibrationProfile?.confidence  || 0,
     calibration_data_points: calibrationProfile?.data_points || 0,
     similar_meal:            similarMeal,
-    usage: { used: limitCheck.used + 1, limit: limitCheck.limit },
+    usage: { used: limitCheck.used + 1, limit: limitCheck.limit ?? null },
   });
 }
