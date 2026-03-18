@@ -299,18 +299,20 @@ export default function Dashboard() {
           </div>
 
           {entries.length === 0 ? (
-            <div style={{
-              width: '100%',
-              border: '0.5px dashed var(--border)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '13px 16px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--text-tertiary)',
-              fontSize: 13, fontFamily: 'var(--font-sans)',
-              boxSizing: 'border-box',
-            }}>
+            <button
+              onClick={() => navigate('/calculator')}
+              style={{
+                width: '100%', background: 'none',
+                border: '0.5px dashed var(--border)',
+                borderRadius: 'var(--radius-sm)', padding: '13px 16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'var(--text-tertiary)',
+                fontSize: 13, fontFamily: 'var(--font-sans)',
+                boxSizing: 'border-box',
+              }}
+            >
               Añade tu primera comida
-            </div>
+            </button>
           ) : (
             <div>
               {entries.map((entry, i) => {
