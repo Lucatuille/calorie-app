@@ -1,2 +1,6 @@
-/* React SPA — all /app/* routes handled by React Router */
-/app/*    /app/index.html    200
+# /app and /app/* → React SPA (index.html stays at dist root)
+/app      /index.html    200
+/app/*    /index.html    200
+
+# Everything else → landing page
+/*        /landing.html  200

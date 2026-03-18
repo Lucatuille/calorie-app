@@ -2,7 +2,7 @@
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
 
-/app/index.html
+/landing.html
   Cache-Control: no-cache, no-store, must-revalidate
 
 /sw.js
