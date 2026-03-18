@@ -1,7 +1,7 @@
-const CACHE_NAME = 'lucaeats-v3';
+const CACHE_NAME = 'lucaeats-v4';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
+  '/app/',
+  '/app/index.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -33,6 +33,15 @@ self.addEventListener('fetch', (event) => {
   // API calls — siempre red, nunca cache
   if (url.hostname.includes('workers.dev') || url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  // Navegación a rutas de la app (/app/*) — servir /app/index.html
+  if (request.mode === 'navigate' && url.pathname.startsWith('/app')) {
+    event.respondWith(
+      fetch(request)
+        .catch(() => caches.match('/app/index.html'))
+    );
     return;
   }
 

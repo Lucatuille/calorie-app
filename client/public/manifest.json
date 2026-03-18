@@ -2,7 +2,7 @@
   "name": "LucaEats — Seguimiento calórico",
   "short_name": "LucaEats",
   "description": "Registra tus comidas y sigue tu progreso nutricional",
-  "start_url": "/",
+  "start_url": "/app/",
   "display": "standalone",
   "background_color": "#f7f6f3",
   "theme_color": "#2d6a4f",

@@ -1,5 +1,8 @@
-# index.html y sw.js — nunca cachear en el edge (garantiza versión fresca)
+# index.html (landing) y app shell — nunca cachear en el edge (garantiza versión fresca)
 /index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/app/index.html
   Cache-Control: no-cache, no-store, must-revalidate
 
 /sw.js

@@ -1,2 +1,2 @@
-/* All routes handled by React Router */
-/*    /index.html    200
+/* React SPA — all /app/* routes handled by React Router */
+/app/*    /app/index.html    200
