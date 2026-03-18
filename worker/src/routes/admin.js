@@ -187,6 +187,7 @@ export async function handleAdmin(request, env, path) {
       goal_weight: u.goal_weight,
       target_calories: u.target_calories,
       tdee: u.tdee,
+      access_level: u.access_level ?? 3,
       last_entry: u.last_entry,
       last_entry_relative: relativeTime(u.last_entry ? u.last_entry + 'T12:00:00Z' : null),
       total_days: u.total_days,
