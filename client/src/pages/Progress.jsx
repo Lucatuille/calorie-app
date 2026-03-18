@@ -85,7 +85,7 @@ export default function Progress() {
     ]).then(([chart, sum]) => {
       const formatted = chart.map(e => ({
         ...e,
-        date: new Date(e.date).toLocaleDateString('es', { day: 'numeric', month: 'short' }),
+        date: new Date(e.date + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' }),
       }));
       setData(formatted);
       setSummary(sum.summary);

@@ -9,8 +9,10 @@ export async function handleCalibration(request, env, path) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
 
-  // POST /api/calibration/correction
+  // POST /api/calibration/correction — requiere Pro (verificación desde BD)
   if (path === '/api/calibration/correction' && request.method === 'POST') {
+    const hasPro = await requireProAccess(user.userId, env);
+    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
     const {
       entry_id, ai_raw, ai_calibrated, user_final,
       food_categories, meal_type, meal_name,

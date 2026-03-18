@@ -8,6 +8,9 @@ import { LEVEL_CONFIG } from '../utils/levels.js';
 async function requireAdmin(request, env) {
   const user = await authenticate(request, env);
   if (!user || !user.is_admin) return null;
+  // Verificar en BD — el JWT puede estar desactualizado si el rol fue revocado
+  const row = await env.DB.prepare('SELECT is_admin FROM users WHERE id = ?').bind(user.userId).first();
+  if (!row?.is_admin) return null;
   return user;
 }
 
@@ -344,13 +347,13 @@ export async function handleAdmin(request, env, path) {
       env.DB.prepare(`
         SELECT u.id, u.name, COALESCE(a.count, 0) as today_calls
         FROM users u
-        LEFT JOIN ai_usage_log a ON u.id = a.user_id AND a.date = date('now')
+        LEFT JOIN ai_usage_logs a ON u.id = a.user_id AND a.date = date('now')
         ORDER BY today_calls DESC
       `).all(),
       // Per-user: this week
       env.DB.prepare(`
         SELECT user_id, SUM(count) as week_calls
-        FROM ai_usage_log
+        FROM ai_usage_logs
         WHERE date >= date('now', '-7 days')
         GROUP BY user_id
       `).all(),

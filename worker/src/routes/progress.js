@@ -136,8 +136,9 @@ export async function handleProgress(request, env, path) {
 
   // GET /api/progress/chart — aggregate meals per day
   if (path === '/api/progress/chart' && request.method === 'GET') {
-    const url  = new URL(request.url);
-    const days = parseInt(url.searchParams.get('days') || '30');
+    const url     = new URL(request.url);
+    const rawDays = parseInt(url.searchParams.get('days') || '30');
+    const days    = [7, 30, 90].includes(rawDays) ? rawDays : 30; // whitelist — evita inyección SQL
     const { results } = await env.DB.prepare(
       `SELECT date,
          SUM(calories) AS calories, MAX(weight) AS weight,
@@ -218,7 +219,7 @@ export async function handleProgress(request, env, path) {
     if (half >= 2) {
       const firstAvg  = calDays.slice(0, half).reduce((a,b)=>a+b,0) / half;
       const secondAvg = calDays.slice(half).reduce((a,b)=>a+b,0) / (calDays.length - half);
-      trendPct = Math.round((secondAvg - firstAvg) / firstAvg * 100);
+      trendPct = firstAvg > 0 ? Math.round((secondAvg - firstAvg) / firstAvg * 100) : 0;
       if      (trendPct < -5) trend = 'improving';
       else if (trendPct >  5) trend = 'worsening';
     }

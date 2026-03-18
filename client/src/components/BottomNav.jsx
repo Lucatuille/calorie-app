@@ -3,6 +3,8 @@
 // ============================================================
 
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { isPro } from '../utils/levels';
 
 const IconHome = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -41,18 +43,20 @@ const IconUser = () => (
   </svg>
 );
 
-const ITEMS = [
-  { to: '/',           label: 'Inicio',     end: true,  Icon: IconHome     },
-  { to: '/calculator', label: 'Registrar',  end: false, Icon: IconPlus     },
-  { to: '/asistente',  label: 'Asistente',  end: false, Icon: IconSparkles },
-  { to: '/progress',   label: 'Progreso',   end: false, Icon: IconChart    },
-  { to: '/profile',    label: 'Perfil',     end: false, Icon: IconUser     },
+const BASE_ITEMS = [
+  { to: '/',           label: 'Inicio',     end: true,  Icon: IconHome,     proOnly: false },
+  { to: '/calculator', label: 'Registrar',  end: false, Icon: IconPlus,     proOnly: false },
+  { to: '/asistente',  label: 'Asistente',  end: false, Icon: IconSparkles, proOnly: true  },
+  { to: '/progress',   label: 'Progreso',   end: false, Icon: IconChart,    proOnly: false },
+  { to: '/profile',    label: 'Perfil',     end: false, Icon: IconUser,     proOnly: false },
 ];
 
 export default function BottomNav() {
+  const { user } = useAuth();
+  const items = BASE_ITEMS.filter(item => !item.proOnly || isPro(user?.access_level));
   return (
     <nav className="bottom-nav">
-      {ITEMS.map(({ to, label, end, Icon }) => (
+      {items.map(({ to, label, end, Icon }) => (
         <NavLink
           key={to}
           to={to}
