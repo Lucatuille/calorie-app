@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import TDEECalculator from '../components/TDEECalculator';
@@ -59,7 +59,8 @@ const microLabel = {
 };
 
 export default function Profile() {
-  const { token, user } = useAuth();
+  const { token, user, logout } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', age: '', weight: '', height: '', gender: 'male',
     target_calories: '', target_protein: '', target_carbs: '', target_fat: '',
@@ -527,6 +528,23 @@ export default function Profile() {
           admin
         </button>
       )}
+
+      {/* Cerrar sesión — visible en móvil donde no hay botón en la navbar */}
+      <button
+        className="profile-logout-mobile"
+        onClick={() => { logout(); navigate('/login'); }}
+        style={{
+          display: 'none',
+          width: '100%', marginTop: 8,
+          padding: '12px', border: '0.5px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          background: 'transparent',
+          color: 'var(--text-secondary)',
+          fontSize: 14, fontFamily: 'var(--font-sans)',
+          cursor: 'pointer',
+        }}>
+        Cerrar sesión
+      </button>
     </div>
   );
 }

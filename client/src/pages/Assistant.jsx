@@ -357,12 +357,12 @@ export default function Assistant() {
         .assistant-suggestions::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div style={{
+      <div className="assistant-chat" style={{
         maxWidth: 640,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 56px)',
+        height: 'calc(100vh - 52px)',
       }}>
 
         {/* ── Header ── */}

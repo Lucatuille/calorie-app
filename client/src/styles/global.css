@@ -351,7 +351,7 @@ input, select, textarea { font-family: inherit; }
   .nav-links    { display: none !important; }
   .nav-username { display: none !important; }
   .nav-logout   { display: none !important; }
-  .nav-hamburger { display: flex !important; }
+  .nav-hamburger { display: none !important; }
 }
 
 /* ── Bottom navigation — solo móvil ──────────────────────── */
@@ -402,6 +402,16 @@ input, select, textarea { font-family: inherit; }
   /* Espacio para no quedar tapado por la barra */
   .page {
     padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  /* Asistente: ajusta la altura para que el input quede sobre la bottom nav */
+  .assistant-chat {
+    height: calc(100vh - 52px - 64px - env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Cerrar sesión visible en móvil (hamburger oculto) */
+  .profile-logout-mobile {
+    display: block !important;
   }
 }
 
