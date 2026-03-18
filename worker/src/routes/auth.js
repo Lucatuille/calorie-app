@@ -23,17 +23,15 @@ export async function handleAuth(request, env, path) {
 
     const hashed = await hashPassword(password);
 
-    // BETA: nuevos usuarios reciben access_level=1 (Fundador) durante la beta.
-    // ⚠️  CAMBIAR A 3 (Free) antes de abrir el registro público con Stripe.
     const result = await env.DB.prepare(
       `INSERT INTO users (name, email, password, age, weight, height, gender, access_level)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, 3)`
     ).bind(name, email.toLowerCase(), hashed, age || null, weight || null, height || null, gender || null).run();
 
     const userId = result.meta.last_row_id;
-    const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 1 }, env.JWT_SECRET);
+    const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 3 }, env.JWT_SECRET);
 
-    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 1, onboarding_completed: 0 } }, 201);
+    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0 } }, 201);
   }
 
   // POST /api/auth/login
@@ -57,6 +55,8 @@ export async function handleAuth(request, env, path) {
       { userId: user.id, email: user.email, name: user.name, is_admin: isAdmin, access_level: accessLevel },
       env.JWT_SECRET
     );
+
+    await env.DB.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").bind(user.id).run();
 
     return jsonResponse({
       token,
@@ -85,6 +85,8 @@ export async function handleAuth(request, env, path) {
       { userId: user.id, email: user.email, name: user.name, is_admin: isAdmin, access_level: accessLevel },
       env.JWT_SECRET
     );
+
+    await env.DB.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").bind(user.id).run();
 
     return jsonResponse({
       token,

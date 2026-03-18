@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
@@ -34,8 +34,21 @@ function PublicRoute({ children }) {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [adminOpen, setAdminOpen] = useState(false);
+  const [showUpgradedBanner, setShowUpgradedBanner] = useState(false);
   const whatsNew = useWhatsNew();
+
+  // Detectar retorno desde Stripe con ?upgraded=true
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('upgraded') === 'true') {
+      setShowUpgradedBanner(true);
+      navigate('/', { replace: true });
+      setTimeout(() => setShowUpgradedBanner(false), 6000);
+    }
+  }, []);
   const [showDisclaimer, setShowDisclaimer] = useState(
     () => user && !localStorage.getItem('lucaeats_disclaimer_v1')
   );
@@ -92,6 +105,22 @@ function AppRoutes() {
           fontFamily: 'DM Sans, sans-serif', letterSpacing: '0.5px',
         }}>
           ⚗️ PREVIEW — Los cambios aquí no afectan a lucaeats.org
+        </div>
+      )}
+      {showUpgradedBanner && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+          background: 'var(--accent)',
+          color: 'white',
+          textAlign: 'center',
+          padding: '12px 16px',
+          fontSize: 14,
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 500,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+          cursor: 'pointer',
+        }} onClick={() => setShowUpgradedBanner(false)}>
+          ¡Bienvenido a Pro! Tu cuenta ya tiene acceso completo.
         </div>
       )}
       {user && <Navbar />}

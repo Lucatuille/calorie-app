@@ -12,6 +12,7 @@ import { handleAdmin } from './routes/admin.js';
 import { handleCalibration } from './routes/calibration.js';
 import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
+import { handleStripe } from './routes/stripe.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 export default {
@@ -69,6 +70,12 @@ export default {
 
       if (path.startsWith('/api/assistant')) {
         return await handleAssistant(request, env, path, ctx);
+      }
+
+      if (path === '/api/create-checkout-session' ||
+          path === '/api/stripe-webhook' ||
+          path === '/api/subscription-status') {
+        return await handleStripe(request, env, path);
       }
 
       // Health check
