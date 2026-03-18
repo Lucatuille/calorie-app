@@ -190,9 +190,9 @@ export default function Dashboard() {
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
           background: 'var(--surface)',
-          border: '0.5px solid var(--border)',
           borderRadius: 'var(--radius-lg)',
           padding: '18px 16px 14px',
+          boxShadow: 'var(--shadow-md)',
         }}>
 
           {/* Número grande + consumido/objetivo */}
@@ -268,9 +268,9 @@ export default function Dashboard() {
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
           background: 'var(--surface)',
-          border: '0.5px solid var(--border)',
           borderRadius: 'var(--radius-lg)',
           padding: '14px 16px',
+          boxShadow: 'var(--shadow-md)',
         }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -366,9 +366,9 @@ export default function Dashboard() {
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
           background: 'var(--surface)',
-          border: '0.5px solid var(--border)',
           borderRadius: 'var(--radius-lg)',
           padding: '14px 16px',
+          boxShadow: 'var(--shadow-md)',
         }}>
           <SupplementTracker />
         </div>

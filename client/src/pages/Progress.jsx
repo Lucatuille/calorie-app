@@ -133,9 +133,9 @@ export default function Progress() {
 
   const cardStyle = {
     background: 'var(--surface)',
-    border: '0.5px solid var(--border)',
     borderRadius: 'var(--radius-lg)',
     padding: '14px 16px',
+    boxShadow: 'var(--shadow-md)',
   };
 
   const sectionLabel = {
@@ -178,74 +178,91 @@ export default function Progress() {
         </div>
       </div>
 
-      {/* ── 1. Hero stats ── */}
+      {/* ── 1. Stat grid 2×2 con celda dark ── */}
       {summary && (
         <div style={{ padding: '0 16px', marginBottom: 10 }}>
-          <div style={cardStyle}>
-            <span style={{ ...sectionLabel, marginBottom: 8 }}>
-              Media · {days} días
-            </span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
 
-            {/* Hero izquierda + métricas derecha */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              {/* Número grande */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontSize: 52, fontStyle: 'italic',
-                  fontWeight: 400, color: 'var(--text-primary)',
-                  lineHeight: 1, letterSpacing: '-2px',
-                }}>
-                  {periodAvgCal?.toLocaleString('es') ?? '—'}
-                </div>
-                <div style={{
-                  fontSize: 11, color: 'var(--text-secondary)',
-                  fontFamily: 'var(--font-sans)', marginTop: 4,
-                }}>
-                  kcal/día de media
-                </div>
-              </div>
-
-              {/* Métricas secundarias — columna derecha */}
+            {/* Media — dark, ancla de la composición */}
+            <div style={{
+              background: '#111111',
+              borderRadius: 14,
+              padding: 14,
+            }}>
               <div style={{
-                display: 'flex', flexDirection: 'column', gap: 10,
-                borderLeft: '0.5px solid var(--border)',
-                paddingLeft: 16, flexShrink: 0,
+                fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase',
+                color: '#555', marginBottom: 6, fontFamily: 'var(--font-sans)', fontWeight: 600,
               }}>
-                {periodAdherence != null && (
-                  <div>
-                    <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 2 }}>Adherencia</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                      <span style={{
-                        fontSize: 18, fontWeight: 600,
-                        color: periodAdherence >= 70 ? 'var(--accent)' : periodAdherence >= 40 ? '#f59e0b' : 'var(--text-primary)',
-                      }}>
-                        {periodAdherence}%
-                      </span>
-                      <span style={{ fontSize: 9, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>objetivo</span>
-                    </div>
-                  </div>
-                )}
-                {trendLabel && (
-                  <div>
-                    <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 2 }}>Peso</div>
-                    <span style={{
-                      fontSize: 18, fontWeight: 600,
-                      color: periodWeightTrend < 0 ? 'var(--accent)' : periodWeightTrend > 0 ? '#e76f51' : 'var(--text-primary)',
-                    }}>
-                      {trendLabel}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 2 }}>Días</div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-                    <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)' }}>{data.length}</span>
-                    <span style={{ fontSize: 9, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>de {days}</span>
-                  </div>
-                </div>
+                Media · {days}d
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 28, color: 'white', lineHeight: 1,
+              }}>
+                {periodAvgCal?.toLocaleString('es') ?? '—'}
+              </div>
+              <div style={{ fontSize: 10, color: '#555', marginTop: 3, fontFamily: 'var(--font-sans)' }}>
+                kcal/día
               </div>
             </div>
+
+            {/* Días registrados */}
+            <div style={{
+              background: 'var(--surface)',
+              borderRadius: 14,
+              padding: 14,
+              boxShadow: 'var(--shadow-md)',
+            }}>
+              <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 6 }}>Días</div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: 'var(--text-primary)', lineHeight: 1 }}>
+                {data.length}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 3, fontFamily: 'var(--font-sans)' }}>
+                de {days}
+              </div>
+            </div>
+
+            {/* Adherencia */}
+            {periodAdherence != null && (
+              <div style={{
+                background: 'var(--surface)',
+                borderRadius: 14,
+                padding: 14,
+                boxShadow: 'var(--shadow-md)',
+              }}>
+                <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 6 }}>Adherencia</div>
+                <div style={{
+                  fontFamily: 'var(--font-serif)', fontSize: 28, lineHeight: 1,
+                  color: periodAdherence >= 70 ? 'var(--accent)' : periodAdherence >= 40 ? '#f59e0b' : 'var(--text-primary)',
+                }}>
+                  {periodAdherence}%
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 3, fontFamily: 'var(--font-sans)' }}>
+                  objetivo ±250
+                </div>
+              </div>
+            )}
+
+            {/* Tendencia de peso */}
+            {trendLabel && (
+              <div style={{
+                background: 'var(--surface)',
+                borderRadius: 14,
+                padding: 14,
+                boxShadow: 'var(--shadow-md)',
+              }}>
+                <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 6 }}>Peso</div>
+                <div style={{
+                  fontFamily: 'var(--font-serif)', fontSize: 28, lineHeight: 1,
+                  color: periodWeightTrend < 0 ? 'var(--accent)' : periodWeightTrend > 0 ? '#e76f51' : 'var(--text-primary)',
+                }}>
+                  {trendLabel}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 3, fontFamily: 'var(--font-sans)' }}>
+                  en {days} días
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

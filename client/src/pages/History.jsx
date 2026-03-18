@@ -189,9 +189,9 @@ export default function History() {
                 {/* ── Card del día — todas las comidas dentro ── */}
                 <div style={{
                   background: 'var(--surface)',
-                  border: '0.5px solid var(--border)',
                   borderRadius: 'var(--radius-lg)',
                   overflow: 'hidden',
+                  boxShadow: 'var(--shadow-md)',
                 }}>
                   {dayEntries.map((entry, i) => {
                     const meal       = getMeal(entry.meal_type);

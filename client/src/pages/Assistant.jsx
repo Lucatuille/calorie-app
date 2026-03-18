@@ -102,7 +102,7 @@ function MessageBubble({ msg }) {
         maxWidth: '82%',
         padding: '10px 14px',
         borderRadius: isUser ? '16px 16px 3px 16px' : '16px 16px 16px 3px',
-        background: isUser ? 'var(--accent)' : 'var(--surface)',
+        background: isUser ? '#111111' : 'var(--surface)',
         color: isUser ? '#fff' : 'var(--text-primary)',
         fontSize: 14,
         lineHeight: 1.65,
@@ -230,6 +230,8 @@ export default function Assistant() {
   const [conversations, setConversations]   = useState([]);
   const [error, setError]                   = useState('');
   const [blocked, setBlocked]               = useState(false);
+  const [todayData, setTodayData]           = useState(null);
+  const [streak, setStreak]                 = useState(0);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
@@ -238,10 +240,17 @@ export default function Assistant() {
   }, [user]);
 
   useEffect(() => {
+    api.getSummary(token)
+      .then(res => setStreak(res.summary?.streak || 0))
+      .catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
     setIntroLoading(true);
     api.getAssistantUsage(token)
       .then(res => {
         if (res?.usage) setUsage(res.usage);
+        setTodayData(res?.today || null);
         const t = res?.today;
         const welcome = buildWelcomeMessage(
           user?.name,
@@ -428,6 +437,28 @@ export default function Assistant() {
             </button>
           </div>
         </div>
+
+        {/* ── Context strip ── */}
+        {todayData && (
+          <div className="context-strip">
+            <div className="ctx-pill">
+              <span className={`ctx-pill__num${(todayData.target || 0) > (todayData.cal || 0) ? ' ctx-pill__num--green' : ''}`}>
+                {Math.max(0, (todayData.target || 0) - (todayData.cal || 0)).toLocaleString('es')}
+              </span>
+              <span className="ctx-pill__label">kcal libres</span>
+            </div>
+            <div className="ctx-pill">
+              <span className="ctx-pill__num">
+                {Math.max(0, Math.round((todayData.target_protein || 0) - (todayData.prot || 0)))}g
+              </span>
+              <span className="ctx-pill__label">proteína</span>
+            </div>
+            <div className="ctx-pill">
+              <span className="ctx-pill__num">🔥{streak}</span>
+              <span className="ctx-pill__label">días racha</span>
+            </div>
+          </div>
+        )}
 
         {/* ── Mensajes ── */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 8px' }}>

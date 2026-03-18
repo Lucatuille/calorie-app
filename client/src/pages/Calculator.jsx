@@ -565,30 +565,18 @@ export default function Calculator() {
           {/* Formulario */}
           <form onSubmit={addMeal} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-            {/* Tipo de comida — ghost pills, activo en accent */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {MEAL_TYPES.map(m => {
-                const isActive = form.meal_type === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => set('meal_type', m.id)}
-                    style={{
-                      padding: '5px 14px',
-                      borderRadius: 'var(--radius-full)',
-                      fontSize: 12, fontWeight: isActive ? 600 : 400,
-                      cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                      border: `0.5px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                      background: isActive ? 'rgba(45,106,79,0.1)' : 'transparent',
-                      color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {m.label}
-                  </button>
-                );
-              })}
+            {/* Tipo de comida — tab bar */}
+            <div className="meal-selector">
+              {MEAL_TYPES.map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => set('meal_type', m.id)}
+                  className={`meal-selector__tab${form.meal_type === m.id ? ' meal-selector__tab--active' : ''}`}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
 
             {/* Nombre */}
@@ -637,34 +625,21 @@ export default function Calculator() {
               )}
             </div>
 
-            {/* Macros con padding top para el hint flotante */}
+            {/* Macros con accent bar */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, paddingTop: kcalTyped > 0 && targetCalories > 0 ? 10 : 0 }}>
               {[
-                { key: 'protein', label: 'Proteína', borderColor: 'var(--accent)' },
-                { key: 'carbs',   label: 'Carbos',   borderColor: '#f59e0b' },
-                { key: 'fat',     label: 'Grasa',    borderColor: '#60a5fa' },
-              ].map(({ key, label, borderColor }) => (
-                <div key={key}>
-                  <label style={{
-                    fontSize: 9, color: 'var(--text-tertiary)',
-                    textTransform: 'uppercase', letterSpacing: '0.4px',
-                    fontWeight: 600, display: 'block', marginBottom: 4,
-                    fontFamily: 'var(--font-sans)',
-                  }}>
-                    {label}
-                  </label>
+                { key: 'protein', label: 'Proteína', cls: 'macro-input--protein' },
+                { key: 'carbs',   label: 'Carbos',   cls: 'macro-input--carbs'   },
+                { key: 'fat',     label: 'Grasa',    cls: 'macro-input--fat'     },
+              ].map(({ key, label, cls }) => (
+                <div key={key} className={`macro-input ${cls}`}>
                   <input
                     type="number"
                     placeholder="0"
                     value={form[key]}
                     onChange={e => set(key, e.target.value)}
-                    style={{
-                      ...inputStyle,
-                      textAlign: 'center',
-                      padding: '9px 8px',
-                      borderBottom: `2px solid ${borderColor}`,
-                    }}
                   />
+                  <div className="macro-input__label">{label}</div>
                 </div>
               ))}
             </div>
@@ -738,20 +713,10 @@ export default function Calculator() {
             <button
               type="submit"
               disabled={saving || !form.calories}
-              style={{
-                width: '100%',
-                background: form.calories ? 'var(--accent)' : 'var(--surface-3)',
-                color: form.calories ? 'white' : 'var(--text-tertiary)',
-                border: 'none', borderRadius: 'var(--radius-sm)',
-                padding: '13px', fontSize: 14, fontWeight: 500,
-                cursor: form.calories && !saving ? 'pointer' : 'default',
-                fontFamily: 'var(--font-sans)',
-                transition: 'background 0.2s, color 0.2s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}
+              className="save-btn-dark"
             >
               {saving
-                ? <span className="spinner" style={{ width: 16, height: 16 }} />
+                ? <span className="spinner" style={{ width: 16, height: 16, borderTopColor: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.2)' }} />
                 : 'Guardar comida'}
             </button>
           </form>
