@@ -1,24 +1,18 @@
 /**
- * Post-build script: restructure dist/ so that:
- *   dist/app/index.html  → React SPA (moved from dist/index.html)
- *   dist/index.html      → Landing page (copied from kcal-landing.html at repo root)
+ * Post-build: restructure dist/ so landing is at root and SPA is at /app/
+ * Runs from client/ directory (cd client && npm run build)
  */
-import { copyFileSync, mkdirSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { copyFileSync, mkdirSync } from 'fs';
+import { resolve } from 'path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const distDir = resolve(__dirname, '../dist');
-const appDir = resolve(distDir, 'app');
-const landingSrc = resolve(__dirname, '../../kcal-landing.html');
+// process.cwd() = client/ when npm run build runs
+const dist    = resolve(process.cwd(), 'dist');
+const appDist = resolve(process.cwd(), 'dist/app');
+const landing = resolve(process.cwd(), '../kcal-landing.html');
 
-// 1. Create dist/app/
-if (!existsSync(appDir)) mkdirSync(appDir, { recursive: true });
+mkdirSync(appDist, { recursive: true });
+copyFileSync(resolve(dist, 'index.html'), resolve(appDist, 'index.html'));
+console.log('✓ dist/index.html → dist/app/index.html');
 
-// 2. Copy dist/index.html → dist/app/index.html
-copyFileSync(resolve(distDir, 'index.html'), resolve(appDir, 'index.html'));
-console.log('✓ Copied dist/index.html → dist/app/index.html');
-
-// 3. Copy kcal-landing.html → dist/index.html (overwrites)
-copyFileSync(landingSrc, resolve(distDir, 'index.html'));
-console.log('✓ Copied kcal-landing.html → dist/index.html');
+copyFileSync(landing, resolve(dist, 'index.html'));
+console.log('✓ kcal-landing.html → dist/index.html');
