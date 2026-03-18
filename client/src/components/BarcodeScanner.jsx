@@ -11,7 +11,6 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   const [status,        setStatus]        = useState('scanning');
   // scanning | loading | found | not_found | error | camera_error
   const [loadingSlow,   setLoadingSlow]   = useState(false);
-  const [debugLines,    setDebugLines]    = useState([]);
   const [product,       setProduct]       = useState(null);
   const [gramsInput,    setGramsInput]    = useState('100');
   const [manualBarcode, setManualBarcode] = useState('');
@@ -44,7 +43,6 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
       setManualBarcode('');
       setLastBarcode('');
       setLoadingSlow(false);
-      setDebugLines([]);
       isProcessing.current = false;
       scanStarted.current  = false;
       setVisible(true);
@@ -108,7 +106,6 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
           isProcessing.current = true;
           await stopScanner();
           setLastBarcode(decodedText);
-          setDebugLines([`Código detectado: ${decodedText}`]);
           setStatus('loading');
           await lookupBarcode(decodedText);
         },
@@ -129,14 +126,10 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
     }
   }
 
-  function addDebug(line) {
-    setDebugLines(prev => [...prev, line]);
-  }
-
   async function lookupBarcode(code) {
     setLoadingSlow(false);
     const slowTimer = setTimeout(() => setLoadingSlow(true), 3000);
-    const result = await fetchProductByBarcode(code, addDebug, token);
+    const result = await fetchProductByBarcode(code, undefined, token);
     clearTimeout(slowTimer);
     setLoadingSlow(false);
     if (result === null) {
@@ -173,7 +166,6 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
     await stopScanner();
     isProcessing.current = true;
     setLastBarcode(code);
-    setDebugLines([`Código manual: ${code}`]);
     setStatus('loading');
     await lookupBarcode(code);
   }
@@ -285,19 +277,6 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
             </div>
           )}
 
-          {/* ── DEBUG LOG (temporal) ──────────────────────── */}
-          {debugLines.length > 0 && (
-            <div style={{
-              background: '#111', borderRadius: 8, padding: '10px 12px',
-              marginTop: 8, marginBottom: 8,
-            }}>
-              {debugLines.map((line, i) => (
-                <p key={i} style={{ fontFamily: 'monospace', fontSize: 11, color: '#7fff7f', margin: '2px 0', wordBreak: 'break-all' }}>
-                  {line}
-                </p>
-              ))}
-            </div>
-          )}
 
           {/* ── FOUND ─────────────────────────────────────── */}
           {status === 'found' && product && (

@@ -32,7 +32,7 @@ self.addEventListener('fetch', (event) => {
 
   // API calls — siempre red, nunca cache
   if (url.hostname.includes('workers.dev') || url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(request));
+    event.respondWith(fetch(request).catch(() => new Response('Offline', { status: 503 })));
     return;
   }
 

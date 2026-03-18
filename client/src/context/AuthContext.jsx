@@ -56,13 +56,13 @@ export function AuthProvider({ children }) {
         // usar el JWT almacenado como fallback temporal.
         const jwtPayload = decodeJWT(t);
         setToken(t);
-        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
+        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 3 });
       })
       .catch(() => {
         // Sin red — usar token almacenado (offline mode)
         const jwtPayload = decodeJWT(t);
         setToken(t);
-        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 1 });
+        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 3 });
       })
       .finally(() => setReady(true));
   }, []);
