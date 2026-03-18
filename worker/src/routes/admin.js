@@ -138,7 +138,7 @@ export async function handleAdmin(request, env, path) {
     ] = await Promise.all([
       env.DB.prepare(`
         SELECT u.id, u.name, u.email, u.created_at, u.weight, u.goal_weight,
-               u.target_calories, u.tdee, u.access_level,
+               u.target_calories, u.tdee, u.access_level, u.last_login,
                MAX(e.date) as last_entry,
                COUNT(DISTINCT e.date) as total_days
         FROM users u LEFT JOIN entries e ON u.id = e.user_id
@@ -191,6 +191,8 @@ export async function handleAdmin(request, env, path) {
       target_calories: u.target_calories,
       tdee: u.tdee,
       access_level: u.access_level ?? 3,
+      last_login: u.last_login,
+      last_login_relative: relativeTime(u.last_login),
       last_entry: u.last_entry,
       last_entry_relative: relativeTime(u.last_entry ? u.last_entry + 'T12:00:00Z' : null),
       total_days: u.total_days,

@@ -213,7 +213,8 @@ function TabUsers({ data, loading, defaultSort }) {
           <tr style={{ borderBottom: '2px solid var(--border)' }}>
             <Th k="name"        label="Usuario"      />
             <Th k="created_at"  label="Registro"     />
-            <Th k="last_entry"  label="Último acceso"/>
+            <Th k="last_login"  label="Último login"    />
+            <Th k="last_entry"  label="Último registro"/>
             <Th k="days_7d"     label="7d activos"   />
             <Th k="avg_cal_7d"  label="Kcal media"   />
           </tr>
@@ -237,6 +238,9 @@ function TabUsers({ data, loading, defaultSort }) {
                 </td>
                 <td style={{ padding: '10px', color: 'var(--text-3)', whiteSpace: 'nowrap' }}>
                   {u.created_at ? new Date(u.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '—'}
+                </td>
+                <td style={{ padding: '10px', color: 'var(--text-2)', whiteSpace: 'nowrap' }}>
+                  {u.last_login_relative || '—'}
                 </td>
                 <td style={{ padding: '10px', color: lastEntryColor(u.last_entry), fontWeight: 600, whiteSpace: 'nowrap' }}>
                   {u.last_entry_relative || (u.last_entry ? u.last_entry : '—')}
