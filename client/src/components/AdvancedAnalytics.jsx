@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   BarChart, Bar, Cell,
-  ComposedChart, Line,
+  ComposedChart, Line, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { api } from '../api';
@@ -60,12 +60,14 @@ function EmptyMsg({ text = 'Registra más días para ver este análisis' }) {
   return <p style={{ color: 'var(--text-3)', fontSize: 13, fontStyle: 'italic' }}>{text}</p>;
 }
 
+// Sistema C — sin border, con shadow
 function StatBox({ label, value, sub, valueColor }) {
   return (
     <div style={{
-      background: 'var(--surface-2)',
-      border: '0.5px solid var(--border)',
-      borderRadius: 'var(--radius-md)', padding: '12px 14px',
+      background: 'var(--surface)',
+      borderRadius: 'var(--radius-md)',
+      boxShadow: 'var(--shadow-sm)',
+      padding: '12px 14px',
     }}>
       <p style={{ fontSize: 9, color: 'var(--text-secondary)', marginBottom: 6, fontFamily: 'var(--font-sans)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>{label}</p>
       <p style={{ fontWeight: 600, fontSize: 20, lineHeight: 1.1, color: valueColor || 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>{value}</p>
@@ -169,7 +171,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 999,
         maxWidth: 600, marginLeft: 'auto', marginRight: 'auto',
-        background: 'var(--surface)',
+        background: 'var(--bg)',
         borderRadius: '20px 20px 0 0',
         maxHeight: '88vh',
         overflowY: 'auto',
@@ -188,7 +190,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '14px 20px 12px',
           borderBottom: '1px solid var(--border)',
-          position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1,
+          position: 'sticky', top: 0, background: 'var(--bg)', zIndex: 1,
         }}>
           <h2 style={{
             fontFamily: 'var(--font-serif)', fontStyle: 'italic',
@@ -302,34 +304,36 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       )}
                     </div>
 
-                    <ResponsiveContainer width="100%" height={160}>
-                      <BarChart
-                        data={data.daily_data.map(d => ({
-                          date: new Date(d.date + 'T12:00:00Z').toLocaleDateString('es', { day: 'numeric', month: 'short' }),
-                          calories: d.calories,
-                        }))}
-                        margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
-                      >
-                        <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
-                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
-                        <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
-                        <Tooltip
-                          formatter={v => [`${v.toLocaleString()} kcal`, 'Calorías']}
-                          contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                        />
-                        {userTarget && <ReferenceLine y={userTarget} stroke="var(--accent)" strokeDasharray="4 4" />}
-                        <Bar dataKey="calories" radius={[3, 3, 0, 0]}>
-                          {data.daily_data.map((entry, i) => {
-                            const c = entry.calories;
-                            const color = !userTarget ? '#2d6a4f'
-                              : Math.abs(c - userTarget) <= 250 ? '#2d6a4f'
-                              : c > userTarget + 250 ? '#f59e0b'
-                              : '#3b82f6';
-                            return <Cell key={i} fill={color} fillOpacity={0.85} />;
-                          })}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '16px 12px 8px' }}>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <BarChart
+                          data={data.daily_data.map(d => ({
+                            date: new Date(d.date + 'T12:00:00Z').toLocaleDateString('es', { day: 'numeric', month: 'short' }),
+                            calories: d.calories,
+                          }))}
+                          margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
+                        >
+                          <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
+                          <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
+                          <Tooltip
+                            formatter={v => [`${v.toLocaleString()} kcal`, 'Calorías']}
+                            contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                          />
+                          {userTarget && <ReferenceLine y={userTarget} stroke="var(--accent)" strokeDasharray="4 4" />}
+                          <Bar dataKey="calories" radius={[3, 3, 0, 0]}>
+                            {data.daily_data.map((entry, i) => {
+                              const c = entry.calories;
+                              const color = !userTarget ? '#2d6a4f'
+                                : Math.abs(c - userTarget) <= 250 ? '#2d6a4f'
+                                : c > userTarget + 250 ? '#f59e0b'
+                                : '#3b82f6';
+                              return <Cell key={i} fill={color} fillOpacity={0.85} />;
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
 
                     {data.calories.worst_day_of_week && (
                       <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 10, fontStyle: 'italic' }}>
@@ -344,24 +348,29 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
               {/* ── Sección 3: Distribución de comidas ── */}
               {mealBreakdown.length > 0 && (
                 <Section title="Por tipo de comida">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {mealBreakdown.map(m => (
-                      <div key={m.key}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
-                          <span style={{ color: 'var(--text-2)', fontWeight: 500 }}>{m.label}</span>
-                          <span style={{ fontWeight: 700 }}>{m.pct}%</span>
+                  <div style={{
+                    background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-sm)', padding: '16px',
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {mealBreakdown.map(m => (
+                        <div key={m.key}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
+                            <span style={{ color: 'var(--text-2)', fontWeight: 500 }}>{m.label}</span>
+                            <span style={{ fontWeight: 700 }}>{m.pct}%</span>
+                          </div>
+                          <div style={{ height: 7, background: 'var(--border)', borderRadius: 99 }}>
+                            <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 99, transition: 'width 0.6s' }} />
+                          </div>
                         </div>
-                        <div style={{ height: 7, background: 'var(--border)', borderRadius: 99 }}>
-                          <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 99, transition: 'width 0.6s' }} />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    {data.meals.most_calories_meal && (
+                      <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 14, fontStyle: 'italic' }}>
+                        Tu {MEAL_LABELS[data.meals.most_calories_meal]?.toLowerCase()} representa la mayor parte de tus calorías
+                      </p>
+                    )}
                   </div>
-                  {data.meals.most_calories_meal && (
-                    <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 12, fontStyle: 'italic' }}>
-                      Tu {MEAL_LABELS[data.meals.most_calories_meal]?.toLowerCase()} representa la mayor parte de tus calorías
-                    </p>
-                  )}
                 </Section>
               )}
 
@@ -374,31 +383,41 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     const cvLabel = cvPct < 15 ? 'Muy consistente' : cvPct <= 30 ? 'Variabilidad normal' : 'Alta variabilidad';
                     return (
                       <>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14 }}>
-                          <p style={{ fontSize: 28, fontWeight: 700, color: cvColor, lineHeight: 1 }}>{cvPct}%</p>
-                          <p style={{ fontSize: 13, color: cvColor }}>{cvLabel}</p>
-                        </div>
-                        {data.calories.days_in_target != null && (
-                          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                            {[
-                              { label: 'En objetivo', val: data.calories.days_in_target, color: '#10b981' },
-                              { label: 'Por encima',  val: data.calories.days_over,       color: '#f59e0b' },
-                              { label: 'Por debajo',  val: data.calories.days_under,      color: '#3b82f6' },
-                            ].map(item => (
-                              <div key={item.label} style={{ flex: 1, background: 'var(--bg)', borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
-                                <p style={{ fontSize: 22, fontWeight: 700, color: item.color }}>{item.val}</p>
-                                <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>{item.label}</p>
-                              </div>
-                            ))}
+                        <div style={{
+                          background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                          boxShadow: 'var(--shadow-sm)', padding: '16px', marginBottom: 10,
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14 }}>
+                            <p style={{ fontSize: 28, fontWeight: 700, color: cvColor, lineHeight: 1 }}>{cvPct}%</p>
+                            <p style={{ fontSize: 13, color: cvColor }}>{cvLabel}</p>
                           </div>
-                        )}
+                          {data.calories.days_in_target != null && (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                              {[
+                                { label: 'En objetivo', val: data.calories.days_in_target, color: '#10b981' },
+                                { label: 'Por encima',  val: data.calories.days_over,       color: '#f59e0b' },
+                                { label: 'Por debajo',  val: data.calories.days_under,      color: '#3b82f6' },
+                              ].map(item => (
+                                <div key={item.label} style={{
+                                  background: 'var(--bg)', borderRadius: 10,
+                                  padding: '10px 8px', textAlign: 'center',
+                                }}>
+                                  <p style={{ fontSize: 22, fontWeight: 700, color: item.color }}>{item.val}</p>
+                                  <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>{item.label}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         {calorieHistogram.length > 0 && (
-                          <ResponsiveContainer width="100%" height={70}>
-                            <BarChart data={calorieHistogram} margin={{ top: 0, right: 0, bottom: 0, left: -30 }}>
-                              <XAxis dataKey="range" tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} />
-                              <Bar dataKey="count" fill="var(--accent)" fillOpacity={0.7} radius={[3, 3, 0, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
+                          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '12px 12px 4px' }}>
+                            <ResponsiveContainer width="100%" height={70}>
+                              <BarChart data={calorieHistogram} margin={{ top: 0, right: 0, bottom: 0, left: -30 }}>
+                                <XAxis dataKey="range" tick={{ fontSize: 9, fill: 'var(--text-3)' }} tickLine={false} />
+                                <Bar dataKey="count" fill="var(--accent)" fillOpacity={0.7} radius={[3, 3, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
                         )}
                       </>
                     );
@@ -412,81 +431,245 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                   <EmptyMsg text="Registra tu peso en las entradas para ver proyecciones" />
                 ) : (
                   <>
-                    <div style={{ display: 'flex', gap: 24, marginBottom: 18, flexWrap: 'wrap' }}>
-                      <div>
-                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 2 }}>Peso actual</p>
-                        <p style={{ fontFamily: 'Instrument Serif', fontSize: 30, color: 'var(--accent)', lineHeight: 1 }}>
-                          {data.weight.current} kg
-                        </p>
-                      </div>
-                      {data.projection?.weekly_rate_realistic != null && (
-                        <div>
-                          <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 2 }}>Tasa realista</p>
-                          <p style={{
-                            fontFamily: 'Instrument Serif', fontSize: 30, lineHeight: 1,
-                            color: data.projection.weekly_rate_realistic < 0 ? 'var(--accent)' : 'var(--accent-2)',
-                          }}>
-                            {data.projection.weekly_rate_realistic > 0 ? '+' : ''}{data.projection.weekly_rate_realistic} kg/sem
-                          </p>
+                    {/* KPI Row — 3 cards con accent bar superior 2px */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
+                      {/* Peso actual — green */}
+                      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
+                        <div style={{ height: 2, background: '#10b981' }} />
+                        <div style={{ padding: '10px 10px 12px' }}>
+                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Peso actual</p>
+                          <p style={{ fontSize: 22, fontWeight: 700, color: '#10b981', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>{data.weight.current}</p>
+                          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>kg</p>
                         </div>
-                      )}
+                      </div>
+                      {/* Tasa semanal — amber */}
+                      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
+                        <div style={{ height: 2, background: '#f59e0b' }} />
+                        <div style={{ padding: '10px 10px 12px' }}>
+                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Tasa semanal</p>
+                          <p style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
+                            {data.projection?.weekly_rate_realistic != null
+                              ? `${data.projection.weekly_rate_realistic > 0 ? '+' : ''}${data.projection.weekly_rate_realistic}`
+                              : '—'}
+                          </p>
+                          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>kg/sem</p>
+                        </div>
+                      </div>
+                      {/* Días al objetivo — dark */}
+                      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
+                        <div style={{ height: 2, background: '#111111' }} />
+                        <div style={{ padding: '10px 10px 12px' }}>
+                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Días al objetivo</p>
+                          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
+                            {data.projection?.days_to_goal_realistic ? `~${data.projection.days_to_goal_realistic}` : '—'}
+                          </p>
+                          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>días</p>
+                        </div>
+                      </div>
                     </div>
 
+                    {/* Gráfico de proyección */}
                     {projChartData.length > 1 && (
-                      <ResponsiveContainer width="100%" height={200}>
-                        <ComposedChart data={projChartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-                          <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
-                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
-                          <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
-                          <Tooltip
-                            formatter={(v, name) => {
-                              const labels = { actual: 'Real', optimistic: 'Optimista', realistic: 'Realista', conservative: 'Conservador' };
-                              return [`${v} kg`, labels[name] || name];
-                            }}
-                            contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                          />
-                          <Line type="monotone" dataKey="actual" stroke="var(--accent)" strokeWidth={2.5}
-                            dot={{ r: 3, fill: 'var(--accent)' }} connectNulls={false} />
-                          <Line type="monotone" dataKey="optimistic" stroke="#10b981" strokeWidth={1.5} strokeDasharray="6 4"
-                            dot={false} connectNulls={false} strokeOpacity={0.75} />
-                          <Line type="monotone" dataKey="realistic" stroke="var(--accent)" strokeWidth={2} strokeDasharray="6 4"
-                            dot={{ r: 4, fill: 'var(--accent)' }} connectNulls={false} strokeOpacity={0.7} />
-                          <Line type="monotone" dataKey="conservative" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4"
-                            dot={false} connectNulls={false} strokeOpacity={0.65} />
-                        </ComposedChart>
-                      </ResponsiveContainer>
+                      <div style={{
+                        background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-md)', padding: '14px 8px 10px',
+                        position: 'relative', marginBottom: 16,
+                      }}>
+                        {/* Leyenda vertical — esquina superior derecha */}
+                        <div style={{
+                          position: 'absolute', top: 10, right: 14, zIndex: 1,
+                          display: 'flex', flexDirection: 'column', gap: 5,
+                          background: 'rgba(255,255,255,0.9)',
+                          backdropFilter: 'blur(4px)',
+                          borderRadius: 8, padding: '6px 8px',
+                          boxShadow: 'var(--shadow-sm)',
+                        }}>
+                          {[
+                            { color: '#111111', label: 'Real',        dash: false },
+                            { color: '#f59e0b', label: 'Realista',    dash: true  },
+                            { color: '#10b981', label: 'Optimista',   dash: true  },
+                            { color: '#94a3b8', label: 'Conservador', dash: true  },
+                          ].map(item => (
+                            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <svg width="14" height="6" viewBox="0 0 14 6" style={{ flexShrink: 0 }}>
+                                {item.dash
+                                  ? <line x1="0" y1="3" x2="14" y2="3" stroke={item.color} strokeWidth="1.5" strokeDasharray="3 2" />
+                                  : <line x1="0" y1="3" x2="14" y2="3" stroke={item.color} strokeWidth="2" />
+                                }
+                              </svg>
+                              <span style={{ fontSize: 9, color: 'var(--text-3)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <ResponsiveContainer width="100%" height={240}>
+                          <ComposedChart data={projChartData} margin={{ top: 12, right: 10, bottom: 5, left: -10 }}>
+                            <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
+                            <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
+                            <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
+                            <Tooltip
+                              formatter={(v, name) => {
+                                const labels = { actual: 'Real', optimistic: 'Optimista', realistic: 'Realista', conservative: 'Conservador' };
+                                return [`${v} kg`, labels[name] || name];
+                              }}
+                              contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                            />
+
+                            {/* Banda de confianza — amber opacity 0.12, area bajo la línea optimista */}
+                            <Area
+                              type="monotone"
+                              dataKey="optimistic"
+                              fill="#f59e0b"
+                              fillOpacity={0.12}
+                              stroke="none"
+                              connectNulls={false}
+                              legendType="none"
+                            />
+
+                            {/* Separador "Hoy" — histórico / proyección */}
+                            <ReferenceLine
+                              x="Hoy"
+                              stroke="var(--border)"
+                              strokeDasharray="4 4"
+                              strokeWidth={1.5}
+                              label={({ viewBox }) => (
+                                <g>
+                                  <text
+                                    x={(viewBox?.x || 0) - 6}
+                                    y={(viewBox?.y || 0) + 14}
+                                    textAnchor="end"
+                                    fontSize={9}
+                                    fill="var(--text-3)"
+                                    fontFamily="var(--font-sans)"
+                                  >
+                                    Histórico
+                                  </text>
+                                  <text
+                                    x={(viewBox?.x || 0) + 6}
+                                    y={(viewBox?.y || 0) + 14}
+                                    textAnchor="start"
+                                    fontSize={9}
+                                    fill="var(--text-3)"
+                                    fontFamily="var(--font-sans)"
+                                  >
+                                    Proyección →
+                                  </text>
+                                </g>
+                              )}
+                            />
+
+                            {/* Línea objetivo horizontal */}
+                            {data.projection?.goal_weight && (
+                              <ReferenceLine
+                                y={data.projection.goal_weight}
+                                stroke="#10b981"
+                                strokeOpacity={0.5}
+                                strokeDasharray="4 4"
+                                label={{ value: `🎯 ${data.projection.goal_weight} kg`, position: 'right', fill: '#10b981', fontSize: 10 }}
+                              />
+                            )}
+
+                            {/* Proyección conservadora — slate, 1.5px */}
+                            <Line
+                              type="monotone"
+                              dataKey="conservative"
+                              stroke="#94a3b8"
+                              strokeWidth={1.5}
+                              strokeDasharray="4 4"
+                              dot={false}
+                              connectNulls={false}
+                              legendType="none"
+                            />
+                            {/* Proyección optimista — green, 1.5px */}
+                            <Line
+                              type="monotone"
+                              dataKey="optimistic"
+                              stroke="#10b981"
+                              strokeWidth={1.5}
+                              strokeDasharray="6 4"
+                              dot={false}
+                              connectNulls={false}
+                              legendType="none"
+                            />
+                            {/* Proyección realista — amber, 2px, protagonista */}
+                            <Line
+                              type="monotone"
+                              dataKey="realistic"
+                              stroke="#f59e0b"
+                              strokeWidth={2}
+                              strokeDasharray="6 4"
+                              dot={{ r: 3, fill: '#f59e0b' }}
+                              connectNulls={false}
+                              legendType="none"
+                            />
+                            {/* Línea histórica — dark, sólida, punto actual con halo */}
+                            <Line
+                              type="monotone"
+                              dataKey="actual"
+                              stroke="#111111"
+                              strokeWidth={2}
+                              connectNulls={false}
+                              legendType="none"
+                              dot={(props) => {
+                                const { cx, cy, payload } = props;
+                                if (!cx || !cy) return null;
+                                if (payload.date === 'Hoy') {
+                                  return (
+                                    <g key={`dot-hoy-${cx}-${cy}`}>
+                                      <circle cx={cx} cy={cy} r={10} fill="#111111" fillOpacity={0.1} />
+                                      <circle cx={cx} cy={cy} r={5} fill="#111111" />
+                                    </g>
+                                  );
+                                }
+                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill="#111111" />;
+                              }}
+                              activeDot={{ r: 5, fill: '#111111' }}
+                            />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
                     )}
 
-                    {/* 3 Scenario cards */}
+                    {/* Escenarios — 3 cards con accent bar izquierdo 3px */}
                     {data.projection?.scenarios && (
-                      <div style={{ marginTop: 16 }}>
-                        <p style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <div style={{ marginBottom: 16 }}>
+                        <p style={{
+                          fontSize: 10, color: 'var(--text-3)', marginBottom: 10,
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                          fontFamily: 'var(--font-sans)', fontWeight: 600,
+                        }}>
                           Escenarios a 30 / 60 / 90 días
                         </p>
                         {[
-                          { key: 'optimistic',   label: 'Optimista',   sub: 'adherencia perfecta',   color: '#10b981', border: 'rgba(16,185,129,0.2)' },
-                          { key: 'realistic',    label: 'Realista',    sub: 'basado en tus hábitos', color: 'var(--accent)', border: 'rgba(45,106,79,0.35)', highlight: true },
-                          { key: 'conservative', label: 'Conservador', sub: 'adherencia 20% menor',  color: '#6366f1', border: 'rgba(99,102,241,0.2)' },
+                          { key: 'optimistic',   label: 'Optimista',   sub: 'adherencia perfecta',   accentColor: '#10b981', textColor: '#10b981' },
+                          { key: 'realistic',    label: 'Realista',    sub: 'basado en tus hábitos', accentColor: '#f59e0b', textColor: '#92400e' },
+                          { key: 'conservative', label: 'Conservador', sub: 'adherencia 20% menor',  accentColor: '#94a3b8', textColor: '#475569' },
                         ].map(s => (
                           <div key={s.key} style={{
-                            marginBottom: 8, padding: '12px 14px', borderRadius: 'var(--radius-md)',
-                            background: s.highlight ? 'rgba(45,106,79,0.05)' : 'var(--surface-2)',
-                            border: `0.5px solid ${s.border}`,
+                            marginBottom: 8,
+                            background: 'var(--surface)',
+                            borderRadius: 'var(--radius-md)',
+                            boxShadow: 'var(--shadow-sm)',
+                            borderLeft: `3px solid ${s.accentColor}`,
+                            overflow: 'hidden',
                           }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
-                                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                                  <p style={{ fontSize: 13, fontWeight: 600, color: s.color, margin: 0 }}>{s.label}</p>
-                                </div>
-                                <p style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)', marginLeft: 14 }}>{s.sub}</p>
+                                <p style={{ fontSize: 13, fontWeight: 600, color: s.textColor, margin: 0, fontFamily: 'var(--font-sans)' }}>{s.label}</p>
+                                <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>{s.sub}</p>
                               </div>
-                              <div style={{ display: 'flex', gap: 12, textAlign: 'right' }}>
-                                {['30d', '60d', '90d'].map(t => (
-                                  <div key={t}>
-                                    <p style={{ fontSize: 10, color: 'var(--text-3)' }}>{t === '30d' ? '30 días' : t === '60d' ? '60 días' : '90 días'}</p>
-                                    <p style={{ fontWeight: 700, fontSize: 15, color: s.color }}>
-                                      {data.projection.scenarios[s.key]?.[t] ?? '—'} kg
+                              <div style={{ display: 'flex' }}>
+                                {['30d', '60d', '90d'].map((t, idx) => (
+                                  <div key={t} style={{
+                                    paddingLeft: 12, paddingRight: idx === 2 ? 0 : 12,
+                                    textAlign: 'center',
+                                    borderRight: idx < 2 ? '1px solid var(--border)' : 'none',
+                                  }}>
+                                    <p style={{ fontSize: 9, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, fontFamily: 'var(--font-sans)' }}>
+                                      {t}
+                                    </p>
+                                    <p style={{ fontWeight: 700, fontSize: 14, color: s.textColor, fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>
+                                      {data.projection.scenarios[s.key]?.[t] ?? '—'} <span style={{ fontSize: 10, fontWeight: 400 }}>kg</span>
                                     </p>
                                   </div>
                                 ))}
@@ -497,11 +680,40 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                     )}
 
-                    {/* Plateau banner */}
+                    {/* Card objetivo — icono 🎯 en badge verde suave */}
+                    {data.projection?.days_to_goal_realistic && data.projection?.goal_weight && (
+                      <div style={{
+                        marginBottom: 12,
+                        background: 'var(--surface)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-md)',
+                        padding: '14px 16px',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                      }}>
+                        <div style={{
+                          width: 34, height: 34, borderRadius: '50%',
+                          background: 'rgba(45,106,79,0.1)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 16, flexShrink: 0,
+                        }}>🎯</div>
+                        <div>
+                          <p style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, fontFamily: 'var(--font-sans)' }}>
+                            A tu objetivo ({data.projection.goal_weight} kg) le quedan ~{data.projection.days_to_goal_realistic} días
+                          </p>
+                          <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>escenario realista</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Plateau banner — accent bar, sin fondo de color */}
                     {data.projection?.plateau_prediction?.will_plateau && (
                       <div style={{
-                        marginTop: 14, padding: '12px 14px', borderRadius: 10,
-                        background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)',
+                        marginBottom: 12,
+                        background: 'var(--surface)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-sm)',
+                        borderLeft: '3px solid #f59e0b',
+                        padding: '12px 14px',
                       }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: '#d97706', marginBottom: 4 }}>
                           Plateau probable hacia el día {data.projection.plateau_prediction.estimated_day}
@@ -512,27 +724,61 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                     )}
 
-                    {/* Days to goal */}
-                    {data.projection?.days_to_goal_realistic && data.projection?.goal_weight && (
+                    {/* Calidad del modelo — barra con color dinámico */}
+                    {data.projection?.data_quality_score != null && (
                       <div style={{
-                        marginTop: 12, padding: '12px 14px', borderRadius: 10,
-                        background: 'rgba(45,106,79,0.08)', border: '1px solid rgba(45,106,79,0.2)',
+                        background: 'var(--surface)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-sm)',
+                        padding: '12px 14px',
+                        marginBottom: 12,
                       }}>
-                        <p style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
-                          A tu objetivo ({data.projection.goal_weight} kg) le quedan ~{data.projection.days_to_goal_realistic} días
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-2)', fontWeight: 500, fontFamily: 'var(--font-sans)' }}>Calidad del modelo</span>
+                          <span style={{
+                            fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-sans)',
+                            color: data.projection.data_quality_score >= 0.7 ? '#10b981'
+                              : data.projection.data_quality_score >= 0.5 ? '#f59e0b'
+                              : '#ef4444',
+                          }}>
+                            {Math.round(data.projection.data_quality_score * 100)}%
+                          </span>
+                        </div>
+                        <div style={{ height: 6, background: 'var(--border)', borderRadius: 99 }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.round(data.projection.data_quality_score * 100)}%`,
+                            background: data.projection.data_quality_score >= 0.7 ? '#10b981'
+                              : data.projection.data_quality_score >= 0.5 ? '#f59e0b'
+                              : '#ef4444',
+                            borderRadius: 99, transition: 'width 0.6s',
+                          }} />
+                        </div>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6, fontFamily: 'var(--font-sans)' }}>
+                          Mejora registrando peso y calorías más días
                         </p>
-                        <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>escenario realista</p>
                       </div>
                     )}
 
+                    {/* Confidence */}
+                    {data.projection?.confidence && (() => {
+                      const c = CONFIDENCE[data.projection.confidence];
+                      return (
+                        <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 12, fontFamily: 'var(--font-sans)' }}>
+                          {c.icon} <strong>Confianza {c.label.toLowerCase()}:</strong> {c.text}
+                        </p>
+                      );
+                    })()}
+
                     {/* Collapsible explanation */}
-                    <div style={{ marginTop: 14 }}>
+                    <div style={{ marginBottom: 14 }}>
                       <button
                         onClick={() => setShowExplanation(s => !s)}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
                           color: 'var(--text-3)', fontSize: 12, padding: 0,
                           display: 'flex', alignItems: 'center', gap: 4,
+                          fontFamily: 'var(--font-sans)',
                         }}
                       >
                         {showExplanation ? '▲' : '▼'} ¿Cómo se calcula?
@@ -555,41 +801,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       )}
                     </div>
 
-                    {/* Data quality bar */}
-                    {data.projection?.data_quality_score != null && (
-                      <div style={{ marginTop: 14 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-3)', marginBottom: 4 }}>
-                          <span>Calidad del modelo</span>
-                          <span>{Math.round(data.projection.data_quality_score * 100)}%</span>
-                        </div>
-                        <div style={{ height: 6, background: 'var(--border)', borderRadius: 99 }}>
-                          <div style={{
-                            height: '100%',
-                            width: `${Math.round(data.projection.data_quality_score * 100)}%`,
-                            background: data.projection.data_quality_score >= 0.7 ? '#10b981' : data.projection.data_quality_score >= 0.4 ? '#f59e0b' : '#ef4444',
-                            borderRadius: 99, transition: 'width 0.6s',
-                          }} />
-                        </div>
-                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-                          Mejora registrando peso y calorías más días
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Confidence */}
-                    {data.projection?.confidence && (() => {
-                      const c = CONFIDENCE[data.projection.confidence];
-                      return (
-                        <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 12 }}>
-                          {c.icon} <strong>Confianza {c.label.toLowerCase()}:</strong> {c.text}
-                        </p>
-                      );
-                    })()}
-
                     {/* Scientific disclaimer */}
                     <p style={{
-                      fontSize: 11, color: 'var(--text-3)', marginTop: 16, lineHeight: 1.5,
+                      fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5,
                       borderTop: '1px solid var(--border)', paddingTop: 12,
+                      fontFamily: 'var(--font-sans)',
                     }}>
                       Las proyecciones son estimaciones orientativas con un margen de error de ±150-200 kcal. El peso fluctúa ±1-2 kg diariamente por agua y glucógeno — esto no refleja cambios reales en grasa. No uses estos datos para decisiones médicas. Consulta con un profesional de la salud para objetivos terapéuticos.
                     </p>
@@ -601,14 +817,15 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
               {trendText && (
                 <Section title="Tendencia del período">
                   <div style={{
-                    padding: '14px 16px', borderRadius: 12,
-                    background: data.calories.trend === 'improving' ? 'rgba(16,185,129,0.08)'
-                      : data.calories.trend === 'worsening' ? 'rgba(245,158,11,0.08)'
-                      : 'rgba(99,102,241,0.08)',
-                    border: `1px solid ${
-                      data.calories.trend === 'improving' ? 'rgba(16,185,129,0.25)'
-                      : data.calories.trend === 'worsening' ? 'rgba(245,158,11,0.25)'
-                      : 'rgba(99,102,241,0.25)'}`,
+                    background: 'var(--surface)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-sm)',
+                    borderLeft: `3px solid ${
+                      data.calories.trend === 'improving' ? '#10b981'
+                      : data.calories.trend === 'worsening' ? '#f59e0b'
+                      : '#6366f1'
+                    }`,
+                    padding: '14px 16px',
                   }}>
                     <p style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.4 }}>{trendText}</p>
                   </div>
