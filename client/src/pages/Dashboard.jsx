@@ -284,18 +284,20 @@ export default function Dashboard() {
             }}>
               Hoy · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
-            <button
-              onClick={() => navigate('/calculator')}
-              style={{
-                width: 24, height: 24, background: 'var(--accent)',
-                border: 'none', borderRadius: '50%', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}
-            >
-              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-              </svg>
-            </button>
+            {entries.length > 0 && (
+              <button
+                onClick={() => navigate('/calculator')}
+                style={{
+                  width: 24, height: 24, background: 'var(--accent)',
+                  border: 'none', borderRadius: '50%', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                  <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
           </div>
 
           {entries.length === 0 ? (
