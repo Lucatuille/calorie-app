@@ -408,8 +408,9 @@ input, select, textarea { font-family: inherit; }
   }
 
   /* Asistente: ajusta la altura para que el input quede sobre la bottom nav */
+  /* dvh en lugar de vh — en iOS Safari, vh incluye la barra del navegador */
   .assistant-chat {
-    height: calc(100vh - 52px - 64px - env(safe-area-inset-bottom)) !important;
+    height: calc(100dvh - 52px - 56px - env(safe-area-inset-bottom)) !important;
   }
 
   /* Cerrar sesión visible en móvil (hamburger oculto) */

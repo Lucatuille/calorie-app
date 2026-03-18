@@ -371,7 +371,8 @@ export default function Assistant() {
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 52px)',
+        height: 'calc(100dvh - 52px)',
+        overflow: 'hidden',
       }}>
 
         {/* ── Header ── */}
@@ -491,7 +492,10 @@ export default function Assistant() {
 
         {/* ── Input area ── */}
         <div style={{
-          padding: '10px 16px 16px',
+          paddingTop: 10,
+          paddingLeft: 16,
+          paddingRight: 16,
+          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)',
           borderTop: '0.5px solid var(--border)',
           flexShrink: 0,
           background: 'var(--bg)',
@@ -499,7 +503,7 @@ export default function Assistant() {
           <QuickSuggestions onSelect={handleSend} visible={showSuggestions} />
 
           {/* Input row */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 6 }}>
             <textarea
               ref={inputRef}
               value={input}
