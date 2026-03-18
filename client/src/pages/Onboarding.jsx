@@ -86,6 +86,7 @@ export default function Onboarding() {
     setSaving(true);
     try {
       await api.updateProfile({
+        name: user.name,
         age: data.age, weight: data.weight, height: data.height,
         gender: data.gender, goal_weight: data.goal_weight || null,
         target_calories: targetCalories, tdee, formula_used: 'mifflin',
@@ -353,7 +354,7 @@ export default function Onboarding() {
                 border: 'none', borderRadius: 'var(--radius-full)',
                 fontSize: 13, fontWeight: 500,
                 cursor: saving ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-sans)', marginTop: 'auto', paddingTop: 24,
+                fontFamily: 'var(--font-sans)', marginTop: 24,
                 opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
               }}>
                 {saving ? 'Guardando…' : 'Empezar a registrar →'}
