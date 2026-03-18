@@ -84,7 +84,7 @@ export async function handleAnalyze(request, env, path, ctx) {
   const dbUser = await env.DB.prepare(
     'SELECT access_level FROM users WHERE id = ?'
   ).bind(user.userId).first();
-  const accessLevel = dbUser?.access_level ?? 1;
+  const accessLevel = dbUser?.access_level ?? 3;
 
   if (!canAccess(accessLevel)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
@@ -227,7 +227,7 @@ export async function handleAnalyzeText(request, env, ctx) {
   const dbUser = await env.DB.prepare(
     'SELECT access_level FROM users WHERE id = ?'
   ).bind(user.userId).first();
-  const accessLevel = dbUser?.access_level ?? 1;
+  const accessLevel = dbUser?.access_level ?? 3;
 
   if (!canAccess(accessLevel)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);

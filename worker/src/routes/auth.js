@@ -23,6 +23,8 @@ export async function handleAuth(request, env, path) {
 
     const hashed = await hashPassword(password);
 
+    // BETA: nuevos usuarios reciben access_level=1 (Fundador) durante la beta.
+    // ⚠️  CAMBIAR A 3 (Free) antes de abrir el registro público con Stripe.
     const result = await env.DB.prepare(
       `INSERT INTO users (name, email, password, age, weight, height, gender, access_level)
        VALUES (?, ?, ?, ?, ?, ?, ?, 1)`
@@ -49,7 +51,7 @@ export async function handleAuth(request, env, path) {
     const valid = await verifyPassword(password, user.password);
     if (!valid)  return errorResponse('Credenciales incorrectas', 401);
 
-    const accessLevel = user.access_level ?? 1;
+    const accessLevel = user.access_level ?? 3; // fail-safe: nivel desconocido → Free (restrictivo)
     const isAdmin     = user.is_admin || (accessLevel === 99 ? 1 : 0);
     const token = await signJWT(
       { userId: user.id, email: user.email, name: user.name, is_admin: isAdmin, access_level: accessLevel },
@@ -77,7 +79,7 @@ export async function handleAuth(request, env, path) {
 
     if (!user) return errorResponse('Usuario no encontrado', 404);
 
-    const accessLevel = user.access_level ?? 1;
+    const accessLevel = user.access_level ?? 3; // fail-safe: nivel desconocido → Free (restrictivo)
     const isAdmin     = user.is_admin || (accessLevel === 99 ? 1 : 0);
     const token = await signJWT(
       { userId: user.id, email: user.email, name: user.name, is_admin: isAdmin, access_level: accessLevel },

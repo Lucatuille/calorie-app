@@ -2,7 +2,7 @@
 //  CALIBRATION ROUTES — /api/calibration
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate } from '../utils.js';
+import { jsonResponse, errorResponse, authenticate, requireProAccess } from '../utils.js';
 import { calculateCalibrationProfile, updateFrequentMeals } from '../utils/calibration.js';
 
 export async function handleCalibration(request, env, path) {
@@ -87,8 +87,10 @@ export async function handleCalibration(request, env, path) {
     return jsonResponse({ success: true });
   }
 
-  // GET /api/calibration/profile
+  // GET /api/calibration/profile — requiere Pro (verificación desde BD)
   if (path === '/api/calibration/profile' && request.method === 'GET') {
+    const hasPro = await requireProAccess(user.userId, env);
+    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
     const row = await env.DB.prepare(
       'SELECT * FROM user_calibration WHERE user_id = ?'
     ).bind(user.userId).first();
@@ -103,8 +105,10 @@ export async function handleCalibration(request, env, path) {
     });
   }
 
-  // DELETE /api/calibration/profile
+  // DELETE /api/calibration/profile — requiere Pro (verificación desde BD)
   if (path === '/api/calibration/profile' && request.method === 'DELETE') {
+    const hasPro = await requireProAccess(user.userId, env);
+    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
     await Promise.all([
       env.DB.prepare('DELETE FROM user_calibration WHERE user_id = ?').bind(user.userId).run(),
       env.DB.prepare('DELETE FROM ai_corrections WHERE user_id = ?').bind(user.userId).run(),

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { buildWelcomeMessage } from '../utils/assistantMessages';
+import { isPro } from '../utils/levels';
 
 // ── ProOnly (dark card) ──────────────────────────────────────
 
@@ -233,7 +234,7 @@ export default function Assistant() {
   const inputRef  = useRef(null);
 
   useEffect(() => {
-    if (user && ![1, 2, 99].includes(user.access_level ?? 0)) navigate('/');
+    if (user && !isPro(user.access_level)) navigate('/');
   }, [user]);
 
   useEffect(() => {

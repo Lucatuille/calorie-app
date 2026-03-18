@@ -79,6 +79,18 @@ export async function authenticate(request, env) {
   return verifyJWT(token, env.JWT_SECRET);
 }
 
+// ── Verificación Pro desde BD (nunca confiar solo en el JWT) ──
+// Usar en TODOS los endpoints Pro: /progress/advanced, /calibration/profile, etc.
+// El JWT puede estar desactualizado o manipulado en localStorage.
+const PRO_LEVELS = [1, 2, 99]; // Fundador, Pro, Admin
+
+export async function requireProAccess(userId, env) {
+  const row = await env.DB.prepare(
+    'SELECT access_level FROM users WHERE id = ?'
+  ).bind(userId).first();
+  return row != null && PRO_LEVELS.includes(row.access_level);
+}
+
 // ── Password hashing (SHA-256 based, no bcrypt needed) ───────
 
 export async function hashPassword(password) {

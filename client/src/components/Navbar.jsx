@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isPro } from '../utils/levels';
 
 const links = [
   { to: '/',           label: 'Inicio' },
@@ -73,7 +74,7 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          {[1, 2, 99].includes(user?.access_level ?? 0) && (
+          {isPro(user?.access_level) && (
             <NavLink to="/asistente" style={linkStyle}>
               Asistente
             </NavLink>
@@ -139,7 +140,7 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          {[1, 2, 99].includes(user?.access_level ?? 0) && (
+          {isPro(user?.access_level) && (
             <NavLink to="/asistente" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
               🤖 Asistente
             </NavLink>
