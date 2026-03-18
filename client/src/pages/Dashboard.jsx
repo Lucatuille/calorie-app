@@ -299,13 +299,18 @@ export default function Dashboard() {
           </div>
 
           {entries.length === 0 ? (
-            <p style={{
-              fontSize: 12, color: 'var(--text-tertiary)',
-              fontFamily: 'var(--font-sans)', fontStyle: 'italic',
-              textAlign: 'center', padding: '10px 0',
+            <div style={{
+              width: '100%',
+              border: '0.5px dashed var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '13px 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-tertiary)',
+              fontSize: 13, fontFamily: 'var(--font-sans)',
+              boxSizing: 'border-box',
             }}>
-              Nada registrado aún hoy
-            </p>
+              Añade tu primera comida
+            </div>
           ) : (
             <div>
               {entries.map((entry, i) => {
