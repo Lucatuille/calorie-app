@@ -458,8 +458,26 @@ export default function Profile() {
         </div>
       )}
 
+      {/* ── Historial (acceso móvil) ── */}
+      <Link to="/history" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginTop: 20, padding: '14px 16px',
+        background: 'var(--surface)',
+        border: '0.5px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        textDecoration: 'none',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 16 }}>📋</span>
+          <span style={{ fontSize: 14, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
+            Historial
+          </span>
+        </div>
+        <span style={{ fontSize: 16, color: 'var(--text-tertiary)' }}>›</span>
+      </Link>
+
       {/* ── Footer: export + legal ── */}
-      <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '0.5px solid var(--border)' }}>
+      <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '0.5px solid var(--border)' }}>
         <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
           Exportar historial
         </span>

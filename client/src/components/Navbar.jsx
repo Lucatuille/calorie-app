@@ -126,25 +126,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile dropdown */}
+      {/* Mobile dropdown — solo items secundarios (nav principal está en BottomNav) */}
       {menuOpen && (
         <div className="nav-mobile-menu">
-          {links.map(l => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              end={l.to === '/'}
-              onClick={() => setMenuOpen(false)}
-              className={({ isActive }) => isActive ? 'active' : ''}
-            >
-              {l.label}
-            </NavLink>
-          ))}
-          {isPro(user?.access_level) && (
-            <NavLink to="/asistente" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
-              🤖 Asistente
-            </NavLink>
-          )}
           <button onClick={handleLogout}>Salir</button>
         </div>
       )}

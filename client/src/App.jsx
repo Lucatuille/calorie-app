@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import BottomNav from './components/BottomNav';
 import InstallPrompt from './components/InstallPrompt';
 import AdminOverlay from './components/AdminOverlay';
 import WelcomeDisclaimer from './components/WelcomeDisclaimer';
@@ -94,6 +95,7 @@ function AppRoutes() {
         </div>
       )}
       {user && <Navbar />}
+      {user && <BottomNav />}
       <InstallPrompt />
       {user?.is_admin === 1 && (
         <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} forceWhatsNew={whatsNew.forceOpen} />
