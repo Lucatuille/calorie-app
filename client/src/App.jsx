@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import BottomNav from './components/BottomNav';
 import InstallPrompt from './components/InstallPrompt';
 import AdminOverlay from './components/AdminOverlay';
 import WelcomeDisclaimer from './components/WelcomeDisclaimer';
@@ -82,7 +83,19 @@ function AppRoutes() {
 
   return (
     <>
+      {import.meta.env.VITE_ENV === 'preview' && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0,
+          background: '#e76f51', color: 'white',
+          textAlign: 'center', fontSize: '12px', fontWeight: 600,
+          padding: '4px', zIndex: 99999,
+          fontFamily: 'DM Sans, sans-serif', letterSpacing: '0.5px',
+        }}>
+          ⚗️ PREVIEW — Los cambios aquí no afectan a lucaeats.org
+        </div>
+      )}
       {user && <Navbar />}
+      {user && <BottomNav />}
       <InstallPrompt />
       {user?.is_admin === 1 && (
         <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} forceWhatsNew={whatsNew.forceOpen} />

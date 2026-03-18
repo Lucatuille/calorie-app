@@ -3,16 +3,15 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 
-const MACROS = [
-  { key: 'protein', label: 'Prot',  chipClass: 'chip-protein' },
-  { key: 'carbs',   label: 'Carb',  chipClass: 'chip-carbs'   },
-  { key: 'fat',     label: 'Grasa', chipClass: 'chip-fat'     },
-];
+function formatDateParts(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  const weekday = d.toLocaleDateString('es-ES', { weekday: 'long' });
+  const rest    = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  return { weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1), rest };
+}
 
-function formatDate(dateStr) {
-  return new Date(dateStr + 'T12:00:00Z').toLocaleDateString('es-ES', {
-    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-  });
+function isToday(dateStr) {
+  return dateStr === new Date().toISOString().split('T')[0];
 }
 
 function groupByDate(entries) {
@@ -24,7 +23,26 @@ function groupByDate(entries) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
 }
 
-const EMPTY_FORM = { meal_type: 'other', name: '', calories: '', protein: '', carbs: '', fat: '', weight: '', notes: '' };
+const EMPTY_FORM = {
+  meal_type: 'other', name: '', calories: '',
+  protein: '', carbs: '', fat: '', weight: '', notes: '',
+};
+
+const inputStyle = {
+  width: '100%', background: 'var(--surface-3)',
+  border: '0.5px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: '8px 10px',
+  fontSize: 13, color: 'var(--text-primary)',
+  fontFamily: 'var(--font-sans)',
+  outline: 'none', boxSizing: 'border-box',
+};
+
+const MACRO_META = [
+  { key: 'protein', color: 'var(--accent)',  label: 'P' },
+  { key: 'carbs',   color: '#f59e0b',        label: 'C' },
+  { key: 'fat',     color: '#60a5fa',        label: 'G' },
+];
 
 export default function History() {
   const { token } = useAuth();
@@ -100,198 +118,329 @@ export default function History() {
   const groups = groupByDate(entries);
 
   if (loading && entries.length === 0) return (
-    <div className="page" style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
       <div className="spinner" style={{ width: 32, height: 32 }} />
     </div>
   );
 
   return (
-    <div className="page stagger">
-      <div style={{ marginBottom: 28 }}>
-        <h1 className="title-xl" style={{ marginBottom: 4 }}>Historial</h1>
-        <p className="body-sm">Tus entradas agrupadas por día — edita o elimina si te equivocaste</p>
+    <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
+
+      {/* ── Header ── */}
+      <div style={{ padding: '20px 20px 20px' }}>
+        <h1 style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 32, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--text-primary)',
+          margin: 0,
+        }}>
+          Historial
+        </h1>
       </div>
 
       {entries.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <p style={{ fontSize: 32, marginBottom: 12 }}>📋</p>
-          <p style={{ color: 'var(--text-2)' }}>Aún no hay entradas registradas.</p>
-          <p className="body-sm">Empieza registrando tu primera comida.</p>
+        <div style={{ padding: '0 16px' }}>
+          <div style={{
+            background: 'var(--surface)', border: '0.5px solid var(--border)',
+            borderRadius: 'var(--radius-lg)', padding: '48px 24px', textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 13, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+              Aún no hay entradas registradas.
+            </p>
+          </div>
         </div>
       ) : (
-        <>
-          {groups.map(([date, dayEntries]) => {
-            const dayTotal = dayEntries.reduce((a, e) => a + (e.calories || 0), 0);
+        <div style={{ padding: '0 16px' }}>
+          {groups.map(([date, dayEntries], groupIdx) => {
+            const dayTotal  = dayEntries.reduce((a, e) => a + (e.calories || 0), 0);
+            const { weekday, rest } = formatDateParts(date);
+            const today     = isToday(date);
+
             return (
-              <div key={date} style={{ marginBottom: 16 }}>
-                {/* Date header */}
+              <div key={date} style={{ marginBottom: 20 }}>
+
+                {/* ── Cabecera del día ── */}
                 <div style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-                  marginBottom: 6, padding: '0 2px',
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'baseline', padding: '0 4px', marginBottom: 6,
                 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', textTransform: 'capitalize' }}>
-                    {formatDate(date)}
-                  </p>
-                  <p style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                    {dayTotal.toLocaleString()} kcal
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{
+                      fontFamily: 'var(--font-serif)',
+                      fontSize: 21, fontStyle: 'italic', fontWeight: 400,
+                      color: today ? 'var(--accent)' : 'var(--text-primary)',
+                    }}>
+                      {today ? 'Hoy' : weekday}
+                    </span>
+                    {!today && (
+                      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+                        {rest}
+                      </span>
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: 13, color: 'var(--text-secondary)',
+                    fontFamily: 'var(--font-sans)', fontWeight: 500,
+                  }}>
+                    {dayTotal.toLocaleString('es')} kcal
+                  </span>
                 </div>
 
-                {/* Individual meal entries */}
-                {dayEntries.map(entry => {
-                  const meal = getMeal(entry.meal_type);
-                  return (
-                    <div key={entry.id} className="card" style={{ marginBottom: 8, padding: '14px 16px' }}>
+                {/* ── Card del día — todas las comidas dentro ── */}
+                <div style={{
+                  background: 'var(--surface)',
+                  borderRadius: 'var(--radius-lg)',
+                  overflow: 'hidden',
+                  boxShadow: 'var(--shadow-md)',
+                }}>
+                  {dayEntries.map((entry, i) => {
+                    const meal       = getMeal(entry.meal_type);
+                    const isEditing  = editingId  === entry.id;
+                    const isDeleting = deletingId === entry.id;
+                    const isLast     = i === dayEntries.length - 1;
+                    const showDivider = !isLast && !isEditing && !(deletingId === dayEntries[i + 1]?.id);
 
-                      {editingId === entry.id ? (
-                        /* ── Inline edit form ── */
-                        <form onSubmit={e => { e.preventDefault(); saveEdit(entry.id); }}>
-                          <p className="muted" style={{ marginBottom: 10, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                            Editando entrada
-                          </p>
-                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
-                            {MEAL_TYPES.map(m => (
-                              <button key={m.id} type="button"
-                                className={`btn btn-sm ${editForm.meal_type === m.id ? 'btn-primary' : 'btn-secondary'}`}
-                                style={{ fontSize: 11 }}
-                                onClick={() => set('meal_type', m.id)}>
-                                {m.icon} {m.label}
-                              </button>
-                            ))}
+                    return (
+                      <div key={entry.id}>
+
+                        {isEditing ? (
+                          /* ── Inline edit ── */
+                          <div style={{
+                            padding: '14px 16px',
+                            borderBottom: isLast ? 'none' : '0.5px solid var(--border)',
+                            background: 'var(--surface-2)',
+                          }}>
+                            <form onSubmit={e => { e.preventDefault(); saveEdit(entry.id); }}>
+                              <span style={{
+                                fontSize: 9, color: 'var(--text-secondary)',
+                                textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
+                                display: 'block', marginBottom: 10, fontFamily: 'var(--font-sans)',
+                              }}>
+                                Editando
+                              </span>
+
+                              {/* Tipo de comida */}
+                              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+                                {MEAL_TYPES.map(m => {
+                                  const isActive = editForm.meal_type === m.id;
+                                  return (
+                                    <button key={m.id} type="button"
+                                      onClick={() => set('meal_type', m.id)}
+                                      style={{
+                                        padding: '4px 12px', borderRadius: 'var(--radius-full)',
+                                        fontSize: 11, fontWeight: isActive ? 600 : 400,
+                                        cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                        border: `0.5px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                                        background: isActive ? 'rgba(45,106,79,0.1)' : 'transparent',
+                                        color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                                      }}
+                                    >
+                                      {m.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Nombre */}
+                              <input
+                                value={editForm.name}
+                                onChange={e => set('name', e.target.value)}
+                                placeholder="Nombre (opcional)"
+                                style={{ ...inputStyle, marginBottom: 8 }}
+                              />
+
+                              {/* Kcal + macros */}
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+                                <div>
+                                  <label style={{
+                                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+                                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
+                                    fontFamily: 'var(--font-sans)',
+                                  }}>kcal *</label>
+                                  <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required style={{ ...inputStyle, textAlign: 'center' }} />
+                                </div>
+                                {[
+                                  { key: 'protein', label: 'Prot' },
+                                  { key: 'carbs',   label: 'Carb' },
+                                  { key: 'fat',     label: 'Grasa' },
+                                ].map(({ key, label }) => (
+                                  <div key={key}>
+                                    <label style={{
+                                      fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+                                      letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
+                                      fontFamily: 'var(--font-sans)',
+                                    }}>{label}</label>
+                                    <input type="number" value={editForm[key]} onChange={e => set(key, e.target.value)} style={{ ...inputStyle, textAlign: 'center' }} />
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                  type="submit"
+                                  disabled={saving}
+                                  style={{
+                                    background: 'var(--accent)', color: 'white', border: 'none',
+                                    borderRadius: 6, padding: '7px 16px', fontSize: 12, fontWeight: 500,
+                                    cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                  }}
+                                >
+                                  {saving ? <span className="spinner" style={{ width: 12, height: 12 }} /> : 'Guardar'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingId(null)}
+                                  style={{
+                                    background: 'none', border: '0.5px solid var(--border)',
+                                    borderRadius: 6, padding: '7px 16px', fontSize: 12,
+                                    cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                                  }}
+                                >Cancelar</button>
+                              </div>
+                            </form>
                           </div>
-                          <div className="field" style={{ marginBottom: 10 }}>
-                            <label>Nombre</label>
-                            <input value={editForm.name} onChange={e => set('name', e.target.value)} placeholder="Opcional..." />
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 10 }}>
-                            <div className="field">
-                              <label>Calorías *</label>
-                              <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required />
-                            </div>
-                            <div className="field">
-                              <label>Proteína (g)</label>
-                              <input type="number" value={editForm.protein} onChange={e => set('protein', e.target.value)} />
-                            </div>
-                            <div className="field">
-                              <label>Carbos (g)</label>
-                              <input type="number" value={editForm.carbs} onChange={e => set('carbs', e.target.value)} />
-                            </div>
-                            <div className="field">
-                              <label>Grasa (g)</label>
-                              <input type="number" value={editForm.fat} onChange={e => set('fat', e.target.value)} />
-                            </div>
-                            <div className="field">
-                              <label>Peso (kg)</label>
-                              <input type="number" step="0.1" value={editForm.weight} onChange={e => set('weight', e.target.value)} />
-                            </div>
-                          </div>
-                          <div className="field" style={{ marginBottom: 12 }}>
-                            <label>Notas</label>
-                            <input value={editForm.notes} onChange={e => set('notes', e.target.value)} placeholder="Opcional..." />
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button className="btn btn-primary btn-sm" type="submit" disabled={saving}>
-                              {saving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : 'Guardar'}
-                            </button>
-                            <button className="btn btn-secondary btn-sm" type="button" onClick={() => setEditingId(null)}>
-                              Cancelar
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        /* ── Display mode ── */
-                        <>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                              <span style={{ fontSize: 18, flexShrink: 0 }}>{meal.icon}</span>
-                              <div style={{ minWidth: 0 }}>
+                        ) : (
+                          /* ── Vista normal ── */
+                          <div>
+                            <div style={{
+                              display: 'flex', alignItems: 'center',
+                              padding: '12px 16px',
+                              borderBottom: showDivider ? '0.5px solid var(--border)' : 'none',
+                              gap: 10,
+                            }}>
+                              {/* Info principal */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-                                  <span style={{ fontWeight: 700, fontSize: 15 }}>
+                                  <span style={{
+                                    fontSize: 14, fontWeight: 500, color: 'var(--text-primary)',
+                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                  }}>
                                     {entry.name || meal.label}
                                   </span>
                                   {entry.name && (
-                                    <span style={{ color: 'var(--text-3)', fontSize: 12 }}>{meal.label}</span>
-                                  )}
-                                  <span style={{ color: 'var(--text-3)', fontSize: 13 }}>
-                                    · {entry.calories.toLocaleString()} kcal
-                                  </span>
-                                  {entry.weight && (
-                                    <span style={{ color: 'var(--text-3)', fontSize: 12 }}>· {entry.weight} kg</span>
+                                    <span style={{
+                                      fontSize: 11, color: 'var(--text-tertiary)',
+                                      fontFamily: 'var(--font-sans)',
+                                    }}>
+                                      {meal.label}
+                                    </span>
                                   )}
                                 </div>
+                                {/* Macros inline */}
+                                {(entry.protein > 0 || entry.carbs > 0 || entry.fat > 0) && (
+                                  <div style={{ display: 'flex', gap: 8, marginTop: 3 }}>
+                                    {MACRO_META.map(m => entry[m.key] > 0 ? (
+                                      <span key={m.key} style={{
+                                        fontSize: 10, fontFamily: 'var(--font-sans)',
+                                        color: 'var(--text-tertiary)',
+                                        display: 'flex', alignItems: 'center', gap: 3,
+                                      }}>
+                                        <span style={{
+                                          width: 5, height: 5, borderRadius: '50%',
+                                          background: m.color, display: 'inline-block', flexShrink: 0,
+                                        }} />
+                                        {Math.round(entry[m.key])}g
+                                      </span>
+                                    ) : null)}
+                                  </div>
+                                )}
+                                {entry.notes && (
+                                  <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--text-tertiary)', fontStyle: 'italic', fontFamily: 'var(--font-sans)' }}>
+                                    {entry.notes}
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Calorías + acciones */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                <span style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 500, fontFamily: 'var(--font-sans)' }}>
+                                  {entry.calories.toLocaleString('es')}
+                                </span>
+                                <button
+                                  onClick={() => { setDeletingId(null); startEdit(entry); }}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-tertiary)', padding: '2px 4px',
+                                    lineHeight: 1, borderRadius: 4, fontSize: 11,
+                                    fontFamily: 'var(--font-sans)',
+                                  }}
+                                  title="Editar"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => { setEditingId(null); setDeletingId(d => d === entry.id ? null : entry.id); }}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-tertiary)', fontSize: 16,
+                                    padding: '0 2px', lineHeight: 1, borderRadius: 4,
+                                  }}
+                                >×</button>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
-                              <button
-                                className="btn btn-secondary btn-sm"
-                                onClick={() => { setDeletingId(null); startEdit(entry); }}
-                                style={{ fontSize: 12 }}
-                              >Editar</button>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => { setEditingId(null); setDeletingId(d => d === entry.id ? null : entry.id); }}
-                                style={{ color: 'var(--text-3)', fontSize: 14, padding: '7px 10px' }}
-                              >✕</button>
-                            </div>
+
+                            {/* Confirmación de borrar — expandida debajo de la fila */}
+                            {isDeleting && (
+                              <div style={{
+                                display: 'flex', alignItems: 'center', gap: 8,
+                                padding: '9px 16px',
+                                borderTop: '0.5px solid var(--border)',
+                                borderBottom: isLast ? 'none' : '0.5px solid var(--border)',
+                              }}>
+                                <span style={{
+                                  flex: 1, fontSize: 12, color: 'var(--text-secondary)',
+                                  fontFamily: 'var(--font-sans)',
+                                }}>
+                                  ¿Eliminar esta entrada?
+                                </span>
+                                <button
+                                  onClick={() => confirmDelete(entry.id)}
+                                  style={{
+                                    background: '#ef4444', color: 'white', border: 'none',
+                                    borderRadius: 6, padding: '4px 12px', fontSize: 12,
+                                    cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                  }}
+                                >Eliminar</button>
+                                <button
+                                  onClick={() => setDeletingId(null)}
+                                  style={{
+                                    background: 'none', border: '0.5px solid var(--border)',
+                                    borderRadius: 6, padding: '4px 12px', fontSize: 12,
+                                    cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                                  }}
+                                >Cancelar</button>
+                              </div>
+                            )}
                           </div>
-
-                          {(entry.protein || entry.carbs || entry.fat) && (
-                            <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                              {MACROS.map(m => entry[m.key] ? (
-                                <div key={m.key} className={`macro-chip ${m.chipClass}`} style={{ fontSize: 11 }}>
-                                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', flexShrink: 0, opacity: 0.7 }} />
-                                  <span style={{ fontWeight: 700 }}>{Math.round(entry[m.key])}g</span>
-                                  <span style={{ opacity: 0.7 }}>{m.label}</span>
-                                </div>
-                              ) : null)}
-                            </div>
-                          )}
-
-                          {entry.notes && (
-                            <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic' }}>
-                              {entry.notes}
-                            </p>
-                          )}
-
-                          {deletingId === entry.id && (
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: 8, marginTop: 10,
-                              padding: '10px 12px', background: 'rgba(193,18,31,0.06)',
-                              borderRadius: 8, flexWrap: 'wrap',
-                            }}>
-                              <span style={{ flex: 1, fontSize: 13, color: 'var(--danger)' }}>
-                                ¿Eliminar esta entrada?
-                              </span>
-                              <button
-                                className="btn btn-sm"
-                                style={{ background: 'var(--danger)', color: 'white', border: 'none' }}
-                                onClick={() => confirmDelete(entry.id)}
-                              >Eliminar</button>
-                              <button className="btn btn-secondary btn-sm" onClick={() => setDeletingId(null)}>
-                                Cancelar
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
 
-          {entries.length === limit && (
+          {entries.length >= limit && (
             <button
-              className="btn btn-secondary btn-full"
-              style={{ marginTop: 4 }}
               onClick={loadMore}
               disabled={loading}
+              style={{
+                width: '100%', background: 'none',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-sm)', padding: '11px',
+                fontSize: 13, color: 'var(--text-secondary)',
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
+              }}
             >
-              {loading ? 'Cargando...' : 'Cargar más'}
+              {loading ? 'Cargando…' : 'Ver más entradas'}
             </button>
           )}
-        </>
+        </div>
       )}
     </div>
   );
