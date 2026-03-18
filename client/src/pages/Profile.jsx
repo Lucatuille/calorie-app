@@ -75,6 +75,7 @@ export default function Profile() {
   const [calibration,  setCalibration]  = useState(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [upgrading,    setUpgrading]    = useState(null); // 'monthly' | 'yearly' | null
+  const [upgradeError, setUpgradeError] = useState('');
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -126,6 +127,7 @@ export default function Profile() {
 
   async function handleUpgrade(plan) {
     setUpgrading(plan);
+    setUpgradeError('');
     try {
       const priceId = plan === 'yearly'
         ? 'price_1TCSydIDqPCl93zM6fMYoamR'
@@ -133,7 +135,7 @@ export default function Profile() {
       const { url } = await api.createCheckoutSession(priceId, token);
       window.location.href = url;
     } catch (err) {
-      console.error(err);
+      setUpgradeError(err.message || 'Error al conectar con el servidor de pagos');
       setUpgrading(null);
     }
   }
@@ -203,6 +205,11 @@ export default function Profile() {
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 16, fontFamily: 'var(--font-sans)' }}>
             Foto IA ilimitada · Asistente personal · Motor de calibración · Análisis profundo
           </p>
+          {upgradeError && (
+            <p style={{ fontSize: 12, color: '#ef4444', marginBottom: 10, fontFamily: 'var(--font-sans)' }}>
+              {upgradeError}
+            </p>
+          )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               onClick={() => handleUpgrade('monthly')}
