@@ -12,6 +12,7 @@ async function request(method, path, body, token) {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    cache: 'no-store',
   });
 
   const data = await res.json();
