@@ -333,15 +333,18 @@ export default function Assistant() {
 
   const showSuggestions = messages.length <= 1 && !loading;
 
-  // Usage label
+  // Usage label — null limit = admin (ilimitado)
+  const isUnlimited = usage && (usage.limit === null || usage.limit >= 999);
   const usageLabel = usage
-    ? usage.remaining > 5
+    ? isUnlimited
+      ? '∞'
+      : usage.remaining > 5
       ? `${usage.remaining} hoy`
       : usage.remaining > 0
       ? `${usage.remaining} restantes`
       : 'Límite alcanzado'
     : null;
-  const usageCritical = usage && usage.remaining <= 5;
+  const usageCritical = !isUnlimited && usage && usage.remaining <= 5;
 
   return (
     <>

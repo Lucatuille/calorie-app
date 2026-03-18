@@ -38,7 +38,7 @@ const sectionLabel = {
 };
 
 const inputStyle = {
-  background: 'var(--surface-2)',
+  background: 'var(--surface)',
   border: '0.5px solid var(--border)',
   borderRadius: 'var(--radius-md)',
   padding: '10px 12px',
@@ -316,17 +316,17 @@ export default function Profile() {
 
           <button type="submit" disabled={loading}
             style={{
-              width: '100%',
-              padding: '12px',
+              padding: '11px 28px',
               background: 'var(--accent)',
               color: 'white',
               border: 'none',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 14,
-              fontWeight: 600,
+              borderRadius: 'var(--radius-full)',
+              fontSize: 13,
+              fontWeight: 500,
               fontFamily: 'var(--font-sans)',
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.7 : 1,
+              alignSelf: 'flex-start',
             }}>
             {loading ? 'Guardando…' : 'Guardar cambios'}
           </button>

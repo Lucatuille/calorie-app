@@ -274,28 +274,13 @@ export default function Dashboard() {
           borderRadius: 'var(--radius-lg)',
           padding: '14px 16px',
         }}>
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: entries.length > 0 ? 10 : 0,
-          }}>
+          <div style={{ marginBottom: entries.length > 0 ? 10 : 0 }}>
             <span style={{
               fontSize: 9, color: 'var(--text-secondary)',
               textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
             }}>
               Hoy · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
-            <button
-              onClick={() => navigate('/calculator')}
-              style={{
-                width: 24, height: 24, background: 'var(--accent)',
-                border: 'none', borderRadius: '50%', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}
-            >
-              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-              </svg>
-            </button>
           </div>
 
           {entries.length === 0 ? (

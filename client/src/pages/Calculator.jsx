@@ -18,19 +18,41 @@ const BarcodeIcon = () => (
   </svg>
 );
 
-const CameraIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-    <circle cx="12" cy="13" r="4"/>
-  </svg>
-);
-
-const PenIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 20h9"/>
-    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-  </svg>
-);
+const METHODS = [
+  {
+    key: 'photo',
+    label: 'Foto IA',
+    icon: (active) => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="3" width="16" height="12" rx="2"
+          stroke={active ? '#16a34a' : '#888'} strokeWidth="1.2"/>
+        <circle cx="9" cy="9" r="3.5"
+          stroke={active ? '#16a34a' : '#888'} strokeWidth="1.2"/>
+      </svg>
+    ),
+  },
+  {
+    key: 'scan',
+    label: 'Escanear',
+    icon: (active) => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="2" y="4" width="14" height="2" rx="1" fill={active ? '#16a34a' : '#888'}/>
+        <rect x="2" y="8" width="14" height="2" rx="1" fill={active ? '#16a34a' : '#888'}/>
+        <rect x="2" y="12" width="9" height="2" rx="1" fill={active ? '#16a34a' : '#888'}/>
+      </svg>
+    ),
+  },
+  {
+    key: 'text',
+    label: 'Describir',
+    icon: (active) => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M3 13 L6 10 L10 12 L15 6"
+          stroke={active ? '#16a34a' : '#888'} strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+];
 
 
 function getDefaultMealType() {
@@ -77,6 +99,8 @@ export default function Calculator() {
   const [scannerOpen,      setScannerOpen]      = useState(false);
   const [scanFeedback,     setScanFeedback]     = useState(false);
   const [textAnalyzerOpen, setTextAnalyzerOpen] = useState(false);
+
+  const [method, setMethod] = useState('photo');
 
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoData,    setPhotoData]    = useState(null);
@@ -334,73 +358,53 @@ export default function Calculator() {
             )}
           </div>
 
-          {/* Métodos de captura — Foto como hero, los otros secundarios */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-            {/* Foto — hero */}
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={analyzing}
-              style={{
-                gridColumn: '1 / -1',
-                background: analyzing
-                  ? 'var(--surface-2)'
-                  : 'linear-gradient(135deg, rgba(45,106,79,0.12) 0%, rgba(45,106,79,0.06) 100%)',
-                border: `0.5px solid ${analyzing ? 'var(--border)' : 'rgba(45,106,79,0.25)'}`,
-                borderRadius: 'var(--radius-md)',
-                padding: '13px 16px',
-                display: 'flex', alignItems: 'center', gap: 10,
-                cursor: analyzing ? 'default' : 'pointer',
-                color: analyzing ? 'var(--text-tertiary)' : 'var(--accent)',
-                fontFamily: 'var(--font-sans)',
-                opacity: analyzing ? 0.7 : 1,
-              }}
-            >
-              {analyzing
-                ? <span className="spinner" style={{ width: 18, height: 18 }} />
-                : <CameraIcon />}
-              <span style={{ fontSize: 13, fontWeight: 600 }}>
-                {analyzing ? 'Analizando con IA…' : 'Foto con IA'}
-              </span>
-            </button>
-
-            {/* Escanear */}
-            <button
-              type="button"
-              onClick={() => setScannerOpen(true)}
-              style={{
-                background: 'var(--surface-2)',
-                border: '0.5px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '11px 12px',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', gap: 5,
-                cursor: 'pointer', color: 'var(--text-secondary)',
-                fontFamily: 'var(--font-sans)',
-              }}
-            >
-              <BarcodeIcon />
-              <span style={{ fontSize: 11, fontWeight: 500 }}>Escanear</span>
-            </button>
-
-            {/* Describir */}
-            <button
-              type="button"
-              onClick={() => setTextAnalyzerOpen(true)}
-              style={{
-                background: 'var(--surface-2)',
-                border: '0.5px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                padding: '11px 12px',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', gap: 5,
-                cursor: 'pointer', color: 'var(--text-secondary)',
-                fontFamily: 'var(--font-sans)',
-              }}
-            >
-              <PenIcon />
-              <span style={{ fontSize: 11, fontWeight: 500 }}>Describir</span>
-            </button>
+          {/* Selector de método — igual jerarquía */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 14 }}>
+            {METHODS.map(m => {
+              const active = method === m.key;
+              return (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => {
+                    setMethod(m.key);
+                    if (m.key === 'scan') setScannerOpen(true);
+                    if (m.key === 'text') setTextAnalyzerOpen(true);
+                    if (m.key === 'photo') fileRef.current?.click();
+                  }}
+                  disabled={m.key === 'photo' && analyzing}
+                  style={{
+                    background: active ? '#f0fdf4' : 'var(--surface-2)',
+                    border: active ? '1.5px solid #16a34a' : '0.5px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 8px',
+                    textAlign: 'center',
+                    cursor: (m.key === 'photo' && analyzing) ? 'default' : 'pointer',
+                    transition: 'all 0.15s ease',
+                    opacity: (m.key === 'photo' && analyzing) ? 0.6 : 1,
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  <div style={{
+                    width: 32, height: 32,
+                    background: active ? '#dcfce7' : 'var(--surface)',
+                    borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 6px',
+                  }}>
+                    {m.key === 'photo' && analyzing
+                      ? <span className="spinner" style={{ width: 14, height: 14 }} />
+                      : m.icon(active)}
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 500,
+                    color: active ? '#16a34a' : 'var(--text-secondary)',
+                  }}>
+                    {m.key === 'photo' && analyzing ? 'Analizando…' : m.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <input
