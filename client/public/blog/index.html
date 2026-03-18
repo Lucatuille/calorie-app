@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — kcal</title>
+<meta name="description" content="Artículos sobre nutrición, apps de calorías y cómo comer mejor sin complicarte la vida. Por el equipo de kcal.">
+<link rel="canonical" href="https://lucaeats.org/blog">
+<link rel="alternate" hreflang="es" href="https://lucaeats.org/blog">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lucaeats.org/blog">
+<meta property="og:title" content="Blog — kcal">
+<meta property="og:description" content="Artículos sobre nutrición, apps de calorías y cómo comer mejor sin complicarte la vida.">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE;
+  --white: #FFFFFF;
+  --dark: #111111;
+  --mid: #888888;
+  --light: #E8E4DE;
+  --green: #22c55e;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(245,242,238,0.92);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--light);
+}
+.nav-logo { font-family: var(--serif); font-size: 20px; color: var(--green); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { font-size: 13px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--dark); }
+.nav-links a.active { color: var(--dark); font-weight: 500; }
+.nav-cta { background: var(--dark) !important; color: white !important; padding: 8px 18px; border-radius: 100px; font-weight: 500 !important; }
+@media (max-width: 640px) { nav { padding: 14px 20px; } .nav-links { display: none; } }
+
+/* MAIN */
+.blog-wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+}
+
+.blog-header {
+  margin-bottom: 56px;
+}
+.blog-label {
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--mid); margin-bottom: 14px;
+}
+.blog-title {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.08;
+}
+
+/* ARTICLES */
+.articles { display: flex; flex-direction: column; gap: 2px; }
+
+.article-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--light);
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+.article-card:first-child { border-top: 1px solid var(--light); }
+.article-card:hover { opacity: 0.72; }
+
+.card-meta {
+  display: flex; align-items: center; gap: 10px;
+}
+.card-tag {
+  background: var(--white);
+  border: 1px solid var(--light);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--mid);
+}
+.card-date { font-size: 12px; color: var(--mid); }
+
+.card-title {
+  font-family: var(--serif);
+  font-size: clamp(20px, 3vw, 26px);
+  line-height: 1.2;
+  color: var(--dark);
+}
+
+.card-desc {
+  font-size: 14px;
+  color: var(--mid);
+  line-height: 1.65;
+  font-weight: 300;
+  max-width: 560px;
+}
+
+.card-cta {
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+/* FOOTER */
+footer {
+  background: var(--dark);
+  border-top: 1px solid #1e1e1e;
+  padding: 28px 40px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+  margin-top: 80px;
+}
+.f-logo { font-family: var(--serif); font-size: 18px; color: var(--green); text-decoration: none; }
+.f-links { display: flex; gap: 24px; list-style: none; }
+.f-links a { font-size: 12px; color: #555; text-decoration: none; transition: color 0.2s; }
+.f-links a:hover { color: #888; }
+.f-copy { font-size: 12px; color: #444; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">kcal</a>
+  <ul class="nav-links">
+    <li><a href="/blog" class="active">Blog</a></li>
+    <li><a href="/#precios">Precios</a></li>
+    <li><a href="/app/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<main class="blog-wrap">
+
+  <div class="blog-header">
+    <div class="blog-label">Blog</div>
+    <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
+  </div>
+
+  <div class="articles">
+
+    <a href="/blog/alternativa-myfitnesspal-espana" class="article-card">
+      <div class="card-meta">
+        <span class="card-tag">Herramientas</span>
+        <span class="card-date">Marzo 2026 · 5 min</span>
+      </div>
+      <div class="card-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
+      <div class="card-desc">MyFitnessPal tiene 11 millones de alimentos y no sabe lo que es un bocadillo de lomo. Cuento qué pasó y qué cambié.</div>
+      <div class="card-cta">Leer artículo →</div>
+    </a>
+
+  </div>
+
+</main>
+
+<footer>
+  <a href="/" class="f-logo">kcal</a>
+  <ul class="f-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/privacy">Privacidad</a></li>
+    <li><a href="mailto:hola@lucaeats.org">Contacto</a></li>
+  </ul>
+  <div class="f-copy">© 2026 kcal. Hecho en Barcelona.</div>
+</footer>
+
+</body>
+</html>
