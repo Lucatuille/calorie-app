@@ -299,8 +299,7 @@ export async function handleAssistant(request, env, path, ctx) {
     // Detectar complejidad y elegir modelo
     const complexity = is_intro ? 'haiku' : detectQueryComplexity(message);
     const modelId    = complexity === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
-    // FIX #10: Haiku max_tokens subido de 500 a 650
-    const maxTokens  = complexity === 'sonnet' ? 1000 : 650;
+    const maxTokens  = complexity === 'sonnet' ? 1200 : 800;
 
     // Obtener o crear conversación (los intros nunca crean conversación)
     let convId    = conversation_id || null;
@@ -371,6 +370,14 @@ export async function handleAssistant(request, env, path, ctx) {
         return errorResponse(err?.error?.message || 'Error del asistente', 502);
       }
       const claudeData = await claudeRes.json();
+      if (claudeData.stop_reason === 'max_tokens') {
+        if (!is_intro) {
+          await env.DB.prepare(
+            'UPDATE assistant_usage SET messages = MAX(0, messages - 1) WHERE user_id = ? AND date = ?'
+          ).bind(user.id, today).run().catch(() => {});
+        }
+        return errorResponse('La respuesta fue demasiado larga. Intenta con una pregunta más concreta.', 422);
+      }
       assistantText = claudeData.content?.[0]?.text || '';
       tokensUsed    = (claudeData.usage?.input_tokens || 0) + (claudeData.usage?.output_tokens || 0);
     } catch {

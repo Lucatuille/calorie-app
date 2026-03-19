@@ -207,7 +207,7 @@ export async function handleAnalyze(request, env, path, ctx) {
         is_weekend:      isWeekend,
       });
 
-      const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.1;
+      const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.05;
       const similarMeal        = findSimilarMeal(result.name, calibrationProfile?.frequent_meals);
 
       return jsonResponse({
