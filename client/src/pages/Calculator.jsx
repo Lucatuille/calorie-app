@@ -223,7 +223,7 @@ export default function Calculator() {
       if (err.data?.error === 'ai_limit_reached') {
         setAiLimitData(err.data);
       } else {
-        setAiResult({ error: err.message });
+        setAiResult({ error: err.data?.message || err.message });
       }
     } finally { setAnalyzing(false); }
   }

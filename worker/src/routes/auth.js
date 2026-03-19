@@ -4,10 +4,55 @@
 
 import { jsonResponse, errorResponse, hashPassword, verifyPassword, signJWT, verifyJWT } from '../utils.js';
 
+// ── Rate limiting (fija ventana deslizante en D1) ────────────
+// Tabla: auth_attempts (key TEXT PK, count INT, window_start INT)
+// Ejecutar una vez: CREATE TABLE IF NOT EXISTS auth_attempts
+//   (key TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0, window_start INTEGER NOT NULL);
+
+async function checkRateLimit(env, key, limit, windowSecs) {
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    const row = await env.DB.prepare(
+      'SELECT count, window_start FROM auth_attempts WHERE key = ?'
+    ).bind(key).first();
+
+    if (!row || now - row.window_start >= windowSecs) {
+      // Nueva ventana — resetear
+      await env.DB.prepare(`
+        INSERT INTO auth_attempts (key, count, window_start) VALUES (?, 1, ?)
+        ON CONFLICT(key) DO UPDATE SET count = 1, window_start = excluded.window_start
+      `).bind(key, now).run();
+      return true;
+    }
+
+    if (row.count >= limit) return false; // límite superado
+
+    await env.DB.prepare(
+      'UPDATE auth_attempts SET count = count + 1 WHERE key = ?'
+    ).bind(key).run();
+    return true;
+  } catch {
+    // Si la tabla no existe o falla D1 — dejar pasar (no bloquear usuarios legítimos)
+    return true;
+  }
+}
+
+function getIP(request) {
+  return request.headers.get('CF-Connecting-IP')
+    || request.headers.get('X-Forwarded-For')?.split(',')[0].trim()
+    || 'unknown';
+}
+
 export async function handleAuth(request, env, path) {
 
   // POST /api/auth/register
   if (path === '/api/auth/register' && request.method === 'POST') {
+    const ip = getIP(request);
+    const ipOk = await checkRateLimit(env, `register:ip:${ip}`, 10, 60 * 60);
+    if (!ipOk) {
+      return jsonResponse({ error: 'Demasiados registros desde esta IP. Espera un rato.' }, 429);
+    }
+
     const { name, email, password, age, weight, height, gender } = await request.json();
 
     if (!name || !email || !password) {
@@ -24,8 +69,8 @@ export async function handleAuth(request, env, path) {
     const hashed = await hashPassword(password);
 
     const result = await env.DB.prepare(
-      `INSERT INTO users (name, email, password, age, weight, height, gender, access_level)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 3)`
+      `INSERT INTO users (name, email, password, age, weight, height, gender, access_level, onboarding_completed)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 3, 0)`
     ).bind(name, email.toLowerCase(), hashed, age || null, weight || null, height || null, gender || null).run();
 
     const userId = result.meta.last_row_id;
@@ -36,9 +81,19 @@ export async function handleAuth(request, env, path) {
 
   // POST /api/auth/login
   if (path === '/api/auth/login' && request.method === 'POST') {
-    const { email, password } = await request.json();
+    const ip = getIP(request);
+    const body = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) return errorResponse('Email y contraseña requeridos');
+
+    const [ipOk, emailOk] = await Promise.all([
+      checkRateLimit(env, `login:ip:${ip}`,             20, 15 * 60),
+      checkRateLimit(env, `login:email:${email.toLowerCase()}`, 10, 15 * 60),
+    ]);
+    if (!ipOk || !emailOk) {
+      return jsonResponse({ error: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.' }, 429);
+    }
 
     const user = await env.DB.prepare(
       'SELECT * FROM users WHERE email = ?'

@@ -43,7 +43,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
       if (err.data?.error === 'ai_limit_reached' && onAiLimit) {
         onAiLimit(err.data);
       } else {
-        setErrorMsg(err.message || 'Error al analizar. Inténtalo de nuevo.');
+        setErrorMsg(err.data?.message || err.message || 'Error al analizar. Inténtalo de nuevo.');
         setStatus('error');
       }
     }

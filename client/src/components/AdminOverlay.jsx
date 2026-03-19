@@ -645,7 +645,7 @@ function TabAI({ data, loading }) {
 // ── Main component ───────────────────────────────────────────
 
 export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
-  const { token } = useAuth();
+  const { token, user, updateUser } = useAuth();
   const [activeTab,       setActiveTab]       = useState('overview');
   const [tabData,         setTabData]         = useState({});
   const [loading,         setLoading]         = useState({});
@@ -663,6 +663,11 @@ export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
       setTabData(prev => ({ ...prev, [tab]: data }));
       setLastUpdate(new Date());
     } catch (e) {
+      if (e.status === 403) {
+        updateUser({ ...user, is_admin: 0 });
+        onClose();
+        return;
+      }
       console.error('Admin fetch error:', e);
     } finally {
       setLoading(prev => ({ ...prev, [tab]: false }));

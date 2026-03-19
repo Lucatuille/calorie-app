@@ -6,26 +6,7 @@
 //  ALTER TABLE assistant_usage ADD COLUMN intros INTEGER DEFAULT 0;
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate } from '../utils.js';
-
-// ── Auth helper: solo Fundador(1), Pro(2) y Admin(99) ───────
-// Free(3) NO tiene acceso al asistente.
-
-async function requireProAccess(request, env) {
-  const user = await authenticate(request, env);
-  if (!user) return null;
-  // Verificar en BD — nunca confiar solo en el JWT
-  const row = await env.DB.prepare(
-    'SELECT id, name, access_level FROM users WHERE id = ?'
-  ).bind(user.userId).first();
-  if (!row || !ALLOWED_LEVELS.includes(row.access_level)) return null;
-  return { ...user, ...row };
-}
-
-// ── Niveles con acceso al asistente ────────────────────────
-// 1=Fundador, 2=Pro, 99=Admin. Free(3) excluido.
-
-const ALLOWED_LEVELS = [1, 2, 99];
+import { jsonResponse, errorResponse, requireProAccess, proAccessDenied } from '../utils.js';
 
 // ── Límites diarios por nivel ───────────────────────────────
 
@@ -264,7 +245,7 @@ export async function handleAssistant(request, env, path, ctx) {
   // POST /api/assistant/chat
   if (path === '/api/assistant/chat' && request.method === 'POST') {
     const user = await requireProAccess(request, env);
-    if (!user) return errorResponse('El asistente es una feature exclusiva de Pro.', 403);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
 
     const body = await request.json().catch(() => ({}));
     const { message, conversation_id } = body;
@@ -446,7 +427,7 @@ export async function handleAssistant(request, env, path, ctx) {
   // GET /api/assistant/usage — contador diario + resumen de hoy (para el saludo)
   if (path === '/api/assistant/usage' && request.method === 'GET') {
     const user = await requireProAccess(request, env);
-    if (!user) return errorResponse('Pro requerido', 403);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
 
     const today = new Date().toLocaleDateString('en-CA');
     const limit = DAILY_LIMITS[user.access_level] ?? 0; // fail-safe: nivel desconocido = sin acceso
@@ -473,7 +454,7 @@ export async function handleAssistant(request, env, path, ctx) {
   // GET /api/assistant/conversations
   if (path === '/api/assistant/conversations' && request.method === 'GET') {
     const user = await requireProAccess(request, env);
-    if (!user) return errorResponse('Pro requerido', 403);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
 
     const convs = await env.DB.prepare(`
       SELECT id, title, message_count, created_at, updated_at
@@ -488,7 +469,7 @@ export async function handleAssistant(request, env, path, ctx) {
   const convMatch = path.match(/^\/api\/assistant\/conversations\/(\d+)$/);
   if (convMatch && request.method === 'GET') {
     const user = await requireProAccess(request, env);
-    if (!user) return errorResponse('Pro requerido', 403);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
 
     const convId = parseInt(convMatch[1]);
     // FIX #2: verificar ownership antes de devolver mensajes

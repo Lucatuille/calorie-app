@@ -63,6 +63,7 @@ export default function Onboarding() {
   const [targetCalories, setTargetCal]  = useState(null);
   const [monthsToGoal, setMonthsToGoal] = useState(null);
   const [saving, setSaving]             = useState(false);
+  const [saveError, setSaveError]       = useState(false);
 
   const set = (k, v) => setData(d => ({ ...d, [k]: v }));
   const canProceed = data.gender && data.age && data.weight && data.height && data.activity;
@@ -84,6 +85,7 @@ export default function Onboarding() {
 
   async function handleFinish() {
     setSaving(true);
+    setSaveError(false);
     try {
       await api.updateProfile({
         name: user.name,
@@ -95,6 +97,7 @@ export default function Onboarding() {
       updateUser({ ...user, target_calories: targetCalories, onboarding_completed: 1 });
     } catch (e) {
       console.error(e);
+      setSaveError(true);
       setSaving(false);
     }
   }
@@ -348,13 +351,22 @@ export default function Onboarding() {
                 Puedes ajustarlo en tu perfil en cualquier momento.
               </p>
 
+              {saveError && (
+                <p style={{
+                  fontSize: 12, color: 'var(--accent-2)',
+                  fontFamily: 'var(--font-sans)', textAlign: 'center',
+                  margin: '16px 0 0',
+                }}>
+                  No se pudo guardar. Comprueba tu conexión e inténtalo de nuevo.
+                </p>
+              )}
               <button onClick={handleFinish} disabled={saving} style={{
                 padding: '13px', width: '100%',
                 background: 'var(--accent)', color: 'white',
                 border: 'none', borderRadius: 'var(--radius-full)',
                 fontSize: 13, fontWeight: 500,
                 cursor: saving ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-sans)', marginTop: 24,
+                fontFamily: 'var(--font-sans)', marginTop: 16,
                 opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
               }}>
                 {saving ? 'Guardando…' : 'Empezar a registrar →'}

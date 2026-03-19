@@ -82,13 +82,26 @@ export async function authenticate(request, env) {
 // ── Verificación Pro desde BD (nunca confiar solo en el JWT) ──
 // Usar en TODOS los endpoints Pro: /progress/advanced, /calibration/profile, etc.
 // El JWT puede estar desactualizado o manipulado en localStorage.
+// Retorna el objeto usuario enriquecido (JWT + DB) o null si no autenticado/sin acceso.
 const PRO_LEVELS = [1, 2, 99]; // Fundador, Pro, Admin
 
-export async function requireProAccess(userId, env) {
+export async function requireProAccess(request, env) {
+  const user = await authenticate(request, env);
+  if (!user) return null;
   const row = await env.DB.prepare(
-    'SELECT access_level FROM users WHERE id = ?'
-  ).bind(userId).first();
-  return row != null && PRO_LEVELS.includes(row.access_level);
+    'SELECT id, name, access_level FROM users WHERE id = ?'
+  ).bind(user.userId).first();
+  if (!row) return null;
+  if (row.access_level === 0) return 'waitlist';
+  if (!PRO_LEVELS.includes(row.access_level)) return null;
+  return { ...user, ...row };
+}
+
+// Devuelve la Response correcta según el resultado de requireProAccess.
+// Úsalo en todos los endpoints Pro para consistencia.
+export function proAccessDenied(result) {
+  if (result === 'waitlist') return errorResponse('Tu cuenta está en lista de espera.', 403);
+  return errorResponse('Se requiere plan Pro', 403);
 }
 
 // ── Password hashing (SHA-256 based, no bcrypt needed) ───────

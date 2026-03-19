@@ -139,7 +139,7 @@ export async function handleAnalyze(request, env, path, ctx) {
       },
       body: JSON.stringify({
         model:      'claude-haiku-4-5-20251001',
-        max_tokens: 600,
+        max_tokens: 800,
         system:     PHOTO_SYSTEM_PROMPT,
         messages: [{
           role: 'user',
@@ -161,7 +161,16 @@ export async function handleAnalyze(request, env, path, ctx) {
     }
 
     const claude = await response.json();
-    const text   = claude.content?.[0]?.text || '';
+
+    if (claude.stop_reason === 'max_tokens') {
+      await rollbackAiLimit(env, user.userId);
+      return jsonResponse({
+        error: 'response_too_large',
+        message: 'La IA no pudo completar el análisis (respuesta demasiado larga). Prueba con una imagen más clara o con menos elementos en el plato.',
+      }, 422);
+    }
+
+    const text  = claude.content?.[0]?.text || '';
 
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
@@ -281,7 +290,7 @@ export async function handleAnalyzeText(request, env, ctx) {
     },
     body: JSON.stringify({
       model:      'claude-haiku-4-5-20251001',
-      max_tokens: 500,
+      max_tokens: 800,
       system:     TEXT_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
     }),
@@ -298,6 +307,15 @@ export async function handleAnalyzeText(request, env, ctx) {
     await rollbackAiLimit(env, user.userId);
     return errorResponse('Respuesta no-JSON de Claude', 502);
   }
+
+  if (aiData.stop_reason === 'max_tokens') {
+    await rollbackAiLimit(env, user.userId);
+    return jsonResponse({
+      error: 'response_too_large',
+      message: 'La IA no pudo completar el análisis (respuesta demasiado larga). Intenta con una descripción más corta.',
+    }, 422);
+  }
+
   const rawText = aiData.content?.[0]?.text || '';
 
   let result;

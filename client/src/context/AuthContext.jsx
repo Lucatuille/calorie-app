@@ -1,15 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { setLogoutHandler } from '../api.js';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
 
 const AuthContext = createContext(null);
-
-function decodeJWT(token) {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-  } catch { return {}; }
-}
 
 export function AuthProvider({ children }) {
   const [user,  setUser]  = useState(null);
@@ -17,6 +11,7 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    setLogoutHandler(logout);
     const t = localStorage.getItem('token');
     const u = localStorage.getItem('user');
     if (!t || !u) { setReady(true); return; }
@@ -53,16 +48,15 @@ export function AuthProvider({ children }) {
         }
 
         // Error de servidor (5xx) o respuesta inesperada — modo offline:
-        // usar el JWT almacenado como fallback temporal.
-        const jwtPayload = decodeJWT(t);
+        // storedUser es igual de fresco que el JWT (se actualizan juntos) y
+        // puede ser MÁS fresco si updateUser() fue llamado después del último login.
         setToken(t);
-        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 3 });
+        setUser(storedUser);
       })
       .catch(() => {
-        // Sin red — usar token almacenado (offline mode)
-        const jwtPayload = decodeJWT(t);
+        // Sin red — usar datos almacenados (offline mode)
         setToken(t);
-        setUser({ ...storedUser, is_admin: jwtPayload.is_admin || 0, access_level: jwtPayload.access_level ?? storedUser.access_level ?? 3 });
+        setUser(storedUser);
       })
       .finally(() => setReady(true));
   }, []);

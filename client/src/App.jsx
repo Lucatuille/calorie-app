@@ -90,7 +90,7 @@ function AppRoutes() {
     );
   }
 
-  if (user && user.onboarding_completed === 0) {
+  if (user && !user.onboarding_completed) {
     return <Onboarding />;
   }
 

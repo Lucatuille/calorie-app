@@ -2,17 +2,14 @@
 //  CALIBRATION ROUTES — /api/calibration
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate, requireProAccess } from '../utils.js';
+import { jsonResponse, errorResponse, requireProAccess, proAccessDenied } from '../utils.js';
 import { calculateCalibrationProfile, updateFrequentMeals } from '../utils/calibration.js';
 
 export async function handleCalibration(request, env, path) {
-  const user = await authenticate(request, env);
-  if (!user) return errorResponse('No autorizado', 401);
-
   // POST /api/calibration/correction — requiere Pro (verificación desde BD)
   if (path === '/api/calibration/correction' && request.method === 'POST') {
-    const hasPro = await requireProAccess(user.userId, env);
-    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
+    const user = await requireProAccess(request, env);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
     const {
       entry_id, ai_raw, ai_calibrated, user_final,
       food_categories, meal_type, meal_name,
@@ -91,8 +88,8 @@ export async function handleCalibration(request, env, path) {
 
   // GET /api/calibration/profile — requiere Pro (verificación desde BD)
   if (path === '/api/calibration/profile' && request.method === 'GET') {
-    const hasPro = await requireProAccess(user.userId, env);
-    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
+    const user = await requireProAccess(request, env);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
     const row = await env.DB.prepare(
       'SELECT * FROM user_calibration WHERE user_id = ?'
     ).bind(user.userId).first();
@@ -109,8 +106,8 @@ export async function handleCalibration(request, env, path) {
 
   // DELETE /api/calibration/profile — requiere Pro (verificación desde BD)
   if (path === '/api/calibration/profile' && request.method === 'DELETE') {
-    const hasPro = await requireProAccess(user.userId, env);
-    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
+    const user = await requireProAccess(request, env);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
     await Promise.all([
       env.DB.prepare('DELETE FROM user_calibration WHERE user_id = ?').bind(user.userId).run(),
       env.DB.prepare('DELETE FROM ai_corrections WHERE user_id = ?').bind(user.userId).run(),

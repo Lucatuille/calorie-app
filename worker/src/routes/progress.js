@@ -2,7 +2,7 @@
 //  PROGRESS ROUTES — /api/progress
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate, requireProAccess } from '../utils.js';
+import { jsonResponse, errorResponse, authenticate, requireProAccess, proAccessDenied } from '../utils.js';
 
 // ── Scientific projection helpers ──────────────────────────────
 function calcStdDev(arr) {
@@ -152,8 +152,8 @@ export async function handleProgress(request, env, path) {
 
   // GET /api/progress/advanced — requiere Pro (verificación desde BD)
   if (path === '/api/progress/advanced' && request.method === 'GET') {
-    const hasPro = await requireProAccess(user.userId, env);
-    if (!hasPro) return errorResponse('Se requiere plan Pro', 403);
+    const proUser = await requireProAccess(request, env);
+    if (!proUser || proUser === 'waitlist') return proAccessDenied(proUser);
     const url    = new URL(request.url);
     const period = url.searchParams.get('period') || 'month';
     const days   = period === 'week' ? 7 : period === '90days' ? 90 : 30;

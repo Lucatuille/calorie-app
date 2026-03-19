@@ -464,10 +464,11 @@ export default function Profile() {
                 {confidenceLabel}
               </span>
             </div>
-            <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99 }}>
+            <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 width: `${Math.round(calibration.confidence * 100)}%`,
+                minWidth: calibration.confidence > 0 ? 6 : 0,
                 background: calibration.confidence >= 0.6 ? 'var(--accent)' : '#f59e0b',
                 borderRadius: 99, transition: 'width 0.6s',
               }} />

@@ -4,6 +4,11 @@
 
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
 
+// Centralised 401 handler — set by AuthContext on mount.
+// Any expired/invalid token triggers logout app-wide automatically.
+let _on401 = null;
+export function setLogoutHandler(fn) { _on401 = fn; }
+
 async function request(method, path, body, token) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -17,6 +22,7 @@ async function request(method, path, body, token) {
 
   const data = await res.json();
   if (!res.ok) {
+    if (res.status === 401) _on401?.();
     const err = new Error(data.error || 'Error en la petición');
     err.data   = data;
     err.status = res.status;
