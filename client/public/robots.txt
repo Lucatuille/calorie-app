@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://lucaeats.org/sitemap.xml
+Sitemap: https://caliro.dev/sitemap.xml

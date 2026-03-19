@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CURRENT_VERSION, RELEASES } from '../data/whatsNew';
 
-const STORAGE_KEY = 'lucaeats_whats_new_seen';
+const STORAGE_KEY = 'caliro_whats_new_seen';
 
 export function useWhatsNew() {
   const [isOpen, setIsOpen] = useState(false);

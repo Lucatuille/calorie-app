@@ -52,8 +52,8 @@ export async function handleStripe(request, env, path) {
       'mode': 'subscription',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      'success_url': 'https://lucaeats.org/app/?upgraded=true',
-      'cancel_url': 'https://lucaeats.org/app/profile',
+      'success_url': 'https://caliro.dev/app/?upgraded=true',
+      'cancel_url': 'https://caliro.dev/app/profile',
       'metadata[userId]': String(payload.userId),
     });
 

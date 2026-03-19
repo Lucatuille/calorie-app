@@ -1,6 +1,6 @@
 {
-  "name": "LucaEats — Seguimiento calórico",
-  "short_name": "LucaEats",
+  "name": "Caliro — Seguimiento calórico con IA",
+  "short_name": "Caliro",
   "description": "Registra tus comidas y sigue tu progreso nutricional",
   "start_url": "/app/",
   "display": "standalone",

@@ -22,7 +22,7 @@ export default function Register() {
       const data = await api.register(form);
       login(data.token, data.user);
       // Nuevo usuario — ya tiene el onboarding, no mostrar What's New
-      localStorage.setItem('lucaeats_whats_new_seen', CURRENT_VERSION);
+      localStorage.setItem('caliro_whats_new_seen', CURRENT_VERSION);
       navigate('/');
     } catch (err) {
       setError(err.message);

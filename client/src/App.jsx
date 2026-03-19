@@ -50,12 +50,12 @@ function AppRoutes() {
     }
   }, []);
   const [showDisclaimer, setShowDisclaimer] = useState(
-    () => user && !localStorage.getItem('lucaeats_disclaimer_v1')
+    () => user && !localStorage.getItem('caliro_disclaimer_v1')
   );
 
   // Re-evaluate when user logs in/registers
   useEffect(() => {
-    if (user && !localStorage.getItem('lucaeats_disclaimer_v1')) {
+    if (user && !localStorage.getItem('caliro_disclaimer_v1')) {
       setShowDisclaimer(true);
     }
   }, [user]);
@@ -84,7 +84,7 @@ function AppRoutes() {
   if (user && showDisclaimer) {
     return (
       <WelcomeDisclaimer onAccept={() => {
-        localStorage.setItem('lucaeats_disclaimer_v1', 'true');
+        localStorage.setItem('caliro_disclaimer_v1', 'true');
         setShowDisclaimer(false);
       }} />
     );
