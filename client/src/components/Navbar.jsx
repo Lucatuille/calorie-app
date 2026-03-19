@@ -62,9 +62,10 @@ export default function Navbar() {
         <span style={{
           fontSize: 13, color: 'var(--text-primary)',
           fontWeight: 400, letterSpacing: '2px',
-          fontFamily: 'var(--font-sans)',
+          fontFamily: 'var(--font-serif)',
+          fontStyle: 'italic',
         }}>
-          kcal
+          Caliro
         </span>
 
         {/* Desktop links */}
