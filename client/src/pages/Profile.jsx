@@ -4,7 +4,6 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { isFree } from '../utils/levels';
 import TDEECalculator from '../components/TDEECalculator';
-import { isPro } from '../utils/levels';
 
 function exportCSV(entries) {
   const header = 'Fecha,Calorías,Proteína(g),Carbos(g),Grasa(g),Peso(kg),Notas';
@@ -405,7 +404,7 @@ export default function Profile() {
                 {confidenceLabel}
               </span>
             </div>
-            <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: 3, background: 'rgba(255,255,255,0.15)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 width: `${Math.round(calibration.confidence * 100)}%`,

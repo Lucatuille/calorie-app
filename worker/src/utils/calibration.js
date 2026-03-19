@@ -65,24 +65,16 @@ export function calculateCalibrationProfile(corrections) {
              meal_factors: {}, food_factors: {}, time_factors: {} };
   }
 
-  // Solo correcciones donde el usuario cambió el valor
+  // Correcciones donde el usuario cambió el valor (señal fuerte)
   const actual = corrections.filter(c => !c.accepted_without_change);
 
-  if (actual.length === 0) {
-    return { global_bias: 0, confidence: 0.3, data_points: corrections.length,
-             meal_factors: {}, food_factors: {}, time_factors: {} };
-  }
+  // Todas las correcciones cronológicas — las aceptadas sin cambio aportan bias=0
+  // (el usuario confirmó que la IA acertó, eso también es señal útil)
+  const chronological = [...corrections].reverse();
+  const weights = chronological.map((_, i) => Math.pow(1.05, i));
 
-  // Invertir para que index 0 = más antiguo, index n-1 = más reciente
-  // Así Math.pow(1.1, i) da MAYOR peso a las correcciones recientes
-  const chronological = [...actual].reverse();
-  const weights = chronological.map((_, i) => Math.pow(1.1, i));
-
-  // Bias mixto: combina error absoluto (relevante en meals pequeñas) y relativo
-  // (relevante en meals grandes) — evita que meals de 200 kcal distorsionen
-  // el promedio frente a meals de 800 kcal con el mismo error en kcal.
   const globalBias = calculateWeightedMean(
-    chronological.map(c => calcMixedBias(c)),
+    chronological.map(c => c.accepted_without_change ? 0 : calcMixedBias(c)),
     weights
   );
 
@@ -131,8 +123,12 @@ export function calculateCalibrationProfile(corrections) {
     }
   }
 
-  // 5 muestras para activar, 20 para máxima confianza (más justificado que el 15 anterior)
-  const confidence = actual.length < 5 ? 0 : Math.min((actual.length - 5) / 15, 1);
+  // Señal efectiva: correcciones cambiadas cuentan 1, aceptadas sin cambio cuentan 0.3
+  // (confirmar que la IA acertó también es información útil)
+  const acceptedCount = corrections.length - actual.length;
+  const effectiveSignal = actual.length + acceptedCount * 0.3;
+  // Mínimo 2 para activar, 12 para máxima confianza
+  const confidence = effectiveSignal < 2 ? 0 : Math.min(effectiveSignal / 12, 1);
 
   return { global_bias: globalBias, confidence, data_points: corrections.length,
            meal_factors: mealFactors, food_factors: foodFactors, time_factors: timeFactors };
@@ -141,7 +137,7 @@ export function calculateCalibrationProfile(corrections) {
 // ── Aplicar perfil a una estimación base ───────────────────
 
 export function applyCalibration(baseEstimate, profile, context) {
-  if (!profile || profile.confidence < 0.1) return baseEstimate;
+  if (!profile || profile.confidence < 0.05) return baseEstimate;
 
   let factor = 1 + profile.global_bias;
 
