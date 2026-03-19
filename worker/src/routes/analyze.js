@@ -16,10 +16,11 @@ const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
 const PHOTO_SYSTEM_PROMPT = `Eres un nutricionista experto. Analiza la foto de comida y devuelve SOLO JSON válido con esta estructura exacta:
 {"name":"nombre descriptivo","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal,"confidence":"alta"|"media"|"baja","notes":"observaciones breves","categories":["cat1","cat2"]}
 
-Reglas de estimación (no seas conservador):
-- Asume raciones generosas y aceites/grasas ocultos
-- Restaurante: +30% vs casero por uso de grasas
-- En duda entre dos cifras, elige la más alta
+Reglas de estimación:
+- Estima las calorías reales según lo que ves: ensalada 150-300 kcal, huevos revueltos 200-350 kcal, bocadillo 350-550 kcal, pasta 400-700 kcal, pizza porción 250-400 kcal, pollo a la plancha 150-300 kcal, burger 500-900 kcal. Varía según tamaño y contenido visible.
+- Asume aceites y grasas ocultos en la cocción
+- Restaurante: +25-30% vs casero
+- NO uses el mismo valor para comidas distintas — cada estimación debe reflejar lo que hay en la foto
 - categories: máx 4, en inglés snake_case
 - Si no hay comida identificable: confidence "baja", valores 0`;
 
@@ -138,7 +139,7 @@ export async function handleAnalyze(request, env, path, ctx) {
       },
       body: JSON.stringify({
         model:      'claude-haiku-4-5-20251001',
-        max_tokens: 400,
+        max_tokens: 600,
         system:     PHOTO_SYSTEM_PROMPT,
         messages: [{
           role: 'user',
