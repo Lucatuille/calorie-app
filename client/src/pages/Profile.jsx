@@ -597,7 +597,7 @@ export default function Profile() {
         opacity: 0.6,
         fontFamily: 'var(--font-sans)',
       }}>
-        LucaEats v1.0 · Herramienta de tracking nutricional personal
+        Caliro v1.0 · Herramienta de tracking nutricional personal
         <br />
         No es un dispositivo médico ni sustituye asesoramiento clínico.
         <br />
