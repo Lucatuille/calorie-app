@@ -19,6 +19,7 @@ import History from './pages/History';
 import Privacy from './pages/Privacy';
 import Assistant from './pages/Assistant';
 import Onboarding from './pages/Onboarding';
+import Upgrade from './pages/Upgrade';
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -104,7 +105,7 @@ function AppRoutes() {
           padding: '4px', zIndex: 99999,
           fontFamily: 'DM Sans, sans-serif', letterSpacing: '0.5px',
         }}>
-          ⚗️ PREVIEW — Los cambios aquí no afectan a lucaeats.org
+          ⚗️ PREVIEW — Los cambios aquí no afectan a caliro.dev
         </div>
       )}
       {showUpgradedBanner && (
@@ -146,6 +147,7 @@ function AppRoutes() {
         <Route path="/history"  element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/profile"    element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/asistente" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+        <Route path="/upgrade"   element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
         <Route path="*"          element={<Navigate to="/" replace />} />
       </Routes>
     </>

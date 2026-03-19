@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { isFree } from '../utils/levels';
 import TDEECalculator from '../components/TDEECalculator';
+import { isPro } from '../utils/levels';
 
 function exportCSV(entries) {
   const header = 'Fecha,Calorías,Proteína(g),Carbos(g),Grasa(g),Peso(kg),Notas';
@@ -74,8 +75,6 @@ export default function Profile() {
   const [showTDEE,     setShowTDEE]     = useState(false);
   const [calibration,  setCalibration]  = useState(null);
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [upgrading,    setUpgrading]    = useState(null); // 'monthly' | 'yearly' | null
-  const [upgradeError, setUpgradeError] = useState('');
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -125,21 +124,6 @@ export default function Profile() {
     }));
   }
 
-  async function handleUpgrade(plan) {
-    setUpgrading(plan);
-    setUpgradeError('');
-    try {
-      const priceId = plan === 'yearly'
-        ? 'price_1TCSydIDqPCl93zM6fMYoamR'
-        : 'price_1TCSy8IDqPCl93zMZmrb0Mzg';
-      const { url } = await api.createCheckoutSession(priceId, token);
-      window.location.href = url;
-    } catch (err) {
-      setUpgradeError(err.message || 'Error al conectar con el servidor de pagos');
-      setUpgrading(null);
-    }
-  }
-
   async function handleResetCalibration() {
     await api.resetCalibration(token);
     setCalibration(null);
@@ -182,73 +166,30 @@ export default function Profile() {
         </p>
       </div>
 
-      {/* ── Upgrade card (solo Free) ── */}
+      {/* ── Upgrade entry (solo Free) ── */}
       {isFree(user?.access_level) && (
-        <div style={{
+        <Link to="/upgrade" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'linear-gradient(145deg, #1c1c1c, #111111)',
-          border: '0.5px solid rgba(255,255,255,0.06)',
           borderRadius: 'var(--radius-lg)',
-          padding: '20px',
+          padding: '16px 20px',
           marginBottom: 12,
+          textDecoration: 'none',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: '0.5px',
               background: 'var(--accent)', color: 'white',
               borderRadius: 4, padding: '2px 6px',
+              fontFamily: 'var(--font-sans)', flexShrink: 0,
             }}>PRO</span>
             <span style={{
               fontFamily: 'var(--font-serif)', fontStyle: 'italic',
-              fontSize: 17, color: 'rgba(255,255,255,0.9)', fontWeight: 400,
+              fontSize: 17, color: 'rgba(255,255,255,0.85)', fontWeight: 400,
             }}>Actualiza a Pro</span>
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 16, fontFamily: 'var(--font-sans)' }}>
-            Foto IA ilimitada · Asistente personal · Motor de calibración · Análisis profundo
-          </p>
-          {upgradeError && (
-            <p style={{ fontSize: 12, color: '#ef4444', marginBottom: 10, fontFamily: 'var(--font-sans)' }}>
-              {upgradeError}
-            </p>
-          )}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              onClick={() => handleUpgrade('monthly')}
-              disabled={upgrading !== null}
-              style={{
-                flex: 1, minWidth: 120,
-                padding: '10px 0',
-                background: 'var(--accent)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 'var(--radius-full)',
-                fontSize: 13,
-                fontWeight: 500,
-                fontFamily: 'var(--font-sans)',
-                cursor: upgrading ? 'not-allowed' : 'pointer',
-                opacity: upgrading === 'yearly' ? 0.5 : 1,
-              }}>
-              {upgrading === 'monthly' ? 'Redirigiendo…' : '1,99€/mes'}
-            </button>
-            <button
-              onClick={() => handleUpgrade('yearly')}
-              disabled={upgrading !== null}
-              style={{
-                flex: 1, minWidth: 120,
-                padding: '10px 0',
-                background: 'transparent',
-                color: 'rgba(255,255,255,0.7)',
-                border: '0.5px solid rgba(255,255,255,0.15)',
-                borderRadius: 'var(--radius-full)',
-                fontSize: 13,
-                fontWeight: 500,
-                fontFamily: 'var(--font-sans)',
-                cursor: upgrading ? 'not-allowed' : 'pointer',
-                opacity: upgrading === 'monthly' ? 0.5 : 1,
-              }}>
-              {upgrading === 'yearly' ? 'Redirigiendo…' : '14,99€/año'}
-            </button>
-          </div>
-        </div>
+          <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.3)' }}>›</span>
+        </Link>
       )}
 
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
