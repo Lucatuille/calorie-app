@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import * as Sentry from '@sentry/react';
 import { setLogoutHandler } from '../api.js';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
@@ -33,6 +34,7 @@ export function AuthProvider({ children }) {
             localStorage.setItem('user', JSON.stringify(data.user));
             setToken(data.token);
             setUser(data.user);
+            Sentry.setUser({ id: String(data.user.id), email: data.user.email });
             return;
           }
         }
@@ -66,6 +68,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('user', JSON.stringify(user));
     setToken(token);
     setUser(user);
+    Sentry.setUser({ id: String(user.id), email: user.email });
   }
 
   function logout() {
@@ -73,6 +76,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    Sentry.setUser(null);
   }
 
   function updateUser(updatedUser) {
