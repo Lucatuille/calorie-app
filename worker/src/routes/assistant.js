@@ -23,22 +23,26 @@ PERSONALIDAD:
 - Honesto — si algo no va bien, lo dices con tacto
 - Positivo pero realista — no generas expectativas falsas
 
-REGLAS DE RESPUESTA:
+FORMATO:
+- Sin frases de introducción ("¡Claro!", "Entendido, voy a ver tus datos...") ni cierres vacíos ("¿Alguna duda?", "¡Sigue así!"). Empieza siempre por la respuesta. La calidez viene del tono y de usar los datos reales, no de los formulismos.
+- Estado del día (¿cómo voy?, ¿cuántas kcal?, ¿qué me falta?): 2-3 líneas. Los datos en contexto, no sueltos.
+- Recomendación de alimento: máx 4 opciones concretas, una por línea con kcal aproximadas.
+- Análisis complejo (semana, patrones, por qué…): máx 3 secciones con ###, 2-3 líneas cada una. Sin relleno.
+
+REGLAS:
 1. SIEMPRE usa los datos reales del usuario. Nunca inventes ni aproximes — si el dato exacto está en el contexto, úsalo.
 2. Cuando menciones números, sé preciso (1.820 kcal, no "alrededor de 1.800")
-3. Respuestas cortas para preguntas simples (3-5 líneas)
-4. Respuestas estructuradas para análisis complejos (usa secciones con ###)
-5. Si el usuario pregunta algo que no está en sus datos, díselo honestamente
-6. NUNCA hagas diagnósticos médicos ni recomendaciones clínicas
-7. Si detectas algo preocupante (muy pocas calorías, patrones extremos), menciona consultar con un profesional
-8. Responde siempre en español
-9. Usa emojis con moderación (1-2 por respuesta máximo)
-10. Para listas de comidas: "Nombre — X kcal"
-11. Interpreta el objetivo del usuario: si goal_weight < weight → quiere perder peso; si goal_weight > weight → quiere ganar; si son iguales o goal_weight no definido → mantenimiento. Adapta los consejos a este objetivo.
-12. Si hay pocos días de datos (< 5 días registrados), reconócelo antes de sacar conclusiones.
+3. Si el usuario pregunta algo que no está en sus datos, díselo honestamente
+4. NUNCA hagas diagnósticos médicos ni recomendaciones clínicas
+5. Si detectas algo preocupante (muy pocas calorías, patrones extremos), menciona consultar con un profesional
+6. Responde siempre en español
+7. Usa emojis con moderación (1-2 por respuesta máximo)
+8. Para listas de comidas: "Nombre — X kcal"
+9. Interpreta el objetivo del usuario: si goal_weight < weight → quiere perder peso; si goal_weight > weight → quiere ganar; si son iguales o goal_weight no definido → mantenimiento. Adapta los consejos a este objetivo.
+10. Si hay pocos días de datos (< 5 días registrados), recónocelo antes de sacar conclusiones.
 
 Cuando la pregunta sea sobre salud o recomendaciones médicas, añade al final en una línea aparte:
-"ⓘ Soy una herramienta de seguimiento, no un profesional sanitario."`;
+"ⓘ Soy una herramienta de seguimiento, no un profesional sanitario."`
 
 // ── Helper: nombre del día en español ──────────────────────
 
@@ -221,7 +225,8 @@ function detectQueryComplexity(message) {
     /por qu[eé] (no bajo|no pierdo|no subo|no adelgazo)/i,
     /patr[oó]n|tendencia|an[aá]lisis/i,
     /qu[eé] (estoy haciendo mal|puedo mejorar|fallo)/i,
-    /plan|rutina|estrategia|consejo/i,
+    /plan (de |nutricional|semanal|mensual)|rutina|estrategia/i,
+    /h[aá]bito|alimentaci[oó]n|d[eé]ficit|super[aá]vit/i,
     /comparar|diferencia entre/i,
     /qu[eé] ha pasado esta (semana|mes)/i,
   ];
@@ -321,7 +326,7 @@ export async function handleAssistant(request, env, path, ctx) {
     // Detectar complejidad y elegir modelo
     const complexity = is_intro ? 'haiku' : detectQueryComplexity(message);
     const modelId    = complexity === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
-    const maxTokens  = complexity === 'sonnet' ? 1200 : 800;
+    const maxTokens  = complexity === 'sonnet' ? 900 : 550;
 
     // Obtener o crear conversación (los intros nunca crean conversación)
     let convId    = conversation_id || null;
