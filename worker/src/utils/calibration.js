@@ -70,18 +70,40 @@ export function calculateCalibrationProfile(corrections) {
 
   // Todas las correcciones cronológicas — las aceptadas sin cambio aportan bias=0
   // (el usuario confirmó que la IA acertó, eso también es señal útil)
+  // corrections llega DESC (más reciente primero); reverse = ASC (más antiguo primero)
   const chronological = [...corrections].reverse();
-  const weights = chronological.map((_, i) => Math.pow(1.05, i));
 
-  const globalBias = calculateWeightedMean(
+  // Pesos por antigüedad basados en fecha real — vida media ~23 días
+  // Más reciente = peso mayor; una corrección de hace 23 días pesa la mitad que hoy
+  const now = Date.now();
+  const weights = chronological.map(c => {
+    // SQLite devuelve "2026-03-20 14:30:00" — reemplazar espacio por T para ISO válido
+    const ts = Date.parse((c.created_at || '').replace(' ', 'T'));
+    const daysSince = isNaN(ts) ? 0 : Math.max(0, (now - ts) / 86400000);
+    return Math.pow(0.97, daysSince); // vida media ~23 días
+  });
+
+  let globalBias = calculateWeightedMean(
     chronological.map(c => c.accepted_without_change ? 0 : calcMixedBias(c)),
     weights
   );
 
-  // Factores por meal_type (mínimo 2 muestras)
+  // Si hay una racha de N correcciones recientes aceptadas sin cambio, la IA está acertando
+  // → reducir activamente el bias hacia 0 (cada 5 aceptaciones consecutivas lo divide a la mitad)
+  let recentAcceptedRun = 0;
+  for (const c of corrections) { // DESC: empieza por la más reciente
+    if (c.accepted_without_change) recentAcceptedRun++;
+    else break;
+  }
+  if (recentAcceptedRun >= 5) {
+    const halvings = Math.floor(recentAcceptedRun / 5);
+    globalBias = globalBias * Math.pow(0.5, halvings);
+  }
+
+  // Factores por meal_type (mínimo 3 muestras)
   const mealFactors = {};
   for (const [meal, items] of Object.entries(groupBy(actual, 'meal_type'))) {
-    if (items.length >= 2) {
+    if (items.length >= 3) {
       mealFactors[meal] = {
         bias:       calculateWeightedMean(items.map(c => calcMixedBias(c))),
         samples:    items.length,
@@ -103,7 +125,7 @@ export function calculateCalibrationProfile(corrections) {
         return cats.includes(cat);
       } catch { return false; }
     });
-    if (catItems.length >= 2) {
+    if (catItems.length >= 3) {
       foodFactors[cat] = {
         bias:    calculateWeightedMean(catItems.map(c => calcMixedBias(c))),
         samples: catItems.length,
@@ -164,8 +186,8 @@ export function applyCalibration(baseEstimate, profile, context) {
     factor += profile.time_factors.weekend_extra * 0.5;
   }
 
-  // Cap: nunca más de +80% ni menos de -30%
-  factor = Math.max(0.7, Math.min(1.8, factor));
+  // Cap: nunca más de +40% ni menos de -25%
+  factor = Math.max(0.75, Math.min(1.4, factor));
 
   return Math.round(baseEstimate * factor);
 }
