@@ -93,6 +93,28 @@ async function rollbackAiLimit(env, userId) {
   ).bind(userId, today).run().catch(() => {});
 }
 
+// ── Sonnet diario para Pro — primeras N fotos usan Sonnet ───
+const SONNET_DAILY_LIMIT = 3;
+
+async function checkAndIncrementSonnetLimit(env, userId) {
+  const today = new Date().toLocaleDateString('en-CA');
+  const row = await env.DB.prepare(
+    'SELECT sonnet_photo_count FROM ai_usage_log WHERE user_id = ? AND date = ?'
+  ).bind(userId, today).first();
+  if ((row?.sonnet_photo_count || 0) >= SONNET_DAILY_LIMIT) return false;
+  await env.DB.prepare(
+    'UPDATE ai_usage_log SET sonnet_photo_count = sonnet_photo_count + 1 WHERE user_id = ? AND date = ?'
+  ).bind(userId, today).run();
+  return true;
+}
+
+async function rollbackSonnetLimit(env, userId) {
+  const today = new Date().toLocaleDateString('en-CA');
+  await env.DB.prepare(
+    'UPDATE ai_usage_log SET sonnet_photo_count = MAX(0, sonnet_photo_count - 1) WHERE user_id = ? AND date = ?'
+  ).bind(userId, today).run().catch(() => {});
+}
+
 // ── POST /api/analyze — análisis por foto ───────────────────
 
 export async function handleAnalyze(request, env, path, ctx) {
@@ -122,6 +144,19 @@ export async function handleAnalyze(request, env, path, ctx) {
 
     const limitCheck = await checkAndIncrementAiLimit(env, user.userId, accessLevel);
     if (limitCheck.error) return limitCheck.error;
+
+    // Modelo: Pro/Founder/Admin → Sonnet para las primeras 3 fotos del día, luego Haiku
+    const isProUser = [1, 2, 99].includes(accessLevel);
+    let photoModel = 'claude-haiku-4-5-20251001';
+    let usedSonnet = false;
+    if (isProUser) {
+      if (accessLevel === 99) {
+        photoModel = 'claude-sonnet-4-6'; usedSonnet = true; // admin: sin límite
+      } else {
+        usedSonnet = await checkAndIncrementSonnetLimit(env, user.userId);
+        if (usedSonnet) photoModel = 'claude-sonnet-4-6';
+      }
+    }
 
     // Calibración (no-blocking)
     let calibrationProfile = null;
@@ -162,7 +197,7 @@ export async function handleAnalyze(request, env, path, ctx) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model:      'claude-haiku-4-5-20251001',
+        model:      photoModel,
         max_tokens: 800,
         system:     PHOTO_SYSTEM_PROMPT,
         messages: [{
@@ -180,6 +215,7 @@ export async function handleAnalyze(request, env, path, ctx) {
 
     if (!response.ok) {
       await rollbackAiLimit(env, user.userId);
+      if (usedSonnet) await rollbackSonnetLimit(env, user.userId);
       const err = await response.json().catch(() => ({}));
       return errorResponse(err.error?.message || 'Error al llamar a Claude', 502);
     }
@@ -188,6 +224,7 @@ export async function handleAnalyze(request, env, path, ctx) {
 
     if (claude.stop_reason === 'max_tokens') {
       await rollbackAiLimit(env, user.userId);
+      if (usedSonnet) await rollbackSonnetLimit(env, user.userId);
       return jsonResponse({
         error: 'response_too_large',
         message: 'La IA no pudo completar el análisis (respuesta demasiado larga). Prueba con una imagen más clara o con menos elementos en el plato.',
@@ -199,6 +236,7 @@ export async function handleAnalyze(request, env, path, ctx) {
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
       await rollbackAiLimit(env, user.userId);
+      if (usedSonnet) await rollbackSonnetLimit(env, user.userId);
       return errorResponse('No se pudo parsear la respuesta de Claude', 502);
     }
 
@@ -240,6 +278,7 @@ export async function handleAnalyze(request, env, path, ctx) {
       });
     } catch {
       await rollbackAiLimit(env, user.userId);
+      if (usedSonnet) await rollbackSonnetLimit(env, user.userId);
       return errorResponse('Respuesta JSON inválida de Claude', 502);
     }
   }
