@@ -28,6 +28,19 @@
 <!-- Favicon -->
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
+<!-- PWA: manifest necesario para que iOS use start_url=/app/ al añadir a inicio -->
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Caliro">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script>
+  // Instalaciones antiguas sin manifest: si la PWA se abre en modo standalone desde /,
+  // redirigir a la app automáticamente
+  if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+    window.location.replace('/app');
+  }
+</script>
+
 <!-- Schema -->
 <script type="application/ld+json">
 {
