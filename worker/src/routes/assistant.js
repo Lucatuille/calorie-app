@@ -148,8 +148,10 @@ async function buildUserContext(userId, env) {
 
       env.DB.prepare(`
         SELECT AVG(dc) as avg_cal, AVG(dp) as avg_prot,
+               AVG(dcarbs) as avg_carbs, AVG(dfat) as avg_fat,
                MIN(dc) as min_cal, MAX(dc) as max_cal, COUNT(*) as days
-        FROM (SELECT date, SUM(calories) as dc, SUM(protein) as dp
+        FROM (SELECT date, SUM(calories) as dc, SUM(protein) as dp,
+                     SUM(carbs) as dcarbs, SUM(fat) as dfat
               FROM entries WHERE user_id = ? AND date >= ? AND date < ?
               GROUP BY date)
       `).bind(userId, monthAgo, today).first(),
@@ -249,6 +251,29 @@ async function buildUserContext(userId, env) {
     weSum ? fmtDow('S\u00e1b\u2013Dom', weSum) : null,
   ].filter(Boolean).join('\n') || '  Sin suficientes datos';
 
+  // Macro deficit profile — pre-computed labels so Claude reads conclusions, not raw numbers
+  const macroProfile = (() => {
+    const avgProt  = Math.round(last30Stats?.avg_prot  || 0);
+    const avgCarbs = Math.round(last30Stats?.avg_carbs || 0);
+    const avgFat   = Math.round(last30Stats?.avg_fat   || 0);
+    const tgtProt  = user?.target_protein || 0;
+    const tgtCarbs = user?.target_carbs   || 0;
+    const tgtFat   = user?.target_fat     || 0;
+    const fmtMacro = (avg, tgt, name) => {
+      if (!tgt) return `  ${name.padEnd(10)} ${avg}g/día (sin objetivo definido)`;
+      const pct = Math.round(((avg - tgt) / tgt) * 100);
+      const tag = Math.abs(pct) <= 5 ? 'en objetivo'
+                : pct > 0 ? `+${pct}% superávit`
+                : `${pct}% déficit`;
+      return `  ${name.padEnd(10)} ${avg}g/día vs ${tgt}g objetivo → ${tag}`;
+    };
+    return [
+      fmtMacro(avgProt,  tgtProt,  'Prote\u00edna'),
+      fmtMacro(avgCarbs, tgtCarbs, 'Carbos'),
+      fmtMacro(avgFat,   tgtFat,   'Grasa'),
+    ].join('\n');
+  })();
+
   return `Hoy: ${todayLabel()}
 
 === PERFIL ===
@@ -268,6 +293,9 @@ ${(last7Days.results||[]).map(d => `  ${d.date}: ${Math.round(d.cal)} kcal (${Ma
 === ÚLTIMOS 30 DÍAS ===
 Días registrados: ${last30Stats?.days||0} | Media: ${Math.round(last30Stats?.avg_cal||0)} kcal | Proteína media: ${Math.round(last30Stats?.avg_prot||0)}g
 Rango: ${Math.round(last30Stats?.min_cal||0)} – ${Math.round(last30Stats?.max_cal||0)} kcal
+
+=== PERFIL DE MACROS (últimos 30 días) ===
+${macroProfile}
 
 === PATRONES POR DÍA (últimos 30 días) ===
 ${dowPattern}
