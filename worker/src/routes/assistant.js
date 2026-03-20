@@ -130,7 +130,7 @@ async function buildUserContext(userId, env) {
   const weekAgo  = new Date(Date.now() - 7  * 86400000).toLocaleDateString('en-CA');
   const monthAgo = new Date(Date.now() - 30 * 86400000).toLocaleDateString('en-CA');
 
-  const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory, mealTypes] =
+  const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory, mealTypes, allDays30] =
     await Promise.all([
       env.DB.prepare(
         'SELECT name, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat, goal_weight, tdee FROM users WHERE id = ?'
@@ -184,6 +184,14 @@ async function buildUserContext(userId, env) {
           WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2
           WHEN 'dinner'    THEN 3 WHEN 'snack' THEN 4 ELSE 5 END
       `).bind(userId, monthAgo, today).all(),
+
+      // Per-day totals for 30 days — needed for weekday/weekend split in JS
+      env.DB.prepare(`
+        SELECT date, SUM(calories) as cal
+        FROM entries
+        WHERE user_id = ? AND date >= ? AND date < ?
+        GROUP BY date ORDER BY date DESC
+      `).bind(userId, monthAgo, today).all(),
     ]);
 
   const todayTotals = (todayRows.results||[]).reduce(
@@ -215,6 +223,32 @@ async function buildUserContext(userId, env) {
     })
     .join('\n') || '  Sin suficientes datos';
 
+  // Weekday vs weekend — split allDays30 by day-of-week
+  // T12:00:00Z anchors to UTC noon to avoid day-boundary issues in CF Workers
+  const splitByDow = (rows) => {
+    const wd = [], we = [];
+    (rows || []).forEach(d => {
+      const dow = new Date(d.date + 'T12:00:00Z').getDay(); // 0=Sun, 6=Sat
+      (dow === 0 || dow === 6 ? we : wd).push(d);
+    });
+    return { wd, we };
+  };
+  const summarizeDow = (rows) => {
+    if (rows.length < 2) return null;
+    const avg = Math.round(rows.reduce((s, d) => s + d.cal, 0) / rows.length);
+    const onT = rows.filter(d => Math.abs(d.cal - targetCal) <= 250).length;
+    return { avg, onT, total: rows.length, pct: Math.round((onT / rows.length) * 100) };
+  };
+  const { wd: wdRows, we: weRows } = splitByDow(allDays30.results);
+  const wdSum = summarizeDow(wdRows);
+  const weSum = summarizeDow(weRows);
+  const fmtDow = (label, s) =>
+    `  ${label}: ~${s.avg} kcal/día | en objetivo ${s.onT}/${s.total} días (${s.pct}%)`;
+  const dowPattern = [
+    wdSum ? fmtDow('Lun\u2013Vie', wdSum) : null,
+    weSum ? fmtDow('S\u00e1b\u2013Dom', weSum) : null,
+  ].filter(Boolean).join('\n') || '  Sin suficientes datos';
+
   return `Hoy: ${todayLabel()}
 
 === PERFIL ===
@@ -234,6 +268,9 @@ ${(last7Days.results||[]).map(d => `  ${d.date}: ${Math.round(d.cal)} kcal (${Ma
 === ÚLTIMOS 30 DÍAS ===
 Días registrados: ${last30Stats?.days||0} | Media: ${Math.round(last30Stats?.avg_cal||0)} kcal | Proteína media: ${Math.round(last30Stats?.avg_prot||0)}g
 Rango: ${Math.round(last30Stats?.min_cal||0)} – ${Math.round(last30Stats?.max_cal||0)} kcal
+
+=== PATRONES POR DÍA (últimos 30 días) ===
+${dowPattern}
 
 === PATRONES POR TIPO DE COMIDA (últimos 30 días) ===
 ${mealPattern}
@@ -259,6 +296,7 @@ function detectQueryComplexity(message) {
     /plan (de |nutricional|semanal|mensual)|rutina|estrategia/i,
     /h[aá]bito|alimentaci[oó]n|d[eé]ficit|super[aá]vit/i,
     /mis (desayunos|comidas|cenas|snacks|meriendas)|por tipo de comida/i,
+    /fin(es)? de semana|entre semana|d[\u00ed]as? de la semana/i,
     /comparar|diferencia entre/i,
     /qu[eé] ha pasado esta (semana|mes)/i,
   ];
