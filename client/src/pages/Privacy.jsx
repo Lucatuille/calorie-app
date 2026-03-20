@@ -63,12 +63,12 @@ export default function Privacy() {
         <Section title="4. Tus derechos (RGPD)">
           <p style={{ marginBottom: 12 }}>
             Puedes ejercer tus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a{' '}
-            <a href="mailto:contact@caliro.dev" style={{ color: 'var(--accent)' }}>contact@caliro.dev</a>.
+            <a href="mailto:contacto@caliro.dev" style={{ color: 'var(--accent)' }}>contacto@caliro.dev</a>.
             Responderemos a tu solicitud en un plazo máximo de un mes desde su recepción. Si no recibes respuesta o no estás satisfecho con ella, puedes presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) en{' '}
             <a href="https://www.aepd.es" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>aepd.es</a>.
           </p>
           <ul>
-            <li><strong>Acceso a tus datos:</strong> escríbenos a <a href="mailto:contact@caliro.dev" style={{ color: 'var(--accent)' }}>contact@caliro.dev</a></li>
+            <li><strong>Acceso a tus datos:</strong> escríbenos a <a href="mailto:contacto@caliro.dev" style={{ color: 'var(--accent)' }}>contacto@caliro.dev</a></li>
             <li><strong>Eliminación de cuenta y datos:</strong> desde Perfil → contacta con soporte</li>
             <li><strong>Portabilidad:</strong> exporta tu historial en CSV desde la sección Perfil</li>
             <li><strong>Rectificación:</strong> puedes editar o eliminar cualquier entrada desde la app</li>
@@ -87,7 +87,7 @@ export default function Privacy() {
         <Section title="5. Contacto">
           <p>
             Para cualquier consulta sobre privacidad o protección de datos:{' '}
-            <a href="mailto:contact@caliro.dev" style={{ color: 'var(--accent)' }}>contact@caliro.dev</a>
+            <a href="mailto:contacto@caliro.dev" style={{ color: 'var(--accent)' }}>contacto@caliro.dev</a>
           </p>
         </Section>
 

@@ -18,6 +18,7 @@ import Progress from './pages/Progress';
 import Profile from './pages/Profile';
 import History from './pages/History';
 import Privacy from './pages/Privacy';
+import Terms  from './pages/Terms';
 import Assistant from './pages/Assistant';
 import Onboarding from './pages/Onboarding';
 import Upgrade from './pages/Upgrade';
@@ -142,6 +143,7 @@ function AppRoutes() {
         <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/privacy"  element={<Privacy />} />
+      <Route path="/terms"    element={<Terms />} />
         <Route path="/"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
