@@ -15,7 +15,7 @@ const DAILY_LIMITS = { 1: 15, 2: 30, 99: 999 };
 
 // ── System prompt del asistente ────────────────────────────
 
-const SYSTEM_PROMPT = `Eres el asistente nutricional personal de LucaEats. Tienes acceso completo a los datos reales del usuario y respondes con información específica y personalizada.
+const SYSTEM_PROMPT = `Eres el asistente nutricional personal de Caliro. Tienes acceso completo a los datos reales del usuario y respondes con información específica y personalizada.
 
 PERSONALIDAD:
 - Cercano y motivador, nunca condescendiente
@@ -24,19 +24,29 @@ PERSONALIDAD:
 - Positivo pero realista — no generas expectativas falsas
 
 REGLAS DE RESPUESTA:
-1. SIEMPRE usa los datos reales del usuario en tus respuestas. Nunca des respuestas genéricas.
+1. SIEMPRE usa los datos reales del usuario. Nunca inventes ni aproximes — si el dato exacto está en el contexto, úsalo.
 2. Cuando menciones números, sé preciso (1.820 kcal, no "alrededor de 1.800")
 3. Respuestas cortas para preguntas simples (3-5 líneas)
-4. Respuestas estructuradas para análisis complejos (usa secciones claras)
+4. Respuestas estructuradas para análisis complejos (usa secciones con ###)
 5. Si el usuario pregunta algo que no está en sus datos, díselo honestamente
 6. NUNCA hagas diagnósticos médicos ni recomendaciones clínicas
 7. Si detectas algo preocupante (muy pocas calorías, patrones extremos), menciona consultar con un profesional
 8. Responde siempre en español
 9. Usa emojis con moderación (1-2 por respuesta máximo)
 10. Para listas de comidas: "Nombre — X kcal"
+11. Interpreta el objetivo del usuario: si goal_weight < weight → quiere perder peso; si goal_weight > weight → quiere ganar; si son iguales o goal_weight no definido → mantenimiento. Adapta los consejos a este objetivo.
+12. Si hay pocos días de datos (< 5 días registrados), reconócelo antes de sacar conclusiones.
 
 Cuando la pregunta sea sobre salud o recomendaciones médicas, añade al final en una línea aparte:
 "ⓘ Soy una herramienta de seguimiento, no un profesional sanitario."`;
+
+// ── Helper: nombre del día en español ──────────────────────
+
+const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+function todayLabel() {
+  const now = new Date();
+  return `${DAY_NAMES[now.getDay()]} ${now.toLocaleDateString('en-CA')}`;
+}
 
 // ── Contexto ligero — Haiku, primera vez (~800 tokens) ─────
 
@@ -66,7 +76,13 @@ async function buildLightContext(userId, env) {
   );
   const remaining = (user?.target_calories || 0) - todayTotals.cal;
 
-  return `=== PERFIL ===
+  const target7   = user?.target_calories || 0;
+  const onTarget7 = (last7Days.results||[]).filter(d => Math.abs(d.cal - target7) <= 250).length;
+  const total7    = (last7Days.results||[]).length;
+
+  return `Hoy: ${todayLabel()}
+
+=== PERFIL ===
 ${user?.name} | ${user?.weight}kg | Objetivo: ${user?.target_calories} kcal/día | Meta peso: ${user?.goal_weight || 'no definida'}kg
 Macros objetivo: ${user?.target_protein||'?'}g prot | ${user?.target_carbs||'?'}g carbos | ${user?.target_fat||'?'}g grasa
 
@@ -80,6 +96,7 @@ ${(todayRows.results||[]).length > 0
   : '  - Sin registros todavía'}
 
 === ÚLTIMOS 7 DÍAS ===
+En objetivo (±250kcal): ${onTarget7}/${total7 || 0} días
 ${(last7Days.results||[]).length > 0
   ? (last7Days.results||[]).map(d => `  ${d.date}: ${Math.round(d.cal)} kcal (${Math.round(d.cal-(user?.target_calories||0)) >= 0 ? '+' : ''}${Math.round(d.cal-(user?.target_calories||0))} vs objetivo)`).join('\n')
   : '  Sin datos'}`;
@@ -99,11 +116,10 @@ async function buildMicroContext(userId, env) {
   ]);
   const cal       = todayTotals?.cal  || 0;
   const remaining = (user?.target_calories || 0) - cal;
-  return `[Datos actualizados ${today}: ${Math.round(cal)} kcal consumidas, ${Math.round(remaining)} restantes | Prot: ${Math.round(todayTotals?.prot||0)}g | Carbos: ${Math.round(todayTotals?.carbs||0)}g | Grasa: ${Math.round(todayTotals?.fat||0)}g]`;
+  return `[Datos actualizados ${todayLabel()}: ${Math.round(cal)} kcal consumidas, ${Math.round(remaining)} restantes | Prot: ${Math.round(todayTotals?.prot||0)}g | Carbos: ${Math.round(todayTotals?.carbs||0)}g | Grasa: ${Math.round(todayTotals?.fat||0)}g]`;
 }
 
 // ── Contexto completo — Sonnet, primera vez (~2200 tokens) ──
-// FIX #7: eliminadas columnas de calibración (inútiles para el asistente)
 
 async function buildUserContext(userId, env) {
   const today    = new Date().toLocaleDateString('en-CA');
@@ -163,7 +179,13 @@ async function buildUserContext(userId, env) {
     ? `${wh[0].weight < wh[wh.length-1].weight ? '↓ bajando' : '↑ subiendo'} (${(wh[0].weight - wh[wh.length-1].weight).toFixed(1)}kg en ${wh.length} registros)`
     : 'insuficientes datos';
 
-  return `=== PERFIL ===
+  const targetCal  = user?.target_calories || 0;
+  const onTarget7  = (last7Days.results||[]).filter(d => Math.abs(d.cal - targetCal) <= 250).length;
+  const total7days = (last7Days.results||[]).length;
+
+  return `Hoy: ${todayLabel()}
+
+=== PERFIL ===
 ${user?.name} | ${user?.age} años | ${user?.weight}kg | ${user?.height}cm | ${user?.gender === 'male' ? 'hombre' : 'mujer'}
 Objetivo peso: ${user?.goal_weight ? `${user.goal_weight}kg` : 'no definido'} | TDEE: ${user?.tdee || 'no calculado'} kcal
 Objetivo diario: ${user?.target_calories} kcal | Proteína: ${user?.target_protein||'?'}g | Carbos: ${user?.target_carbs||'?'}g | Grasa: ${user?.target_fat||'?'}g
@@ -174,7 +196,7 @@ Prot: ${Math.round(todayTotals.prot)}g | Carbos: ${Math.round(todayTotals.carbs)
 ${(todayRows.results||[]).map(e => `  [${e.meal_type}] ${e.name||'sin nombre'}: ${e.calories} kcal`).join('\n') || '  Sin registros'}
 
 === ÚLTIMOS 7 DÍAS ===
-Media: ${Math.round(avg7d)} kcal/día
+Media: ${Math.round(avg7d)} kcal/día | En objetivo (±250kcal): ${onTarget7}/${total7days || 0} días
 ${(last7Days.results||[]).map(d => `  ${d.date}: ${Math.round(d.cal)} kcal (${Math.round(d.cal-(user?.target_calories||0)) >= 0 ? '+' : ''}${Math.round(d.cal-(user?.target_calories||0))})`).join('\n') || '  Sin datos'}
 
 === ÚLTIMOS 30 DÍAS ===

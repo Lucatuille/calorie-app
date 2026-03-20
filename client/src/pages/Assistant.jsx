@@ -44,26 +44,56 @@ function ProOnlyCard({ onNavigate }) {
 
 // ── Markdown mínimo ──────────────────────────────────────────
 
+function inlineFormat(text) {
+  // bold + italic inline
+  const parts = text.split(/(\*\*.*?\*\*|\*[^*]+\*)/g);
+  return parts.map((p, i) => {
+    if (p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>;
+    if (p.startsWith('*')  && p.endsWith('*'))  return <em key={i}>{p.slice(1, -1)}</em>;
+    return p;
+  });
+}
+
 function MarkdownText({ content }) {
   const lines = (content || '').split('\n');
   return (
     <div>
       {lines.map((line, i) => {
+        // h3
+        if (line.startsWith('### ')) {
+          return <div key={i} style={{ fontWeight: 700, marginTop: 10, marginBottom: 2 }}>{line.slice(4)}</div>;
+        }
+        // h2
+        if (line.startsWith('## ')) {
+          return <div key={i} style={{ fontWeight: 700, fontSize: 15, marginTop: 12, marginBottom: 3 }}>{line.slice(3)}</div>;
+        }
+        // hr
+        if (line === '---') {
+          return <hr key={i} style={{ border: 'none', borderTop: '0.5px solid var(--border)', margin: '8px 0' }} />;
+        }
+        // bullet
         if (line.startsWith('- ') || line.startsWith('• ')) {
-          const text = line.slice(2);
-          const parts = text.split(/\*\*(.*?)\*\*/g);
           return (
-            <div key={i} style={{ paddingLeft: 8 }}>
-              {'• '}{parts.map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}
+            <div key={i} style={{ paddingLeft: 8, display: 'flex', gap: 4 }}>
+              <span style={{ flexShrink: 0 }}>•</span>
+              <span>{inlineFormat(line.slice(2))}</span>
             </div>
           );
         }
-        const parts = line.split(/\*\*(.*?)\*\*/g);
-        return (
-          <div key={i} style={{ minHeight: line === '' ? 8 : undefined }}>
-            {parts.map((p, j) => j % 2 === 1 ? <strong key={j}>{p}</strong> : p)}
-          </div>
-        );
+        // numbered list
+        const numMatch = line.match(/^(\d+)\. (.+)/);
+        if (numMatch) {
+          return (
+            <div key={i} style={{ paddingLeft: 4, display: 'flex', gap: 6 }}>
+              <span style={{ flexShrink: 0, color: 'var(--text-tertiary)', minWidth: 16 }}>{numMatch[1]}.</span>
+              <span>{inlineFormat(numMatch[2])}</span>
+            </div>
+          );
+        }
+        // empty line = spacer
+        if (line === '') return <div key={i} style={{ height: 6 }} />;
+        // plain text
+        return <div key={i}>{inlineFormat(line)}</div>;
       })}
     </div>
   );
@@ -117,13 +147,37 @@ function MessageBubble({ msg }) {
 
 // ── Sugerencias rápidas (scroll horizontal) ──────────────────
 
-function QuickSuggestions({ onSelect, visible }) {
-  const hour = new Date().getHours();
-  const suggestions = hour < 12
-    ? ['¿Qué desayuno hoy?', '¿Cómo voy esta semana?', '¿Me falta proteína?', 'Dame un resumen']
-    : hour < 17
-    ? ['¿Qué como esta tarde?', '¿Cómo voy hoy?', '¿Me falta proteína?', 'Analiza mi semana']
-    : ['¿Qué ceno hoy?', '¿Cómo he ido esta semana?', '¿Por qué no bajo de peso?', 'Dame un resumen'];
+function QuickSuggestions({ onSelect, visible, todayData }) {
+  const hour       = new Date().getHours();
+  const cal        = todayData?.cal         || 0;
+  const target     = todayData?.target      || 0;
+  const remaining  = todayData?.remaining_cal ?? (target - cal);
+  const prot       = todayData?.prot        || 0;
+  const targetProt = todayData?.target_protein || 0;
+  const protGap    = targetProt > 0 ? Math.round(targetProt - prot) : 0;
+
+  let suggestions;
+  if (cal === 0) {
+    // Sin registros — empezar el día
+    const meal = hour < 11 ? 'desayunar' : hour < 15 ? 'comer' : 'cenar';
+    suggestions = [`¿Qué puedo ${meal} hoy?`, '¿Cómo empiezo bien el día?', 'Dime mi objetivo de hoy', 'Analiza mi semana'];
+  } else if (remaining <= 0) {
+    // Objetivo superado
+    suggestions = ['¿Cómo ha ido esta semana?', 'Analiza mis macros', '¿Por qué no bajo de peso?', 'Dame un resumen'];
+  } else if (remaining < 300) {
+    // Poco margen — cena ligera
+    suggestions = [`Tengo ${remaining} kcal libres, ¿qué ceno?`, '¿Llego a la proteína?', '¿Cómo ha ido esta semana?', 'Dame un resumen'];
+  } else if (protGap > 20) {
+    // Déficit de proteína notable
+    suggestions = [`Me faltan ${protGap}g de proteína, ¿ideas?`, '¿Cómo voy hoy?', '¿Qué como para cerrar bien?', 'Analiza mi semana'];
+  } else {
+    // Estado normal — sugerencias por hora
+    suggestions = hour < 12
+      ? ['¿Qué desayuno hoy?', '¿Cómo voy esta semana?', '¿Me falta proteína?', 'Dame un resumen']
+      : hour < 17
+      ? ['¿Qué como esta tarde?', '¿Cómo voy hoy?', '¿Me falta proteína?', 'Analiza mi semana']
+      : ['¿Qué ceno hoy?', '¿Cómo he ido esta semana?', '¿Por qué no bajo de peso?', 'Dame un resumen'];
+  }
 
   if (!visible) return null;
   return (
@@ -293,6 +347,9 @@ export default function Assistant() {
         setMessages(prev => prev.slice(0, -1));
       } else if (err.status === 429) {
         setError(`Límite diario alcanzado (${usage?.limit ?? ''} mensajes). Se renueva mañana.`);
+        setMessages(prev => prev.slice(0, -1));
+      } else if (err.status === 422) {
+        setError('La pregunta generó una respuesta demasiado larga. Intenta dividirla en partes más concretas.');
         setMessages(prev => prev.slice(0, -1));
       } else {
         setError('Error al conectar con el asistente. Inténtalo de nuevo.');
@@ -500,7 +557,7 @@ export default function Assistant() {
           flexShrink: 0,
           background: 'var(--bg)',
         }}>
-          <QuickSuggestions onSelect={handleSend} visible={showSuggestions} />
+          <QuickSuggestions onSelect={handleSend} visible={showSuggestions} todayData={todayData} />
 
           {/* Input row */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: 6 }}>
