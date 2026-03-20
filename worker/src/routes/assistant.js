@@ -49,12 +49,39 @@ REGLAS:
 Cuando la pregunta sea sobre salud o recomendaciones médicas, añade al final en una línea aparte:
 "ⓘ Soy una herramienta de seguimiento, no un profesional sanitario.""ⓘ Soy una herramienta de seguimiento, no un profesional sanitario."`
 
+const DIGEST_SYSTEM_PROMPT = `Eres el asistente nutricional de Caliro. Genera un resumen semanal basado en datos reales.
+
+Formato exacto — exactamente 3 puntos, nada antes ni después del primero:
+
+### [Título 3-4 palabras]
+[Observación concreta con números reales. Máx 2 líneas. Accionable.]
+
+### [Título 3-4 palabras]
+[Observación concreta con números reales. Máx 2 líneas. Accionable.]
+
+### [Título 3-4 palabras]
+[Observación concreta con números reales. Máx 2 líneas. Accionable.]
+
+Reglas:
+- Usa SOLO los datos del contexto. Nunca inventes.
+- Prioriza: adherencia al objetivo calórico > macros vs objetivos > patrones día/tipo comida > calibración
+- Si hay un patrón claro con números (fines de semana +X% sobre objetivo, proteína -X%, categoría con sesgo notable en calibración), menéionalo con exactitud
+- Responde en español`;
+
 // ── Helper: nombre del día en español ──────────────────────
 
 const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 function todayLabel() {
   const now = new Date();
   return `${DAY_NAMES[now.getDay()]} ${now.toLocaleDateString('en-CA')}`;
+}
+
+function getWeekStart() {
+  const d   = new Date();
+  const day = d.getUTCDay(); // 0=Dom, 1=Lun...
+  const diff = day === 0 ? -6 : 1 - day; // retroceder al lunes
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().split('T')[0]; // "2026-03-16"
 }
 
 // ── Contexto ligero — Haiku, primera vez (~800 tokens) ─────
@@ -672,6 +699,70 @@ export async function handleAssistant(request, env, path, ctx) {
     ).bind(convId, user.id).all();
 
     return jsonResponse(msgs.results || []);
+  }
+
+  // GET /api/assistant/digest — resumen semanal (1 Sonnet/semana/usuario, solo si activo)
+  if (path === '/api/assistant/digest' && request.method === 'GET') {
+    const user = await requireProAccess(request, env);
+    if (!user || user === 'waitlist') return proAccessDenied(user);
+    try {
+      const weekStart = getWeekStart();
+
+      // Devolver digest cacheado si ya existe esta semana
+      const existing = await env.DB.prepare(
+        'SELECT content, generated_at FROM assistant_digests WHERE user_id = ? AND week_start = ?'
+      ).bind(user.id, weekStart).first();
+      if (existing) {
+        return jsonResponse({ digest: { content: existing.content, generated_at: existing.generated_at } });
+      }
+
+      // Solo generar si el usuario tiene >= 5 dias registrados en los ultimos 14
+      const activity = await env.DB.prepare(`
+        SELECT COUNT(DISTINCT date) as active_days
+        FROM entries WHERE user_id = ? AND date >= date('now', '-14 days')
+      `).bind(user.id).first();
+      if ((activity?.active_days || 0) < 5) {
+        return jsonResponse({ digest: null, reason: 'insufficient_data' });
+      }
+
+      // Construir contexto completo y llamar a Sonnet
+      const context = await buildUserContext(user.id, env);
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 350,
+          system: DIGEST_SYSTEM_PROMPT,
+          messages: [
+            { role: 'user',      content: `[DATOS DEL USUARIO]\n${context}\n[FIN DE DATOS]` },
+            { role: 'assistant', content: 'Entendido.' },
+            { role: 'user',      content: 'Genera el resumen semanal.' },
+          ],
+        }),
+      });
+      if (!claudeRes.ok) return jsonResponse({ digest: null, reason: 'api_error' });
+      const claudeData = await claudeRes.json();
+      if (claudeData.stop_reason === 'max_tokens') return jsonResponse({ digest: null, reason: 'too_long' });
+      const digestText = claudeData.content?.[0]?.text?.trim() || '';
+      if (!digestText) return jsonResponse({ digest: null, reason: 'empty' });
+
+      // Persistir — ON CONFLICT evita duplicados en condiciones de carrera
+      const generatedAt = new Date().toISOString();
+      await env.DB.prepare(`
+        INSERT INTO assistant_digests (user_id, week_start, content, generated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id, week_start) DO NOTHING
+      `).bind(user.id, weekStart, digestText, generatedAt).run().catch(() => {});
+
+      return jsonResponse({ digest: { content: digestText, generated_at: generatedAt } });
+    } catch {
+      return jsonResponse({ digest: null, reason: 'error' }); // nunca rompe la UI
+    }
   }
 
   return errorResponse('Not found', 404);

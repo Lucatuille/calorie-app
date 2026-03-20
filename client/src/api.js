@@ -82,6 +82,7 @@ export const api = {
   getAssistantUsage:         (token)          => request('GET',  '/api/assistant/usage', null, token),
   getAssistantConversations: (token)          => request('GET',  '/api/assistant/conversations', null, token),
   getConversationMessages:   (convId, token)  => request('GET',  `/api/assistant/conversations/${convId}`, null, token),
+  getAssistantDigest:        (token)          => request('GET',  '/api/assistant/digest', null, token),
 
   // Stripe
   createCheckoutSession: (priceId, token) => request('POST', '/api/create-checkout-session', { priceId }, token),

@@ -269,6 +269,69 @@ function ConversationHistory({ conversations, onSelect, onClose }) {
   );
 }
 
+// ── Resumen semanal (card proactiva, no es un mensaje de chat) ────────
+
+function DigestCard({ digest, onDismiss }) {
+  const dateStr = new Date(digest.generated_at).toLocaleDateString('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '0.5px solid var(--border)',
+      borderLeft: '2px solid var(--accent)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '13px 14px 14px',
+      marginBottom: 12,
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 10,
+      }}>
+        <div>
+          <span style={{
+            display: 'block',
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: '0.07em',
+            textTransform: 'uppercase',
+            color: 'var(--accent)',
+            fontFamily: 'var(--font-sans)',
+            marginBottom: 2,
+          }}>
+            Resumen semanal
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+            {dateStr}
+          </span>
+        </div>
+        <button
+          onClick={onDismiss}
+          aria-label="Cerrar resumen"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-tertiary)',
+            cursor: 'pointer',
+            fontSize: 18,
+            lineHeight: 1,
+            padding: '0 2px',
+            marginLeft: 8,
+            flexShrink: 0,
+          }}
+        >
+          ×
+        </button>
+      </div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.65, fontFamily: 'var(--font-sans)' }}>
+        <MarkdownText content={digest.content} />
+      </div>
+    </div>
+  );
+}
+
 // ── Página principal ─────────────────────────────────────────
 
 export default function Assistant() {
@@ -286,6 +349,8 @@ export default function Assistant() {
   const [blocked, setBlocked]               = useState(false);
   const [todayData, setTodayData]           = useState(null);
   const [streak, setStreak]                 = useState(0);
+  const [digest, setDigest]                 = useState(null);
+  const [digestDismissed, setDigestDismissed] = useState(false);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
@@ -298,6 +363,13 @@ export default function Assistant() {
       .then(res => setStreak(res.summary?.streak || 0))
       .catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    if (!isPro(user?.access_level)) return;
+    api.getAssistantDigest(token)
+      .then(res => { if (res?.digest) setDigest(res.digest); })
+      .catch(() => {}); // silent — never blocks the chat
+  }, []);
 
   useEffect(() => {
     setIntroLoading(true);
@@ -520,6 +592,10 @@ export default function Assistant() {
 
         {/* ── Mensajes ── */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 8px' }}>
+          {digest && !digestDismissed && !blocked && (
+            <DigestCard digest={digest} onDismiss={() => setDigestDismissed(true)} />
+          )}
+
           {introLoading && <TypingDots />}
 
           {blocked
