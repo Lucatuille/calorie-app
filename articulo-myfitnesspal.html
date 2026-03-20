@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Por qué dejé MyFitnessPal (y qué uso ahora) — kcal blog</title>
+<meta name="description" content="MyFitnessPal cobra 10€ al mes, tiene anuncios y una UI que abruma. Cal AI cuesta lo mismo. Hay una alternativa mejor y gratuita para la dieta española.">
+<link rel="canonical" href="https://lucaeats.org/blog/alternativa-myfitnesspal-espana">
+<link rel="alternate" hreflang="es" href="https://lucaeats.org/blog/alternativa-myfitnesspal-espana">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lucaeats.org/blog/alternativa-myfitnesspal-espana">
+<meta property="og:title" content="Por qué dejé MyFitnessPal (y qué uso ahora)">
+<meta property="og:description" content="MyFitnessPal cobra 10€ al mes con anuncios. Cal AI lo mismo. Existe una alternativa gratuita hecha para la dieta española.">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Por qué dejé MyFitnessPal (y qué uso ahora)",
+  "description": "MyFitnessPal cobra 10€ al mes con anuncios. Cal AI lo mismo. Existe una alternativa gratuita hecha para la dieta española.",
+  "inLanguage": "es",
+  "author": {
+    "@type": "Person",
+    "name": "Luca"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "kcal"
+  },
+  "datePublished": "2026-03-18",
+  "mainEntityOfPage": "https://lucaeats.org/blog/alternativa-myfitnesspal-espana"
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE;
+  --white: #FFFFFF;
+  --dark: #111111;
+  --mid: #888888;
+  --light: #E8E4DE;
+  --green: #22c55e;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(245,242,238,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--light);
+}
+.nav-logo { font-family: var(--serif); font-size: 20px; color: var(--green); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { font-size: 13px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--dark); }
+.nav-cta { background: var(--dark) !important; color: white !important; padding: 8px 18px; border-radius: 100px; font-weight: 500 !important; }
+@media (max-width: 640px) { nav { padding: 14px 20px; } .nav-links { display: none; } }
+
+/* ARTICLE */
+.article-wrap {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+}
+
+/* Header */
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.meta-tag {
+  background: var(--white);
+  border: 1px solid var(--light);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--mid);
+}
+.meta-date { font-size: 12px; color: var(--mid); }
+.meta-read { font-size: 12px; color: var(--mid); }
+
+.article-title {
+  font-family: var(--serif);
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+.article-title em { font-style: italic; color: var(--green); }
+
+.article-lead {
+  font-size: 18px;
+  color: var(--mid);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--light);
+}
+
+/* Body */
+.article-body { font-size: 16px; line-height: 1.8; color: #333; }
+
+.article-body h2 {
+  font-family: var(--serif);
+  font-size: 28px;
+  color: var(--dark);
+  margin: 48px 0 16px;
+  line-height: 1.2;
+}
+.article-body h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--dark);
+  margin: 36px 0 12px;
+}
+.article-body p { margin-bottom: 20px; }
+.article-body p:last-child { margin-bottom: 0; }
+
+.article-body strong { color: var(--dark); font-weight: 600; }
+
+.article-body ul {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.article-body ul li {
+  padding-left: 20px;
+  position: relative;
+}
+.article-body ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-size: 14px;
+}
+
+/* Callout */
+.callout {
+  background: var(--white);
+  border-left: 3px solid var(--green);
+  border-radius: 0 12px 12px 0;
+  padding: 20px 24px;
+  margin: 32px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.callout p { margin: 0; font-size: 15px; color: var(--dark); font-style: italic; }
+
+/* Comparison box */
+.compare-box {
+  background: var(--dark);
+  border-radius: 16px;
+  padding: 28px;
+  margin: 32px 0;
+  color: white;
+}
+.compare-box h4 {
+  font-family: var(--serif);
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: white;
+}
+.compare-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #222;
+  font-size: 14px;
+}
+.compare-row:last-child { border: none; padding-bottom: 0; }
+.compare-label { color: #888; }
+.compare-val { font-weight: 500; }
+.compare-val.red { color: #ef4444; }
+.compare-val.green { color: var(--green); }
+
+/* CTA inline */
+.article-cta {
+  background: var(--dark);
+  border-radius: 20px;
+  padding: 36px 32px;
+  text-align: center;
+  margin: 48px 0;
+}
+.article-cta h3 { font-family: var(--serif); font-size: 24px; color: white; margin-bottom: 10px; }
+.article-cta p { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+.article-cta a {
+  display: inline-block;
+  background: var(--green);
+  color: white;
+  padding: 13px 28px;
+  border-radius: 100px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.article-cta a:hover { background: #16a34a; }
+
+/* Author */
+.article-author {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0;
+  border-top: 1px solid var(--light);
+  margin-top: 48px;
+}
+.author-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--dark);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+.author-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.author-bio { font-size: 13px; color: var(--mid); }
+
+/* Related */
+.related {
+  padding: 48px 0 0;
+  border-top: 1px solid var(--light);
+}
+.related-label {
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--mid); margin-bottom: 20px;
+}
+.related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.related-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 20px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+.related-card:hover { transform: translateY(-2px); }
+.related-tag { font-size: 10px; color: var(--mid); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+.related-title { font-family: var(--serif); font-size: 17px; color: var(--dark); line-height: 1.3; }
+@media (max-width: 480px) { .related-grid { grid-template-columns: 1fr; } }
+
+/* Footer */
+footer {
+  background: var(--dark);
+  border-top: 1px solid #1e1e1e;
+  padding: 28px 40px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+  margin-top: 80px;
+}
+.f-logo { font-family: var(--serif); font-size: 18px; color: var(--green); text-decoration: none; }
+.f-links { display: flex; gap: 24px; list-style: none; }
+.f-links a { font-size: 12px; color: #555; text-decoration: none; }
+.f-copy { font-size: 12px; color: #444; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">kcal</a>
+  <ul class="nav-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/#precios">Precios</a></li>
+    <li><a href="/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrap">
+
+  <div class="article-meta">
+    <span class="meta-tag">Herramientas</span>
+    <span class="meta-date">Marzo 2026</span>
+    <span class="meta-read">· 5 min de lectura</span>
+  </div>
+
+  <h1 class="article-title">
+    Por qué dejé MyFitnessPal<br>
+    <em>(y qué uso ahora)</em>
+  </h1>
+
+  <p class="article-lead">
+    MyFitnessPal tiene 11 millones de alimentos en su base de datos.
+    Y aun así, no sabe lo que es un bocadillo de lomo.
+    Llevo años usando apps de calorías y he llegado a una conclusión:
+    más no es mejor. Aquí cuento qué pasó y qué cambié.
+  </p>
+
+  <div class="article-body">
+
+    <p>
+      Empecé a contar calorías por la razón más española posible: quería perder unos kilos antes del verano sin dejar de comer bien. Nada de dietas raras, solo saber lo que metía en el cuerpo.
+    </p>
+
+    <p>
+      MyFitnessPal era la opción obvia. Todo el mundo lo usaba, tenía millones de alimentos, y en teoría era gratis. Lo descargué, lo configuré, y durante los primeros días hasta me gustó.
+    </p>
+
+    <p>
+      Luego llegó el primer problema real.
+    </p>
+
+    <h2>El problema no es la base de datos. Es la UI.</h2>
+
+    <p>
+      Busqué "tostadas con tomate" y me aparecieron 47 resultados diferentes, todos con datos distintos, la mayoría creados por usuarios de Estados Unidos que claramente no saben lo que es el pan con tomate y aceite de oliva de toda la vida.
+    </p>
+
+    <p>
+      Para añadir una comida sencilla tenía que elegir entre versiones con datos contradictorios, ajustar gramos manualmente, separar ingredientes, y al final no estar seguro de si lo que había registrado tenía algo que ver con la realidad.
+    </p>
+
+    <div class="callout">
+      <p>"Pasaba más tiempo buscando el alimento correcto que comiendo. En algún momento el proceso se volvió más estresante que útil."</p>
+    </div>
+
+    <p>
+      La app tiene demasiadas opciones para todo. Demasiados menús, demasiados ajustes, demasiados números. Está diseñada para alguien que quiere controlar 84 micronutrientes. Yo solo quería saber si me pasaba de calorías.
+    </p>
+
+    <h2>Luego está el precio.</h2>
+
+    <p>
+      MyFitnessPal Premium cuesta <strong>8,99€ al mes</strong>. O 47,99€ al año. Para una app que encima te muestra anuncios en el plan gratuito.
+    </p>
+
+    <p>
+      Cal AI — la app que se ha puesto de moda por lo de la foto con IA — cuesta entre 4 y 6€ al mes. Mejor experiencia, sí, pero sigue siendo una suscripción más que justificar.
+    </p>
+
+    <div class="compare-box">
+      <h4>Lo que pagan los usuarios al año</h4>
+      <div class="compare-row">
+        <span class="compare-label">MyFitnessPal Premium</span>
+        <span class="compare-val red">47,99€/año</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Cal AI</span>
+        <span class="compare-val red">~60€/año</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">kcal Pro</span>
+        <span class="compare-val green">14,99€/año</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">kcal Free</span>
+        <span class="compare-val green">0€</span>
+      </div>
+    </div>
+
+    <p>
+      Para mí el precio no era el único problema, pero sí era el que más pesaba. Pagar casi 50€ al año por una app que no entiende la dieta mediterránea y que encima tiene anuncios no tiene ningún sentido.
+    </p>
+
+    <h2>Qué busqué cuando decidí cambiar</h2>
+
+    <p>
+      Tenía claro lo que no quería. Quería algo que:
+    </p>
+
+    <ul>
+      <li>Fuera rápido — foto y listo, sin buscar entre miles de versiones del mismo plato</li>
+      <li>Entendiera la comida española real, no la versión americana de la dieta mediterránea</li>
+      <li>No me cobrara 10€ al mes por algo que uso 2 minutos al día</li>
+      <li>No tuviera anuncios</li>
+      <li>Aprendiera de mis hábitos en lugar de darme estimaciones genéricas</li>
+    </ul>
+
+    <p>
+      La última condición era la más difícil de encontrar. Todas las apps de calorías usan la misma IA para todo el mundo. Si yo siempre como la misma tortilla española y siempre la corrijo con los mismos gramos, ¿por qué la app no lo recuerda?
+    </p>
+
+    <h2>Lo que cambió con kcal</h2>
+
+    <p>
+      La diferencia más grande no es la foto IA — eso ya lo tienen otras apps. La diferencia es el <strong>motor de calibración personal</strong>. Cada vez que corrijo una estimación, la app lo registra y lo aplica la próxima vez. Con el tiempo, las estimaciones son cada vez más precisas para mi forma específica de comer.
+    </p>
+
+    <p>
+      Es la diferencia entre una app que sabe lo que come un usuario promedio y una app que sabe lo que como yo.
+    </p>
+
+    <p>
+      El otro cambio que no esperaba: el asistente. No es un chatbot genérico con respuestas de manual. Tiene acceso a todo mi historial real y puede decirme cosas como "llevas 485 kcal hoy, te quedan 1327 y todavía necesitas 107g de proteína". No porque lo haya calculado en el momento — porque sabe lo que he comido esta semana, cuál es mi objetivo, y cómo voy.
+    </p>
+
+    <div class="callout">
+      <p>"La primera vez que el asistente me dijo 'tus viernes son tus peores días de la semana' me di cuenta de que ninguna otra app podía decir eso porque ninguna otra tenía ese contexto."</p>
+    </div>
+
+    <h2>¿Cuándo tiene sentido pagar la versión Pro?</h2>
+
+    <p>
+      El plan gratuito incluye registro manual ilimitado, escáner de código de barras y 5 análisis por foto con IA. Para alguien que empieza a contar calorías, es más que suficiente.
+    </p>
+
+    <p>
+      Pro (1,99€/mes o 14,99€/año) desbloquea la foto IA ilimitada, el asistente completo, el motor de calibración y el análisis profundo con proyecciones de peso. Si usas la app todos los días, 1,99€ al mes es difícil de cuestionar comparado con las alternativas.
+    </p>
+
+    <h2>La conclusión honesta</h2>
+
+    <p>
+      MyFitnessPal es una app muy completa para alguien que quiere controlar cada micronutriente de su dieta con precisión científica. Si eso eres tú, probablemente vale los 48€ al año.
+    </p>
+
+    <p>
+      Para el resto — la mayoría de personas que solo quieren saber si están comiendo bien sin que se convierta en un trabajo — hay mejores opciones. Especialmente si comes comida española y no te apetece buscar entre 47 versiones distintas de la tortilla de patatas.
+    </p>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="article-cta">
+    <h3>Prueba kcal gratis</h3>
+    <p>Sin tarjeta de crédito. Sin suscripción obligatoria. La IA aprende cómo comes tú desde el primer día.</p>
+    <a href="/register">Empieza gratis →</a>
+  </div>
+
+  <!-- Author -->
+  <div class="article-author">
+    <div class="author-avatar">L</div>
+    <div>
+      <div class="author-name">Luca</div>
+      <div class="author-bio">Estudiante de ingeniería en Barcelona. Construí kcal porque MyFitnessPal no entendía lo que comía.</div>
+    </div>
+  </div>
+
+  <!-- Related -->
+  <div class="related">
+    <div class="related-label">Más artículos</div>
+    <div class="related-grid">
+      <a href="/blog/contar-calorias-ia" class="related-card">
+        <div class="related-tag">Guías</div>
+        <div class="related-title">Cómo contar calorías con IA en 2026</div>
+      </a>
+      <a href="/blog/app-calorias-espanol" class="related-card">
+        <div class="related-tag">Comparativas</div>
+        <div class="related-title">Las mejores apps de calorías en español</div>
+      </a>
+    </div>
+  </div>
+
+</article>
+
+<footer>
+  <a href="/" class="f-logo">kcal</a>
+  <ul class="f-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/privacy">Privacidad</a></li>
+    <li><a href="mailto:hola@lucaeats.org">Contacto</a></li>
+  </ul>
+  <div class="f-copy">© 2026 kcal. Hecho en Barcelona.</div>
+</footer>
+
+</body>
+</html>

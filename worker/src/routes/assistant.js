@@ -135,7 +135,7 @@ async function buildUserContext(userId, env) {
   const weekAgo  = new Date(Date.now() - 7  * 86400000).toLocaleDateString('en-CA');
   const monthAgo = new Date(Date.now() - 30 * 86400000).toLocaleDateString('en-CA');
 
-  const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory, mealTypes, allDays30] =
+  const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory, mealTypes, allDays30, calibRow] =
     await Promise.all([
       env.DB.prepare(
         'SELECT name, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat, goal_weight, tdee FROM users WHERE id = ?'
@@ -199,6 +199,11 @@ async function buildUserContext(userId, env) {
         WHERE user_id = ? AND date >= ? AND date < ?
         GROUP BY date ORDER BY date DESC
       `).bind(userId, monthAgo, today).all(),
+
+      // Motor de calibración — solo se lee, no bloquea si falta la tabla
+      env.DB.prepare(
+        'SELECT global_bias, confidence, data_points, food_factors FROM user_calibration WHERE user_id = ?'
+      ).bind(userId).first().catch(() => null),
     ]);
 
   const todayTotals = (todayRows.results||[]).reduce(
@@ -279,6 +284,34 @@ async function buildUserContext(userId, env) {
     ].join('\n');
   })();
 
+  // Calibration section — solo Sonnet y solo si hay datos suficientes (confidence >= 15%)
+  const calibSection = (() => {
+    if (!calibRow || (calibRow.confidence || 0) < 0.15) return '';
+    const conf    = Math.round((calibRow.confidence || 0) * 100);
+    const pts     = calibRow.data_points || 0;
+    const bias    = calibRow.global_bias || 0;
+    const biasTag = Math.abs(bias) < 0.05
+      ? 'calibrado (sesgo mínimo)'
+      : bias > 0
+        ? `+${Math.round(bias * 100)}% (subestima habitualmente)`
+        : `${Math.round(bias * 100)}% (sobreestima habitualmente)`;
+    let foodLine = '';
+    try {
+      const ff = JSON.parse(calibRow.food_factors || '{}');
+      const notable = Object.entries(ff)
+        .filter(([, v]) => Math.abs(v.bias) >= 0.10 && (v.samples || 0) >= 2)
+        .sort((a, b) => Math.abs(b[1].bias) - Math.abs(a[1].bias))
+        .slice(0, 3)
+        .map(([cat, v]) => `${cat} (${v.bias > 0 ? '+' : ''}${Math.round(v.bias * 100)}%)`);
+      if (notable.length) foodLine = `
+  Categorías con sesgo: ${notable.join(', ')}`;
+    } catch {}
+    return `
+
+=== MOTOR DE CALIBRACIÓN ===
+  Confianza: ${conf}% (${pts} correcciones) | Sesgo: ${biasTag}${foodLine}`;
+  })();
+
   return `Hoy: ${todayLabel()}
 
 === PERFIL ===
@@ -309,7 +342,7 @@ ${dowPattern}
 ${mealPattern}
 
 === COMIDAS FRECUENTES (últimos 90 días) ===
-${(topFoods.results||[]).map(f => `  ${f.name}: ${f.times}x (${Math.round(f.avg_cal)} kcal media)`).join('\n') || '  Sin datos suficientes'}
+${(topFoods.results||[]).map(f => `  ${f.name}: ${f.times}x (${Math.round(f.avg_cal)} kcal media)`).join('\n') || '  Sin datos suficientes'}${calibSection}
 
 === PESO ===
 ${wh.slice(0,5).map(w => `  ${w.date}: ${w.weight}kg`).join('\n') || '  Sin registros de peso'}

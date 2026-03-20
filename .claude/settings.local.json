@@ -14,7 +14,11 @@
       "Bash(npx wrangler d1 execute calorie-app-db --command=\"ALTER TABLE users ADD COLUMN tdee_calculated_at TEXT\" --remote)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|BUG\\\\|HACK\" /c/Users/osesa/proyectos/calorie-app/client/src /c/Users/osesa/proyectos/calorie-app/worker/src --include=*.js --include=*.jsx)",
+      "Bash(npx wrangler:*)"
     ]
   }
 }
