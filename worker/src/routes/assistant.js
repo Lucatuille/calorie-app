@@ -708,6 +708,10 @@ export async function handleAssistant(request, env, path, ctx) {
     try {
       const weekStart = getWeekStart();
 
+      // Feature gate: no generar antes de la semana de lanzamiento
+      const MIN_WEEK_START = '2026-03-23';
+      if (weekStart < MIN_WEEK_START) return jsonResponse({ digest: null, reason: 'not_yet_active' });
+
       // Devolver digest cacheado si ya existe esta semana
       const existing = await env.DB.prepare(
         'SELECT content, generated_at FROM assistant_digests WHERE user_id = ? AND week_start = ?'
