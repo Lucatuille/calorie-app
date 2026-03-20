@@ -12,6 +12,8 @@ import { jsonResponse, errorResponse, requireProAccess, proAccessDenied } from '
 
 // Beta(1): 15 mensajes/día | Pro(2): 30 mensajes/día | Admin(99): sin límite práctico
 const DAILY_LIMITS = { 1: 15, 2: 30, 99: 999 };
+// Sonnet: max 1/usuario/dia — downgrade silencioso si se supera
+const SONNET_DAILY_LIMIT = 1;
 
 // ── System prompt del asistente ────────────────────────────
 
@@ -28,6 +30,7 @@ FORMATO:
 - Estado del día (¿cómo voy?, ¿cuántas kcal?, ¿qué me falta?): 2-3 líneas. Los datos en contexto, no sueltos.
 - Recomendación de alimento: máx 4 opciones concretas, una por línea con kcal aproximadas.
 - Análisis complejo (semana, patrones, por qué…): máx 3 secciones con ###, 2-3 líneas cada una. Sin relleno.
+- Al responder preguntas de análisis (cuando el contexto incluya PATRONES o PERFIL DE MACROS): si detectas UN patrón claro no preguntado pero relevante (p.ej. fines de semana >15% sobre objetivo, proteína sistemáticamente baja, tendencia en 7 días), añádelo al final como "Además: [observación concreta]". Solo uno, solo si es genuinamente accionable.
 
 REGLAS:
 1. SIEMPRE usa los datos reales del usuario. Nunca inventes ni aproximes — si el dato exacto está en el contexto, úsalo.
@@ -40,9 +43,11 @@ REGLAS:
 8. Para listas de comidas: "Nombre — X kcal"
 9. Interpreta el objetivo del usuario: si goal_weight < weight → quiere perder peso; si goal_weight > weight → quiere ganar; si son iguales o goal_weight no definido → mantenimiento. Adapta los consejos a este objetivo.
 10. Si hay pocos días de datos (< 5 días registrados), recónocelo antes de sacar conclusiones.
+11. Cuando el contexto incluya PERFIL DE MACROS, PATRONES POR DÍA o PATRONES POR TIPO DE COMIDA, úsalos activamente — no los ignores.
+12. El "Además:" solo aparece una vez por respuesta y solo si la observación es concreta y accionable.
 
 Cuando la pregunta sea sobre salud o recomendaciones médicas, añade al final en una línea aparte:
-"ⓘ Soy una herramienta de seguimiento, no un profesional sanitario."`
+"ⓘ Soy una herramienta de seguimiento, no un profesional sanitario.""ⓘ Soy una herramienta de seguimiento, no un profesional sanitario."`
 
 // ── Helper: nombre del día en español ──────────────────────
 
@@ -322,7 +327,7 @@ function detectQueryComplexity(message) {
     /patr[oó]n|tendencia|an[aá]lisis/i,
     /qu[eé] (estoy haciendo mal|puedo mejorar|fallo)/i,
     /plan (de |nutricional|semanal|mensual)|rutina|estrategia/i,
-    /h[aá]bito|alimentaci[oó]n|d[eé]ficit|super[aá]vit/i,
+    // hábito/alimentación/déficit/superávit — removed, answerable with Haiku light context
     /mis (desayunos|comidas|cenas|snacks|meriendas)|por tipo de comida/i,
     /fin(es)? de semana|entre semana|d[\u00ed]as? de la semana/i,
     /comparar|diferencia entre/i,
@@ -422,9 +427,28 @@ export async function handleAssistant(request, env, path, ctx) {
     }
 
     // Detectar complejidad y elegir modelo
-    const complexity = is_intro ? 'haiku' : detectQueryComplexity(message);
+    let complexity = is_intro ? 'haiku' : detectQueryComplexity(message);
+
+    // Sonnet budget: max 1/usuario/dia — downgrade silencioso si se supera
+    if (complexity === 'sonnet' && !is_intro) {
+      try {
+        const sonnetRow = await env.DB.prepare(
+          'SELECT sonnet_count FROM assistant_usage WHERE user_id = ? AND date = ?'
+        ).bind(user.id, today).first();
+        if ((sonnetRow?.sonnet_count || 0) >= SONNET_DAILY_LIMIT) complexity = 'haiku';
+      } catch { /* DB error: allow Sonnet */ }
+    }
+
     const modelId    = complexity === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
     const maxTokens  = complexity === 'sonnet' ? 900 : 550;
+
+    // Incrementar Sonnet counter atomicamente antes de la llamada
+    if (complexity === 'sonnet' && !is_intro) {
+      await env.DB.prepare(`
+        INSERT INTO assistant_usage (user_id, date, sonnet_count) VALUES (?,?,1)
+        ON CONFLICT(user_id, date) DO UPDATE SET sonnet_count = sonnet_count + 1
+      `).bind(user.id, today).run().catch(() => {});
+    }
 
     // Obtener o crear conversación (los intros nunca crean conversación)
     let convId    = conversation_id || null;
