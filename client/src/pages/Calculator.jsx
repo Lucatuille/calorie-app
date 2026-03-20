@@ -102,10 +102,12 @@ export default function Calculator() {
 
   const [method, setMethod] = useState('photo');
 
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [photoData,    setPhotoData]    = useState(null);
-  const [photoContext, setPhotoContext] = useState('');
-  const [analyzing,    setAnalyzing]    = useState(false);
+  const [photoPreview,    setPhotoPreview]    = useState(null);
+  const [photoData,       setPhotoData]       = useState(null);
+  const [photoContext,    setPhotoContext]     = useState('');
+  const [photoLocation,   setPhotoLocation]   = useState(null);
+  const [photoPlateSize,  setPhotoPlateSize]  = useState(null);
+  const [analyzing,       setAnalyzing]       = useState(false);
   const [aiResult,     setAiResult]     = useState(null);
   const [aiLimitData,  setAiLimitData]  = useState(null);
   const fileRef = useRef(null);
@@ -202,6 +204,8 @@ export default function Calculator() {
       img.src = original;
       setAiResult(null);
       setPhotoContext('');
+      setPhotoLocation(null);
+      setPhotoPlateSize(null);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -213,10 +217,12 @@ export default function Calculator() {
     setAiResult(null);
     try {
       const result = await api.analyzePhoto({
-        image:     photoData.base64,
-        mediaType: photoData.mediaType,
-        context:   photoContext.trim(),
-        meal_type: form.meal_type,
+        image:            photoData.base64,
+        mediaType:        photoData.mediaType,
+        context:          photoContext.trim(),
+        meal_type:        form.meal_type,
+        photo_location:   photoLocation  || undefined,
+        photo_plate_size: photoPlateSize || undefined,
       }, token);
       setAiResult(result);
     } catch (err) {
@@ -279,12 +285,14 @@ export default function Calculator() {
       ai_raw:        aiResult.ai_raw || aiResult.calories,
       ai_calibrated: aiResult.calories,
       categories:    aiResult.categories || [],
-      has_context:   photoContext.trim().length > 0,
+      has_context:   photoContext.trim().length > 0 || !!photoLocation || !!photoPlateSize,
       name:          aiResult.name,
     };
     setPhotoPreview(null);
     setPhotoData(null);
     setPhotoContext('');
+    setPhotoLocation(null);
+    setPhotoPlateSize(null);
     setAiResult(null);
   }
 
@@ -411,7 +419,6 @@ export default function Calculator() {
             ref={fileRef}
             type="file"
             accept="image/*"
-            capture="environment"
             style={{ display: 'none' }}
             onChange={handlePhotoChange}
           />
@@ -429,6 +436,73 @@ export default function Calculator() {
               />
               {!aiResult && !analyzing && (
                 <>
+                  {/* Optional context toggles */}
+                  <div style={{ marginBottom: 10 }}>
+                    {/* Location row */}
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                      {[
+                        { key: 'home',       label: 'Casa'       },
+                        { key: 'restaurant', label: 'Restaurante' },
+                        { key: 'takeaway',   label: 'Takeaway'   },
+                        { key: 'fastfood',   label: 'Fast food'  },
+                      ].map(opt => {
+                        const active = photoLocation === opt.key;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => setPhotoLocation(active ? null : opt.key)}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: 11,
+                              borderRadius: 99,
+                              border: active ? '1.5px solid var(--accent)' : '0.5px solid var(--border)',
+                              background: active ? 'rgba(45,106,79,0.08)' : 'var(--surface-2)',
+                              color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                              cursor: 'pointer',
+                              fontFamily: 'var(--font-sans)',
+                              fontWeight: active ? 600 : 400,
+                              transition: 'all 0.12s ease',
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Plate size row */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {[
+                        { key: 'small',  label: 'Plato pequeño' },
+                        { key: 'normal', label: 'Plato normal'  },
+                        { key: 'large',  label: 'Plato grande'  },
+                        { key: 'bowl',   label: 'Bol'           },
+                      ].map(opt => {
+                        const active = photoPlateSize === opt.key;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => setPhotoPlateSize(active ? null : opt.key)}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: 11,
+                              borderRadius: 99,
+                              border: active ? '1.5px solid var(--accent)' : '0.5px solid var(--border)',
+                              background: active ? 'rgba(45,106,79,0.08)' : 'var(--surface-2)',
+                              color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                              cursor: 'pointer',
+                              fontFamily: 'var(--font-sans)',
+                              fontWeight: active ? 600 : 400,
+                              transition: 'all 0.12s ease',
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div style={{ marginBottom: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
                       <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
@@ -439,7 +513,7 @@ export default function Calculator() {
                     <textarea
                       rows={2}
                       maxLength={300}
-                      placeholder='Ej: "son 2 raciones", "200g aprox", "comida de restaurante"…'
+                      placeholder='Ej: "son 2 raciones", "200g aprox"…'
                       value={photoContext}
                       onChange={e => setPhotoContext(e.target.value)}
                       style={{ ...inputStyle, resize: 'vertical', fontSize: 13 }}
@@ -484,8 +558,15 @@ export default function Calculator() {
                       confianza {aiResult.confidence}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, flexWrap: 'wrap' }}>
-                    <span><b>{aiResult.calories}</b> kcal</span>
+                  <div style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, flexWrap: 'wrap', alignItems: 'baseline' }}>
+                    <span>
+                      <b>{aiResult.calories}</b> kcal
+                      {aiResult.calories_min && aiResult.calories_max && (
+                        <span style={{ fontSize: 10, color: 'var(--text-tertiary)', marginLeft: 4 }}>
+                          ({aiResult.calories_min}–{aiResult.calories_max})
+                        </span>
+                      )}
+                    </span>
                     {aiResult.protein > 0 && <span style={{ color: '#059669' }}><b>{aiResult.protein}g</b> prot</span>}
                     {aiResult.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{aiResult.carbs}g</b> carb</span>}
                     {aiResult.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{aiResult.fat}g</b> grasa</span>}
@@ -538,7 +619,7 @@ export default function Calculator() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setPhotoPreview(null); setPhotoData(null); setPhotoContext(''); setAiResult(null); }}
+                      onClick={() => { setPhotoPreview(null); setPhotoData(null); setPhotoContext(''); setPhotoLocation(null); setPhotoPlateSize(null); setAiResult(null); }}
                       style={{
                         background: 'none', border: '0.5px solid var(--border)',
                         borderRadius: 6, padding: '6px 14px', fontSize: 13,

@@ -11,7 +11,7 @@ import { getAiLimit, canAccess } from '../utils/levels.js';
 const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
 
 // ── System prompt fotos — estático, apto para prompt caching ─
-// ~200 tokens (antes ~420)
+// ~300 tokens
 
 const PHOTO_SYSTEM_PROMPT = `Eres un nutricionista experto analizando una foto de comida.
 
@@ -21,15 +21,18 @@ Proceso obligatorio antes de estimar:
 3. Calcula kcal por componente y suma → ese es el total real
 
 Devuelve SOLO JSON válido:
-{"name":"nombre descriptivo","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal,"confidence":"alta"|"media"|"baja","notes":"componentes: X g proteína (~Nkcal) + Y g carbos (~Nkcal) + ...","categories":["cat1","cat2"]}
+{"name":"nombre descriptivo","calories":entero,"calories_min":entero|null,"calories_max":entero|null,"protein":decimal,"carbs":decimal,"fat":decimal,"confidence":"alta"|"media"|"baja","notes":"componentes: X g proteína (~Nkcal) + Y g carbos (~Nkcal) + ...","categories":["cat1","cat2"]}
+
+Si confidence!="alta", rellena calories_min y calories_max con el rango realista (±15-25%).
 
 Referencia por 100g (úsala para calcular, no como techo):
 pollo/pavo pechuga 120kcal | muslo pollo 180kcal | ternera 250kcal | cerdo 280kcal | pescado blanco 90kcal | salmón 200kcal | huevo 155kcal | arroz cocido 130kcal | pasta cocida 160kcal | pan 260kcal | patata cocida 85kcal | patata frita 310kcal | legumbres 120kcal | verdura hoja 25kcal | aceite 880kcal
 
 Reglas:
 - El total depende de la CANTIDAD visible — un plato grande de pasta puede ser 700kcal, uno pequeño 350kcal
-- Asume aceite de cocción (+30-80kcal típico)
-- Restaurante o preparación elaborada: +25-35% vs casero simple
+- Grasa de cocción según método: hervido/vapor +0 | plancha/horno +15-30kcal | salteado/rehogado +60-100kcal | frito sartén +100-180kcal | frito freidora +150-250kcal | salsa cremosa visible +100-200kcal | aliño ensalada +80-150kcal
+- Si hay múltiples platos o acompañamientos visibles (guarnición, pan, bebida), estímalos todos y suma al total
+- Restaurante o preparación elaborada: +25-35% vs casero simple (ya incluido en grasa si aplica)
 - confidence "baja" si la imagen no muestra comida claramente, valores 0
 - categories: máx 4, inglés snake_case`;
 
@@ -101,7 +104,7 @@ export async function handleAnalyze(request, env, path, ctx) {
   }
 
   if (path === '/api/analyze' && request.method === 'POST') {
-    const { image, mediaType, context, meal_type } = await request.json();
+    const { image, mediaType, context, meal_type, photo_location, photo_plate_size } = await request.json();
 
     if (!image) return errorResponse('Imagen requerida');
     if (!env.ANTHROPIC_API_KEY) return errorResponse('API key no configurada', 500);
@@ -133,10 +136,16 @@ export async function handleAnalyze(request, env, path, ctx) {
       }
     } catch {}
 
-    const contextSection = context?.trim()
-      ? `\nContexto: "${context.trim().slice(0, 200)}"`
-      : '';
+    // Contexto estructurado desde los toggles del cliente
+    const locationLabels = { home: 'comida casera', restaurant: 'restaurante', takeaway: 'takeaway/para llevar', fastfood: 'fast food' };
+    const sizeLabels     = { small: 'plato pequeño (~20cm)', normal: 'plato estándar (~26cm)', large: 'plato grande (~30cm)', bowl: 'bol/cuenco' };
+    const structuredParts = [
+      photo_location   ? `Lugar: ${locationLabels[photo_location]   || photo_location}`   : null,
+      photo_plate_size ? `Tamaño: ${sizeLabels[photo_plate_size] || photo_plate_size}` : null,
+    ].filter(Boolean);
+    const fullContext = [structuredParts.join(' | '), context?.trim()].filter(Boolean).join(' · ');
 
+    const contextSection = fullContext ? `\nContexto: "${fullContext.slice(0, 250)}"` : '';
     const userText = `Analiza esta comida y devuelve el JSON.${contextSection}`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -207,17 +216,24 @@ export async function handleAnalyze(request, env, path, ctx) {
         is_weekend:      isWeekend,
       });
 
+      // Scale the range by the same calibration ratio applied to the midpoint
+      const calibRatio = aiRaw > 0 ? calibrated / aiRaw : 1;
+      const caloriesMin = result.calories_min ? Math.round(result.calories_min * calibRatio) : null;
+      const caloriesMax = result.calories_max ? Math.round(result.calories_max * calibRatio) : null;
+
       const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.05;
       const similarMeal        = findSimilarMeal(result.name, calibrationProfile?.frequent_meals);
 
       return jsonResponse({
-        name:       result.name       || '',
-        calories:   calibrated,
-        protein:    parseFloat((result.protein  || 0).toFixed(1)),
-        carbs:      parseFloat((result.carbs    || 0).toFixed(1)),
-        fat:        parseFloat((result.fat      || 0).toFixed(1)),
-        confidence: result.confidence || 'media',
-        notes:      result.notes      || '',
+        name:         result.name       || '',
+        calories:     calibrated,
+        calories_min: caloriesMin,
+        calories_max: caloriesMax,
+        protein:      parseFloat((result.protein  || 0).toFixed(1)),
+        carbs:        parseFloat((result.carbs    || 0).toFixed(1)),
+        fat:          parseFloat((result.fat      || 0).toFixed(1)),
+        confidence:   result.confidence || 'media',
+        notes:        result.notes      || '',
         categories,
         ai_raw:                  aiRaw,
         calibration_applied:     calibrationApplied,
