@@ -18,13 +18,45 @@
  * LÍMITE RECOMENDADO: 4-6 items por versión. Si hay más, priorizar los más impactantes.
  */
 
-export const CURRENT_VERSION = '1.3.0';
+export const CURRENT_VERSION = '1.4.0';
 
 export const RELEASES = [
   {
+    version: '1.4.0',
+    date: 'Marzo 2026',
+    title: 'Lo nuevo en Caliro',
+    subtitle: 'El asistente que analiza tus patrones reales',
+    items: [
+      {
+        icon: '🧠',
+        title: 'Asistente de patrones',
+        description: 'El asistente ahora analiza tus h\u00e1bitos reales: cu\u00e1nto comes por tipo de comida, si el fin de semana te desv\u00edas, y cu\u00e1l es tu d\u00e9ficit real de prote\u00edna. No solo responde \u2014 detecta patrones.',
+        tag: 'new',
+      },
+      {
+        icon: '\uD83D\uDCC5',
+        title: 'Resumen semanal',
+        description: 'Cada lunes aparece una tarjeta con 3 insights concretos y accionables sobre tu semana. Qu\u00e9 funcion\u00f3, qu\u00e9 no, y qu\u00e9 cambiar.',
+        tag: 'new',
+      },
+      {
+        icon: '\uD83C\uDFAF',
+        title: 'Calibraci\u00f3n en el asistente',
+        description: 'El asistente ahora conoce tu motor de calibraci\u00f3n: si tiendes a subestimar pasta o arroz, lo menciona cuando es relevante.',
+        tag: 'improved',
+      },
+      {
+        icon: '\u26A1',
+        title: 'Respuestas m\u00e1s precisas',
+        description: 'El asistente detecta autom\u00e1ticamente si tu pregunta requiere an\u00e1lisis profundo o respuesta r\u00e1pida, y elige el modelo adecuado.',
+        tag: 'improved',
+      },
+    ],
+  },
+  {
     version: '1.3.0',
     date: 'Marzo 2026',
-    title: 'Lo nuevo en LucaEats',
+    title: 'Lo nuevo en Caliro',
     subtitle: 'La app que aprende cómo comes tú',
     items: [
       {
@@ -55,18 +87,6 @@ export const RELEASES = [
         icon: '📊',
         title: 'Análisis avanzado con proyección',
         description: 'Abre el análisis detallado en Progreso para ver tu proyección de peso basada en tu déficit real y adherencia.',
-        tag: 'new',
-      },
-      {
-        icon: '🧮',
-        title: 'Calculadora TDEE mejorada',
-        description: 'Wizard paso a paso con preguntas concretas. Ahora usa la fórmula Mifflin-St Jeor 1990, el estándar clínico más preciso.',
-        tag: 'improved',
-      },
-      {
-        icon: '🌙',
-        title: 'Modo oscuro',
-        description: 'Actívalo desde el navbar. Tu preferencia se guarda automáticamente.',
         tag: 'new',
       },
     ],
