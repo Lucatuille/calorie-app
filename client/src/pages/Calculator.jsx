@@ -571,11 +571,6 @@ export default function Calculator() {
                     {aiResult.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{aiResult.carbs}g</b> carb</span>}
                     {aiResult.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{aiResult.fat}g</b> grasa</span>}
                   </div>
-                  {aiResult.calibration_applied && aiResult.calibration_confidence > 0.3 && (
-                    <p style={{ fontSize: 11, color: 'var(--accent)', margin: '0 0 8px' }}>
-                      Ajustado a tus hábitos · {aiResult.calibration_data_points} correcciones
-                    </p>
-                  )}
                   {aiResult.similar_meal && (
                     <div style={{
                       padding: '8px 10px', background: 'var(--surface)', borderRadius: 8,

@@ -214,25 +214,18 @@ export async function handleAnalyze(request, env, path, ctx) {
 
       const aiRaw      = Math.round(result.calories || 0);
       const categories = Array.isArray(result.categories) ? result.categories : [];
-      const isWeekend  = [0, 6].includes(new Date().getDay());
 
-      const calibrated = applyCalibration(aiRaw, calibrationProfile, {
-        meal_type:       meal_type || 'other',
-        food_categories: categories,
-        is_weekend:      isWeekend,
-      });
-
-      // Scale the range by the same calibration ratio applied to the midpoint
-      const calibRatio = aiRaw > 0 ? calibrated / aiRaw : 1;
-      const caloriesMin = result.calories_min ? Math.round(result.calories_min * calibRatio) : null;
-      const caloriesMax = result.calories_max ? Math.round(result.calories_max * calibRatio) : null;
-
-      const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.05;
-      const similarMeal        = findSimilarMeal(result.name, calibrationProfile?.frequent_meals);
+      // Para fotos NO aplicamos el motor de calibración global (entrenado en texto,
+      // causa sobreajuste en estimaciones visuales).
+      // Solo usamos similitud semántica: si el usuario ha comido esto antes, se muestra
+      // la sugerencia para que elija. La corrección que haga sí alimenta el motor.
+      const caloriesMin = result.calories_min ? Math.round(result.calories_min) : null;
+      const caloriesMax = result.calories_max ? Math.round(result.calories_max) : null;
+      const similarMeal = findSimilarMeal(result.name, calibrationProfile?.frequent_meals);
 
       return jsonResponse({
         name:         result.name       || '',
-        calories:     calibrated,
+        calories:     aiRaw,
         calories_min: caloriesMin,
         calories_max: caloriesMax,
         protein:      parseFloat((result.protein  || 0).toFixed(1)),
@@ -241,11 +234,8 @@ export async function handleAnalyze(request, env, path, ctx) {
         confidence:   result.confidence || 'media',
         notes:        result.notes      || '',
         categories,
-        ai_raw:                  aiRaw,
-        calibration_applied:     calibrationApplied,
-        calibration_confidence:  calibrationProfile?.confidence   || 0,
-        calibration_data_points: calibrationProfile?.data_points  || 0,
-        similar_meal:            similarMeal,
+        ai_raw:       aiRaw,
+        similar_meal: similarMeal,
         usage: { used: limitCheck.used + 1, limit: limitCheck.limit ?? null },
       });
     } catch {
