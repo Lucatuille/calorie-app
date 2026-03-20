@@ -269,64 +269,76 @@ function ConversationHistory({ conversations, onSelect, onClose }) {
   );
 }
 
-// ── Resumen semanal (card proactiva, no es un mensaje de chat) ────────
+// ── Resumen semanal — bottom sheet (se muestra una vez por semana) ────
 
-function DigestCard({ digest, onDismiss }) {
+function DigestSheet({ digest, onClose }) {
   const dateStr = new Date(digest.generated_at).toLocaleDateString('es-ES', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
   return (
-    <div style={{
-      background: 'var(--surface)',
-      border: '0.5px solid var(--border)',
-      borderLeft: '2px solid var(--accent)',
-      borderRadius: 'var(--radius-lg)',
-      padding: '13px 14px 14px',
-      marginBottom: 12,
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 10,
-      }}>
-        <div>
+    <div
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(0,0,0,0.4)',
+        zIndex: 200, display: 'flex', alignItems: 'flex-end',
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: 640, margin: '0 auto',
+          background: 'var(--surface)',
+          border: '0.5px solid var(--border)',
+          borderRadius: '20px 20px 0 0',
+          padding: '20px 20px 40px',
+          maxHeight: '78vh', overflowY: 'auto',
+        }}
+      >
+        {/* Handle */}
+        <div style={{ width: 36, height: 3, background: 'var(--border)', borderRadius: 99, margin: '0 auto 20px' }} />
+
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
           <span style={{
             display: 'block',
-            fontSize: 9,
-            fontWeight: 700,
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase',
-            color: 'var(--accent)',
-            fontFamily: 'var(--font-sans)',
-            marginBottom: 2,
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.07em',
+            textTransform: 'uppercase', color: 'var(--accent)',
+            fontFamily: 'var(--font-sans)', marginBottom: 5,
           }}>
             Resumen semanal
           </span>
-          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+          <span style={{
+            display: 'block',
+            fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+            fontSize: 21, color: 'var(--text-primary)', fontWeight: 400,
+            marginBottom: 3,
+          }}>
+            Tu semana en Caliro
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
             {dateStr}
           </span>
         </div>
+
+        {/* Content */}
+        <div style={{ fontSize: 14, lineHeight: 1.75, fontFamily: 'var(--font-sans)', color: 'var(--text-primary)' }}>
+          <MarkdownText content={digest.content} />
+        </div>
+
+        {/* CTA */}
         <button
-          onClick={onDismiss}
-          aria-label="Cerrar resumen"
+          onClick={onClose}
           style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-tertiary)',
-            cursor: 'pointer',
-            fontSize: 18,
-            lineHeight: 1,
-            padding: '0 2px',
-            marginLeft: 8,
-            flexShrink: 0,
+            marginTop: 28, width: '100%',
+            background: 'var(--accent)', color: '#fff', border: 'none',
+            borderRadius: 'var(--radius-md)', padding: '12px',
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            fontFamily: 'var(--font-sans)',
           }}
         >
-          ×
+          Entendido
         </button>
-      </div>
-      <div style={{ fontSize: 13.5, lineHeight: 1.65, fontFamily: 'var(--font-sans)' }}>
-        <MarkdownText content={digest.content} />
       </div>
     </div>
   );
@@ -592,10 +604,6 @@ export default function Assistant() {
 
         {/* ── Mensajes ── */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 8px' }}>
-          {digest && !digestDismissed && !blocked && (
-            <DigestCard digest={digest} onDismiss={() => setDigestDismissed(true)} />
-          )}
-
           {introLoading && <TypingDots />}
 
           {blocked
@@ -701,6 +709,10 @@ export default function Assistant() {
           onSelect={loadConversation}
           onClose={() => setShowHistory(false)}
         />
+      )}
+
+      {digest && !digestDismissed && (
+        <DigestSheet digest={digest} onClose={() => setDigestDismissed(true)} />
       )}
     </>
   );
