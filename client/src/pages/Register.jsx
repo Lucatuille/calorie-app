@@ -66,13 +66,13 @@ export default function Register() {
             <div className="divider" />
 
             <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: -4 }}>
-              Datos opcionales — los usaremos para calcular tus calorías automáticamente
+              Necesarios para calcular tu plan nutricional
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div className="field">
                 <label>Edad</label>
-                <input type="number" placeholder="25" value={form.age} onChange={e => set('age', e.target.value)} />
+                <input type="number" placeholder="25" value={form.age} onChange={e => set('age', e.target.value)} required />
               </div>
               <div className="field">
                 <label>Sexo</label>
@@ -83,11 +83,11 @@ export default function Register() {
               </div>
               <div className="field">
                 <label>Peso (kg)</label>
-                <input type="number" placeholder="70" value={form.weight} onChange={e => set('weight', e.target.value)} />
+                <input type="number" placeholder="70" value={form.weight} onChange={e => set('weight', e.target.value)} required />
               </div>
               <div className="field">
                 <label>Altura (cm)</label>
-                <input type="number" placeholder="175" value={form.height} onChange={e => set('height', e.target.value)} />
+                <input type="number" placeholder="175" value={form.height} onChange={e => set('height', e.target.value)} required />
               </div>
             </div>
 
@@ -104,7 +104,7 @@ export default function Register() {
               <span>
                 He leído y acepto los Términos de uso y la{' '}
                 <Link to="/privacy" style={{ color: 'var(--accent)' }}>Política de privacidad</Link>
-                {' '}de LucaEats
+                {' '}de Caliro
               </span>
             </label>
 
