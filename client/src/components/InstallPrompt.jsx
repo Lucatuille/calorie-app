@@ -44,9 +44,9 @@ export default function InstallPrompt() {
       display: 'flex', alignItems: 'center', gap: 12,
       boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
     }}>
-      <img src="/icons/icon-72x72.png" alt="LucaEats" style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0 }} />
+      <img src="/icons/icon-72x72.png" alt="Caliro" style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Instala LucaEats en tu móvil</p>
+        <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Instala Caliro en tu móvil</p>
         <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Acceso rápido desde la pantalla de inicio</p>
       </div>
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>

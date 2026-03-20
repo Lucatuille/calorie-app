@@ -12,7 +12,7 @@ export default function WaitlistScreen() {
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
 
         <div style={{ fontFamily: 'Instrument Serif', fontSize: 40, color: 'var(--accent)', marginBottom: 32 }}>
-          LucaEats
+          Caliro
         </div>
 
         <div style={{

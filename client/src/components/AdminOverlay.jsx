@@ -748,7 +748,7 @@ export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
             borderBottom: '1px solid var(--border)',
             flexShrink: 0,
           }}>
-            <h2 style={{ fontWeight: 700, fontSize: 17 }}>👑 LucaEats Admin</h2>
+            <h2 style={{ fontWeight: 700, fontSize: 17 }}>👑 Caliro Admin</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {relativeUpdateTime && (
                 <span style={{ fontSize: 11, color: 'var(--text-3)' }}>

@@ -15,7 +15,7 @@ export default function Privacy() {
           Política de Privacidad
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 36 }}>
-          LucaEats · Última actualización: marzo 2026
+          Caliro · Última actualización: marzo 2026
         </p>
 
         <Section title="1. Qué datos recogemos">
@@ -96,7 +96,7 @@ export default function Privacy() {
           background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 12, fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6,
         }}>
-          LucaEats es una herramienta de seguimiento personal. No es un dispositivo médico.
+          Caliro es una herramienta de seguimiento personal. No es un dispositivo médico.
           No sustituye el consejo de un médico, nutricionista u otro profesional sanitario.
         </div>
 

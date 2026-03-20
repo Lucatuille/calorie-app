@@ -28,7 +28,7 @@ export default function WelcomeDisclaimer({ onAccept }) {
         }}>
           kcal
         </div>
-        <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 32 }}>LucaEats</p>
+        <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 32 }}>Caliro</p>
 
         {/* Title */}
         <h1 style={{
@@ -36,7 +36,7 @@ export default function WelcomeDisclaimer({ onAccept }) {
           fontSize: 28, fontWeight: 400,
           marginBottom: 8, lineHeight: 1.2,
         }}>
-          Bienvenido a LucaEats
+          Bienvenido a Caliro
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-2)', marginBottom: 32 }}>
           Tu compañero de seguimiento nutricional personal.
@@ -50,7 +50,7 @@ export default function WelcomeDisclaimer({ onAccept }) {
           fontSize: 13, color: 'var(--text-3)',
           lineHeight: 1.6, marginBottom: 32,
         }}>
-          LucaEats es una herramienta de tracking personal.
+          Caliro es una herramienta de tracking personal.
           No sustituye el consejo de un médico o nutricionista.
           <br /><br />
           Si tienes alguna condición médica o buscas orientación
