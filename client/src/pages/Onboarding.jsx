@@ -56,7 +56,11 @@ export default function Onboarding() {
   const { user, token, updateUser } = useAuth();
   const [step, setStep] = useState(1);
   const [data, setData] = useState({
-    goal: null, gender: 'male', age: '', weight: '', height: '',
+    goal: null,
+    gender:     user?.gender || 'male',
+    age:        user?.age    ? String(user.age)    : '',
+    weight:     user?.weight ? String(user.weight) : '',
+    height:     user?.height ? String(user.height) : '',
     activity: null, goal_weight: '',
   });
   const [tdee, setTdee]                 = useState(null);
