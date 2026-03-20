@@ -130,7 +130,7 @@ async function buildUserContext(userId, env) {
   const weekAgo  = new Date(Date.now() - 7  * 86400000).toLocaleDateString('en-CA');
   const monthAgo = new Date(Date.now() - 30 * 86400000).toLocaleDateString('en-CA');
 
-  const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory] =
+  const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory, mealTypes] =
     await Promise.all([
       env.DB.prepare(
         'SELECT name, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat, goal_weight, tdee FROM users WHERE id = ?'
@@ -168,6 +168,22 @@ async function buildUserContext(userId, env) {
         WHERE user_id = ? AND weight IS NOT NULL AND date >= ?
         GROUP BY date ORDER BY date DESC LIMIT 10
       `).bind(userId, monthAgo).all(),
+
+      // Meal type breakdown — avg per occasion, frequency vs active days
+      env.DB.prepare(`
+        SELECT
+          meal_type,
+          ROUND(SUM(calories) * 1.0 / COUNT(DISTINCT date)) as avg_kcal,
+          ROUND(SUM(protein)  * 1.0 / COUNT(DISTINCT date)) as avg_prot,
+          COUNT(DISTINCT date) as meal_days
+        FROM entries
+        WHERE user_id = ? AND date >= ? AND date < ?
+          AND meal_type IS NOT NULL AND meal_type != ''
+        GROUP BY meal_type
+        ORDER BY CASE meal_type
+          WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2
+          WHEN 'dinner'    THEN 3 WHEN 'snack' THEN 4 ELSE 5 END
+      `).bind(userId, monthAgo, today).all(),
     ]);
 
   const todayTotals = (todayRows.results||[]).reduce(
@@ -186,6 +202,18 @@ async function buildUserContext(userId, env) {
   const targetCal  = user?.target_calories || 0;
   const onTarget7  = (last7Days.results||[]).filter(d => Math.abs(d.cal - targetCal) <= 250).length;
   const total7days = (last7Days.results||[]).length;
+
+  // Meal type breakdown — normalize frequency against active days (not calendar days)
+  const activeDays30 = Math.max(last30Stats?.days || 1, 1);
+  const MEAL_LABELS  = { breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack', other: 'Otro' };
+  const mealPattern  = (mealTypes.results || [])
+    .filter(m => m.meal_days >= 3)  // skip noise from single-use meal types
+    .map(m => {
+      const label = (MEAL_LABELS[m.meal_type] || m.meal_type).padEnd(9);
+      const freq  = Math.min((m.meal_days / activeDays30) * 7, 7).toFixed(1);
+      return `  ${label} ~${m.avg_kcal} kcal | ${m.avg_prot}g prot | ${freq}x/sem`;
+    })
+    .join('\n') || '  Sin suficientes datos';
 
   return `Hoy: ${todayLabel()}
 
@@ -207,6 +235,9 @@ ${(last7Days.results||[]).map(d => `  ${d.date}: ${Math.round(d.cal)} kcal (${Ma
 Días registrados: ${last30Stats?.days||0} | Media: ${Math.round(last30Stats?.avg_cal||0)} kcal | Proteína media: ${Math.round(last30Stats?.avg_prot||0)}g
 Rango: ${Math.round(last30Stats?.min_cal||0)} – ${Math.round(last30Stats?.max_cal||0)} kcal
 
+=== PATRONES POR TIPO DE COMIDA (últimos 30 días) ===
+${mealPattern}
+
 === COMIDAS FRECUENTES (últimos 90 días) ===
 ${(topFoods.results||[]).map(f => `  ${f.name}: ${f.times}x (${Math.round(f.avg_cal)} kcal media)`).join('\n') || '  Sin datos suficientes'}
 
@@ -227,6 +258,7 @@ function detectQueryComplexity(message) {
     /qu[eé] (estoy haciendo mal|puedo mejorar|fallo)/i,
     /plan (de |nutricional|semanal|mensual)|rutina|estrategia/i,
     /h[aá]bito|alimentaci[oó]n|d[eé]ficit|super[aá]vit/i,
+    /mis (desayunos|comidas|cenas|snacks|meriendas)|por tipo de comida/i,
     /comparar|diferencia entre/i,
     /qu[eé] ha pasado esta (semana|mes)/i,
   ];
