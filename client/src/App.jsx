@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as Sentry from '@sentry/react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -154,12 +155,44 @@ function AppRoutes() {
   );
 }
 
+function AppFallback() {
+  return (
+    <div style={{
+      minHeight: '100dvh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      background: 'var(--bg)', padding: 24, textAlign: 'center',
+    }}>
+      <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 28, color: 'var(--accent)', marginBottom: 16 }}>
+        kcal
+      </div>
+      <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--text-primary)', marginBottom: 8 }}>
+        Algo salió mal
+      </p>
+      <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24 }}>
+        El error ha sido reportado automáticamente.
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          padding: '10px 24px', background: 'var(--accent)', color: 'white',
+          border: 'none', borderRadius: 'var(--radius-full)',
+          fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+        }}
+      >
+        Reintentar
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter basename="/app">
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <Sentry.ErrorBoundary fallback={<AppFallback />}>
+      <AuthProvider>
+        <BrowserRouter basename="/app">
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </Sentry.ErrorBoundary>
   );
 }
