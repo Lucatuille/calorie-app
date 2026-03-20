@@ -175,7 +175,7 @@ unreliable when the input is long and complex.
 
 ### Improvement Plan
 
-**P1 — Spanish portion anchor table in system prompt**
+**P1 — Spanish portion anchor table in system prompt** ⏳ PENDIENTE (se implementará con la base de datos de alimentos españoles)
 
 Add an explicit anchor table to the system prompt for the most common vague
 quantity descriptors in Spanish eating context:

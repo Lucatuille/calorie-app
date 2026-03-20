@@ -37,12 +37,18 @@ Reglas:
 - categories: máx 4, inglés snake_case`;
 
 // ── System prompt texto — estático, apto para prompt caching ─
-// ~150 tokens (antes ~380 en user message)
+// ~200 tokens
 
 const TEXT_SYSTEM_PROMPT = `Eres un nutricionista experto. El usuario describe su comida en texto. Devuelve SOLO JSON válido:
-{"name":"nombre descriptivo","items":[{"name":"nombre","quantity":"cantidad","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal}],"total":{"calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal},"categories":["cat1","cat2"],"confidence":"high"|"medium"|"low","notes":"observaciones breves"}
+{"name":"nombre descriptivo","items":[{"name":"nombre","quantity":"cantidad","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal}],"total":{"calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal},"categories":["cat1","cat2"],"confidence":"high"|"medium"|"low","notes":"observaciones breves","clarification_question":null,"clarification_options":null}
 
-Reglas: ración normal española si no se especifica cantidad | casero: moderado en aceites | restaurante: +25-35% | múltiples alimentos: analiza y suma | no seas conservador.`;
+Si confidence="low", rellena clarification_question con la duda más relevante (ej: "¿El pollo era a la plancha o frito?") y clarification_options con 2-3 opciones cortas.
+
+Reglas:
+- Ración normal española si no se especifica cantidad | no seas conservador
+- Casero: moderado en aceites | restaurante: +25-35%
+- Cocción no especificada: carnes/pescados → asumir plancha; patatas en restaurante → asumir fritas
+- Múltiples alimentos: analiza cada uno individualmente y suma`;
 
 // ── Rate limiting con incremento atómico previo ─────────────
 // FIX: incremento ANTES de llamar a Claude, rollback si falla.

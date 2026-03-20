@@ -24,18 +24,23 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
   const [adjusting,    setAdjusting]    = useState(false);
   const [adjustedKcal, setAdjustedKcal] = useState('');
 
+  // Clarification state
+  const [clarified, setClarified] = useState(false);
+
   if (!isOpen) return null;
 
   const charCount = text.length;
   const charColor = charCount >= 400 ? 'var(--accent-2)' : 'var(--text-3)';
 
-  async function handleAnalyze() {
-    if (!text.trim() || text.trim().length < 3) return;
+  async function handleAnalyze(refinementText = null) {
+    const analysisText = refinementText || text.trim();
+    if (!analysisText || analysisText.length < 3) return;
     setStatus('loading');
     setResult(null);
     setErrorMsg('');
+    setClarified(false);
     try {
-      const r = await api.analyzeText({ text: text.trim(), meal_type: mealType }, token);
+      const r = await api.analyzeText({ text: analysisText, meal_type: mealType }, token);
       setResult(r);
       setAdjustedKcal(String(r.total.calories));
       setStatus('result');
@@ -83,6 +88,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
     setErrorMsg('');
     setAdjusting(false);
     setAdjustedKcal('');
+    setClarified(false);
     onClose();
   }
 
@@ -318,6 +324,48 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
                 <p style={{ fontSize: 12, color: 'var(--text-2)', fontStyle: 'italic', marginBottom: 12 }}>
                   {result.notes}
                 </p>
+              )}
+
+              {/* Clarification prompt — only for low confidence */}
+              {result.confidence === 'low' && result.clarification_question && !clarified && (
+                <div style={{
+                  background: 'var(--surface)', border: '0.5px solid var(--border)',
+                  borderRadius: 8, padding: '8px 12px', marginBottom: 12,
+                }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', margin: '0 0 6px' }}>
+                    {result.clarification_question}
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {result.clarification_options?.map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => handleAnalyze(text.trim() + ' — ' + opt)}
+                        style={{
+                          padding: '4px 10px', fontSize: 11, borderRadius: 99,
+                          border: '0.5px solid var(--border)',
+                          background: 'var(--surface-2)',
+                          color: 'var(--text-2)', cursor: 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setClarified(true)}
+                      style={{
+                        padding: '4px 8px', fontSize: 11, borderRadius: 99,
+                        border: 'none', background: 'none',
+                        color: 'var(--text-3)', cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Ignorar
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* Actions */}
