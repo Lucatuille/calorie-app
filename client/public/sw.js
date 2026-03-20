@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caliro-v1';
+const CACHE_NAME = 'caliro-v2';
 const STATIC_ASSETS = [
   '/app/',
   '/app/index.html',
