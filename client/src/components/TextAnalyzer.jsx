@@ -169,7 +169,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
               <button
                 className="btn btn-primary btn-full"
                 disabled={text.trim().length < 3 || status === 'loading'}
-                onClick={handleAnalyze}
+                onClick={() => handleAnalyze()}
                 style={{ marginBottom: 20, fontSize: 15, padding: '12px 0' }}
               >
                 {status === 'loading'
