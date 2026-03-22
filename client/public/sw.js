@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caliro-v3';
+const CACHE_NAME = 'caliro-v4';
 const STATIC_ASSETS = [
   '/app/',
   '/app/index.html',
@@ -36,11 +36,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegación a rutas de la app (/app/*) — servir /app/index.html
+  // Navegación a rutas de la app (/app/*) — Network First, fallback a index.html cacheado
+  // Usa request.url (string) en lugar de request (objeto) para evitar problemas con
+  // mode:'navigate' en subrequests de iOS PWA standalone
   if (request.mode === 'navigate' && url.pathname.startsWith('/app')) {
     event.respondWith(
-      fetch(request)
-        .catch(() => caches.match('/app/index.html'))
+      fetch(request.url)
+        .catch(() => caches.match('/app/index.html').then(r => r || fetch('/app/index.html')))
     );
     return;
   }
