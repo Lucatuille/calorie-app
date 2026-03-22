@@ -43,6 +43,25 @@ export async function handleProfile(request, env, path) {
       }
     }
     if (!profile) return errorResponse('Usuario no encontrado', 404);
+
+    // Silent macro backfill for users who completed onboarding before macros were saved
+    if (!profile.target_protein && profile.target_calories && profile.tdee) {
+      const kcal = profile.target_calories;
+      const tdee = profile.tdee;
+      const goal = kcal < tdee * 0.95 ? 'lose' : kcal > tdee * 1.05 ? 'gain' : 'maintain';
+      const RATIOS = { lose: [0.30,0.40,0.30], maintain: [0.25,0.45,0.30], gain: [0.25,0.50,0.25] };
+      const [pr, cr, fr] = RATIOS[goal];
+      const protein = Math.round((kcal * pr) / 4);
+      const carbs   = Math.round((kcal * cr) / 4);
+      const fat     = Math.round((kcal * fr) / 9);
+      try {
+        await env.DB.prepare(
+          'UPDATE users SET target_protein=?, target_carbs=?, target_fat=? WHERE id=? AND target_protein IS NULL'
+        ).bind(protein, carbs, fat, user.userId).run();
+        profile = { ...profile, target_protein: protein, target_carbs: carbs, target_fat: fat };
+      } catch { /* ignore — non-critical */ }
+    }
+
     return jsonResponse(profile);
   }
 

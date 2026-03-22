@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { calculateTDEE, calculateTargetCalories, calculateMonthsToGoal } from '../utils/tdeeCalculator';
+import { calculateMacros } from '../utils/tdee';
 
 const GOALS = [
   { key: 'lose',     icon: '📉', label: 'Perder peso',   subtitle: 'Déficit moderado y sostenible' },
@@ -91,14 +92,18 @@ export default function Onboarding() {
     setSaving(true);
     setSaveError(false);
     try {
+      const macros = calculateMacros(targetCalories, data.goal);
       await api.updateProfile({
         name: user.name,
         age: data.age, weight: data.weight, height: data.height,
         gender: data.gender, goal_weight: data.goal_weight || null,
         target_calories: targetCalories, tdee, formula_used: 'mifflin',
+        target_protein: macros.protein,
+        target_carbs:   macros.carbs,
+        target_fat:     macros.fat,
         onboarding_completed: 1,
       }, token);
-      updateUser({ ...user, target_calories: targetCalories, onboarding_completed: 1 });
+      updateUser({ ...user, target_calories: targetCalories, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat, onboarding_completed: 1 });
     } catch (e) {
       console.error(e);
       setSaveError(true);

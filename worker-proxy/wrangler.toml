@@ -1,0 +1,8 @@
+name = "caliro-proxy"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+account_id = "d304895689aeefcac7aca7c70366da5c"
+
+[[routes]]
+pattern = "caliro.dev/*"
+zone_name = "caliro.dev"
