@@ -87,10 +87,10 @@ Replace the generic "+30-80kcal aceite" with explicit rules by cooking method:
 Claude already detects cooking method reasonably well — the issue is the
 current rules don't differentiate. This is a prompt-only change.
 
-**P1 — Add Spanish food explicit reference table to system prompt**
+**P1 — Add Spanish food explicit reference table to system prompt** ⏳ PENDIENTE (se implementará con la base de datos de alimentos españoles)
 
 Extend the per-100g reference with a "comidas españolas completas" section:
-- Croquetas (1 unidad, ~40g): 90-110kcal
+- Croquetas (1 unidad, ~40g): 90-110kcal1
 - Tortilla española (ración): 250-380kcal según grosor y aceite
 - Patatas bravas (ración): 350-500kcal con salsa
 - Bocadillo jamón (estándar): 400-500kcal
