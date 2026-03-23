@@ -7,11 +7,11 @@ whether it costs money.
 
 ---
 
-## Phase 0 — Quick Wins (1–2 sessions, zero risk)
+## Phase 0 — Quick Wins (1–2 sessions, zero risk) [X]
 
 These changes touch nothing structural. No regressions possible.
 
-### 0.1 ARIA Labels on Icon Buttons
+### 0.1 ARIA Labels on Icon Buttons [X]
 **Effort:** 30 min | **Risk:** None | **Cost:** Free
 
 Every icon-only `<button>` needs `aria-label`. Examples:
@@ -31,7 +31,7 @@ Every icon-only `<button>` needs `aria-label`. Examples:
 - All modal close buttons (✕)
 - Nav/hamburger buttons
 
-### 0.2 Semantic HTML Skeleton
+### 0.2 Semantic HTML Skeleton [X]
 **Effort:** 1 hour | **Risk:** None | **Cost:** Free
 
 Wrap existing divs in semantic elements. No visual change.
@@ -45,7 +45,7 @@ Wrap existing divs in semantic elements. No visual change.
 
 Files: App.jsx, Dashboard.jsx, History.jsx, Progress.jsx, Calculator.jsx
 
-### 0.3 Remove Axios
+### 0.3 Remove Axios [X]
 **Effort:** 15 min | **Risk:** None | **Cost:** Free
 
 `axios` is imported in `package.json` but never used — all API calls use
@@ -55,7 +55,7 @@ cd client && npm uninstall axios
 ```
 Saves ~15KB from the bundle.
 
-### 0.4 Extract Magic Numbers to Constants
+### 0.4 Extract Magic Numbers to Constants [X]
 **Effort:** 45 min | **Risk:** None | **Cost:** Free
 
 Create `client/src/utils/constants.js`:
@@ -77,7 +77,7 @@ export const CALIBRATION_CAP = [0.75, 1.4];
 Then replace hardcoded values in Calculator.jsx, analyze.js, calibration.js,
 Progress.jsx, Dashboard.jsx. One file at a time — grep for each value.
 
-### 0.5 Focus Styles
+### 0.5 Focus Styles [X]
 **Effort:** 20 min | **Risk:** None | **Cost:** Free
 
 Add to `global.css`:
@@ -128,6 +128,23 @@ This is the biggest quality-of-life improvement. Strategy:
 
 **How to do it safely:** one file per commit. Visual diff in browser after each.
 No logic changes — purely cosmetic refactor.
+
+**CRITICAL — Migration Rules (learned from failed History.jsx attempt):**
+1. **NEVER replace inline styles with a CSS class unless the values are an EXACT match.**
+   If the original has `padding: '4px 12px'` and the class has `padding: 5px 12px`, that's
+   a visual regression. Keep the inline style.
+2. **Do NOT use existing `.btn` / `.btn-primary` / `.btn-secondary` classes** for compact
+   inline buttons. Those global classes have their own padding/border-radius that differ
+   from the small action buttons in cards. Keep inline styles for one-off buttons.
+3. **Diff each property one-by-one** before converting. Open the original file side-by-side
+   with the CSS class definition and verify every value matches.
+4. **Preserve `style={{}}` overrides** for unique values. A class handles the 80% common
+   case; the remaining 20% stays as inline `style={{}}` on top of the class.
+5. **Background colors vary per context.** Inputs in edit forms use `var(--surface-3)`,
+   inputs in modals use `var(--surface)`. The `.input` class uses `var(--surface-3)` as
+   the base; override with `style={{ background: 'var(--surface)' }}` where needed.
+6. **Test in browser BEFORE committing.** Open the exact page, click through every
+   interaction (edit, delete, pills), compare with a screenshot of the original.
 
 ### 1.2 Error Boundaries Per Route
 **Effort:** 1 hour | **Risk:** None | **Cost:** Free
@@ -454,7 +471,7 @@ This is essential if you ever:
 ## Implementation Order (Safe Path)
 
 ```
-Week 1:  Phase 0 (quick wins) — zero risk, immediate quality boost
+Week 1:  Phase 0 (quick wins) — zero risk, immediate quality boost [X]
 Week 2:  Phase 1.1 (CSS extraction) — start with History.jsx
 Week 3:  Phase 1.2-1.4 (error boundaries, focus trap, contrast)
 Week 4:  Phase 3.1 (unit tests for pure functions)
