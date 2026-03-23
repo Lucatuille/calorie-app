@@ -16,10 +16,25 @@ import { handleAssistant } from './routes/assistant.js';
 import { handleStripe } from './routes/stripe.js';
 import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
 
+const ALLOWED_ORIGINS = [
+  'https://caliro.dev',
+  'https://calorie-app.pages.dev',
+  'https://lucaeats.org',
+  'http://localhost:5173',  // local dev
+];
+
 async function handleRequest(request, env, ctx) {
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // CSRF: reject mutations from unknown origins
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
+    const origin = request.headers.get('Origin');
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+      return errorResponse('Origin not allowed', 403);
+    }
   }
 
   const url = new URL(request.url);

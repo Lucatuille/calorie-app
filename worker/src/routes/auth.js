@@ -58,6 +58,9 @@ export async function handleAuth(request, env, path) {
     if (!name || !email || !password) {
       return errorResponse('Nombre, email y contraseña son obligatorios');
     }
+    if (password.length < 8) {
+      return errorResponse('La contraseña debe tener al menos 8 caracteres');
+    }
 
     // Check if user exists
     const existing = await env.DB.prepare(
