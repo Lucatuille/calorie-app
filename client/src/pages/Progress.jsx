@@ -34,9 +34,9 @@ function MacroBar({ protein, carbs, fat }) {
   const pC = Math.round(carbs   / total * 100);
   const pF = 100 - pP - pC;
   const segments = [
-    { label: 'Proteína', pct: pP, color: 'var(--accent)' },
-    { label: 'Carbos',   pct: pC, color: '#f59e0b' },
-    { label: 'Grasa',    pct: pF, color: '#60a5fa' },
+    { label: 'Proteína', pct: pP, color: 'var(--color-protein)' },
+    { label: 'Carbos',   pct: pC, color: 'var(--color-carbs)' },
+    { label: 'Grasa',    pct: pF, color: 'var(--color-fat)' },
   ];
   return (
     <div>
@@ -132,19 +132,6 @@ export default function Progress() {
     </div>
   );
 
-  const cardStyle = {
-    background: 'var(--surface)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '14px 16px',
-    boxShadow: 'var(--shadow-md)',
-  };
-
-  const sectionLabel = {
-    fontSize: 9, color: 'var(--text-secondary)',
-    textTransform: 'uppercase', letterSpacing: '0.7px',
-    fontWeight: 600, fontFamily: 'var(--font-sans)',
-    display: 'block',
-  };
 
   return (
     <section style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
@@ -154,25 +141,14 @@ export default function Progress() {
         padding: '20px 20px 16px',
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
       }}>
-        <h1 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 32, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--text-primary)', margin: 0,
-        }}>
-          Progreso
-        </h1>
+        <h1 className="page-title">Progreso</h1>
 
         {/* Period pills */}
         <div style={{ display: 'flex', gap: 4 }}>
           {[7, 30, 90].map(d => (
-            <button key={d} onClick={() => setDays(d)} style={{
-              padding: '5px 12px', borderRadius: 'var(--radius-full)',
-              fontSize: 12, fontWeight: days === d ? 600 : 400,
-              cursor: 'pointer', fontFamily: 'var(--font-sans)',
-              border: `0.5px solid ${days === d ? 'var(--accent)' : 'var(--border)'}`,
-              background: days === d ? 'rgba(45,106,79,0.1)' : 'transparent',
-              color: days === d ? 'var(--accent)' : 'var(--text-secondary)',
-            }}>
+            <button key={d} onClick={() => setDays(d)}
+              className={`pill pill--lg${days === d ? ' pill--active' : ''}`}
+            >
               {d}d
             </button>
           ))}
@@ -214,7 +190,7 @@ export default function Progress() {
               padding: 14,
               boxShadow: 'var(--shadow-md)',
             }}>
-              <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 6 }}>Días</div>
+              <div className="section-label" style={{ marginBottom: 6 }}>Días</div>
               <div style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: 'var(--text-primary)', lineHeight: 1 }}>
                 {data.length}
               </div>
@@ -231,7 +207,7 @@ export default function Progress() {
                 padding: 14,
                 boxShadow: 'var(--shadow-md)',
               }}>
-                <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 6 }}>Adherencia</div>
+                <div className="section-label" style={{ marginBottom: 6 }}>Adherencia</div>
                 <div style={{
                   fontFamily: 'var(--font-serif)', fontSize: 28, lineHeight: 1,
                   color: periodAdherence >= 70 ? 'var(--accent)' : periodAdherence >= 40 ? '#f59e0b' : 'var(--text-primary)',
@@ -252,7 +228,7 @@ export default function Progress() {
                 padding: 14,
                 boxShadow: 'var(--shadow-md)',
               }}>
-                <div style={{ fontSize: 9, ...sectionLabel, marginBottom: 6 }}>Peso</div>
+                <div className="section-label" style={{ marginBottom: 6 }}>Peso</div>
                 <div style={{
                   fontFamily: 'var(--font-serif)', fontSize: 28, lineHeight: 1,
                   color: periodWeightTrend < 0 ? 'var(--accent)' : periodWeightTrend > 0 ? '#e76f51' : 'var(--text-primary)',
@@ -270,7 +246,7 @@ export default function Progress() {
 
       {data.length === 0 ? (
         <div style={{ padding: '0 16px' }}>
-          <div style={{ ...cardStyle, textAlign: 'center', padding: '48px 24px' }}>
+          <div className="card card-shadow" style={{ textAlign: 'center', padding: '48px 24px' }}>
             <p style={{ fontSize: 13, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
               Aún no hay datos suficientes. Empieza a registrar tus días.
             </p>
@@ -280,8 +256,8 @@ export default function Progress() {
         <>
           {/* ── 2. Calorías diarias ── */}
           <div style={{ padding: '0 16px', marginBottom: 10 }}>
-            <div style={cardStyle}>
-              <span style={{ ...sectionLabel, marginBottom: 14, display: 'block' }}>
+            <div className="card card-padded card-shadow">
+              <span className="section-label" style={{ marginBottom: 14 }}>
                 Calorías diarias
               </span>
               <ResponsiveContainer width="100%" height={200}>
@@ -324,8 +300,8 @@ export default function Progress() {
           {/* ── 3. Distribución de macros ── */}
           {macroPeriod && (macroPeriod.protein + macroPeriod.carbs + macroPeriod.fat) > 0 && (
             <div style={{ padding: '0 16px', marginBottom: 10 }}>
-              <div style={cardStyle}>
-                <span style={{ ...sectionLabel, marginBottom: 14, display: 'block' }}>
+              <div className="card card-padded card-shadow">
+                <span className="section-label" style={{ marginBottom: 14 }}>
                   Distribución de macros · media del período
                 </span>
                 <MacroBar {...macroPeriod} />
@@ -336,8 +312,8 @@ export default function Progress() {
           {/* ── 4. Evolución del peso ── */}
           {data.some(d => d.weight) && (
             <div style={{ padding: '0 16px', marginBottom: 10 }}>
-              <div style={cardStyle}>
-                <span style={{ ...sectionLabel, marginBottom: 14, display: 'block' }}>
+              <div className="card card-padded card-shadow">
+                <span className="section-label" style={{ marginBottom: 14 }}>
                   Evolución del peso
                 </span>
                 <ResponsiveContainer width="100%" height={180}>
