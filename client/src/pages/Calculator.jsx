@@ -331,7 +331,7 @@ export default function Calculator() {
 
       {/* ── 1. Formulario — primero ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
-        <div className="card card-padded card-bordered">
+        <div className="card card-padded card-bordered card-shadow">
 
           {/* Header del formulario: label + hint contextual */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -774,7 +774,7 @@ export default function Calculator() {
       {/* ── 2. Historial de hoy — debajo ── */}
       {entries.length > 0 && (
         <div style={{ padding: '0 16px', marginBottom: 10 }}>
-          <div className="card card-padded card-bordered">
+          <div className="card card-padded card-bordered card-shadow">
             <span className="section-label" style={{ marginBottom: 10 }}>
               Hoy · {total.calories.toLocaleString('es')} kcal · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
