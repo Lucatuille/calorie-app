@@ -29,10 +29,20 @@ const EMPTY_FORM = {
   protein: '', carbs: '', fat: '', weight: '', notes: '',
 };
 
+const inputStyle = {
+  width: '100%', background: 'var(--surface-3)',
+  border: '0.5px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: '8px 10px',
+  fontSize: 13, color: 'var(--text-primary)',
+  fontFamily: 'var(--font-sans)',
+  outline: 'none', boxSizing: 'border-box',
+};
+
 const MACRO_META = [
-  { key: 'protein', color: 'var(--color-protein)', label: 'P' },
-  { key: 'carbs',   color: 'var(--color-carbs)',   label: 'C' },
-  { key: 'fat',     color: 'var(--color-fat)',      label: 'G' },
+  { key: 'protein', color: 'var(--accent)',  label: 'P' },
+  { key: 'carbs',   color: '#f59e0b',        label: 'C' },
+  { key: 'fat',     color: '#60a5fa',        label: 'G' },
 ];
 
 export default function History() {
@@ -120,12 +130,22 @@ export default function History() {
 
       {/* ── Header ── */}
       <header style={{ padding: '20px 20px 20px' }}>
-        <h1 className="page-title">Historial</h1>
+        <h1 style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: 32, fontStyle: 'italic',
+          fontWeight: 400, color: 'var(--text-primary)',
+          margin: 0,
+        }}>
+          Historial
+        </h1>
       </header>
 
       {entries.length === 0 ? (
         <div style={{ padding: '0 16px' }}>
-          <div className="card card-bordered" style={{ padding: '48px 24px', textAlign: 'center' }}>
+          <div style={{
+            background: 'var(--surface)', border: '0.5px solid var(--border)',
+            borderRadius: 'var(--radius-lg)', padding: '48px 24px', textAlign: 'center',
+          }}>
             <p style={{ fontSize: 13, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
               Aún no hay entradas registradas.
             </p>
@@ -133,7 +153,7 @@ export default function History() {
         </div>
       ) : (
         <div style={{ padding: '0 16px' }}>
-          {groups.map(([date, dayEntries]) => {
+          {groups.map(([date, dayEntries], groupIdx) => {
             const dayTotal  = dayEntries.reduce((a, e) => a + (e.calories || 0), 0);
             const { weekday, rest } = formatDateParts(date);
             const today     = isToday(date);
@@ -184,7 +204,12 @@ export default function History() {
                 </div>
 
                 {/* ── Card del día — todas las comidas dentro ── */}
-                <div className="card" style={{ overflow: 'hidden' }}>
+                <div style={{
+                  background: 'var(--surface)',
+                  borderRadius: 'var(--radius-lg)',
+                  overflow: 'hidden',
+                  boxShadow: 'var(--shadow-md)',
+                }}>
                   {dayEntries.map((entry, i) => {
                     const meal       = getMeal(entry.meal_type);
                     const isEditing  = editingId  === entry.id;
@@ -203,7 +228,11 @@ export default function History() {
                             background: 'var(--surface-2)',
                           }}>
                             <form onSubmit={e => { e.preventDefault(); saveEdit(entry.id); }}>
-                              <span className="section-label" style={{ marginBottom: 10 }}>
+                              <span style={{
+                                fontSize: 9, color: 'var(--text-secondary)',
+                                textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
+                                display: 'block', marginBottom: 10, fontFamily: 'var(--font-sans)',
+                              }}>
                                 Editando
                               </span>
 
@@ -214,7 +243,14 @@ export default function History() {
                                   return (
                                     <button key={m.id} type="button"
                                       onClick={() => set('meal_type', m.id)}
-                                      className={`pill pill--sm${isActive ? ' pill--active' : ''}`}
+                                      style={{
+                                        padding: '4px 12px', borderRadius: 'var(--radius-full)',
+                                        fontSize: 11, fontWeight: isActive ? 600 : 400,
+                                        cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                        border: `0.5px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
+                                        background: isActive ? 'rgba(45,106,79,0.1)' : 'transparent',
+                                        color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
+                                      }}
                                     >
                                       {m.label}
                                     </button>
@@ -227,15 +263,18 @@ export default function History() {
                                 value={editForm.name}
                                 onChange={e => set('name', e.target.value)}
                                 placeholder="Nombre (opcional)"
-                                className="input"
-                                style={{ marginBottom: 8 }}
+                                style={{ ...inputStyle, marginBottom: 8 }}
                               />
 
                               {/* Kcal + macros */}
-                              <div className="macro-grid" style={{ marginBottom: 10 }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
                                 <div>
-                                  <label className="form-label">kcal *</label>
-                                  <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required className="input" style={{ textAlign: 'center' }} />
+                                  <label style={{
+                                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+                                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
+                                    fontFamily: 'var(--font-sans)',
+                                  }}>kcal *</label>
+                                  <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required style={{ ...inputStyle, textAlign: 'center' }} />
                                 </div>
                                 {[
                                   { key: 'protein', label: 'Prot' },
@@ -243,8 +282,12 @@ export default function History() {
                                   { key: 'fat',     label: 'Grasa' },
                                 ].map(({ key, label }) => (
                                   <div key={key}>
-                                    <label className="form-label">{label}</label>
-                                    <input type="number" value={editForm[key]} onChange={e => set(key, e.target.value)} className="input" style={{ textAlign: 'center' }} />
+                                    <label style={{
+                                      fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+                                      letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
+                                      fontFamily: 'var(--font-sans)',
+                                    }}>{label}</label>
+                                    <input type="number" value={editForm[key]} onChange={e => set(key, e.target.value)} style={{ ...inputStyle, textAlign: 'center' }} />
                                   </div>
                                 ))}
                               </div>
@@ -253,16 +296,23 @@ export default function History() {
                                 <button
                                   type="submit"
                                   disabled={saving}
-                                  className="btn btn-primary"
-                                  style={{ padding: '7px 16px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}
+                                  style={{
+                                    background: 'var(--accent)', color: 'white', border: 'none',
+                                    borderRadius: 6, padding: '7px 16px', fontSize: 12, fontWeight: 500,
+                                    cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                  }}
                                 >
                                   {saving ? <span className="spinner" style={{ width: 12, height: 12 }} /> : 'Guardar'}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setEditingId(null)}
-                                  className="btn btn-secondary"
-                                  style={{ padding: '7px 16px', fontSize: 12 }}
+                                  style={{
+                                    background: 'none', border: '0.5px solid var(--border)',
+                                    borderRadius: 6, padding: '7px 16px', fontSize: 12,
+                                    cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                                  }}
                                 >Cancelar</button>
                               </div>
                             </form>
@@ -286,7 +336,10 @@ export default function History() {
                                     {entry.name || meal.label}
                                   </span>
                                   {entry.name && (
-                                    <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+                                    <span style={{
+                                      fontSize: 11, color: 'var(--text-tertiary)',
+                                      fontFamily: 'var(--font-sans)',
+                                    }}>
                                       {meal.label}
                                     </span>
                                   )}
@@ -324,8 +377,12 @@ export default function History() {
                                 <button
                                   onClick={() => { setDeletingId(null); startEdit(entry); }}
                                   aria-label="Editar comida"
-                                  className="icon-btn"
-                                  style={{ padding: '2px 4px', fontSize: 11 }}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-tertiary)', padding: '2px 4px',
+                                    lineHeight: 1, borderRadius: 4, fontSize: 11,
+                                    fontFamily: 'var(--font-sans)',
+                                  }}
                                   title="Editar"
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -336,8 +393,11 @@ export default function History() {
                                 <button
                                   onClick={() => { setEditingId(null); setDeletingId(d => d === entry.id ? null : entry.id); }}
                                   aria-label="Eliminar comida"
-                                  className="icon-btn"
-                                  style={{ fontSize: 16, padding: '0 2px' }}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-tertiary)', fontSize: 16,
+                                    padding: '0 2px', lineHeight: 1, borderRadius: 4,
+                                  }}
                                 >×</button>
                               </div>
                             </div>
@@ -358,13 +418,19 @@ export default function History() {
                                 </span>
                                 <button
                                   onClick={() => confirmDelete(entry.id)}
-                                  className="btn btn-primary"
-                                  style={{ padding: '4px 12px', fontSize: 12, background: '#ef4444' }}
+                                  style={{
+                                    background: '#ef4444', color: 'white', border: 'none',
+                                    borderRadius: 6, padding: '4px 12px', fontSize: 12,
+                                    cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                  }}
                                 >Eliminar</button>
                                 <button
                                   onClick={() => setDeletingId(null)}
-                                  className="btn btn-secondary"
-                                  style={{ padding: '4px 12px', fontSize: 12 }}
+                                  style={{
+                                    background: 'none', border: '0.5px solid var(--border)',
+                                    borderRadius: 6, padding: '4px 12px', fontSize: 12,
+                                    cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                                  }}
                                 >Cancelar</button>
                               </div>
                             )}
