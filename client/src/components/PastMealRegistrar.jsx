@@ -23,15 +23,6 @@ const METHODS = [
   { key: 'text',  label: 'Describir' },
 ];
 
-const inputStyle = {
-  width: '100%', background: 'var(--surface)',
-  border: '0.5px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
-  padding: '8px 10px', fontSize: 13,
-  color: 'var(--text-primary)', fontFamily: 'var(--font-sans)',
-  outline: 'none', boxSizing: 'border-box',
-};
-
 const CONFIDENCE_STYLE = {
   alta:  { bg: 'rgba(16,185,129,0.1)',  color: '#059669' },
   media: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
@@ -279,24 +270,12 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
 
   return createPortal(
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'flex-end',
-      }}
+      className="modal-overlay"
       onClick={e => { if (e.target === e.currentTarget) onClose(false); }}
     >
-      <div style={{
-        width: '100%', maxWidth: 520, margin: '0 auto',
-        background: 'var(--bg)',
-        borderRadius: '20px 20px 0 0',
-        padding: '0 0 env(safe-area-inset-bottom, 16px)',
-        maxHeight: '92vh', overflowY: 'auto',
-      }}>
+      <div className="modal-sheet">
         {/* Handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--border)' }} />
-        </div>
+        <div className="modal-handle" />
 
         <div style={{ padding: '0 20px 24px' }}>
           {/* Header */}
@@ -383,7 +362,8 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                           value={photoContext}
                           onChange={e => setPhotoContext(e.target.value)}
                           placeholder="Contexto opcional (ej: casero, 200g)"
-                          style={{ ...inputStyle, marginBottom: 8, fontSize: 12 }}
+                          className="input"
+                          style={{ background: 'var(--surface)', marginBottom: 8, fontSize: 12 }}
                         />
 
                         {/* Location pills */}
@@ -585,9 +565,9 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
 
                         {/* Macros */}
                         <div style={{ display: 'flex', gap: 10, fontSize: 12, marginTop: 6 }}>
-                          {textResult.total.protein > 0 && <span style={{ color: '#059669' }}><b>{textResult.total.protein}g</b> prot</span>}
-                          {textResult.total.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{textResult.total.carbs}g</b> carb</span>}
-                          {textResult.total.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{textResult.total.fat}g</b> grasa</span>}
+                          {textResult.total.protein > 0 && <span className="color-protein"><b>{textResult.total.protein}g</b> prot</span>}
+                          {textResult.total.carbs   > 0 && <span className="color-carbs"><b>{textResult.total.carbs}g</b> carb</span>}
+                          {textResult.total.fat     > 0 && <span className="color-fat"><b>{textResult.total.fat}g</b> grasa</span>}
                         </div>
                       </div>
 
@@ -630,25 +610,14 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
 
               {/* Meal type pills */}
               <div style={{ marginBottom: 10 }}>
-                <span style={{
-                  fontSize: 9, color: 'var(--text-secondary)',
-                  textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
-                  display: 'block', marginBottom: 6,
-                }}>Tipo de comida</span>
+                <span className="section-label" style={{ marginBottom: 6 }}>Tipo de comida</span>
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {MEAL_TYPES.map(m => {
                     const active = form.meal_type === m.id;
                     return (
                       <button key={m.id} type="button"
                         onClick={() => set('meal_type', m.id)}
-                        style={{
-                          padding: '5px 12px', borderRadius: 'var(--radius-full)',
-                          fontSize: 12, fontWeight: active ? 600 : 400,
-                          cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                          border: `0.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                          background: active ? 'rgba(45,106,79,0.1)' : 'transparent',
-                          color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                        }}
+                        className={`pill pill--lg${active ? ' pill--active' : ''}`}
                       >{m.label}</button>
                     );
                   })}
@@ -660,18 +629,16 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
                 placeholder="Nombre (opcional)"
-                style={{ ...inputStyle, marginBottom: 8 }}
+                className="input"
+                style={{ background: 'var(--surface)', marginBottom: 8 }}
               />
 
               {/* Kcal + macros grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+              <div className="macro-grid" style={{ marginBottom: 10 }}>
                 <div>
-                  <label style={{
-                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
-                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
-                  }}>kcal *</label>
+                  <label className="form-label">kcal *</label>
                   <input type="number" value={form.calories} onChange={e => set('calories', e.target.value)}
-                    required style={{ ...inputStyle, textAlign: 'center' }} />
+                    required className="input" style={{ background: 'var(--surface)', textAlign: 'center' }} />
                 </div>
                 {[
                   { key: 'protein', label: 'Prot' },
@@ -679,12 +646,9 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                   { key: 'fat',     label: 'Grasa' },
                 ].map(({ key, label }) => (
                   <div key={key}>
-                    <label style={{
-                      fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
-                      letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
-                    }}>{label}</label>
+                    <label className="form-label">{label}</label>
                     <input type="number" value={form[key]} onChange={e => set(key, e.target.value)}
-                      style={{ ...inputStyle, textAlign: 'center' }} />
+                      className="input" style={{ background: 'var(--surface)', textAlign: 'center' }} />
                   </div>
                 ))}
               </div>
@@ -694,7 +658,8 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                 value={form.notes}
                 onChange={e => set('notes', e.target.value)}
                 placeholder="Notas (opcional)"
-                style={{ ...inputStyle, marginBottom: 14 }}
+                className="input"
+                style={{ background: 'var(--surface)', marginBottom: 14 }}
               />
 
               {/* Error */}
