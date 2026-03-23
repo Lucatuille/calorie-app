@@ -29,20 +29,10 @@ const EMPTY_FORM = {
   protein: '', carbs: '', fat: '', weight: '', notes: '',
 };
 
-const inputStyle = {
-  width: '100%', background: 'var(--surface-3)',
-  border: '0.5px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
-  padding: '8px 10px',
-  fontSize: 13, color: 'var(--text-primary)',
-  fontFamily: 'var(--font-sans)',
-  outline: 'none', boxSizing: 'border-box',
-};
-
 const MACRO_META = [
-  { key: 'protein', color: 'var(--accent)',  label: 'P' },
-  { key: 'carbs',   color: '#f59e0b',        label: 'C' },
-  { key: 'fat',     color: '#60a5fa',        label: 'G' },
+  { key: 'protein', color: 'var(--color-protein)', label: 'P' },
+  { key: 'carbs',   color: 'var(--color-carbs)',   label: 'C' },
+  { key: 'fat',     color: 'var(--color-fat)',      label: 'G' },
 ];
 
 export default function History() {
@@ -130,14 +120,7 @@ export default function History() {
 
       {/* ── Header ── */}
       <header style={{ padding: '20px 20px 20px' }}>
-        <h1 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 32, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--text-primary)',
-          margin: 0,
-        }}>
-          Historial
-        </h1>
+        <h1 className="page-title">Historial</h1>
       </header>
 
       {entries.length === 0 ? (
@@ -204,12 +187,7 @@ export default function History() {
                 </div>
 
                 {/* ── Card del día — todas las comidas dentro ── */}
-                <div style={{
-                  background: 'var(--surface)',
-                  borderRadius: 'var(--radius-lg)',
-                  overflow: 'hidden',
-                  boxShadow: 'var(--shadow-md)',
-                }}>
+                <div className="card" style={{ overflow: 'hidden' }}>
                   {dayEntries.map((entry, i) => {
                     const meal       = getMeal(entry.meal_type);
                     const isEditing  = editingId  === entry.id;
@@ -228,11 +206,7 @@ export default function History() {
                             background: 'var(--surface-2)',
                           }}>
                             <form onSubmit={e => { e.preventDefault(); saveEdit(entry.id); }}>
-                              <span style={{
-                                fontSize: 9, color: 'var(--text-secondary)',
-                                textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
-                                display: 'block', marginBottom: 10, fontFamily: 'var(--font-sans)',
-                              }}>
+                              <span className="section-label" style={{ marginBottom: 10 }}>
                                 Editando
                               </span>
 
@@ -243,14 +217,7 @@ export default function History() {
                                   return (
                                     <button key={m.id} type="button"
                                       onClick={() => set('meal_type', m.id)}
-                                      style={{
-                                        padding: '4px 12px', borderRadius: 'var(--radius-full)',
-                                        fontSize: 11, fontWeight: isActive ? 600 : 400,
-                                        cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                                        border: `0.5px solid ${isActive ? 'var(--accent)' : 'var(--border)'}`,
-                                        background: isActive ? 'rgba(45,106,79,0.1)' : 'transparent',
-                                        color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                                      }}
+                                      className={`pill${isActive ? ' pill--active' : ''}`}
                                     >
                                       {m.label}
                                     </button>
@@ -263,18 +230,15 @@ export default function History() {
                                 value={editForm.name}
                                 onChange={e => set('name', e.target.value)}
                                 placeholder="Nombre (opcional)"
-                                style={{ ...inputStyle, marginBottom: 8 }}
+                                className="input"
+                                style={{ marginBottom: 8 }}
                               />
 
                               {/* Kcal + macros */}
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+                              <div className="macro-grid" style={{ marginBottom: 10 }}>
                                 <div>
-                                  <label style={{
-                                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
-                                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
-                                    fontFamily: 'var(--font-sans)',
-                                  }}>kcal *</label>
-                                  <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required style={{ ...inputStyle, textAlign: 'center' }} />
+                                  <label className="form-label">kcal *</label>
+                                  <input type="number" value={editForm.calories} onChange={e => set('calories', e.target.value)} required className="input" style={{ textAlign: 'center' }} />
                                 </div>
                                 {[
                                   { key: 'protein', label: 'Prot' },
@@ -282,12 +246,8 @@ export default function History() {
                                   { key: 'fat',     label: 'Grasa' },
                                 ].map(({ key, label }) => (
                                   <div key={key}>
-                                    <label style={{
-                                      fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
-                                      letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 3,
-                                      fontFamily: 'var(--font-sans)',
-                                    }}>{label}</label>
-                                    <input type="number" value={editForm[key]} onChange={e => set(key, e.target.value)} style={{ ...inputStyle, textAlign: 'center' }} />
+                                    <label className="form-label">{label}</label>
+                                    <input type="number" value={editForm[key]} onChange={e => set(key, e.target.value)} className="input" style={{ textAlign: 'center' }} />
                                   </div>
                                 ))}
                               </div>
