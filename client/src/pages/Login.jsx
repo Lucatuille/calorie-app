@@ -44,7 +44,7 @@ export default function Login() {
           <p className="body-sm">Registra tus calorías y sigue tu progreso</p>
         </div>
 
-        <div className="card">
+        <div className="card card-padded-lg card-bordered-lg">
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="field">
               <label>Email</label>

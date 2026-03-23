@@ -132,15 +132,7 @@ input, select, textarea { font-family: inherit; }
   max-width: 900px;
 }
 
-/* ── Cards ──────────────────────────────────────────────── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  box-shadow: var(--shadow);
-}
-
+/* ── Cards (legacy — Login/Register use card-padded) ────── */
 .card + .card { margin-top: 12px; }
 
 /* ── Form fields ─────────────────────────────────────────── */
@@ -632,8 +624,10 @@ input, select, textarea { font-family: inherit; }
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
-.card-padded { padding: 14px 16px; }
-.card-bordered { border: 0.5px solid var(--border); }
+.card-padded    { padding: 14px 16px; }
+.card-padded-lg { padding: 24px; }
+.card-bordered  { border: 0.5px solid var(--border); }
+.card-bordered-lg { border: 1px solid var(--border); }
 
 /* ── Input (standard text field) ──────────────────────────── */
 .input {

@@ -187,12 +187,7 @@ export default function History() {
                 </div>
 
                 {/* ── Card del día — todas las comidas dentro ── */}
-                <div style={{
-                  background: 'var(--surface)',
-                  borderRadius: 'var(--radius-lg)',
-                  overflow: 'hidden',
-                  boxShadow: 'var(--shadow-md)',
-                }}>
+                <div className="card" style={{ overflow: 'hidden' }}>
                   {dayEntries.map((entry, i) => {
                     const meal       = getMeal(entry.meal_type);
                     const isEditing  = editingId  === entry.id;

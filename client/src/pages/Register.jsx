@@ -45,7 +45,7 @@ export default function Register() {
           <p className="body-sm">Gratis para siempre</p>
         </div>
 
-        <div className="card">
+        <div className="card card-padded-lg card-bordered-lg">
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             <div className="field">
