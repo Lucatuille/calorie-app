@@ -22,6 +22,7 @@ import Terms  from './pages/Terms';
 import Assistant from './pages/Assistant';
 import Onboarding from './pages/Onboarding';
 import Upgrade from './pages/Upgrade';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -145,14 +146,14 @@ function AppRoutes() {
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/privacy"  element={<Privacy />} />
           <Route path="/terms"    element={<Terms />} />
-          <Route path="/"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
-          <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
-          <Route path="/history"  element={<ProtectedRoute><History /></ProtectedRoute>} />
-          <Route path="/profile"    element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/asistente" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
-          <Route path="/upgrade"   element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
-          <Route path="*"          element={<Navigate to="/" replace />} />
+          <Route path="/"           element={<ProtectedRoute><RouteErrorBoundary><Dashboard /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/calculator" element={<ProtectedRoute><RouteErrorBoundary><Calculator /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/progress"   element={<ProtectedRoute><RouteErrorBoundary><Progress /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/history"    element={<ProtectedRoute><RouteErrorBoundary><History /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/profile"    element={<ProtectedRoute><RouteErrorBoundary><Profile /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/asistente"  element={<ProtectedRoute><RouteErrorBoundary><Assistant /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/upgrade"    element={<ProtectedRoute><RouteErrorBoundary><Upgrade /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="*"           element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </>
