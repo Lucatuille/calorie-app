@@ -22,7 +22,7 @@ export default function WelcomeDisclaimer({ onAccept }) {
 
         {/* Logo */}
         <div style={{
-          fontFamily: 'Instrument Serif, serif',
+          fontFamily: 'var(--font-serif)',
           fontSize: 40, color: 'var(--accent)',
           marginBottom: 6, lineHeight: 1,
         }}>
@@ -32,7 +32,7 @@ export default function WelcomeDisclaimer({ onAccept }) {
 
         {/* Title */}
         <h1 style={{
-          fontFamily: 'Instrument Serif, serif',
+          fontFamily: 'var(--font-serif)',
           fontSize: 28, fontWeight: 400,
           marginBottom: 8, lineHeight: 1.2,
         }}>

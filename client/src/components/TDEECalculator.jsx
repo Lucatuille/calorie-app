@@ -116,7 +116,7 @@ function Step1({ data, set }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 24, marginBottom: 4 }}>Cuéntanos sobre ti</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 4 }}>Cuéntanos sobre ti</h2>
         <p style={{ fontSize: 13, color: 'var(--text-3)' }}>Cuanto más precisos sean los datos, mejor será el resultado</p>
       </div>
 
@@ -272,7 +272,7 @@ function Step2({ data, set }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 24, marginBottom: 4 }}>¿Cómo es tu día típico?</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 4 }}>¿Cómo es tu día típico?</h2>
         <p style={{ fontSize: 13, color: 'var(--text-3)' }}>No cuentes el ejercicio — eso va en el siguiente paso</p>
       </div>
 
@@ -318,7 +318,7 @@ function Step3({ data, set }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 24, marginBottom: 4 }}>¿Cuánto ejercicio haces?</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 4 }}>¿Cuánto ejercicio haces?</h2>
         <p style={{ fontSize: 13, color: 'var(--text-3)' }}>Solo ejercicio planificado — no cuentes caminar al trabajo</p>
       </div>
 
@@ -396,7 +396,7 @@ function Step4({ data, set }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 24, marginBottom: 4 }}>¿Qué quieres conseguir?</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 4 }}>¿Qué quieres conseguir?</h2>
       </div>
 
       <div>
@@ -499,13 +499,13 @@ function ResultScreen({ result, data, history }) {
     gain:     `Ganar ${GAIN_TABLE.find(r => r.key === data.gainRate)?.rate || 0.5} kg/semana`,
   }[data.goal] || '';
 
-  const macroColors = { protein: '#10b981', carbs: '#f59e0b', fat: '#3b82f6' };
+  const macroColors = { protein: 'var(--color-protein)', carbs: 'var(--color-carbs)', fat: 'var(--color-fat)' };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       <div>
-        <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 24, marginBottom: 2 }}>Tu metabolismo</h2>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 2 }}>Tu metabolismo</h2>
         {result.formula === 'katch-mcardle'
           ? <span style={{ fontSize: 11, background: 'rgba(99,102,241,0.12)', color: '#6366f1', padding: '3px 8px', borderRadius: 99, fontWeight: 600 }}>🔬 Katch-McArdle (composición corporal)</span>
           : <span style={{ fontSize: 11, background: 'rgba(45,106,79,0.1)', color: 'var(--accent)', padding: '3px 8px', borderRadius: 99, fontWeight: 600 }}>Mifflin-St Jeor 1990</span>
@@ -517,7 +517,7 @@ function ResultScreen({ result, data, history }) {
         <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 10 }}>
           Quemas al día
         </p>
-        <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 52, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 14 }}>
+        <div style={{ fontFamily: 'var(--font-serif)', fontSize: 52, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 14 }}>
           {tdeeDisplay.toLocaleString()}
           <span style={{ fontSize: 18, color: 'var(--text-3)', marginLeft: 6 }}>kcal</span>
         </div>
@@ -548,7 +548,7 @@ function ResultScreen({ result, data, history }) {
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 6 }}>
             Para tu objetivo: {goalLabel}
           </p>
-          <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 44, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 10 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 44, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 10 }}>
             {targetDisplay.toLocaleString()}
             <span style={{ fontSize: 16, color: 'var(--text-3)', marginLeft: 6 }}>kcal / día</span>
           </div>
@@ -582,7 +582,7 @@ function ResultScreen({ result, data, history }) {
           <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 6 }}>
             Tu objetivo calórico
           </p>
-          <div style={{ fontFamily: 'Instrument Serif, serif', fontSize: 44, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 44, fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1 }}>
             {tdeeDisplay.toLocaleString()}
             <span style={{ fontSize: 16, color: 'var(--text-3)', marginLeft: 6 }}>kcal / día</span>
           </div>

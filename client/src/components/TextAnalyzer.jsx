@@ -12,7 +12,7 @@ const EXAMPLES = [
   { label: '🍗 Pollo',  text: 'Pechuga de pollo a la plancha, unos 150g' },
 ];
 
-const CONFIDENCE_COLOR = { high: '#059669', medium: '#d97706', low: 'var(--text-3)' };
+const CONFIDENCE_COLOR = { high: 'var(--color-protein)', medium: 'var(--color-carbs)', low: 'var(--text-3)' };
 const CONFIDENCE_LABEL = { high: 'Alta', medium: 'Media', low: 'Baja' };
 
 export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAiLimit, date }) {

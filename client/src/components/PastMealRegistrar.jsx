@@ -25,8 +25,8 @@ const METHODS = [
 ];
 
 const CONFIDENCE_STYLE = {
-  alta:  { bg: 'rgba(16,185,129,0.1)',  color: '#059669' },
-  media: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
+  alta:  { bg: 'rgba(16,185,129,0.1)',  color: 'var(--color-protein)' },
+  media: { bg: 'rgba(245,158,11,0.1)', color: 'var(--color-carbs)' },
   baja:  { bg: 'rgba(193,18,31,0.1)',  color: '#ef4444' },
 };
 
@@ -307,7 +307,7 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
             <div style={{
               background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
               borderRadius: 10, padding: '12px 16px', textAlign: 'center',
-              fontSize: 14, color: '#059669', fontWeight: 600, marginBottom: 16,
+              fontSize: 14, color: 'var(--color-protein)', fontWeight: 600, marginBottom: 16,
             }}>
               Comida guardada
             </div>
@@ -605,7 +605,7 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
               {scanFeedback && (
                 <div style={{
                   background: 'rgba(16,185,129,0.1)', borderRadius: 8,
-                  padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#059669',
+                  padding: '8px 12px', marginBottom: 10, fontSize: 12, color: 'var(--color-protein)',
                 }}>
                   Datos aplicados al formulario
                 </div>

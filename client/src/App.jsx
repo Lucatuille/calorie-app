@@ -106,7 +106,7 @@ function AppRoutes() {
           background: '#e76f51', color: 'white',
           textAlign: 'center', fontSize: '12px', fontWeight: 600,
           padding: '4px', zIndex: 99999,
-          fontFamily: 'DM Sans, sans-serif', letterSpacing: '0.5px',
+          fontFamily: 'var(--font-sans)', letterSpacing: '0.5px',
         }}>
           ⚗️ PREVIEW — Los cambios aquí no afectan a caliro.dev
         </div>

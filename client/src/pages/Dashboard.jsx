@@ -166,7 +166,7 @@ export default function Dashboard() {
           <h1 className="page-title">{user?.name}</h1>
           {streak > 0 && (
             <span style={{
-              fontSize: 11, color: '#d97706',
+              fontSize: 11, color: 'var(--color-carbs)',
               background: 'rgba(245,158,11,0.1)',
               border: '0.5px solid rgba(245,158,11,0.25)',
               padding: '3px 10px', borderRadius: 'var(--radius-full)',

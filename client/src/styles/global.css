@@ -56,6 +56,14 @@ textarea:focus:not(:focus-visible) {
   --color-carbs:   #d97706;
   --color-fat:     #3b82f6;
 
+  /* Status colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger:  #ef4444;
+
+  /* Accent RGB (for rgba() usage) */
+  --accent-rgb: 45, 106, 79;
+
   /* Backward-compat aliases */
   --text-1:    var(--text-primary);
   --text-2:    var(--text-secondary);
@@ -160,7 +168,7 @@ input, select, textarea { font-family: inherit; }
 .field input:focus,
 .field select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(45,106,79,0.1);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.1);
 }
 
 .field input::placeholder { color: var(--text-3); }
@@ -257,13 +265,13 @@ input, select, textarea { font-family: inherit; }
   border-radius: 99px;
   font-size: 12px;
 }
-.chip-protein { background: rgba(45,106,79,0.1);  color: #2d6a4f; }
-.chip-carbs   { background: rgba(180,83,9,0.1);   color: #b45309; }
-.chip-fat     { background: rgba(29,78,216,0.1);  color: #1d4ed8; }
+.chip-protein { background: rgba(5,150,105,0.1);   color: var(--color-protein); }
+.chip-carbs   { background: rgba(217,119,6,0.1);  color: var(--color-carbs); }
+.chip-fat     { background: rgba(59,130,246,0.1); color: var(--color-fat); }
 
-[data-theme="dark"] .chip-protein { background: rgba(82,183,136,0.15); color: #52b788; }
-[data-theme="dark"] .chip-carbs   { background: rgba(251,191,36,0.15); color: #fbbf24; }
-[data-theme="dark"] .chip-fat     { background: rgba(96,165,250,0.15); color: #60a5fa; }
+[data-theme="dark"] .chip-protein { background: rgba(5,150,105,0.15); color: var(--color-protein); }
+[data-theme="dark"] .chip-carbs   { background: rgba(217,119,6,0.15); color: var(--color-carbs); }
+[data-theme="dark"] .chip-fat     { background: rgba(59,130,246,0.15); color: var(--color-fat); }
 
 /* ── Progress bar ────────────────────────────────────────── */
 .progress-track {
@@ -347,7 +355,7 @@ input, select, textarea { font-family: inherit; }
   left: 0; right: 0;
   height: 2px;
   background: #2d6a4f;
-  box-shadow: 0 0 6px rgba(45,106,79,0.6);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb),0.6);
   animation: scanLine 1.5s ease-in-out infinite alternate;
 }
 /* Hide html5-qrcode default UI chrome */
@@ -657,7 +665,7 @@ input, select, textarea { font-family: inherit; }
 }
 .pill--active {
   border-color: var(--accent);
-  background: rgba(45,106,79,0.1);
+  background: rgba(var(--accent-rgb),0.1);
   color: var(--accent);
   font-weight: 600;
 }

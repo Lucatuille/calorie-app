@@ -40,7 +40,7 @@ export default function Register() {
       <div className="fade-up" style={{ width: '100%', maxWidth: 440 }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontFamily: 'Instrument Serif', fontSize: 36, color: 'var(--accent)', marginBottom: 8 }}>kcal</div>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, color: 'var(--accent)', marginBottom: 8 }}>kcal</div>
           <h1 className="title-lg" style={{ marginBottom: 6 }}>Crea tu cuenta</h1>
           <p className="body-sm">Gratis para siempre</p>
         </div>

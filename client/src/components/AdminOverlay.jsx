@@ -44,7 +44,7 @@ function KPICard({ label, value, sub, valueColor, accent, onClick }) {
       <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>
         {label}
       </p>
-      <p style={{ fontFamily: 'Instrument Serif', fontSize: 32, lineHeight: 1, color: valueColor || 'var(--text)' }}>
+      <p style={{ fontFamily: 'var(--font-serif)', fontSize: 32, lineHeight: 1, color: valueColor || 'var(--text)' }}>
         {value ?? '—'}
       </p>
       {sub && <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>{sub}</p>}
@@ -66,7 +66,7 @@ function TabOverview({ data, loading, onDrillCalories }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 20 }}>
         <KPICard label="Total usuarios"   value={users.total}        accent />
         <KPICard label="Activos hoy"       value={users.active_today} sub={`${users.active_week} esta semana`} valueColor="var(--accent)" />
-        <KPICard label="Nuevos 7 días"     value={users.new_last_7d}  valueColor="#10b981" />
+        <KPICard label="Nuevos 7 días"     value={users.new_last_7d}  valueColor="var(--color-success)" />
         <KPICard label="Entradas BD"       value={platform.total_entries?.toLocaleString()} sub={`+${platform.entries_today} hoy`} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 24 }}>
@@ -110,7 +110,7 @@ function TabOverview({ data, loading, onDrillCalories }) {
           Alertas
         </p>
         {alerts?.length === 0 ? (
-          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', fontSize: 13, color: '#10b981' }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', fontSize: 13, color: 'var(--color-success)' }}>
             🟢 Todos los usuarios activos — sin alertas
           </div>
         ) : (
@@ -192,7 +192,7 @@ function TabUsers({ data, loading, defaultSort }) {
   const lastEntryColor = (d) => {
     if (!d) return '#ef4444';
     const days = Math.floor((Date.now() - new Date(d + 'T12:00:00Z').getTime()) / 86400000);
-    if (days <= 1) return '#10b981';
+    if (days <= 1) return 'var(--color-success)';
     if (days <= 4) return '#f59e0b';
     return '#ef4444';
   };
@@ -246,7 +246,7 @@ function TabUsers({ data, loading, defaultSort }) {
                   {u.last_entry_relative || (u.last_entry ? u.last_entry : '—')}
                 </td>
                 <td style={{ padding: '10px', textAlign: 'center' }}>
-                  <span style={{ fontWeight: 700, color: u.days_7d >= 5 ? '#10b981' : u.days_7d >= 3 ? '#f59e0b' : '#ef4444' }}>
+                  <span style={{ fontWeight: 700, color: u.days_7d >= 5 ? 'var(--color-success)' : u.days_7d >= 3 ? '#f59e0b' : '#ef4444' }}>
                     {u.days_7d}/7
                   </span>
                 </td>
@@ -468,7 +468,7 @@ function TabEngagement({ data, loading }) {
                   <td style={{ padding: '8px 10px', color: 'var(--text-2)' }}>{row.week}</td>
                   <td style={{ padding: '8px 10px', fontWeight: 700 }}>{row.total}</td>
                   {[row.d7_pct, row.d14_pct, row.d30_pct].map((pct, i) => (
-                    <td key={i} style={{ padding: '8px 10px', fontWeight: 600, color: pct == null ? 'var(--text-3)' : pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#ef4444' }}>
+                    <td key={i} style={{ padding: '8px 10px', fontWeight: 600, color: pct == null ? 'var(--text-3)' : pct >= 70 ? 'var(--color-success)' : pct >= 40 ? '#f59e0b' : '#ef4444' }}>
                       {pct != null ? `${pct}%` : '—'}
                     </td>
                   ))}
@@ -498,7 +498,7 @@ function TabAI({ data, loading }) {
           <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>
             Fotos analizadas
           </p>
-          <p style={{ fontFamily: 'Instrument Serif', fontSize: 32, lineHeight: 1, color: 'var(--text)' }}>{photos.total}</p>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 32, lineHeight: 1, color: 'var(--text)' }}>{photos.total}</p>
           <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
             <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Esta semana: <strong style={{ color: 'var(--text-2)' }}>{photos.this_week}</strong></p>
             <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Este mes: <strong style={{ color: 'var(--text-2)' }}>{photos.this_month}</strong></p>
@@ -509,7 +509,7 @@ function TabAI({ data, loading }) {
           <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>
             Coste estimado API
           </p>
-          <p style={{ fontFamily: 'Instrument Serif', fontSize: 32, lineHeight: 1, color: '#6366f1' }}>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 32, lineHeight: 1, color: '#6366f1' }}>
             ${cost.this_month?.toFixed(3)}
           </p>
           <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>

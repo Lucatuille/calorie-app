@@ -92,7 +92,7 @@ export default function SupplementTracker() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{
                 fontSize: 13, fontWeight: 700,
-                color: allDone ? '#10b981' : 'var(--text-2)',
+                color: allDone ? 'var(--color-success)' : 'var(--text-2)',
                 transition: 'color 0.3s',
               }}>
                 {takenCount}/{supplements.length}{allDone ? ' ✓' : ''}

@@ -294,7 +294,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                 )}
                 <div>
                   <p style={{ fontWeight: 600, fontSize: 15, marginBottom: 2 }}>
-                    <span style={{ color: '#059669', marginRight: 6 }}>✓</span>
+                    <span style={{ color: 'var(--color-protein)', marginRight: 6 }}>✓</span>
                     {product.name}
                   </p>
                   {product.brand && (
@@ -351,9 +351,9 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                 {nutrition && (
                   <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-2)', marginTop: 8 }}>
                     → <strong>{nutrition.calories ?? '—'} kcal</strong>
-                    {nutrition.protein != null && <span style={{ color: '#059669' }}> · {nutrition.protein}g prot</span>}
-                    {nutrition.carbs   != null && <span style={{ color: '#d97706' }}> · {nutrition.carbs}g carb</span>}
-                    {nutrition.fat     != null && <span style={{ color: '#3b82f6' }}> · {nutrition.fat}g grasa</span>}
+                    {nutrition.protein != null && <span style={{ color: 'var(--color-protein)' }}> · {nutrition.protein}g prot</span>}
+                    {nutrition.carbs   != null && <span style={{ color: 'var(--color-carbs)' }}> · {nutrition.carbs}g carb</span>}
+                    {nutrition.fat     != null && <span style={{ color: 'var(--color-fat)' }}> · {nutrition.fat}g grasa</span>}
                   </p>
                 )}
               </div>

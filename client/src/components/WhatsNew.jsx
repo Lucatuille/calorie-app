@@ -84,7 +84,7 @@ export default function WhatsNew({ release, onDismiss, isClosing }) {
               </button>
             </div>
             <h2 style={{
-              fontFamily: 'Instrument Serif, serif', fontSize: 22, fontWeight: 400,
+              fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 400,
               color: 'var(--text)', margin: '0 0 4px',
             }}>
               {release.title}
@@ -133,7 +133,7 @@ export default function WhatsNew({ release, onDismiss, isClosing }) {
                 background: 'var(--accent)', color: 'white',
                 border: 'none', padding: '13px',
                 borderRadius: 100, fontSize: 14, fontWeight: 500,
-                cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
               }}
             >
               ¡Entendido, a probarlo! →

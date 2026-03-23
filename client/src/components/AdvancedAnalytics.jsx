@@ -121,7 +121,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
   })();
 
   const adherenceColor = !data?.calories?.adherence_pct ? 'var(--text-2)'
-    : data.calories.adherence_pct >= 70 ? '#10b981'
+    : data.calories.adherence_pct >= 70 ? 'var(--color-success)'
     : data.calories.adherence_pct >= 40 ? '#f59e0b'
     : '#ef4444';
 
@@ -328,7 +328,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               const color = !userTarget ? '#2d6a4f'
                                 : Math.abs(c - userTarget) <= ADHERENCE_TOLERANCE ? '#2d6a4f'
                                 : c > userTarget + 250 ? '#f59e0b'
-                                : '#3b82f6';
+                                : 'var(--color-fat)';
                               return <Cell key={i} fill={color} fillOpacity={0.85} />;
                             })}
                           </Bar>
@@ -380,7 +380,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                 <Section title="Tu patrón calórico">
                   {(() => {
                     const cvPct = Math.round(data.projection.calorie_variability_cv * 100);
-                    const cvColor = cvPct < 15 ? '#10b981' : cvPct <= 30 ? '#f59e0b' : '#ef4444';
+                    const cvColor = cvPct < 15 ? 'var(--color-success)' : cvPct <= 30 ? '#f59e0b' : '#ef4444';
                     const cvLabel = cvPct < 15 ? 'Muy consistente' : cvPct <= 30 ? 'Variabilidad normal' : 'Alta variabilidad';
                     return (
                       <>
@@ -395,9 +395,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           {data.calories.days_in_target != null && (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                               {[
-                                { label: 'En objetivo', val: data.calories.days_in_target, color: '#10b981' },
+                                { label: 'En objetivo', val: data.calories.days_in_target, color: 'var(--color-success)' },
                                 { label: 'Por encima',  val: data.calories.days_over,       color: '#f59e0b' },
-                                { label: 'Por debajo',  val: data.calories.days_under,      color: '#3b82f6' },
+                                { label: 'Por debajo',  val: data.calories.days_under,      color: 'var(--color-fat)' },
                               ].map(item => (
                                 <div key={item.label} style={{
                                   background: 'var(--bg)', borderRadius: 10,
@@ -436,10 +436,10 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
                       {/* Peso actual — green */}
                       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
-                        <div style={{ height: 2, background: '#10b981' }} />
+                        <div style={{ height: 2, background: 'var(--color-success)' }} />
                         <div style={{ padding: '10px 10px 12px' }}>
                           <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Peso actual</p>
-                          <p style={{ fontSize: 22, fontWeight: 700, color: '#10b981', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>{data.weight.current}</p>
+                          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-success)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>{data.weight.current}</p>
                           <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>kg</p>
                         </div>
                       </div>
@@ -488,7 +488,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           {[
                             { color: '#111111', label: 'Real',        dash: false },
                             { color: '#f59e0b', label: 'Realista',    dash: true  },
-                            { color: '#10b981', label: 'Optimista',   dash: true  },
+                            { color: 'var(--color-success)', label: 'Optimista',   dash: true  },
                             { color: '#94a3b8', label: 'Conservador', dash: true  },
                           ].map(item => (
                             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -563,10 +563,10 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             {data.projection?.goal_weight && (
                               <ReferenceLine
                                 y={data.projection.goal_weight}
-                                stroke="#10b981"
+                                stroke="var(--color-success)"
                                 strokeOpacity={0.5}
                                 strokeDasharray="4 4"
-                                label={{ value: `${data.projection.goal_weight} kg`, position: 'insideTopLeft', fill: '#10b981', fontSize: 10 }}
+                                label={{ value: `${data.projection.goal_weight} kg`, position: 'insideTopLeft', fill: 'var(--color-success)', fontSize: 10 }}
                               />
                             )}
 
@@ -585,7 +585,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             <Line
                               type="monotone"
                               dataKey="optimistic"
-                              stroke="#10b981"
+                              stroke="var(--color-success)"
                               strokeWidth={1.5}
                               strokeDasharray="6 4"
                               dot={false}
@@ -642,7 +642,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           Escenarios a 30 / 60 / 90 días
                         </p>
                         {[
-                          { key: 'optimistic',   label: 'Optimista',   sub: 'adherencia perfecta',   accentColor: '#10b981', textColor: '#10b981' },
+                          { key: 'optimistic',   label: 'Optimista',   sub: 'adherencia perfecta',   accentColor: 'var(--color-success)', textColor: 'var(--color-success)' },
                           { key: 'realistic',    label: 'Realista',    sub: 'basado en tus hábitos', accentColor: '#f59e0b', textColor: '#92400e' },
                           { key: 'conservative', label: 'Conservador', sub: 'adherencia 20% menor',  accentColor: '#94a3b8', textColor: '#475569' },
                         ].map(s => (
@@ -716,7 +716,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         borderLeft: '3px solid #f59e0b',
                         padding: '12px 14px',
                       }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#d97706', marginBottom: 4 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-carbs)', marginBottom: 4 }}>
                           Plateau probable hacia el día {data.projection.plateau_prediction.estimated_day}
                         </p>
                         <p style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
@@ -738,7 +738,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           <span style={{ fontSize: 11, color: 'var(--text-2)', fontWeight: 500, fontFamily: 'var(--font-sans)' }}>Calidad del modelo</span>
                           <span style={{
                             fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-sans)',
-                            color: data.projection.data_quality_score >= 0.7 ? '#10b981'
+                            color: data.projection.data_quality_score >= 0.7 ? 'var(--color-success)'
                               : data.projection.data_quality_score >= 0.5 ? '#f59e0b'
                               : '#ef4444',
                           }}>
@@ -749,7 +749,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           <div style={{
                             height: '100%',
                             width: `${Math.round(data.projection.data_quality_score * 100)}%`,
-                            background: data.projection.data_quality_score >= 0.7 ? '#10b981'
+                            background: data.projection.data_quality_score >= 0.7 ? 'var(--color-success)'
                               : data.projection.data_quality_score >= 0.5 ? '#f59e0b'
                               : '#ef4444',
                             borderRadius: 99, transition: 'width 0.6s',
@@ -822,7 +822,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     borderRadius: 'var(--radius-md)',
                     boxShadow: 'var(--shadow-sm)',
                     borderLeft: `3px solid ${
-                      data.calories.trend === 'improving' ? '#10b981'
+                      data.calories.trend === 'improving' ? 'var(--color-success)'
                       : data.calories.trend === 'worsening' ? '#f59e0b'
                       : '#6366f1'
                     }`,

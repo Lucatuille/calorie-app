@@ -79,8 +79,8 @@ const emptyForm = () => ({
 });
 
 const CONFIDENCE_STYLE = {
-  alta:  { bg: 'rgba(16,185,129,0.1)',  color: '#059669' },
-  media: { bg: 'rgba(245,158,11,0.1)', color: '#d97706' },
+  alta:  { bg: 'rgba(16,185,129,0.1)',  color: 'var(--color-protein)' },
+  media: { bg: 'rgba(245,158,11,0.1)', color: 'var(--color-carbs)' },
   baja:  { bg: 'rgba(193,18,31,0.1)',  color: '#ef4444' },
 };
 
@@ -671,7 +671,7 @@ export default function Calculator() {
                 <div style={{
                   position: 'absolute', bottom: -18, left: 0,
                   fontSize: 10,
-                  color: kcalOver ? '#d97706' : 'var(--accent)',
+                  color: kcalOver ? 'var(--color-carbs)' : 'var(--accent)',
                   fontFamily: 'var(--font-sans)',
                 }}>
                   {kcalOver

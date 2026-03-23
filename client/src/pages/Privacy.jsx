@@ -11,7 +11,7 @@ export default function Privacy() {
           </Link>
         </div>
 
-        <h1 style={{ fontFamily: 'Instrument Serif, serif', fontSize: 32, fontWeight: 400, marginBottom: 4 }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 400, marginBottom: 4 }}>
           Política de Privacidad
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 36 }}>

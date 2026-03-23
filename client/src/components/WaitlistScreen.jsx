@@ -11,7 +11,7 @@ export default function WaitlistScreen() {
     }}>
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
 
-        <div style={{ fontFamily: 'Instrument Serif', fontSize: 40, color: 'var(--accent)', marginBottom: 32 }}>
+        <div style={{ fontFamily: 'var(--font-serif)', fontSize: 40, color: 'var(--accent)', marginBottom: 32 }}>
           Caliro
         </div>
 
@@ -22,7 +22,7 @@ export default function WaitlistScreen() {
           <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
 
           <h1 style={{
-            fontFamily: 'Instrument Serif, serif', fontSize: 24,
+            fontFamily: 'var(--font-serif)', fontSize: 24,
             fontWeight: 400, color: 'var(--text)', marginBottom: 12,
           }}>
             Estás en lista de espera
@@ -50,7 +50,7 @@ export default function WaitlistScreen() {
               width: '100%', background: 'none',
               border: '1px solid var(--border)', color: 'var(--text-2)',
               padding: '12px', borderRadius: 12, fontSize: 14,
-              cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+              cursor: 'pointer', fontFamily: 'var(--font-sans)',
             }}
           >
             Cerrar sesión
