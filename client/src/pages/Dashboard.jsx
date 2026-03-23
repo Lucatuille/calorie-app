@@ -285,6 +285,7 @@ export default function Dashboard() {
             {entries.length > 0 && (
               <button
                 onClick={() => navigate('/calculator')}
+                aria-label="Añadir comida"
                 style={{
                   width: 24, height: 24, background: 'var(--accent)',
                   border: 'none', borderRadius: '50%', cursor: 'pointer',
@@ -344,6 +345,7 @@ export default function Dashboard() {
                       </span>
                       <button
                         onClick={() => handleDelete(entry.id)}
+                        aria-label="Eliminar comida"
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
                           color: 'var(--text-tertiary)', fontSize: 16,

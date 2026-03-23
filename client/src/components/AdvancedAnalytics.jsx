@@ -197,7 +197,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
             fontFamily: 'var(--font-serif)', fontStyle: 'italic',
             fontWeight: 400, fontSize: 22, color: 'var(--text-primary)',
           }}>Análisis profundo</h2>
-          <button onClick={onClose} style={{
+          <button onClick={onClose} aria-label="Cerrar" style={{
             background: 'none', border: 'none', cursor: 'pointer',
             color: 'var(--text-3)', fontSize: 22, padding: '4px 8px', lineHeight: 1,
           }}>✕</button>

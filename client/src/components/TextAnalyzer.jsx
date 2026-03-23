@@ -120,6 +120,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
             <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Describir comida</h3>
             <button
               onClick={handleClose}
+              aria-label="Cerrar"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18,
                        color: 'var(--text-3)', lineHeight: 1, padding: 4 }}
             >✕</button>
@@ -261,6 +262,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
                         <span style={{ fontSize: 13 }}>kcal</span>
                         <button
                           type="button" onClick={() => setAdjusting(false)}
+                          aria-label="Confirmar calorías"
                           style={{ fontSize: 11, color: 'var(--accent)', background: 'none',
                                    border: 'none', cursor: 'pointer', padding: 0 }}
                         >✓</button>
@@ -270,6 +272,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
                         {getFinalCalories()} kcal{' '}
                         <button
                           type="button" onClick={() => { setAdjusting(true); setAdjustedKcal(String(getFinalCalories())); }}
+                          aria-label="Ajustar calorías"
                           style={{ fontSize: 12, color: 'var(--text-3)', background: 'none',
                                    border: 'none', cursor: 'pointer', padding: 0, marginLeft: 4 }}
                         >✏️</button>

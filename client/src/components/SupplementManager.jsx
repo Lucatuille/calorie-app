@@ -171,6 +171,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
           <h2 style={{ fontWeight: 700, fontSize: 18 }}>Mis suplementos</h2>
           <button
             onClick={onClose}
+            aria-label="Cerrar"
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               color: 'var(--text-3)', fontSize: 20, padding: '4px 8px', lineHeight: 1,

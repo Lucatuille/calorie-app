@@ -189,6 +189,7 @@ export default function History() {
                     </span>
                     <button
                       onClick={() => setAddingForDate(date)}
+                      aria-label="Añadir comida"
                       style={{
                         width: 22, height: 22, background: 'var(--accent)',
                         border: 'none', borderRadius: '50%', cursor: 'pointer',
@@ -375,6 +376,7 @@ export default function History() {
                                 </span>
                                 <button
                                   onClick={() => { setDeletingId(null); startEdit(entry); }}
+                                  aria-label="Editar comida"
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
                                     color: 'var(--text-tertiary)', padding: '2px 4px',
@@ -390,6 +392,7 @@ export default function History() {
                                 </button>
                                 <button
                                   onClick={() => { setEditingId(null); setDeletingId(d => d === entry.id ? null : entry.id); }}
+                                  aria-label="Eliminar comida"
                                   style={{
                                     background: 'none', border: 'none', cursor: 'pointer',
                                     color: 'var(--text-tertiary)', fontSize: 16,

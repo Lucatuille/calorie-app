@@ -306,6 +306,7 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
             </h3>
             <button
               onClick={() => onClose(false)}
+              aria-label="Cerrar"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18,
                        color: 'var(--text-tertiary)', lineHeight: 1, padding: 4 }}
             >✕</button>

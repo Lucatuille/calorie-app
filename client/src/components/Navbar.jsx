@@ -91,6 +91,7 @@ export default function Navbar() {
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 14, color: 'var(--text-secondary)', padding: '4px',
@@ -117,6 +118,7 @@ export default function Navbar() {
           <button
             className="nav-hamburger"
             onClick={() => setMenuOpen(o => !o)}
+            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 18, color: 'var(--text-primary)', padding: '4px', lineHeight: 1,
