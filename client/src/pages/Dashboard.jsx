@@ -163,14 +163,7 @@ export default function Dashboard() {
           {getGreeting()},
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: 32, fontStyle: 'italic',
-            fontWeight: 400, color: 'var(--text-primary)',
-            margin: 0, lineHeight: 1,
-          }}>
-            {user?.name}
-          </h1>
+          <h1 className="page-title">{user?.name}</h1>
           {streak > 0 && (
             <span style={{
               fontSize: 11, color: '#d97706',
@@ -257,29 +250,21 @@ export default function Dashboard() {
 
           {/* Macros — cards individuales con mini-barra */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-            <MacroCard val={todayProtein} target={targetProtein} label="proteína" color="var(--accent)" />
-            <MacroCard val={todayCarbs}   target={targetCarbs}   label="carbos"   color="#f59e0b" />
-            <MacroCard val={todayFat}     target={targetFat}     label="grasa"    color="#60a5fa" />
+            <MacroCard val={todayProtein} target={targetProtein} label="proteína" color="var(--color-protein)" />
+            <MacroCard val={todayCarbs}   target={targetCarbs}   label="carbos"   color="var(--color-carbs)" />
+            <MacroCard val={todayFat}     target={targetFat}     label="grasa"    color="var(--color-fat)" />
           </div>
         </div>
       </div>
 
       {/* ── 3. Comidas de hoy ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
-        <div style={{
-          background: 'var(--surface)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '14px 16px',
-          boxShadow: 'var(--shadow-md)',
-        }}>
+        <div className="card card-padded card-shadow">
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             marginBottom: entries.length > 0 ? 10 : 0,
           }}>
-            <span style={{
-              fontSize: 9, color: 'var(--text-secondary)',
-              textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
-            }}>
+            <span className="section-label">
               Hoy · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
             {entries.length > 0 && (
@@ -366,12 +351,7 @@ export default function Dashboard() {
 
       {/* ── 4. Suplementos ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
-        <div style={{
-          background: 'var(--surface)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '14px 16px',
-          boxShadow: 'var(--shadow-md)',
-        }}>
+        <div className="card card-padded card-shadow">
           <SupplementTracker />
         </div>
       </div>
