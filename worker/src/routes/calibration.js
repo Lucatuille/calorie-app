@@ -24,8 +24,17 @@ export async function handleCalibration(request, env, path) {
     if (!ai_calibrated) return jsonResponse({ success: true });
 
     const correctionPct = (user_final - ai_calibrated) / ai_calibrated;
-    const now      = new Date();
-    const isWeekend = [0, 6].includes(now.getDay());
+
+    // Use the entry's date for weekend/hour metadata (not "now") so past-dated entries are calibrated correctly
+    let refDate = new Date();
+    if (entry_id) {
+      try {
+        const entry = await env.DB.prepare('SELECT date FROM entries WHERE id = ? AND user_id = ?')
+          .bind(entry_id, user.userId).first();
+        if (entry?.date) refDate = new Date(entry.date + 'T12:00:00Z');
+      } catch { /* fallback to now */ }
+    }
+    const isWeekend = [0, 6].includes(refDate.getDay());
 
     // 1. Guardar corrección
     await env.DB.prepare(`
@@ -45,8 +54,8 @@ export async function handleCalibration(request, env, path) {
       meal_type || 'other',
       has_context ? 1 : 0,
       isWeekend ? 1 : 0,
-      now.getDay(),
-      now.getHours(),
+      refDate.getDay(),
+      refDate.getHours(),
       accepted_without_change ? 1 : 0,
     ).run();
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
+import PastMealRegistrar from '../components/PastMealRegistrar';
 
 function formatDateParts(dateStr) {
   const d = new Date(dateStr + 'T12:00:00Z');
@@ -53,6 +54,7 @@ export default function History() {
   const [deletingId, setDeletingId] = useState(null);
   const [saving,     setSaving]     = useState(false);
   const [limit,      setLimit]      = useState(90);
+  const [addingForDate, setAddingForDate] = useState(null);
 
   async function load(lim = limit) {
     setLoading(true);
@@ -178,12 +180,26 @@ export default function History() {
                       </span>
                     )}
                   </div>
-                  <span style={{
-                    fontSize: 13, color: 'var(--text-secondary)',
-                    fontFamily: 'var(--font-sans)', fontWeight: 500,
-                  }}>
-                    {dayTotal.toLocaleString('es')} kcal
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      fontSize: 13, color: 'var(--text-secondary)',
+                      fontFamily: 'var(--font-sans)', fontWeight: 500,
+                    }}>
+                      {dayTotal.toLocaleString('es')} kcal
+                    </span>
+                    <button
+                      onClick={() => setAddingForDate(date)}
+                      style={{
+                        width: 22, height: 22, background: 'var(--accent)',
+                        border: 'none', borderRadius: '50%', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      }}
+                    >
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                        <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* ── Card del día — todas las comidas dentro ── */}
@@ -441,6 +457,15 @@ export default function History() {
             </button>
           )}
         </div>
+      )}
+      {addingForDate && (
+        <PastMealRegistrar
+          targetDate={addingForDate}
+          onClose={(saved) => {
+            setAddingForDate(null);
+            if (saved) load();
+          }}
+        />
       )}
     </div>
   );

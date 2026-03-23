@@ -13,7 +13,7 @@ const EXAMPLES = [
 const CONFIDENCE_COLOR = { high: '#059669', medium: '#d97706', low: 'var(--text-3)' };
 const CONFIDENCE_LABEL = { high: 'Alta', medium: 'Media', low: 'Baja' };
 
-export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAiLimit }) {
+export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAiLimit, date }) {
   const { token } = useAuth();
   const [text,      setText]   = useState('');
   const [status,    setStatus] = useState('idle');   // idle | loading | result | error
@@ -40,7 +40,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
     setErrorMsg('');
     setClarified(false);
     try {
-      const r = await api.analyzeText({ text: analysisText, meal_type: mealType }, token);
+      const r = await api.analyzeText({ text: analysisText, meal_type: mealType, ...(date && { date }) }, token);
       setResult(r);
       setAdjustedKcal(String(r.total.calories));
       setStatus('result');

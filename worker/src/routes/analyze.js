@@ -132,7 +132,7 @@ export async function handleAnalyze(request, env, path, ctx) {
   }
 
   if (path === '/api/analyze' && request.method === 'POST') {
-    const { image, mediaType, context, meal_type, photo_location, photo_plate_size } = await request.json();
+    const { image, mediaType, context, meal_type, photo_location, photo_plate_size, date: entryDate } = await request.json();
 
     if (!image) return errorResponse('Imagen requerida');
     if (!env.ANTHROPIC_API_KEY) return errorResponse('API key no configurada', 500);
@@ -303,7 +303,7 @@ export async function handleAnalyzeText(request, env, ctx) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
 
-  const { text, meal_type } = await request.json();
+  const { text, meal_type, date: entryDate } = await request.json();
   if (!text?.trim()) return errorResponse('Texto vacío', 400);
   if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
 
@@ -390,7 +390,8 @@ export async function handleAnalyzeText(request, env, ctx) {
   }
 
   const rawCalories = result.total?.calories || 0;
-  const isWeekend   = [0, 6].includes(new Date().getDay());
+  const refDate     = entryDate ? new Date(entryDate + 'T12:00:00Z') : new Date();
+  const isWeekend   = [0, 6].includes(refDate.getDay());
   const calibratedCalories = applyCalibration(rawCalories, calibrationProfile, {
     meal_type:       meal_type || 'other',
     food_categories: result.categories || [],
