@@ -95,24 +95,12 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
 
   return createPortal(
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'flex-end',
-      }}
+      className="modal-overlay"
       onClick={e => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div style={{
-        width: '100%', maxWidth: 520, margin: '0 auto',
-        background: 'var(--bg)',
-        borderRadius: '20px 20px 0 0',
-        padding: '0 0 env(safe-area-inset-bottom, 16px)',
-        maxHeight: '92vh', overflowY: 'auto',
-      }}>
+      <div className="modal-sheet">
         {/* Handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--border)' }} />
-        </div>
+        <div className="modal-handle" />
 
         <div style={{ padding: '0 20px 24px' }}>
           {/* Header */}
@@ -284,9 +272,9 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
 
               {/* Macros */}
               <div style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 14, flexWrap: 'wrap' }}>
-                {result.total.protein > 0 && <span style={{ color: '#059669' }}><b>{result.total.protein}g</b> prot</span>}
-                {result.total.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{result.total.carbs}g</b> carb</span>}
-                {result.total.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{result.total.fat}g</b> grasa</span>}
+                {result.total.protein > 0 && <span className="color-protein"><b>{result.total.protein}g</b> prot</span>}
+                {result.total.carbs   > 0 && <span className="color-carbs"><b>{result.total.carbs}g</b> carb</span>}
+                {result.total.fat     > 0 && <span className="color-fat"><b>{result.total.fat}g</b> grasa</span>}
               </div>
 
               {/* Calibración aplicada */}

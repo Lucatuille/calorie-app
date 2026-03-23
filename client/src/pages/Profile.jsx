@@ -29,14 +29,7 @@ const card = {
   padding: '16px',
 };
 
-const sectionLabel = {
-  fontSize: 9,
-  textTransform: 'uppercase',
-  letterSpacing: '0.7px',
-  fontWeight: 600,
-  color: 'var(--text-secondary)',
-  marginBottom: 12,
-};
+// sectionLabel → uses .section-label class + marginBottom override
 
 const inputStyle = {
   background: 'var(--surface)',
@@ -195,7 +188,7 @@ export default function Profile() {
 
         {/* ── Card: Sobre ti ── */}
         <div style={card}>
-          <p style={sectionLabel}>Sobre ti</p>
+          <p className="section-label" style={{ marginBottom: 12 }}>Sobre ti</p>
 
           {/* Nombre */}
           <div style={{ marginBottom: 14 }}>
@@ -262,7 +255,7 @@ export default function Profile() {
         {/* ── Card: Objetivos ── */}
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <p style={{ ...sectionLabel, marginBottom: 0 }}>Objetivos</p>
+            <p className="section-label" style={{ marginBottom: 0 }}>Objetivos</p>
             <button type="button"
               onClick={() => setShowTDEE(true)}
               style={{
