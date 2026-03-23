@@ -3,16 +3,57 @@
 //  Mifflin-St Jeor (1990) + Katch-McArdle (Cunningham 1980)
 // ============================================================
 
-// ── Unit conversions ─────────────────────────────────────────
-export function inToCm(ft, inches) {
-  return (parseInt(ft) || 0) * 30.48 + (parseFloat(inches) || 0) * 2.54;
+// ── Types ──────────────────────────────────────────────────
+interface BMRResult {
+  bmr: number;
+  formula: 'mifflin-st-jeor' | 'katch-mcardle';
+  leanMass: number | null;
 }
-export function lbToKg(lb) {
-  return parseFloat(lb) * 0.453592;
+
+export interface MacroResult {
+  protein: number;
+  carbs: number;
+  fat: number;
+  proteinPct: number;
+  carbsPct: number;
+  fatPct: number;
+}
+
+type Goal = 'lose' | 'maintain' | 'gain';
+
+interface TDEEInput {
+  weight: string;
+  weightUnit?: string;
+  heightCm?: string;
+  heightUnit?: string;
+  heightFt?: string;
+  heightIn?: string;
+  age: string;
+  gender: string;
+  jobType: string;
+  steps: string;
+  exerciseDays?: number;
+  exerciseDuration?: string;
+  exerciseType?: string;
+  goal?: string;
+  loseRate?: string;
+  gainRate?: string;
+  showBodyFat?: boolean;
+  bodyFat?: string;
+}
+
+// ── Unit conversions ─────────────────────────────────────────
+export function inToCm(ft: string | number | null, inches: string | number | null): number {
+  return (parseInt(ft as string) || 0) * 30.48 + (parseFloat(inches as string) || 0) * 2.54;
+}
+export function lbToKg(lb: string | number): number {
+  return parseFloat(lb as string) * 0.453592;
 }
 
 // ── BMR formulas ─────────────────────────────────────────────
-export function calculateBMR(weight, height, age, gender, bodyFatPct = null) {
+export function calculateBMR(
+  weight: number, height: number, age: number, gender: string, bodyFatPct: number | null = null
+): BMRResult {
   if (bodyFatPct !== null) {
     // Katch-McArdle (Cunningham 1980) — más preciso si se conoce % grasa
     const leanMass = weight * (1 - bodyFatPct / 100);
@@ -30,16 +71,16 @@ export function calculateBMR(weight, height, age, gender, bodyFatPct = null) {
 }
 
 // ── Physical Activity Level (PAL) ────────────────────────────
-export function calculateBasePAL(jobType, steps) {
-  const jobFactors  = { desk: 0.0, standing: 0.1, physical: 0.3, home: 0.05 };
-  const stepFactors = { low: 0.0, medium: 0.1, high: 0.2, very: 0.3 };
+export function calculateBasePAL(jobType: string, steps: string): number {
+  const jobFactors:  Record<string, number> = { desk: 0.0, standing: 0.1, physical: 0.3, home: 0.05 };
+  const stepFactors: Record<string, number> = { low: 0.0, medium: 0.1, high: 0.2, very: 0.3 };
   return Math.min(1.2 + (jobFactors[jobType] || 0) + (stepFactors[steps] || 0), 1.5);
 }
 
-export function calculateExercisePAL(days, duration, type) {
+export function calculateExercisePAL(days: number | null, duration: string, type: string): number {
   if (!days) return 0;
-  const metByType      = { weights: 5.0, cardio: 7.0, mixed: 6.0 };
-  const durationHours  = { short: 0.4, medium: 0.75, hour: 1.0, long: 1.5 };
+  const metByType:     Record<string, number> = { weights: 5.0, cardio: 7.0, mixed: 6.0 };
+  const durationHours: Record<string, number> = { short: 0.4, medium: 0.75, hour: 1.0, long: 1.5 };
   const met   = metByType[type]     || 6.0;
   const hours = durationHours[duration] || 1.0;
   // Contribución al PAL diario: (MET × horas × días/semana) / 168h × factor conservador
@@ -47,13 +88,13 @@ export function calculateExercisePAL(days, duration, type) {
 }
 
 // ── Macros distribution ───────────────────────────────────────
-const MACRO_RATIOS = {
+const MACRO_RATIOS: Record<string, { protein: number; carbs: number; fat: number }> = {
   lose:     { protein: 0.30, carbs: 0.40, fat: 0.30 },
   maintain: { protein: 0.25, carbs: 0.45, fat: 0.30 },
   gain:     { protein: 0.25, carbs: 0.50, fat: 0.25 },
 };
 
-export function calculateMacros(calories, goal) {
+export function calculateMacros(calories: number, goal: string): MacroResult {
   const r = MACRO_RATIOS[goal] || MACRO_RATIOS.maintain;
   return {
     protein: Math.round((calories * r.protein) / 4),
@@ -81,16 +122,16 @@ const GAIN_TABLE = [
 export { LOSE_TABLE, GAIN_TABLE };
 
 // ── Full calculation ──────────────────────────────────────────
-export function calculateResult(data) {
+export function calculateResult(data: TDEEInput) {
   // Normalise units
   let weight = parseFloat(data.weight);
   if (data.weightUnit === 'lb') weight = lbToKg(weight);
 
-  let height;
+  let height: number;
   if (data.heightUnit === 'cm') {
-    height = parseFloat(data.heightCm);
+    height = parseFloat(data.heightCm!);
   } else {
-    height = inToCm(data.heightFt, data.heightIn);
+    height = inToCm(data.heightFt!, data.heightIn!);
   }
 
   const age     = parseInt(data.age);
@@ -99,8 +140,8 @@ export function calculateResult(data) {
   const { bmr, formula, leanMass } = calculateBMR(weight, height, age, data.gender, bodyFat);
 
   const basePAL     = calculateBasePAL(data.jobType, data.steps);
-  const exercisePAL = data.exerciseDays > 0
-    ? calculateExercisePAL(data.exerciseDays, data.exerciseDuration, data.exerciseType)
+  const exercisePAL = (data.exerciseDays ?? 0) > 0
+    ? calculateExercisePAL(data.exerciseDays!, data.exerciseDuration!, data.exerciseType!)
     : 0;
   const finalPAL = Math.min(basePAL + exercisePAL, 1.9);
   const tdee     = Math.round(bmr * finalPAL);
@@ -125,7 +166,7 @@ export function calculateResult(data) {
   const belowMin     = targetCalories < MIN_CALORIES;
   if (belowMin) targetCalories = MIN_CALORIES;
 
-  const macros = calculateMacros(targetCalories, data.goal);
+  const macros = calculateMacros(targetCalories, data.goal || 'maintain');
 
   // All alternatives (only relevant for lose)
   const alternatives = LOSE_TABLE.map(row => ({

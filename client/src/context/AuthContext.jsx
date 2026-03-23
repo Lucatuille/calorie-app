@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { setLogoutHandler } from '../api.js';
-import { calculateMacros } from '../utils/tdee.js';
+import { calculateMacros } from '../utils/tdee';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
 

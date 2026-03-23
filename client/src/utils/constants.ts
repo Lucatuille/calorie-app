@@ -6,7 +6,7 @@
 export const ADHERENCE_TOLERANCE = 250; // kcal ± from target
 
 // ── Meal hour ranges (for auto-detecting meal type) ──────────
-export const MEAL_HOURS = {
+export const MEAL_HOURS: Record<string, [number, number]> = {
   breakfast: [6, 11],
   lunch:     [11, 16],
   snack:     [16, 20],
