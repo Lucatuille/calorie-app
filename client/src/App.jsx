@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import * as Sentry from '@sentry/react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -10,19 +10,23 @@ import WelcomeDisclaimer from './components/WelcomeDisclaimer';
 import WhatsNew from './components/WhatsNew';
 import WaitlistScreen from './components/WaitlistScreen';
 import { useWhatsNew } from './hooks/useWhatsNew';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
+
+// Eager: login/register (first screen), dashboard (most visited)
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Calculator from './pages/Calculator';
-import Progress from './pages/Progress';
-import Profile from './pages/Profile';
-import History from './pages/History';
-import Privacy from './pages/Privacy';
-import Terms  from './pages/Terms';
-import Assistant from './pages/Assistant';
-import Onboarding from './pages/Onboarding';
-import Upgrade from './pages/Upgrade';
-import RouteErrorBoundary from './components/RouteErrorBoundary';
+
+// Lazy: loaded on demand when user navigates
+const Calculator = lazy(() => import('./pages/Calculator'));
+const Progress   = lazy(() => import('./pages/Progress'));
+const Profile    = lazy(() => import('./pages/Profile'));
+const History    = lazy(() => import('./pages/History'));
+const Assistant  = lazy(() => import('./pages/Assistant'));
+const Privacy    = lazy(() => import('./pages/Privacy'));
+const Terms      = lazy(() => import('./pages/Terms'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Upgrade    = lazy(() => import('./pages/Upgrade'));
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -141,6 +145,7 @@ function AppRoutes() {
         />
       )}
       <main>
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><div className="spinner" style={{ width: 32, height: 32 }} /></div>}>
         <Routes>
           <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
@@ -155,6 +160,7 @@ function AppRoutes() {
           <Route path="/upgrade"    element={<ProtectedRoute><RouteErrorBoundary><Upgrade /></RouteErrorBoundary></ProtectedRoute>} />
           <Route path="*"           element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </main>
     </>
   );
