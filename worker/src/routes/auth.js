@@ -76,7 +76,7 @@ export async function handleAuth(request, env, path) {
     const userId = result.meta.last_row_id;
     const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 3 }, env.JWT_SECRET);
 
-    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0 } }, 201);
+    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0, age: age||null, weight: weight||null, height: height||null, gender: gender||null } }, 201);
   }
 
   // POST /api/auth/login
@@ -115,7 +115,7 @@ export async function handleAuth(request, env, path) {
 
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1 }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1, age: user.age, weight: user.weight, height: user.height, gender: user.gender, target_calories: user.target_calories, target_protein: user.target_protein, target_carbs: user.target_carbs, target_fat: user.target_fat }
     });
   }
 
@@ -129,7 +129,7 @@ export async function handleAuth(request, env, path) {
     if (!payload) return errorResponse('Token inválido o expirado', 401);
 
     const user = await env.DB.prepare(
-      'SELECT id, name, email, is_admin, access_level, onboarding_completed FROM users WHERE id = ?'
+      'SELECT id, name, email, is_admin, access_level, onboarding_completed, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat FROM users WHERE id = ?'
     ).bind(payload.userId).first();
 
     if (!user) return errorResponse('Usuario no encontrado', 404);
@@ -145,7 +145,7 @@ export async function handleAuth(request, env, path) {
 
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1 }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1, age: user.age, weight: user.weight, height: user.height, gender: user.gender, target_calories: user.target_calories, target_protein: user.target_protein, target_carbs: user.target_carbs, target_fat: user.target_fat }
     });
   }
 

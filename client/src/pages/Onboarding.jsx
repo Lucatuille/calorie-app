@@ -103,7 +103,7 @@ export default function Onboarding() {
         target_fat:     macros.fat,
         onboarding_completed: 1,
       }, token);
-      updateUser({ ...user, target_calories: targetCalories, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat, onboarding_completed: 1 });
+      updateUser({ ...user, age: Number(data.age), weight: Number(data.weight), height: Number(data.height), gender: data.gender, goal_weight: data.goal_weight || null, target_calories: targetCalories, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat, onboarding_completed: 1 });
     } catch (e) {
       console.error(e);
       setSaveError(true);

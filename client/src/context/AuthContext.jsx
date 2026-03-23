@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 import { setLogoutHandler } from '../api.js';
+import { calculateMacros } from '../utils/tdee.js';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
 
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
             setToken(data.token);
             setUser(data.user);
             Sentry.setUser({ id: String(data.user.id), email: data.user.email });
+            backfillMacros(data.user, data.token);
             return;
           }
         }
@@ -62,6 +64,24 @@ export function AuthProvider({ children }) {
       })
       .finally(() => setReady(true));
   }, []);
+
+  // Backfill macros for users who completed onboarding before macro saving was added
+  function backfillMacros(userData, authToken) {
+    if (!userData.target_calories || userData.target_protein) return;
+    const goal = userData.tdee
+      ? (userData.target_calories < userData.tdee - 50 ? 'lose'
+        : userData.target_calories > userData.tdee + 50 ? 'gain' : 'maintain')
+      : 'maintain';
+    const macros = calculateMacros(userData.target_calories, goal);
+    const patched = { ...userData, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat };
+    localStorage.setItem('user', JSON.stringify(patched));
+    setUser(patched);
+    fetch(`${BASE}/api/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify({ target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat }),
+    }).catch(() => {});
+  }
 
   function login(token, user) {
     localStorage.setItem('token', token);
