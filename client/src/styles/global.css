@@ -618,12 +618,12 @@ input, select, textarea { font-family: inherit; }
   display: block;
 }
 
-/* ── Card (surface container with shadow) ─────────────────── */
+/* ── Card (surface container) ─────────────────────────────── */
 .card {
   background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
 }
+.card-shadow { box-shadow: var(--shadow-md); }
 .card-padded    { padding: 14px 16px; }
 .card-padded-lg { padding: 24px; }
 .card-bordered  { border: 0.5px solid var(--border); }

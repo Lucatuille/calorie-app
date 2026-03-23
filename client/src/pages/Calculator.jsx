@@ -303,18 +303,6 @@ export default function Calculator() {
   const kcalOver  = targetCalories > 0 && (total.calories + kcalTyped) > targetCalories;
 
   // ── Shared styles ─────────────────────────────────────────────
-  const cardStyle = {
-    background: 'var(--surface)',
-    border: '0.5px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '14px 16px',
-  };
-
-  const sectionLabelStyle = {
-    fontSize: 9, color: 'var(--text-secondary)',
-    textTransform: 'uppercase', letterSpacing: '0.7px', fontWeight: 600,
-    display: 'block', marginBottom: 10,
-  };
 
   const inputStyle = {
     width: '100%', background: 'var(--surface-2)',
@@ -338,23 +326,16 @@ export default function Calculator() {
         }}>
           {todayLabel}
         </p>
-        <h1 style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 32, fontStyle: 'italic',
-          fontWeight: 400, color: 'var(--text-primary)',
-          margin: 0,
-        }}>
-          Registrar
-        </h1>
+        <h1 className="page-title">Registrar</h1>
       </header>
 
       {/* ── 1. Formulario — primero ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
-        <div style={cardStyle}>
+        <div className="card card-padded card-bordered">
 
           {/* Header del formulario: label + hint contextual */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ ...sectionLabelStyle, marginBottom: 0 }}>Añadir comida</span>
+            <span className="section-label" style={{ marginBottom: 0 }}>Añadir comida</span>
             {contextHint && (
               <span style={{
                 fontSize: 10, color: 'var(--accent)',
@@ -566,9 +547,9 @@ export default function Calculator() {
                         </span>
                       )}
                     </span>
-                    {aiResult.protein > 0 && <span style={{ color: '#059669' }}><b>{aiResult.protein}g</b> prot</span>}
-                    {aiResult.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{aiResult.carbs}g</b> carb</span>}
-                    {aiResult.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{aiResult.fat}g</b> grasa</span>}
+                    {aiResult.protein > 0 && <span className="color-protein"><b>{aiResult.protein}g</b> prot</span>}
+                    {aiResult.carbs   > 0 && <span className="color-carbs"><b>{aiResult.carbs}g</b> carb</span>}
+                    {aiResult.fat     > 0 && <span className="color-fat"><b>{aiResult.fat}g</b> grasa</span>}
                   </div>
                   {aiResult.similar_meal && (
                     <div style={{
@@ -736,11 +717,7 @@ export default function Calculator() {
             {showExtra && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
-                  <label style={{
-                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
-                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 4,
-                    fontFamily: 'var(--font-sans)',
-                  }}>
+                  <label className="form-label" style={{ marginBottom: 4 }}>
                     Peso corporal (kg)
                   </label>
                   <input
@@ -750,11 +727,7 @@ export default function Calculator() {
                   />
                 </div>
                 <div>
-                  <label style={{
-                    fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
-                    letterSpacing: '0.4px', fontWeight: 600, display: 'block', marginBottom: 4,
-                    fontFamily: 'var(--font-sans)',
-                  }}>
+                  <label className="form-label" style={{ marginBottom: 4 }}>
                     Notas
                   </label>
                   <input
@@ -801,8 +774,8 @@ export default function Calculator() {
       {/* ── 2. Historial de hoy — debajo ── */}
       {entries.length > 0 && (
         <div style={{ padding: '0 16px', marginBottom: 10 }}>
-          <div style={cardStyle}>
-            <span style={sectionLabelStyle}>
+          <div className="card card-padded card-bordered">
+            <span className="section-label" style={{ marginBottom: 10 }}>
               Hoy · {total.calories.toLocaleString('es')} kcal · {entries.length} {entries.length === 1 ? 'comida' : 'comidas'}
             </span>
             <div>
