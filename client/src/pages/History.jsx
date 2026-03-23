@@ -126,10 +126,10 @@ export default function History() {
   );
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
+    <section style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
 
       {/* ── Header ── */}
-      <div style={{ padding: '20px 20px 20px' }}>
+      <header style={{ padding: '20px 20px 20px' }}>
         <h1 style={{
           fontFamily: 'var(--font-serif)',
           fontSize: 32, fontStyle: 'italic',
@@ -138,7 +138,7 @@ export default function History() {
         }}>
           Historial
         </h1>
-      </div>
+      </header>
 
       {entries.length === 0 ? (
         <div style={{ padding: '0 16px' }}>
@@ -470,6 +470,6 @@ export default function History() {
           }}
         />
       )}
-    </div>
+    </section>
   );
 }

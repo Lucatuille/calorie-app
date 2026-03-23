@@ -327,10 +327,10 @@ export default function Calculator() {
   };
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
+    <section style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
 
       {/* ── Header ── */}
-      <div style={{ padding: '20px 20px 16px' }}>
+      <header style={{ padding: '20px 20px 16px' }}>
         <p style={{
           fontSize: 11, color: 'var(--text-secondary)',
           margin: '0 0 2px', fontFamily: 'var(--font-sans)',
@@ -346,7 +346,7 @@ export default function Calculator() {
         }}>
           Registrar
         </h1>
-      </div>
+      </header>
 
       {/* ── 1. Formulario — primero ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
@@ -947,6 +947,6 @@ export default function Calculator() {
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }

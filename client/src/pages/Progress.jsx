@@ -147,10 +147,10 @@ export default function Progress() {
   };
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
+    <section style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
 
       {/* ── Header ── */}
-      <div style={{
+      <header style={{
         padding: '20px 20px 16px',
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
       }}>
@@ -177,7 +177,7 @@ export default function Progress() {
             </button>
           ))}
         </div>
-      </div>
+      </header>
 
       {/* ── 1. Stat grid 2×2 con celda dark ── */}
       {summary && (
@@ -428,6 +428,6 @@ export default function Progress() {
         onClose={() => setShowAdvanced(false)}
         userTarget={summary?.targetCalories}
       />
-    </div>
+    </section>
   );
 }

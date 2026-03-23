@@ -517,7 +517,7 @@ export default function Assistant() {
       }}>
 
         {/* ── Header ── */}
-        <div style={{
+        <header style={{
           padding: '14px 20px 12px',
           borderBottom: '0.5px solid var(--border)',
           display: 'flex',
@@ -578,7 +578,7 @@ export default function Assistant() {
               Historial
             </button>
           </div>
-        </div>
+        </header>
 
         {/* ── Context strip ── */}
         {todayData && (

@@ -145,10 +145,10 @@ export default function Profile() {
     calibration.confidence < 0.8 ? 'Buena precisión' : 'Alta precisión';
 
   return (
-    <div className="page">
+    <section className="page">
 
       {/* ── Header ── */}
-      <div style={{ marginBottom: 24 }}>
+      <header style={{ marginBottom: 24 }}>
         <h1 style={{
           fontFamily: 'var(--font-serif)',
           fontStyle: 'italic',
@@ -163,7 +163,7 @@ export default function Profile() {
         <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, fontFamily: 'var(--font-sans)' }}>
           {user?.email}
         </p>
-      </div>
+      </header>
 
       {/* ── Upgrade entry (solo Free) ── */}
       {isFree(user?.access_level) && (
@@ -573,6 +573,6 @@ export default function Profile() {
         }}>
         Cerrar sesión
       </button>
-    </div>
+    </section>
   );
 }

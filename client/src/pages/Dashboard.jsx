@@ -152,10 +152,10 @@ export default function Dashboard() {
   })();
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
+    <section style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 40 }}>
 
       {/* ── 1. Saludo ── */}
-      <div style={{ padding: '20px 20px 0' }}>
+      <header style={{ padding: '20px 20px 0' }}>
         <p style={{
           fontSize: 11, color: 'var(--text-secondary)',
           margin: '0 0 4px', fontFamily: 'var(--font-sans)',
@@ -184,7 +184,7 @@ export default function Dashboard() {
           )}
           {levelBadge}
         </div>
-      </div>
+      </header>
 
       {/* ── 2. Hero calórico ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
@@ -449,6 +449,6 @@ export default function Dashboard() {
         )}
       </div>
 
-    </div>
+    </section>
   );
 }

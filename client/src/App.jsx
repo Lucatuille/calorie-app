@@ -139,20 +139,22 @@ function AppRoutes() {
           isClosing={whatsNew.isClosing}
         />
       )}
-      <Routes>
-        <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-        <Route path="/privacy"  element={<Privacy />} />
-      <Route path="/terms"    element={<Terms />} />
-        <Route path="/"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
-        <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
-        <Route path="/history"  element={<ProtectedRoute><History /></ProtectedRoute>} />
-        <Route path="/profile"    element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/asistente" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
-        <Route path="/upgrade"   element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
-        <Route path="*"          element={<Navigate to="/" replace />} />
-      </Routes>
+      <main>
+        <Routes>
+          <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/privacy"  element={<Privacy />} />
+          <Route path="/terms"    element={<Terms />} />
+          <Route path="/"         element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/calculator" element={<ProtectedRoute><Calculator /></ProtectedRoute>} />
+          <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+          <Route path="/history"  element={<ProtectedRoute><History /></ProtectedRoute>} />
+          <Route path="/profile"    element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/asistente" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+          <Route path="/upgrade"   element={<ProtectedRoute><Upgrade /></ProtectedRoute>} />
+          <Route path="*"          element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
     </>
   );
 }
