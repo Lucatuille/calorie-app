@@ -46,12 +46,7 @@ const microLabel = {
   fontWeight: 500,
 };
 
-const cardStyle = {
-  background: 'var(--surface)',
-  border: '0.5px solid var(--border)',
-  borderRadius: 'var(--radius-lg)',
-  padding: '14px 16px',
-};
+// cardStyle → uses .card .card-padded .card-bordered classes
 
 export default function Onboarding() {
   const { user, token, updateUser } = useAuth();
@@ -169,8 +164,8 @@ export default function Onboarding() {
                 {GOALS.map(g => (
                   <button key={g.key}
                     onClick={() => { set('goal', g.key); setStep(2); }}
+                    className="card card-padded card-bordered"
                     style={{
-                      ...cardStyle,
                       display: 'flex', alignItems: 'center', gap: 14,
                       cursor: 'pointer', textAlign: 'left',
                       transition: 'border-color 0.15s, transform 0.1s',
@@ -205,7 +200,7 @@ export default function Onboarding() {
                 {GOAL_TITLES[data.goal]}
               </h1>
 
-              <div style={cardStyle}>
+              <div className="card card-padded card-bordered">
 
                 {/* Género */}
                 <div style={{ marginBottom: 16 }}>
@@ -329,7 +324,7 @@ export default function Onboarding() {
               </div>
 
               {/* Card detalles */}
-              <div style={cardStyle}>
+              <div className="card card-padded card-bordered">
                 <div style={{ marginBottom: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
                     Tu TDEE estimado
