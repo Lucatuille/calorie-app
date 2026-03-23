@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { calculateResult, LOSE_TABLE, GAIN_TABLE } from '../utils/tdee';
+import FocusTrap from './FocusTrap';
 
 // ── Count-up animation ────────────────────────────────────────
 function useCountUp(target, active = true, duration = 750) {
@@ -884,7 +885,8 @@ export default function TDEECalculator({ isOpen, onClose, onSave }) {
   };
 
   return createPortal(
-    <>
+    <FocusTrap active={animOpen}>
+    <div data-focus-trap-fallback>
       {/* Overlay */}
       <div onClick={onClose} style={{
         position: 'fixed', inset: 0, zIndex: 998,
@@ -957,7 +959,8 @@ export default function TDEECalculator({ isOpen, onClose, onSave }) {
           to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-    </>,
+    </div>
+    </FocusTrap>,
     document.body
   );
 }

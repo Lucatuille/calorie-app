@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { COMMON_SUPPLEMENTS, EMOJI_PICKER_OPTIONS } from '../utils/supplements';
 import { MAX_SUPPLEMENTS } from '../utils/constants';
+import FocusTrap from './FocusTrap';
 
 export default function SupplementManager({ isOpen, onClose, onUpdate }) {
   const { token } = useAuth();
@@ -138,7 +139,8 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
   };
 
   return createPortal(
-    <>
+    <FocusTrap active={animOpen}>
+    <div data-focus-trap-fallback>
       {/* Overlay */}
       <div
         onClick={onClose}
@@ -342,7 +344,8 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
           <div style={{ height: 16 }} />
         </div>
       </div>
-    </>,
+    </div>
+    </FocusTrap>,
     document.body
   );
 }

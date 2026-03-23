@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { fetchProductByBarcode, calculateNutrition } from '../utils/openfoodfacts';
 import { useAuth } from '../context/AuthContext';
+import FocusTrap from './FocusTrap';
 
 const READER_ID = 'barcode-reader-container';
 
@@ -207,7 +208,8 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
   };
 
   return createPortal(
-    <>
+    <FocusTrap active={animOpen}>
+    <div data-focus-trap-fallback>
       {/* Backdrop */}
       <div
         onClick={handleClose}
@@ -436,7 +438,8 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
           )}
         </div>
       </div>
-    </>,
+    </div>
+    </FocusTrap>,
     document.body
   );
 }

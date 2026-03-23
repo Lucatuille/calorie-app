@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES } from '../utils/meals';
 import { MAX_IMAGE_PX, JPEG_QUALITY, MAX_TEXT_LENGTH } from '../utils/constants';
 import BarcodeScanner from './BarcodeScanner';
+import FocusTrap from './FocusTrap';
 
 function formatTargetDate(dateStr) {
   const d = new Date(dateStr + 'T12:00:00Z');
@@ -269,8 +270,10 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
   ];
 
   return createPortal(
+    <FocusTrap>
     <div
       className="modal-overlay"
+      data-focus-trap-fallback
       onClick={e => { if (e.target === e.currentTarget) onClose(false); }}
     >
       <div className="modal-sheet">
@@ -695,7 +698,8 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
           onAdd={handleAddScannedProduct}
         />
       )}
-    </div>,
+    </div>
+    </FocusTrap>,
     document.body
   );
 }

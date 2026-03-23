@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MAX_TEXT_LENGTH } from '../utils/constants';
+import FocusTrap from './FocusTrap';
 
 const EXAMPLES = [
   { label: '🍳 Huevos', text: '2 huevos revueltos con un poco de mantequilla' },
@@ -94,8 +95,10 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
   }
 
   return createPortal(
+    <FocusTrap>
     <div
       className="modal-overlay"
+      data-focus-trap-fallback
       onClick={e => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div className="modal-sheet">
@@ -376,7 +379,8 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
           )}
         </div>
       </div>
-    </div>,
+    </div>
+    </FocusTrap>,
     document.body
   );
 }
