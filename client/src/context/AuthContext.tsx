@@ -1,15 +1,44 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as Sentry from '@sentry/react';
 import { setLogoutHandler } from '../api.js';
 import { calculateMacros } from '../utils/tdee';
 
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
 
-const AuthContext = createContext(null);
+// ── Types ──────────────────────────────────────────────────
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  is_admin?: number;
+  access_level: number;
+  onboarding_completed?: number;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  gender?: string | null;
+  target_calories?: number | null;
+  target_protein?: number | null;
+  target_carbs?: number | null;
+  target_fat?: number | null;
+  goal_weight?: number | null;
+  tdee?: number | null;
+}
 
-export function AuthProvider({ children }) {
-  const [user,  setUser]  = useState(null);
-  const [token, setToken] = useState(null);
+interface AuthContextValue {
+  user: User | null;
+  token: string | null;
+  login: (token: string, user: User) => void;
+  logout: () => void;
+  ready: boolean;
+  updateUser: (user: User) => void;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user,  setUser]  = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -18,7 +47,7 @@ export function AuthProvider({ children }) {
     const u = localStorage.getItem('user');
     if (!t || !u) { setReady(true); return; }
 
-    const storedUser = JSON.parse(u);
+    const storedUser: User = JSON.parse(u);
 
     // Siempre refrescar el token desde la BD al cargar.
     // Garantiza que cambios de rol hechos desde el admin se reflejen
@@ -42,38 +71,29 @@ export function AuthProvider({ children }) {
         }
 
         if (r.status === 401) {
-          // Token expirado o inválido — forzar logout limpio.
-          // NO usar el token caducado como fallback; causaría "No autorizado"
-          // en cada llamada a la API hasta que el usuario recargue o reinicie sesión.
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          // setUser y setToken permanecen null → app redirige a /login
           return;
         }
 
-        // Error de servidor (5xx) o respuesta inesperada — modo offline:
-        // storedUser es igual de fresco que el JWT (se actualizan juntos) y
-        // puede ser MÁS fresco si updateUser() fue llamado después del último login.
         setToken(t);
         setUser(storedUser);
       })
       .catch(() => {
-        // Sin red — usar datos almacenados (offline mode)
         setToken(t);
         setUser(storedUser);
       })
       .finally(() => setReady(true));
   }, []);
 
-  // Backfill macros for users who completed onboarding before macro saving was added
-  function backfillMacros(userData, authToken) {
+  function backfillMacros(userData: User, authToken: string) {
     if (!userData.target_calories || userData.target_protein) return;
     const goal = userData.tdee
       ? (userData.target_calories < userData.tdee - 50 ? 'lose'
         : userData.target_calories > userData.tdee + 50 ? 'gain' : 'maintain')
       : 'maintain';
     const macros = calculateMacros(userData.target_calories, goal);
-    const patched = { ...userData, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat };
+    const patched: User = { ...userData, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat };
     localStorage.setItem('user', JSON.stringify(patched));
     setUser(patched);
     fetch(`${BASE}/api/profile`, {
@@ -83,12 +103,12 @@ export function AuthProvider({ children }) {
     }).catch(() => {});
   }
 
-  function login(token, user) {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    setToken(token);
-    setUser(user);
-    Sentry.setUser({ id: String(user.id), email: user.email });
+  function login(t: string, u: User) {
+    localStorage.setItem('token', t);
+    localStorage.setItem('user', JSON.stringify(u));
+    setToken(t);
+    setUser(u);
+    Sentry.setUser({ id: String(u.id), email: u.email });
   }
 
   function logout() {
@@ -99,7 +119,7 @@ export function AuthProvider({ children }) {
     Sentry.setUser(null);
   }
 
-  function updateUser(updatedUser) {
+  function updateUser(updatedUser: User) {
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
   }
@@ -111,4 +131,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext) as AuthContextValue;
