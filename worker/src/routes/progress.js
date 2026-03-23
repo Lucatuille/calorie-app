@@ -144,7 +144,7 @@ export async function handleProgress(request, env, path) {
          SUM(calories) AS calories, MAX(weight) AS weight,
          SUM(protein) AS protein, SUM(carbs) AS carbs, SUM(fat) AS fat
        FROM entries WHERE user_id = ?
-       AND date >= date('now', '-${days} days')
+       AND date > date('now', '-${days} days')
        GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
     return jsonResponse(results);

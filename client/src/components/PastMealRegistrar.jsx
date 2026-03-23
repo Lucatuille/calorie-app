@@ -9,7 +9,6 @@ import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES } from '../utils/meals';
-import TextAnalyzer from './TextAnalyzer';
 import BarcodeScanner from './BarcodeScanner';
 
 function formatTargetDate(dateStr) {
@@ -63,9 +62,16 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
   const photoAnalysisRef = useRef(null);
 
   // Sub-component state
-  const [scannerOpen,      setScannerOpen]      = useState(false);
-  const [textAnalyzerOpen, setTextAnalyzerOpen] = useState(false);
-  const [scanFeedback,     setScanFeedback]     = useState(false);
+  const [scannerOpen,   setScannerOpen]   = useState(false);
+  const [scanFeedback,  setScanFeedback]  = useState(false);
+
+  // Inline text analysis state
+  const [textInput,      setTextInput]      = useState('');
+  const [textStatus,     setTextStatus]     = useState('idle'); // idle | loading | result
+  const [textResult,     setTextResult]     = useState(null);
+  const [textError,      setTextError]      = useState('');
+  const [adjustedKcal,   setAdjustedKcal]   = useState('');
+  const [adjusting,      setAdjustingText]  = useState(false);
 
   if (!targetDate) return null;
 
@@ -155,25 +161,49 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
     setAiResult(null);
   }
 
-  // ── Text result handler ────────────────────────────────────
-  function handleTextResult(r) {
+  // ── Inline text analysis ─────────────────────────────────
+  async function handleTextAnalyze() {
+    if (!textInput.trim() || textInput.trim().length < 3) return;
+    setTextStatus('loading');
+    setTextResult(null);
+    setTextError('');
+    try {
+      const r = await api.analyzeText({ text: textInput.trim(), meal_type: form.meal_type, date: targetDate }, token);
+      setTextResult(r);
+      setAdjustedKcal(String(r.total.calories));
+      setTextStatus('result');
+    } catch (err) {
+      if (err.data?.error === 'ai_limit_reached') {
+        setAiLimitData(err.data);
+      } else {
+        setTextError(err.data?.message || err.message || 'Error al analizar');
+      }
+      setTextStatus('idle');
+    }
+  }
+
+  function applyTextResult() {
+    if (!textResult) return;
+    const finalCal = parseInt(adjustedKcal) || textResult.total.calories;
+    const ratio    = finalCal / (textResult.total.calories || 1);
     setForm(f => ({
       ...f,
-      name:     r.name     || f.name,
-      calories: r.calories ? String(r.calories) : f.calories,
-      protein:  r.protein  ? String(r.protein)  : f.protein,
-      carbs:    r.carbs    ? String(r.carbs)    : f.carbs,
-      fat:      r.fat      ? String(r.fat)      : f.fat,
+      name:     textResult.name || f.name,
+      calories: String(finalCal),
+      protein:  String(parseFloat((textResult.total.protein * ratio).toFixed(1))),
+      carbs:    String(parseFloat((textResult.total.carbs   * ratio).toFixed(1))),
+      fat:      String(parseFloat((textResult.total.fat     * ratio).toFixed(1))),
     }));
-    if (r._ai) {
-      photoAnalysisRef.current = {
-        ai_raw:        r._ai.ai_raw,
-        ai_calibrated: r._ai.ai_calibrated,
-        categories:    r._ai.categories,
-        has_context:   true,
-        name:          r.name,
-      };
-    }
+    photoAnalysisRef.current = {
+      ai_raw:        textResult.ai_raw_calories,
+      ai_calibrated: textResult.total.calories,
+      categories:    textResult.categories || [],
+      has_context:   true,
+      name:          textResult.name,
+    };
+    setTextResult(null);
+    setTextStatus('idle');
+    setTextInput('');
     setScanFeedback(true);
     setTimeout(() => setScanFeedback(false), 3000);
   }
@@ -310,8 +340,7 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                     <button key={m.key} type="button"
                       onClick={() => {
                         setMethod(m.key);
-                        if (m.key === 'text')  setTextAnalyzerOpen(true);
-                        if (m.key === 'scan')  setScannerOpen(true);
+                        if (m.key === 'scan') setScannerOpen(true);
                       }}
                       style={{
                         flex: 1, padding: '8px 0', fontSize: 12, fontWeight: active ? 600 : 400,
@@ -458,6 +487,126 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                 </div>
               )}
 
+              {/* Inline text analysis */}
+              {method === 'text' && (
+                <div style={{ marginBottom: 14 }}>
+                  {textStatus !== 'result' ? (
+                    <>
+                      <textarea
+                        rows={3}
+                        maxLength={500}
+                        placeholder="Ej: 150g de pechuga a la plancha con ensalada"
+                        value={textInput}
+                        onChange={e => setTextInput(e.target.value)}
+                        style={{
+                          width: '100%', boxSizing: 'border-box', resize: 'none',
+                          fontSize: 13, padding: '10px 12px', lineHeight: 1.5,
+                          border: '0.5px solid var(--border)', borderRadius: 10,
+                          background: 'var(--surface)', color: 'var(--text-primary)',
+                          fontFamily: 'var(--font-sans)', outline: 'none',
+                        }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, color: textInput.length >= 400 ? 'var(--accent-2)' : 'var(--text-tertiary)' }}>
+                          {textInput.length}/500
+                        </span>
+                        {textError && <span style={{ fontSize: 11, color: '#ef4444' }}>{textError}</span>}
+                      </div>
+                      <button type="button" onClick={handleTextAnalyze}
+                        disabled={textInput.trim().length < 3 || textStatus === 'loading'}
+                        style={{
+                          width: '100%', background: 'var(--accent)', color: 'white', border: 'none',
+                          borderRadius: 8, padding: '10px 0', fontSize: 13, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                          opacity: textInput.trim().length < 3 ? 0.5 : 1,
+                        }}>
+                        {textStatus === 'loading'
+                          ? <><span className="spinner" style={{ width: 14, height: 14 }} />Analizando...</>
+                          : '✨ Analizar con IA'}
+                      </button>
+                    </>
+                  ) : textResult && (
+                    <div style={{
+                      background: 'var(--surface)', border: '0.5px solid var(--border)',
+                      borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+                    }}>
+                      <div style={{ padding: '12px 14px' }}>
+                        <p style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600, margin: '0 0 4px' }}>
+                          ✨ Análisis completado
+                        </p>
+                        <p style={{ fontWeight: 600, fontSize: 15, margin: '0 0 10px' }}>{textResult.name}</p>
+
+                        {/* Items breakdown */}
+                        {textResult.items?.length > 0 && (
+                          <div style={{ borderTop: '0.5px solid var(--border)', marginBottom: 10 }}>
+                            {textResult.items.map((item, i) => (
+                              <div key={i} style={{
+                                display: 'flex', justifyContent: 'space-between',
+                                padding: '6px 0', fontSize: 12,
+                                borderBottom: i < textResult.items.length - 1 ? '0.5px solid var(--border)' : 'none',
+                              }}>
+                                <span style={{ color: 'var(--text-secondary)' }}>
+                                  {item.name}
+                                  {item.quantity && <span style={{ color: 'var(--text-tertiary)', fontSize: 10, marginLeft: 4 }}>({item.quantity})</span>}
+                                </span>
+                                <span style={{ fontWeight: 600, flexShrink: 0, marginLeft: 8 }}>{item.calories} kcal</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Total row */}
+                        <div style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '8px 0', borderTop: '1px solid var(--border)',
+                          fontSize: 14, fontWeight: 700,
+                        }}>
+                          <span>Total</span>
+                          {adjusting ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <input type="number" value={adjustedKcal}
+                                onChange={e => setAdjustedKcal(e.target.value)}
+                                style={{ width: 64, textAlign: 'right', fontWeight: 700, border: '1px solid var(--accent)', borderRadius: 6, padding: '2px 6px', fontSize: 13, background: 'var(--bg)', color: 'var(--text-primary)' }}
+                              />
+                              <span style={{ fontSize: 12 }}>kcal</span>
+                              <button type="button" onClick={() => setAdjustingText(false)}
+                                style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>✓</button>
+                            </div>
+                          ) : (
+                            <span>
+                              {parseInt(adjustedKcal) || textResult.total.calories} kcal{' '}
+                              <button type="button" onClick={() => { setAdjustingText(true); setAdjustedKcal(String(parseInt(adjustedKcal) || textResult.total.calories)); }}
+                                style={{ fontSize: 11, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 2 }}>✏️</button>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Macros */}
+                        <div style={{ display: 'flex', gap: 10, fontSize: 12, marginTop: 6 }}>
+                          {textResult.total.protein > 0 && <span style={{ color: '#059669' }}><b>{textResult.total.protein}g</b> prot</span>}
+                          {textResult.total.carbs   > 0 && <span style={{ color: '#d97706' }}><b>{textResult.total.carbs}g</b> carb</span>}
+                          {textResult.total.fat     > 0 && <span style={{ color: '#3b82f6' }}><b>{textResult.total.fat}g</b> grasa</span>}
+                        </div>
+                      </div>
+
+                      {/* Apply / Back */}
+                      <div style={{ display: 'flex', gap: 8, padding: '10px 14px', borderTop: '0.5px solid var(--border)' }}>
+                        <button type="button" onClick={applyTextResult} style={{
+                          flex: 1, background: 'var(--accent)', color: 'white', border: 'none',
+                          borderRadius: 8, padding: '8px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        }}>Aplicar</button>
+                        <button type="button" onClick={() => { setTextStatus('idle'); setTextResult(null); }} style={{
+                          background: 'none', border: '0.5px solid var(--border)',
+                          borderRadius: 8, padding: '8px 14px', fontSize: 12,
+                          cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                        }}>Volver</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* AI limit reached */}
               {aiLimitData && (
                 <div style={{
@@ -572,16 +721,6 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
           )}
         </div>
       </div>
-
-      {/* TextAnalyzer portal */}
-      <TextAnalyzer
-        isOpen={textAnalyzerOpen}
-        onClose={() => setTextAnalyzerOpen(false)}
-        mealType={form.meal_type}
-        onResult={handleTextResult}
-        onAiLimit={data => setAiLimitData(data)}
-        date={targetDate}
-      />
 
       {/* BarcodeScanner portal */}
       {scannerOpen && (
