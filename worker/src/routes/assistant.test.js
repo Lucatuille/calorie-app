@@ -30,9 +30,14 @@ vi.mock('../utils.js', () => ({
   jsonResponse: (data, status = 200) => ({ ok: true, status, data }),
   errorResponse: (msg, status = 400) => ({ ok: false, status, msg }),
   authenticate: vi.fn(),
+  requireProAccess: vi.fn(),
+  proAccessDenied: vi.fn((user) => {
+    if (user === 'waitlist') return { ok: false, status: 403, msg: 'Waitlist' };
+    return { ok: false, status: 403, msg: 'Pro required' };
+  }),
 }));
 
-import { authenticate, jsonResponse, errorResponse } from '../utils.js';
+import { authenticate, requireProAccess, jsonResponse, errorResponse } from '../utils.js';
 
 // ── Env mock base ─────────────────────────────────────────────
 
@@ -113,9 +118,12 @@ describe('handleAssistant — acceso', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authenticate.mockResolvedValue({ userId: 1, email: 'test@test.com' });
+    // Default: Pro user (access_level=2)
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
   });
 
   it('bloquea usuarios Free (access_level=1)', async () => {
+    requireProAccess.mockResolvedValue(null);
     const env = makeEnv({ accessLevel: 1 });
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
@@ -124,6 +132,7 @@ describe('handleAssistant — acceso', () => {
   });
 
   it('permite usuarios Pro (access_level=2)', async () => {
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
     const env = makeEnv({ accessLevel: 2 });
     mockClaudeOK();
     const req = makeRequest({ message: 'hola' });
@@ -132,6 +141,7 @@ describe('handleAssistant — acceso', () => {
   });
 
   it('permite usuarios Fundador (access_level=3)', async () => {
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 3 });
     const env = makeEnv({ accessLevel: 3 });
     mockClaudeOK();
     const req = makeRequest({ message: 'hola' });
@@ -140,7 +150,7 @@ describe('handleAssistant — acceso', () => {
   });
 
   it('bloquea tokens inválidos', async () => {
-    authenticate.mockResolvedValue(null);
+    requireProAccess.mockResolvedValue(null);
     const env = makeEnv();
     const req = makeRequest({ message: 'hola' }, 'invalid-token');
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
@@ -153,6 +163,7 @@ describe('handleAssistant — rate limiting', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authenticate.mockResolvedValue({ userId: 1, email: 'test@test.com' });
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
   });
 
   it('bloquea cuando se alcanza el límite Pro (20)', async () => {
@@ -173,12 +184,14 @@ describe('handleAssistant — rate limiting', () => {
   });
 
   it('Fundador tiene límite de 40', async () => {
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 3 });
     const env = makeEnv({ accessLevel: 3, usageMessages: 39 });
     mockClaudeOK();
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
     expect(res.ok).toBe(true);
 
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 3 });
     const env2 = makeEnv({ accessLevel: 3, usageMessages: 40 });
     const req2 = makeRequest({ message: 'hola' });
     const res2 = await handleAssistant(req2, env2, '/api/assistant/chat', null);
@@ -246,6 +259,7 @@ describe('handleAssistant — is_intro (FIX #1)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authenticate.mockResolvedValue({ userId: 1, email: 'test@test.com' });
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
   });
 
   it('bloquea segunda intro del mismo día', async () => {
@@ -292,6 +306,7 @@ describe('handleAssistant — aislamiento cross-user (FIX #2)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authenticate.mockResolvedValue({ userId: 2, email: 'attacker@test.com' });
+    requireProAccess.mockResolvedValue({ userId: 2, email: 'attacker@test.com', access_level: 2 });
   });
 
   it('no devuelve mensajes de conversación de otro usuario', async () => {
@@ -331,6 +346,7 @@ describe('handleAssistant — input validation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authenticate.mockResolvedValue({ userId: 1, email: 'test@test.com' });
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
   });
 
   it('rechaza mensaje vacío', async () => {
@@ -354,6 +370,7 @@ describe('handleAssistant — modelo y contexto', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authenticate.mockResolvedValue({ userId: 1, email: 'test@test.com' });
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
   });
 
   it('usa Haiku para preguntas simples', async () => {
