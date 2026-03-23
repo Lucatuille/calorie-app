@@ -3,6 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
+import { ADHERENCE_TOLERANCE } from '../utils/constants';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import AdvancedAnalytics from '../components/AdvancedAnalytics';
@@ -107,7 +108,7 @@ export default function Progress() {
 
   const targetCal = summary?.targetCalories ?? null;
   const periodAdherence = (targetCal && periodCalories.length)
-    ? Math.round(periodCalories.filter(c => Math.abs(c - targetCal) <= 250).length / periodCalories.length * 100)
+    ? Math.round(periodCalories.filter(c => Math.abs(c - targetCal) <= ADHERENCE_TOLERANCE).length / periodCalories.length * 100)
     : null;
 
   const trendLabel = periodWeightTrend != null

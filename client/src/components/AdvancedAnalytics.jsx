@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { ADHERENCE_TOLERANCE } from '../utils/constants';
 
 const PERIOD_OPTIONS = [
   { value: 'week',   label: '7 días'  },
@@ -325,7 +326,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             {data.daily_data.map((entry, i) => {
                               const c = entry.calories;
                               const color = !userTarget ? '#2d6a4f'
-                                : Math.abs(c - userTarget) <= 250 ? '#2d6a4f'
+                                : Math.abs(c - userTarget) <= ADHERENCE_TOLERANCE ? '#2d6a4f'
                                 : c > userTarget + 250 ? '#f59e0b'
                                 : '#3b82f6';
                               return <Cell key={i} fill={color} fillOpacity={0.85} />;

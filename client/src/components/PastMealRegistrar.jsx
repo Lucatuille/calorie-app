@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES } from '../utils/meals';
+import { MAX_IMAGE_PX, JPEG_QUALITY, MAX_TEXT_LENGTH } from '../utils/constants';
 import BarcodeScanner from './BarcodeScanner';
 
 function formatTargetDate(dateStr) {
@@ -88,17 +89,16 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
       setPhotoPreview(original);
       const img = new Image();
       img.onload = () => {
-        const MAX = 900;
         let { width, height } = img;
-        if (width > MAX || height > MAX) {
-          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
-          else                { width = Math.round(width * MAX / height); height = MAX; }
+        if (width > MAX_IMAGE_PX || height > MAX_IMAGE_PX) {
+          if (width > height) { height = Math.round(height * MAX_IMAGE_PX / width); width = MAX_IMAGE_PX; }
+          else                { width = Math.round(width * MAX_IMAGE_PX / height); height = MAX_IMAGE_PX; }
         }
         const canvas = document.createElement('canvas');
         canvas.width  = width;
         canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        const compressed = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
         setPhotoData({ base64: compressed.split(',')[1], mediaType: 'image/jpeg' });
       };
       img.src = original;
@@ -494,7 +494,7 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                     <>
                       <textarea
                         rows={3}
-                        maxLength={500}
+                        maxLength={MAX_TEXT_LENGTH}
                         placeholder="Ej: 150g de pechuga a la plancha con ensalada"
                         value={textInput}
                         onChange={e => setTextInput(e.target.value)}
@@ -507,8 +507,8 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                         }}
                       />
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, color: textInput.length >= 400 ? 'var(--accent-2)' : 'var(--text-tertiary)' }}>
-                          {textInput.length}/500
+                        <span style={{ fontSize: 11, color: textInput.length >= MAX_TEXT_LENGTH - 100 ? 'var(--accent-2)' : 'var(--text-tertiary)' }}>
+                          {textInput.length}/{MAX_TEXT_LENGTH}
                         </span>
                         {textError && <span style={{ fontSize: 11, color: '#ef4444' }}>{textError}</span>}
                       </div>

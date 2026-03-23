@@ -10,10 +10,10 @@ import { jsonResponse, errorResponse, requireProAccess, proAccessDenied } from '
 
 // ── Límites diarios por nivel ───────────────────────────────
 
+import { ADHERENCE_TOLERANCE, SONNET_ASSISTANT_DAILY_LIMIT } from '../constants.js';
+
 // Beta(1): 15 mensajes/día | Pro(2): 30 mensajes/día | Admin(99): sin límite práctico
 const DAILY_LIMITS = { 1: 15, 2: 30, 99: 999 };
-// Sonnet: max 1/usuario/dia — downgrade silencioso si se supera
-const SONNET_DAILY_LIMIT = 1;
 
 // ── System prompt del asistente ────────────────────────────
 
@@ -113,7 +113,7 @@ async function buildLightContext(userId, env) {
   const remaining = (user?.target_calories || 0) - todayTotals.cal;
 
   const target7   = user?.target_calories || 0;
-  const onTarget7 = (last7Days.results||[]).filter(d => Math.abs(d.cal - target7) <= 250).length;
+  const onTarget7 = (last7Days.results||[]).filter(d => Math.abs(d.cal - target7) <= ADHERENCE_TOLERANCE).length;
   const total7    = (last7Days.results||[]).length;
 
   return `Hoy: ${todayLabel()}
@@ -247,7 +247,7 @@ async function buildUserContext(userId, env) {
     : 'insuficientes datos';
 
   const targetCal  = user?.target_calories || 0;
-  const onTarget7  = (last7Days.results||[]).filter(d => Math.abs(d.cal - targetCal) <= 250).length;
+  const onTarget7  = (last7Days.results||[]).filter(d => Math.abs(d.cal - targetCal) <= ADHERENCE_TOLERANCE).length;
   const total7days = (last7Days.results||[]).length;
 
   // Meal type breakdown — normalize frequency against active days (not calendar days)
@@ -275,7 +275,7 @@ async function buildUserContext(userId, env) {
   const summarizeDow = (rows) => {
     if (rows.length < 2) return null;
     const avg = Math.round(rows.reduce((s, d) => s + d.cal, 0) / rows.length);
-    const onT = rows.filter(d => Math.abs(d.cal - targetCal) <= 250).length;
+    const onT = rows.filter(d => Math.abs(d.cal - targetCal) <= ADHERENCE_TOLERANCE).length;
     return { avg, onT, total: rows.length, pct: Math.round((onT / rows.length) * 100) };
   };
   const { wd: wdRows, we: weRows } = splitByDow(allDays30.results);
@@ -495,7 +495,7 @@ export async function handleAssistant(request, env, path, ctx) {
         const sonnetRow = await env.DB.prepare(
           'SELECT sonnet_count FROM assistant_usage WHERE user_id = ? AND date = ?'
         ).bind(user.id, today).first();
-        if ((sonnetRow?.sonnet_count || 0) >= SONNET_DAILY_LIMIT) complexity = 'haiku';
+        if ((sonnetRow?.sonnet_count || 0) >= SONNET_ASSISTANT_DAILY_LIMIT) complexity = 'haiku';
       } catch { /* DB error: allow Sonnet */ }
     }
 

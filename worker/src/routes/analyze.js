@@ -6,6 +6,7 @@
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 import { applyCalibration, findSimilarMeal } from '../utils/calibration.js';
 import { getAiLimit, canAccess } from '../utils/levels.js';
+import { SONNET_PHOTO_DAILY_LIMIT, MAX_TEXT_LENGTH, ADHERENCE_TOLERANCE } from '../constants.js';
 
 // Tamaño máximo de imagen permitido (base64, ~2 MB de imagen original)
 const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
@@ -94,14 +95,12 @@ async function rollbackAiLimit(env, userId) {
 }
 
 // ── Sonnet diario para Pro — primeras N fotos usan Sonnet ───
-const SONNET_DAILY_LIMIT = 3;
-
 async function checkAndIncrementSonnetLimit(env, userId) {
   const today = new Date().toLocaleDateString('en-CA');
   const row = await env.DB.prepare(
     'SELECT sonnet_photo_count FROM ai_usage_log WHERE user_id = ? AND date = ?'
   ).bind(userId, today).first();
-  if ((row?.sonnet_photo_count || 0) >= SONNET_DAILY_LIMIT) return false;
+  if ((row?.sonnet_photo_count || 0) >= SONNET_PHOTO_DAILY_LIMIT) return false;
   await env.DB.prepare(
     'UPDATE ai_usage_log SET sonnet_photo_count = sonnet_photo_count + 1 WHERE user_id = ? AND date = ?'
   ).bind(userId, today).run();
@@ -305,7 +304,7 @@ export async function handleAnalyzeText(request, env, ctx) {
 
   const { text, meal_type, date: entryDate } = await request.json();
   if (!text?.trim()) return errorResponse('Texto vacío', 400);
-  if (text.length > 500) return errorResponse('Texto demasiado largo (máx 500 caracteres)', 400);
+  if (text.length > MAX_TEXT_LENGTH) return errorResponse(`Texto demasiado largo (máx ${MAX_TEXT_LENGTH} caracteres)`, 400);
 
   const limitCheck = await checkAndIncrementAiLimit(env, user.userId, accessLevel);
   if (limitCheck.error) return limitCheck.error;

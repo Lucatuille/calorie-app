@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
+import { MEAL_HOURS, MAX_IMAGE_PX, JPEG_QUALITY } from '../utils/constants';
 import { useAuth as useAuthProfile } from '../context/AuthContext';
 import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
@@ -57,10 +58,9 @@ const METHODS = [
 
 function getDefaultMealType() {
   const h = new Date().getHours();
-  if (h >= 6  && h < 11) return 'breakfast';
-  if (h >= 11 && h < 16) return 'lunch';
-  if (h >= 16 && h < 20) return 'snack';
-  if (h >= 20 && h < 24) return 'dinner';
+  for (const [type, [start, end]] of Object.entries(MEAL_HOURS)) {
+    if (h >= start && h < end) return type;
+  }
   return 'other';
 }
 
@@ -188,17 +188,16 @@ export default function Calculator() {
       setPhotoPreview(original);
       const img = new Image();
       img.onload = () => {
-        const MAX = 900;
         let { width, height } = img;
-        if (width > MAX || height > MAX) {
-          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
-          else                { width = Math.round(width * MAX / height); height = MAX; }
+        if (width > MAX_IMAGE_PX || height > MAX_IMAGE_PX) {
+          if (width > height) { height = Math.round(height * MAX_IMAGE_PX / width); width = MAX_IMAGE_PX; }
+          else                { width = Math.round(width * MAX_IMAGE_PX / height); height = MAX_IMAGE_PX; }
         }
         const canvas = document.createElement('canvas');
         canvas.width  = width;
         canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        const compressed = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
         setPhotoData({ base64: compressed.split(',')[1], mediaType: 'image/jpeg' });
       };
       img.src = original;

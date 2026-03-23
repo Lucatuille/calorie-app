@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { MAX_TEXT_LENGTH } from '../utils/constants';
 
 const EXAMPLES = [
   { label: '🍳 Huevos', text: '2 huevos revueltos con un poco de mantequilla' },
@@ -30,7 +31,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
   if (!isOpen) return null;
 
   const charCount = text.length;
-  const charColor = charCount >= 400 ? 'var(--accent-2)' : 'var(--text-3)';
+  const charColor = charCount >= MAX_TEXT_LENGTH - 100 ? 'var(--accent-2)' : 'var(--text-3)';
 
   async function handleAnalyze(refinementText = null) {
     const analysisText = refinementText || text.trim();
@@ -130,7 +131,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
               <div style={{ marginBottom: 12 }}>
                 <textarea
                   rows={4}
-                  maxLength={500}
+                  maxLength={MAX_TEXT_LENGTH}
                   placeholder={"Ej: 150g de pechuga a la plancha con ensalada, un yogur griego y una pieza de fruta"}
                   value={text}
                   onChange={e => setText(e.target.value)}
@@ -148,7 +149,7 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
                   }}
                 />
                 <div style={{ textAlign: 'right', fontSize: 11, color: charColor, marginTop: 3 }}>
-                  {charCount}/500
+                  {charCount}/{MAX_TEXT_LENGTH}
                 </div>
               </div>
 

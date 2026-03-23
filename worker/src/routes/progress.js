@@ -3,6 +3,7 @@
 // ============================================================
 
 import { jsonResponse, errorResponse, authenticate, requireProAccess, proAccessDenied } from '../utils.js';
+import { ADHERENCE_TOLERANCE } from '../constants.js';
 
 // ── Scientific projection helpers ──────────────────────────────
 function calcStdDev(arr) {
@@ -104,7 +105,7 @@ export async function handleProgress(request, env, path) {
       ? +(weights[weights.length-1] - weights[0]).toFixed(1) : null;
 
     const adherence = targetCalories
-      ? Math.round((calories.filter(c => Math.abs(c - targetCalories) <= 250).length / calories.length) * 100)
+      ? Math.round((calories.filter(c => Math.abs(c - targetCalories) <= ADHERENCE_TOLERANCE).length / calories.length) * 100)
       : null;
 
     // Weekly comparison
@@ -207,9 +208,9 @@ export async function handleProgress(request, env, path) {
     const minCal  = calDays.length ? Math.min(...calDays) : null;
     const maxCal  = calDays.length ? Math.max(...calDays) : null;
 
-    const daysInTarget = target ? calDays.filter(c => Math.abs(c-target) <= 250).length : 0;
-    const daysOver     = target ? calDays.filter(c => c > target + 250).length : 0;
-    const daysUnder    = target ? calDays.filter(c => c < target - 250).length : 0;
+    const daysInTarget = target ? calDays.filter(c => Math.abs(c-target) <= ADHERENCE_TOLERANCE).length : 0;
+    const daysOver     = target ? calDays.filter(c => c > target + ADHERENCE_TOLERANCE).length : 0;
+    const daysUnder    = target ? calDays.filter(c => c < target - ADHERENCE_TOLERANCE).length : 0;
     const adherencePct = (target && calDays.length)
       ? Math.round(daysInTarget / calDays.length * 100) : null;
 

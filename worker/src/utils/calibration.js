@@ -2,6 +2,8 @@
 //  CALIBRATION UTILS — Motor de auto-calibración personal
 // ============================================================
 
+import { CALIBRATION_DECAY, CALIBRATION_MIN_POINTS, CALIBRATION_CAP_LOW, CALIBRATION_CAP_HIGH } from '../constants.js';
+
 // ── Normalización de categorías ────────────────────────────
 // Claude puede devolver variantes del mismo concepto; las mapeamos
 // a un token canónico antes de agrupar.
@@ -80,7 +82,7 @@ export function calculateCalibrationProfile(corrections) {
     // SQLite devuelve "2026-03-20 14:30:00" — reemplazar espacio por T para ISO válido
     const ts = Date.parse((c.created_at || '').replace(' ', 'T'));
     const daysSince = isNaN(ts) ? 0 : Math.max(0, (now - ts) / 86400000);
-    return Math.pow(0.97, daysSince); // vida media ~23 días
+    return Math.pow(CALIBRATION_DECAY, daysSince); // vida media ~23 días
   });
 
   let globalBias = calculateWeightedMean(
@@ -103,7 +105,7 @@ export function calculateCalibrationProfile(corrections) {
   // Factores por meal_type (mínimo 3 muestras)
   const mealFactors = {};
   for (const [meal, items] of Object.entries(groupBy(actual, 'meal_type'))) {
-    if (items.length >= 3) {
+    if (items.length >= CALIBRATION_MIN_POINTS) {
       mealFactors[meal] = {
         bias:       calculateWeightedMean(items.map(c => calcMixedBias(c))),
         samples:    items.length,
@@ -125,7 +127,7 @@ export function calculateCalibrationProfile(corrections) {
         return cats.includes(cat);
       } catch { return false; }
     });
-    if (catItems.length >= 3) {
+    if (catItems.length >= CALIBRATION_MIN_POINTS) {
       foodFactors[cat] = {
         bias:    calculateWeightedMean(catItems.map(c => calcMixedBias(c))),
         samples: catItems.length,
@@ -187,7 +189,7 @@ export function applyCalibration(baseEstimate, profile, context) {
   }
 
   // Cap: nunca más de +40% ni menos de -25%
-  factor = Math.max(0.75, Math.min(1.4, factor));
+  factor = Math.max(CALIBRATION_CAP_LOW, Math.min(CALIBRATION_CAP_HIGH, factor));
 
   return Math.round(baseEstimate * factor);
 }

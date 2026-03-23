@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { COMMON_SUPPLEMENTS, EMOJI_PICKER_OPTIONS } from '../utils/supplements';
+import { MAX_SUPPLEMENTS } from '../utils/constants';
 
 export default function SupplementManager({ isOpen, onClose, onUpdate }) {
   const { token } = useAuth();
@@ -107,7 +108,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
 
   const existingNames  = new Set(supplements.map(s => s.name.toLowerCase()));
   const availableCommon = COMMON_SUPPLEMENTS.filter(s => !existingNames.has(s.name.toLowerCase()));
-  const atMax = supplements.length >= 20;
+  const atMax = supplements.length >= MAX_SUPPLEMENTS;
 
   if (!visible) return null;
 
