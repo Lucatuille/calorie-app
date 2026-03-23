@@ -473,16 +473,16 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     {projChartData.length > 1 && (
                       <div style={{
                         background: 'var(--surface)', borderRadius: 'var(--radius-md)',
-                        boxShadow: 'var(--shadow-md)', padding: '14px 8px 10px',
+                        boxShadow: 'var(--shadow-md)', padding: '14px 10px 10px',
                         position: 'relative', marginBottom: 16,
                       }}>
                         {/* Leyenda vertical — esquina superior derecha */}
                         <div style={{
-                          position: 'absolute', top: 10, right: 14, zIndex: 1,
-                          display: 'flex', flexDirection: 'column', gap: 5,
-                          background: 'rgba(255,255,255,0.9)',
+                          position: 'absolute', top: 10, right: 8, zIndex: 1,
+                          display: 'flex', flexDirection: 'column', gap: 4,
+                          background: 'rgba(255,255,255,0.92)',
                           backdropFilter: 'blur(4px)',
-                          borderRadius: 8, padding: '6px 8px',
+                          borderRadius: 6, padding: '5px 7px',
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           {[
@@ -498,13 +498,13 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                   : <line x1="0" y1="3" x2="14" y2="3" stroke={item.color} strokeWidth="2" />
                                 }
                               </svg>
-                              <span style={{ fontSize: 9, color: 'var(--text-3)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
+                              <span style={{ fontSize: 8, color: 'var(--text-3)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
                             </div>
                           ))}
                         </div>
 
                         <ResponsiveContainer width="100%" height={240}>
-                          <ComposedChart data={projChartData} margin={{ top: 12, right: 10, bottom: 5, left: -10 }}>
+                          <ComposedChart data={projChartData} margin={{ top: 12, right: 16, bottom: 5, left: -6 }}>
                             <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
                             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
                             <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
@@ -566,7 +566,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                 stroke="#10b981"
                                 strokeOpacity={0.5}
                                 strokeDasharray="4 4"
-                                label={{ value: `🎯 ${data.projection.goal_weight} kg`, position: 'right', fill: '#10b981', fontSize: 10 }}
+                                label={{ value: `${data.projection.goal_weight} kg`, position: 'insideTopLeft', fill: '#10b981', fontSize: 10 }}
                               />
                             )}
 
