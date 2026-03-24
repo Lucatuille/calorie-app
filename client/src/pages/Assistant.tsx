@@ -362,7 +362,16 @@ export default function Assistant() {
   const [todayData, setTodayData]           = useState(null);
   const [streak, setStreak]                 = useState(0);
   const [digest, setDigest]                 = useState(null);
-  const [digestDismissed, setDigestDismissed] = useState(false);
+  const [digestDismissed, setDigestDismissed] = useState(() => {
+    const dismissed = localStorage.getItem('digest_dismissed_week');
+    const now = new Date();
+    const day = now.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const mon = new Date(now);
+    mon.setDate(mon.getDate() + diff);
+    const weekStart = mon.toISOString().split('T')[0];
+    return dismissed === weekStart;
+  });
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
@@ -712,7 +721,15 @@ export default function Assistant() {
       )}
 
       {digest && !digestDismissed && (
-        <DigestSheet digest={digest} onClose={() => setDigestDismissed(true)} />
+        <DigestSheet digest={digest} onClose={() => {
+          setDigestDismissed(true);
+          const now = new Date();
+          const day = now.getDay();
+          const diff = day === 0 ? -6 : 1 - day;
+          const mon = new Date(now);
+          mon.setDate(mon.getDate() + diff);
+          localStorage.setItem('digest_dismissed_week', mon.toISOString().split('T')[0]);
+        }} />
       )}
     </>
   );
