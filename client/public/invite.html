@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Caliro — Instala la app</title>
+<meta name="description" content="La app de nutrición que aprende cómo comes tú. Foto, escáner o texto. Sin anuncios. Gratis.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://caliro.dev/invite">
+<meta property="og:title" content="Caliro — Instala la app">
+<meta property="og:description" content="Foto y listo. Sin anuncios. Sin 10€/mes. La IA aprende de tu dieta real. Gratis para siempre.">
+<meta property="og:image" content="https://caliro.dev/icons/icon-512x512.png">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE;
+  --white: #FFFFFF;
+  --dark: #111111;
+  --mid: #888888;
+  --light: #E8E4DE;
+  --green: #22c55e;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+  --sh: 0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--cream);
+  color: var(--dark);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.wrap {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+.logo {
+  font-family: var(--serif);
+  font-size: 32px;
+  color: var(--green);
+  letter-spacing: -0.01em;
+  display: block;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+.header h1 {
+  font-family: var(--serif);
+  font-size: 26px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.header h1 em { font-style: italic; color: var(--green); }
+.header p {
+  font-size: 14px;
+  color: var(--mid);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* CTA BUTTON */
+.cta-wrap {
+  width: 100%;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+.btn-primary {
+  display: block;
+  width: 100%;
+  background: var(--dark);
+  color: white;
+  text-align: center;
+  padding: 16px;
+  border-radius: 14px;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.82; }
+.btn-sub {
+  text-align: center;
+  font-size: 12px;
+  color: var(--mid);
+  margin-top: 8px;
+}
+
+/* DIVIDER */
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeUp 0.5s 0.2s ease both;
+}
+.divider-line { flex: 1; height: 1px; background: var(--light); }
+.divider span { font-size: 12px; color: var(--mid); white-space: nowrap; }
+
+/* OS CARD */
+.os-card {
+  width: 100%;
+  background: var(--white);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--sh);
+  animation: fadeUp 0.5s 0.25s ease both;
+}
+.os-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--light);
+}
+.os-tab {
+  padding: 14px;
+  border: none;
+  background: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--mid);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.os-tab.active {
+  color: var(--dark);
+  border-bottom-color: var(--dark);
+}
+
+.steps-wrap { padding: 20px; }
+.steps-list { display: flex; flex-direction: column; gap: 16px; }
+.step-row { display: flex; gap: 12px; align-items: flex-start; }
+.step-num {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--dark);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--serif);
+}
+.step-content { padding-top: 4px; }
+.step-content strong { display: block; font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.step-content span { font-size: 13px; color: var(--mid); line-height: 1.55; }
+
+.install-note {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--cream);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--mid);
+  text-align: center;
+  line-height: 1.5;
+}
+
+footer {
+  font-size: 11px;
+  color: var(--mid);
+  text-align: center;
+  animation: fadeUp 0.5s 0.35s ease both;
+}
+footer a { color: var(--mid); text-decoration: none; }
+footer a:hover { color: var(--dark); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="header">
+    <a href="/" class="logo">Caliro</a>
+    <h1>Tu app de nutrición<br><em>ya te espera</em></h1>
+    <p>Empieza ahora o instálala en tu móvil para tenerla siempre a mano.</p>
+  </div>
+
+  <div class="cta-wrap">
+    <a href="https://caliro.dev/app/register" class="btn-primary">Abrir Caliro →</a>
+    <p class="btn-sub">Gratis · Sin tarjeta · Sin anuncios</p>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span>o instálala en tu pantalla de inicio</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="os-card">
+    <div class="os-tabs">
+      <button class="os-tab active" id="tabIos" onclick="switchTab('ios')">🍎 iPhone</button>
+      <button class="os-tab" id="tabAndroid" onclick="switchTab('android')">🤖 Android</button>
+    </div>
+    <div class="steps-wrap">
+
+      <div class="steps-list" id="stepsIos">
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>Abre este link en Safari</strong>
+            <span>Si lo recibes por WhatsApp, toca los tres puntos arriba y elige "Abrir en Safari".</span>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Toca el botón compartir</strong>
+            <span>El icono de la cajita con flecha hacia arriba, en la barra inferior de Safari.</span>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Toca "Añadir a pantalla de inicio"</strong>
+            <span>Desplázate en el menú hasta encontrarlo y toca "Añadir".</span>
+          </div>
+        </div>
+        <div class="install-note">Caliro aparecerá en tu pantalla de inicio como cualquier otra app 🎉</div>
+      </div>
+
+      <div class="steps-list" id="stepsAndroid" style="display:none;">
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>Abre este link en Chrome</strong>
+            <span>Si lo recibes por WhatsApp, toca los tres puntos y elige "Abrir en Chrome".</span>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Toca "Instalar app"</strong>
+            <span>Chrome muestra un banner en la parte inferior. Si no aparece, toca los tres puntos → "Añadir a pantalla de inicio".</span>
+          </div>
+        </div>
+        <div class="install-note">Caliro aparecerá en tu pantalla de inicio como cualquier otra app 🎉</div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://caliro.dev">caliro.dev</a> · <a href="https://caliro.dev/app/privacy">Privacidad</a>
+  </footer>
+
+</div>
+
+<script>
+function switchTab(os) {
+  document.getElementById('tabIos').classList.toggle('active', os === 'ios');
+  document.getElementById('tabAndroid').classList.toggle('active', os === 'android');
+  document.getElementById('stepsIos').style.display = os === 'ios' ? 'flex' : 'none';
+  document.getElementById('stepsAndroid').style.display = os === 'android' ? 'flex' : 'none';
+}
+if (/android/i.test(navigator.userAgent)) switchTab('android');
+</script>
+
+</body>
+</html>
