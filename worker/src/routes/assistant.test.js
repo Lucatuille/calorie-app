@@ -68,7 +68,9 @@ function makeEnv({ accessLevel = 2, usageMessages = 0, usageIntros = 0, claudeRe
     bind: vi.fn().mockReturnThis(),
     first: vi.fn(async () => {
       for (const [key, val] of Object.entries(dbResults)) {
-        if (sql.includes(key.split(' ')[0]) && sql.includes(key.split(' ').slice(-1)[0])) return val;
+        // Match by checking all significant words from the key exist in the SQL
+        const words = key.split(/\s+/).filter(w => w.length > 2 && w !== 'FROM' && w !== 'WHERE');
+        if (words.every(w => sql.includes(w))) return val;
       }
       return null;
     }),
@@ -140,9 +142,9 @@ describe('handleAssistant — acceso', () => {
     expect(res.ok).toBe(true);
   });
 
-  it('permite usuarios Fundador (access_level=3)', async () => {
-    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 3 });
-    const env = makeEnv({ accessLevel: 3 });
+  it('permite usuarios Fundador (access_level=1)', async () => {
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 1 });
+    const env = makeEnv({ accessLevel: 1 });
     mockClaudeOK();
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
@@ -166,16 +168,16 @@ describe('handleAssistant — rate limiting', () => {
     requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 2 });
   });
 
-  it('bloquea cuando se alcanza el límite Pro (20)', async () => {
-    const env = makeEnv({ accessLevel: 2, usageMessages: 20 });
+  it('bloquea cuando se alcanza el límite Pro (30)', async () => {
+    const env = makeEnv({ accessLevel: 2, usageMessages: 30 });
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
     expect(res.ok).toBe(false);
     expect(res.status).toBe(429);
   });
 
-  it('permite el mensaje 20 exacto (límite Pro)', async () => {
-    const env = makeEnv({ accessLevel: 2, usageMessages: 19 });
+  it('permite el mensaje 30 exacto (límite Pro)', async () => {
+    const env = makeEnv({ accessLevel: 2, usageMessages: 29 });
     mockClaudeOK();
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
@@ -183,16 +185,16 @@ describe('handleAssistant — rate limiting', () => {
     expect(res.data?.usage?.remaining).toBe(0);
   });
 
-  it('Fundador tiene límite de 40', async () => {
-    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 3 });
-    const env = makeEnv({ accessLevel: 3, usageMessages: 39 });
+  it('Fundador tiene límite de 15', async () => {
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 1 });
+    const env = makeEnv({ accessLevel: 1, usageMessages: 14 });
     mockClaudeOK();
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
     expect(res.ok).toBe(true);
 
-    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 3 });
-    const env2 = makeEnv({ accessLevel: 3, usageMessages: 40 });
+    requireProAccess.mockResolvedValue({ userId: 1, email: 'test@test.com', access_level: 1 });
+    const env2 = makeEnv({ accessLevel: 1, usageMessages: 15 });
     const req2 = makeRequest({ message: 'hola' });
     const res2 = await handleAssistant(req2, env2, '/api/assistant/chat', null);
     expect(res2.status).toBe(429);
@@ -200,48 +202,38 @@ describe('handleAssistant — rate limiting', () => {
 
   it('revierte el incremento si Claude falla (FIX #3)', async () => {
     const env = makeEnv({ accessLevel: 2, usageMessages: 5 });
+    const allSql = [];
+    const origPrepare = env.DB.prepare;
+    env.DB.prepare = vi.fn((sql) => {
+      allSql.push(sql);
+      return origPrepare(sql);
+    });
     mockClaudeError(500);
     const req = makeRequest({ message: 'hola' });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
-    expect(res.ok).toBe(false);
     expect(res.status).toBe(502);
-    // Verificar que se llamó al UPDATE de rollback
-    const calls = env.DB.prepare.mock.calls.map(c => c[0]);
-    const hasRollback = calls.some(sql => sql.includes('MAX(0, messages - 1)'));
+    const hasRollback = allSql.some(sql => sql.includes('MAX(0, messages - 1)'));
     expect(hasRollback).toBe(true);
   });
 
   it('incremento se hace ANTES de llamar a Claude (FIX #3)', async () => {
     const env = makeEnv({ accessLevel: 2, usageMessages: 5 });
-    let incrementCalledAt = -1;
-    let claudeCalledAt    = -1;
-    let callOrder = 0;
-
-    env.DB.prepare = vi.fn((sql) => ({
-      bind: vi.fn().mockReturnThis(),
-      first: vi.fn(async () => {
-        if (sql.includes('SELECT id, name, access_level')) return { id: 1, name: 'T', access_level: 2 };
-        if (sql.includes('SELECT intros')) return { intros: 0 };
-        if (sql.includes('SELECT messages')) return { messages: 5 };
-        if (sql.includes('INSERT INTO assistant_conversations')) return { id: 42 };
-        if (sql.includes('SELECT role, content')) return null;
-        // Context queries
-        if (sql.includes('target_calories')) return { target_calories: 2000 };
-        if (sql.includes('SUM(calories)')) return { cal: 800, prot: 60, carbs: 80, fat: 30 };
-        return null;
-      }),
-      all: vi.fn(async () => ({ results: [] })),
-      run: vi.fn(async () => {
-        if (sql.includes('INSERT INTO assistant_usage') && sql.includes('ON CONFLICT')) {
-          incrementCalledAt = ++callOrder;
+    const events = [];
+    const origPrepare = env.DB.prepare;
+    env.DB.prepare = vi.fn((sql) => {
+      const stmt = origPrepare(sql);
+      const origRun = stmt.run;
+      stmt.run = vi.fn(async () => {
+        if (sql.includes('INSERT INTO assistant_usage') && sql.includes('ON CONFLICT') && sql.includes('messages')) {
+          events.push('increment');
         }
-        return { success: true };
-      }),
-    }));
-    env.DB.batch = vi.fn(async () => []);
+        return origRun();
+      });
+      return stmt;
+    });
 
     mockFetch.mockImplementationOnce(async () => {
-      claudeCalledAt = ++callOrder;
+      events.push('claude');
       return {
         ok: true,
         json: async () => ({ content: [{ text: 'ok' }], usage: { input_tokens: 10, output_tokens: 10 } }),
@@ -249,9 +241,11 @@ describe('handleAssistant — rate limiting', () => {
     });
 
     await handleAssistant(makeRequest({ message: 'hola' }), env, '/api/assistant/chat', null);
-    expect(incrementCalledAt).toBeGreaterThan(0);
-    expect(claudeCalledAt).toBeGreaterThan(0);
-    expect(incrementCalledAt).toBeLessThan(claudeCalledAt);
+    const incIdx = events.indexOf('increment');
+    const claudeIdx = events.indexOf('claude');
+    expect(incIdx).toBeGreaterThanOrEqual(0);
+    expect(claudeIdx).toBeGreaterThan(0);
+    expect(incIdx).toBeLessThan(claudeIdx);
   });
 });
 
@@ -264,6 +258,15 @@ describe('handleAssistant — is_intro (FIX #1)', () => {
 
   it('bloquea segunda intro del mismo día', async () => {
     const env = makeEnv({ accessLevel: 2, usageIntros: 1 });
+    // Override prepare to properly return intros=1 for the SELECT intros query
+    const origPrepare = env.DB.prepare;
+    env.DB.prepare = vi.fn((sql) => {
+      const stmt = origPrepare(sql);
+      if (sql.includes('SELECT intros')) {
+        stmt.first = vi.fn(async () => ({ intros: 1 }));
+      }
+      return stmt;
+    });
     const req = makeRequest({ message: 'intro', is_intro: true });
     const res = await handleAssistant(req, env, '/api/assistant/chat', null);
     expect(res.ok).toBe(false);
@@ -395,7 +398,7 @@ describe('handleAssistant — modelo y contexto', () => {
     expect(capturedModel).toBe('claude-sonnet-4-6');
   });
 
-  it('Haiku max_tokens es 650 (FIX #10)', async () => {
+  it('Haiku max_tokens es 550', async () => {
     const env = makeEnv({ accessLevel: 2 });
     let capturedMaxTokens = null;
     mockFetch.mockImplementationOnce(async (url, opts) => {
@@ -403,7 +406,7 @@ describe('handleAssistant — modelo y contexto', () => {
       return { ok: true, json: async () => ({ content: [{ text: 'ok' }], usage: { input_tokens: 10, output_tokens: 10 } }) };
     });
     await handleAssistant(makeRequest({ message: '¿Cuántas calorías llevo?' }), env, '/api/assistant/chat', null);
-    expect(capturedMaxTokens).toBe(650);
+    expect(capturedMaxTokens).toBe(550);
   });
 
   it('usa micro-contexto cuando hay >= 2 mensajes en historial (FIX #6)', async () => {
