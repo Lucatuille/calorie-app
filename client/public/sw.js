@@ -1,7 +1,6 @@
-const CACHE_NAME = 'caliro-v4';
+const CACHE_NAME = 'caliro-v5';
 const STATIC_ASSETS = [
   '/app/',
-  '/app/index.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -42,7 +41,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate' && url.pathname.startsWith('/app')) {
     event.respondWith(
       fetch(request.url)
-        .catch(() => caches.match('/app/index.html').then(r => r || fetch('/app/index.html')))
+        .catch(() => caches.match('/app/').then(r => r || fetch('/app/')))
     );
     return;
   }
