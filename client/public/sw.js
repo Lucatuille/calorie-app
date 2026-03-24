@@ -35,7 +35,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegación a rutas de la app (/app/*) — Network First, fallback a index.html cacheado
+  // Navegación a rutas de la app (/app/*) — Network First, fallback a /app/ cacheado
   // Usa request.url (string) en lugar de request (objeto) para evitar problemas con
   // mode:'navigate' en subrequests de iOS PWA standalone
   if (request.mode === 'navigate' && url.pathname.startsWith('/app')) {
