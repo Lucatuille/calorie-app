@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cómo contar calorías con IA en 2026 — Caliro blog</title>
+<meta name="description" content="Contar calorías con IA ya no significa introducir datos a mano. Foto, voz o texto — la IA lo calcula en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona y lo que no.">
+<link rel="canonical" href="https://caliro.dev/blog/contar-calorias-ia">
+<link rel="alternate" hreflang="es" href="https://caliro.dev/blog/contar-calorias-ia">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://caliro.dev/blog/contar-calorias-ia">
+<meta property="og:title" content="Cómo contar calorías con IA en 2026">
+<meta property="og:description" content="Foto, voz o texto — la IA calcula las calorías en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona de verdad.">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Cómo contar calorías con IA en 2026",
+  "description": "Contar calorías con IA ya no significa introducir datos a mano. Foto, voz o texto — la IA lo calcula en segundos. Pero no todas las IAs son iguales.",
+  "inLanguage": "es",
+  "author": { "@type": "Person", "name": "Luca" },
+  "publisher": { "@type": "Organization", "name": "Caliro" },
+  "datePublished": "2026-04-01",
+  "mainEntityOfPage": "https://caliro.dev/blog/contar-calorias-ia"
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE;
+  --white: #FFFFFF;
+  --dark: #111111;
+  --mid: #888888;
+  --light: #E8E4DE;
+  --green: #22c55e;
+  --green-d: #16a34a;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(245,242,238,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--light);
+}
+.nav-logo { font-family: var(--serif); font-size: 20px; color: var(--green); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { font-size: 13px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--dark); }
+.nav-cta { background: var(--dark) !important; color: white !important; padding: 8px 18px; border-radius: 100px; font-weight: 500 !important; }
+@media (max-width: 640px) { nav { padding: 14px 20px; } .nav-links { display: none; } }
+
+.article-wrap { max-width: 680px; margin: 0 auto; padding: 120px 24px 80px; }
+
+.article-meta {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.meta-tag { background: var(--white); border: 1px solid var(--light); border-radius: 100px; padding: 4px 12px; font-size: 11px; color: var(--mid); }
+.meta-date { font-size: 12px; color: var(--mid); }
+.meta-read { font-size: 12px; color: var(--mid); }
+
+.article-title { font-family: var(--serif); font-size: clamp(32px, 5vw, 52px); line-height: 1.1; margin-bottom: 20px; }
+.article-title em { font-style: italic; color: var(--green); }
+
+.article-lead {
+  font-size: 18px; color: var(--mid); line-height: 1.7; font-weight: 300;
+  margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid var(--light);
+}
+
+.article-body { font-size: 16px; line-height: 1.8; color: #333; }
+.article-body h2 { font-family: var(--serif); font-size: 28px; color: var(--dark); margin: 48px 0 16px; line-height: 1.2; }
+.article-body h3 { font-family: var(--serif); font-size: 22px; color: var(--dark); margin: 36px 0 12px; }
+.article-body p { margin-bottom: 20px; }
+.article-body strong { color: var(--dark); font-weight: 600; }
+.article-body ul { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.article-body ul li { padding-left: 20px; position: relative; }
+.article-body ul li::before { content: '→'; position: absolute; left: 0; color: var(--green); font-size: 14px; }
+
+.callout {
+  background: var(--white); border-left: 3px solid var(--green);
+  border-radius: 0 12px 12px 0; padding: 20px 24px; margin: 32px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.callout p { margin: 0; font-size: 15px; color: var(--dark); font-style: italic; }
+
+.method-box {
+  background: var(--dark); border-radius: 16px; padding: 28px; margin: 32px 0; color: white;
+}
+.method-box h4 { font-family: var(--serif); font-size: 18px; margin-bottom: 16px; }
+.method-row { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #222; }
+.method-row:last-child { border: none; padding-bottom: 0; }
+.method-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.method-text strong { display: block; font-size: 14px; font-weight: 500; color: white; margin-bottom: 3px; }
+.method-text span { font-size: 12px; color: #666; line-height: 1.5; }
+.method-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 100px; margin-left: 6px; vertical-align: middle; }
+.badge-green { background: var(--green); color: white; }
+.badge-mid { background: #333; color: #888; }
+
+.tip-box {
+  background: var(--white); border-radius: 14px; padding: 20px 24px; margin: 32px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-top: 2px solid var(--green);
+}
+.tip-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--green); font-weight: 600; margin-bottom: 10px; }
+.tip-box p { margin: 0; font-size: 14px; color: var(--mid); line-height: 1.65; }
+
+.article-cta {
+  background: var(--dark); border-radius: 20px; padding: 36px 32px; text-align: center; margin: 48px 0;
+}
+.article-cta h3 { font-family: var(--serif); font-size: 24px; color: white; margin-bottom: 10px; }
+.article-cta p { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+.article-cta a { display: inline-block; background: var(--green); color: white; padding: 13px 28px; border-radius: 100px; font-family: var(--sans); font-size: 14px; font-weight: 500; text-decoration: none; transition: background 0.2s; }
+.article-cta a:hover { background: var(--green-d); }
+
+.article-author { display: flex; align-items: center; gap: 16px; padding: 32px 0; border-top: 1px solid var(--light); margin-top: 48px; }
+.author-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--dark); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 20px; color: var(--green); flex-shrink: 0; }
+.author-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.author-bio { font-size: 13px; color: var(--mid); }
+
+.related { padding: 48px 0 0; border-top: 1px solid var(--light); }
+.related-label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--mid); margin-bottom: 20px; }
+.related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.related-card { background: var(--white); border-radius: 14px; padding: 20px; text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s; }
+.related-card:hover { transform: translateY(-2px); }
+.related-tag { font-size: 10px; color: var(--mid); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+.related-title { font-family: var(--serif); font-size: 17px; color: var(--dark); line-height: 1.3; }
+@media (max-width: 480px) { .related-grid { grid-template-columns: 1fr; } }
+
+footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 80px; }
+.f-logo { font-family: var(--serif); font-size: 18px; color: var(--green); text-decoration: none; }
+.f-links { display: flex; gap: 24px; list-style: none; }
+.f-links a { font-size: 12px; color: #555; text-decoration: none; }
+.f-copy { font-size: 12px; color: #444; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Caliro</a>
+  <ul class="nav-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/#precios">Precios</a></li>
+    <li><a href="/app/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrap">
+
+  <div class="article-meta">
+    <span class="meta-tag">Guías</span>
+    <span class="meta-date">Abril 2026</span>
+    <span class="meta-read">· 6 min de lectura</span>
+  </div>
+
+  <h1 class="article-title">
+    Cómo contar calorías<br>
+    <em>con IA en 2026</em>
+  </h1>
+
+  <p class="article-lead">
+    Durante años contar calorías significaba buscar cada alimento, ajustar gramos y rezar para que alguien hubiera introducido los datos correctamente. La IA lo cambió. Pero no todas las IAs son iguales — y la diferencia importa más de lo que parece.
+  </p>
+
+  <div class="article-body">
+
+    <p>
+      La primera vez que hice una foto a mi comida y la app me devolvió las calorías en tres segundos pensé que era magia. Tortilla española, aceite de oliva incluido, cantidad estimada correcta. En MyFitnessPal esa misma operación me habría costado dos minutos y un resultado dudoso.
+    </p>
+
+    <p>
+      Pero después de usar varias apps con IA durante meses llegué a una conclusión incómoda: la foto es solo el principio. Lo que diferencia una buena app de nutrición con IA de una mediocre no es que reconozca la comida — es lo que hace con esa información a lo largo del tiempo.
+    </p>
+
+    <h2>Los tres métodos de registro con IA</h2>
+
+    <p>
+      En 2026 hay tres formas de usar IA para registrar lo que comes. Cada una tiene su caso de uso ideal.
+    </p>
+
+    <div class="method-box">
+      <h4>Qué método usar y cuándo</h4>
+      <div class="method-row">
+        <div class="method-icon">📷</div>
+        <div class="method-text">
+          <strong>Foto IA <span class="method-badge badge-green">Mejor opción</span></strong>
+          <span>Haces una foto al plato y la IA estima calorías y macros al instante. Funciona mejor con platos visibles y porciones claras. Ideal para comida casera, restaurantes, y cualquier cosa que no tenga código de barras. La precisión mejora si corriges las estimaciones — el sistema aprende.</span>
+        </div>
+      </div>
+      <div class="method-row">
+        <div class="method-icon">≡</div>
+        <div class="method-text">
+          <strong>Escáner de código de barras <span class="method-badge badge-green">Más preciso</span></strong>
+          <span>Para productos envasados es la opción más exacta porque usa los datos nutricionales reales del fabricante. Yogures, proteínas, snacks, cualquier cosa con código de barras. No necesitas IA — solo una buena base de datos.</span>
+        </div>
+      </div>
+      <div class="method-row">
+        <div class="method-icon">✏️</div>
+        <div class="method-text">
+          <strong>Texto libre <span class="method-badge badge-mid">Para cuando no puedes hacer foto</span></strong>
+          <span>"Dos huevos revueltos con jamón serrano" — la IA interpreta la descripción y devuelve una estimación. Útil cuando ya terminaste de comer o cuando estás en una situación donde no puedes sacar el móvil.</span>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      La recomendación práctica: foto para comida casera y restaurantes, escáner para productos envasados, texto como último recurso. Si combinas los tres según el contexto, el registro se vuelve casi automático.
+    </p>
+
+    <h2>El problema que nadie habla: la precisión de la IA</h2>
+
+    <p>
+      Aquí está la trampa que descubrí después de meses usando apps con reconocimiento de fotos: la IA comete errores sistemáticos que nadie corrige.
+    </p>
+
+    <p>
+      La pasta, por ejemplo. Los modelos de visión tienden a subestimar la cantidad de pasta cocida porque visualmente ocupa más espacio que su peso en seco. Resultado: registras 350 kcal cuando en realidad comiste 480. Multiplicado por 30 días, ese error explica por qué muchas personas no ven resultados aunque "siguen el plan".
+    </p>
+
+    <div class="callout">
+      <p>"El mayor error que cometí durante meses fue asumir que la IA siempre acertaba. Cuando empecé a corregir las estimaciones, el sistema empezó a aprender mis porciones reales — y las estimaciones mejoraron semana a semana."</p>
+    </div>
+
+    <p>
+      El arroz tiene el mismo problema. Y la carne a la plancha, donde el grosor no es visible desde arriba. La IA hace una estimación razonable para el usuario promedio — pero tú no eres el usuario promedio. Comes con tus propias porciones, en tus propios platos, con tus propias costumbres.
+    </p>
+
+    <p>
+      La solución no es abandonar la foto IA — es elegir una app que aprenda de tus correcciones. La diferencia entre una IA estática y una que se calibra a ti puede ser de 200-300 kcal al día. Que es exactamente el margen entre perder peso y no perderlo.
+    </p>
+
+    <h2>Lo que la IA puede hacer que antes era imposible</h2>
+
+    <p>
+      Más allá del registro, la IA abre posibilidades que antes requerían un nutricionista o mucho tiempo delante de una hoja de cálculo.
+    </p>
+
+    <h3>Análisis de patrones reales</h3>
+
+    <p>
+      Una app con IA que tenga acceso a tu historial completo puede detectar cosas que tú no verías. Que los viernes comes de media 400 kcal más que el resto de la semana. Que tu proteína cae siempre los días que desayunas tarde. Que en agosto tu ingesta sube un 15% respecto a los otros meses.
+    </p>
+
+    <p>
+      Estos patrones existen en tus datos — la IA solo necesita acceso y contexto para surfacearlos.
+    </p>
+
+    <h3>Proyecciones realistas</h3>
+
+    <p>
+      El peso no baja en línea recta. Fluctúa por retención de agua, glucógeno, digestión. Una buena IA entiende esto y puede darte una proyección basada en tus hábitos reales, no en una fórmula genérica de "déficit de 500 kcal = 0,5 kg por semana".
+    </p>
+
+    <p>
+      Si llevas dos semanas de adherencia del 70%, la proyección de tu peso a 30 días debería reflejar eso — no asumir que de repente vas a ser perfecto.
+    </p>
+
+    <h3>Recomendaciones contextuales</h3>
+
+    <p>
+      "Son las 20:00, llevas 1.200 kcal y te quedan 600. Tu historial dice que los martes por la noche sueles cenar pasta. Con tu objetivo de proteína de hoy, una opción mejor sería pollo con verduras." Esto no es un chatbot genérico — es un asistente que conoce tus datos.
+    </p>
+
+    <div class="tip-box">
+      <div class="tip-label">Consejo práctico</div>
+      <p>La IA es tan buena como los datos que tiene. Si registras solo el 60% de lo que comes, las recomendaciones serán 40% incorrectas. La consistencia en el registro — aunque sea imperfecta — importa más que la precisión de cada entrada individual.</p>
+    </div>
+
+    <h2>Qué buscar en una app de calorías con IA</h2>
+
+    <p>
+      Después de probar las principales opciones disponibles en español, estos son los criterios que realmente importan:
+    </p>
+
+    <ul>
+      <li><strong>Que aprenda de tus correcciones.</strong> Una IA estática comete los mismos errores indefinidamente. Una que se calibra mejora con el tiempo.</li>
+      <li><strong>Que entienda la comida española real.</strong> No la versión americana de la paella. La tortilla de patatas de verdad, con aceite y todo.</li>
+      <li><strong>Que el asistente tenga tu historial.</strong> Un chatbot que no sabe lo que comiste ayer no puede darte consejos útiles hoy.</li>
+      <li><strong>Que sea rápida.</strong> Si registrar una comida tarda más de 30 segundos, dejarás de hacerlo en dos semanas.</li>
+      <li><strong>Que no tenga anuncios.</strong> Si te interrumpe con publicidad mientras intentas ser consciente de lo que comes, el producto está diseñado para otra cosa.</li>
+    </ul>
+
+    <h2>La parte que nadie menciona: la consistencia</h2>
+
+    <p>
+      La IA más avanzada del mundo no te ayuda si la usas tres días y la abandones. El mayor beneficio de contar calorías no es la precisión de cada entrada individual — es la consciencia acumulada de lo que comes.
+    </p>
+
+    <p>
+      Después de un mes registrando, empiezas a saber intuitivamente cuántas calorías tiene una comida sin necesitar hacer la foto. Después de tres meses, tus decisiones cambian antes de sentarte a la mesa, no después.
+    </p>
+
+    <p>
+      La IA reduce la fricción suficiente para que llegues a ese punto. Esa es su función real — no calcular calorías perfectamente, sino hacer que el hábito sea sostenible.
+    </p>
+
+    <div class="callout">
+      <p>"El objetivo no es registrar perfectamente. El objetivo es registrar suficientemente bien durante suficiente tiempo para que tu relación con la comida cambie."</p>
+    </div>
+
+    <h2>El estado actual en 2026</h2>
+
+    <p>
+      Las apps con foto IA ya son la norma, no la excepción. La diferencia entre ellas ya no es si reconocen comida — es qué hacen con los datos a lo largo del tiempo, y a qué precio.
+    </p>
+
+    <p>
+      Para el mercado hispanohablante, la situación es especialmente clara: las apps americanas tienen mejor tecnología de reconocimiento general, pero no entienden los platos específicos de la dieta mediterránea con la misma precisión. Y cobran entre 5 y 10€ al mes por una experiencia que no está diseñada para ti.
+    </p>
+
+    <p>
+      La brecha de mercado es real. Y cada vez hay más opciones que la están llenando.
+    </p>
+
+  </div>
+
+  <div class="article-cta">
+    <h3>Prueba Caliro gratis</h3>
+    <p>Foto IA, escáner y texto. La IA aprende de tus correcciones desde el primer día. Sin anuncios, sin 10€ al mes.</p>
+    <a href="/app/register">Empieza gratis →</a>
+  </div>
+
+  <div class="article-author">
+    <div class="author-avatar">L</div>
+    <div>
+      <div class="author-name">Luca</div>
+      <div class="author-bio">Estudiante de ingeniería en Barcelona. Construí Caliro porque MyFitnessPal no entendía lo que comía.</div>
+    </div>
+  </div>
+
+  <div class="related">
+    <div class="related-label">Más artículos</div>
+    <div class="related-grid">
+      <a href="/blog/alternativa-myfitnesspal-espana" class="related-card">
+        <div class="related-tag">Herramientas</div>
+        <div class="related-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
+      </a>
+    </div>
+  </div>
+
+</article>
+
+<footer>
+  <a href="/" class="f-logo">Caliro</a>
+  <ul class="f-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/app/privacy">Privacidad</a></li>
+    <li><a href="mailto:contacto@caliro.dev">Contacto</a></li>
+  </ul>
+  <div class="f-copy">© 2026 Caliro. Hecho en Barcelona.</div>
+</footer>
+
+</body>
+</html>
