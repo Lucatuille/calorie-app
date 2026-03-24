@@ -283,6 +283,10 @@ footer a:hover { color: var(--dark); }
 </div>
 
 <script>
+// Si se abre en modo standalone (PWA), ir a la app directamente
+if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+  window.location.replace('/app');
+}
 function switchTab(os) {
   document.getElementById('tabIos').classList.toggle('active', os === 'ios');
   document.getElementById('tabAndroid').classList.toggle('active', os === 'android');

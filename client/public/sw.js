@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caliro-v5';
+const CACHE_NAME = 'caliro-v6';
 const STATIC_ASSETS = [
   '/app/',
   '/manifest.json',
@@ -28,6 +28,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Páginas estáticas fuera de la app — no interceptar, dejar al navegador
+  if (url.pathname === '/invite' || url.pathname === '/invite.html') {
+    return;
+  }
 
   // API calls — siempre red, nunca cache
   if (url.hostname.includes('workers.dev') || url.pathname.startsWith('/api/')) {
