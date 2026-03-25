@@ -20,7 +20,7 @@ async function request(method, path, body, token) {
     cache: 'no-store',
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({ error: `Error del servidor (${res.status})` }));
   if (!res.ok) {
     if (res.status === 401) _on401?.();
     const err = new Error(data.error || 'Error en la petición');

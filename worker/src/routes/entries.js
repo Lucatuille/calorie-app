@@ -4,6 +4,15 @@
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 
+function validateNumber(val, name, { min = 0, max = 99999, required = false } = {}) {
+  if (val == null || val === '') return required ? `${name} es obligatorio` : null;
+  const n = Number(val);
+  if (!Number.isFinite(n)) return `${name} debe ser un número válido`;
+  if (n < min) return `${name} no puede ser menor que ${min}`;
+  if (n > max) return `${name} no puede ser mayor que ${max}`;
+  return null;
+}
+
 export async function handleEntries(request, env, path) {
   const user = await authenticate(request, env);
   if (!user) return errorResponse('No autorizado', 401);
@@ -11,7 +20,16 @@ export async function handleEntries(request, env, path) {
   // POST /api/entries — insert a new meal entry (no upsert)
   if (path === '/api/entries' && request.method === 'POST') {
     const { calories, protein, carbs, fat, weight, notes, meal_type, name, date } = await request.json();
-    if (!calories) return errorResponse('Las calorías son obligatorias');
+    const calErr = validateNumber(calories, 'Calorías', { min: 1, max: 15000, required: true });
+    if (calErr) return errorResponse(calErr);
+    const protErr = validateNumber(protein, 'Proteína', { max: 1000 });
+    if (protErr) return errorResponse(protErr);
+    const carbErr = validateNumber(carbs, 'Carbohidratos', { max: 1500 });
+    if (carbErr) return errorResponse(carbErr);
+    const fatErr = validateNumber(fat, 'Grasa', { max: 1000 });
+    if (fatErr) return errorResponse(fatErr);
+    const weightErr = validateNumber(weight, 'Peso', { min: 20, max: 300 });
+    if (weightErr) return errorResponse(weightErr);
 
     const entryDate  = date || new Date().toISOString().split('T')[0];
     const mealType   = meal_type || 'other';
@@ -54,7 +72,14 @@ export async function handleEntries(request, env, path) {
   if (path.match(/^\/api\/entries\/\d+$/) && request.method === 'PUT') {
     const id = parseInt(path.split('/').pop());
     const { calories, protein, carbs, fat, weight, notes, meal_type, name } = await request.json();
-    if (!calories) return errorResponse('Las calorías son obligatorias');
+    const calErr = validateNumber(calories, 'Calorías', { min: 1, max: 15000, required: true });
+    if (calErr) return errorResponse(calErr);
+    const protErr = validateNumber(protein, 'Proteína', { max: 1000 });
+    if (protErr) return errorResponse(protErr);
+    const carbErr = validateNumber(carbs, 'Carbohidratos', { max: 1500 });
+    if (carbErr) return errorResponse(carbErr);
+    const fatErr = validateNumber(fat, 'Grasa', { max: 1000 });
+    if (fatErr) return errorResponse(fatErr);
 
     const entry = await env.DB.prepare(
       'SELECT id FROM entries WHERE id = ? AND user_id = ?'

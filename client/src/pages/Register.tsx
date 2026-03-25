@@ -64,7 +64,7 @@ export default function Register() {
 
             <div className="field">
               <label>Contraseña</label>
-              <input type="password" placeholder="Mínimo 6 caracteres" value={form.password} onChange={e => set('password', e.target.value)} required minLength={6} />
+              <input type="password" placeholder="Mínimo 8 caracteres" value={form.password} onChange={e => set('password', e.target.value)} required minLength={8} />
             </div>
 
             <div className="divider" />
