@@ -14,26 +14,20 @@ import { handleCalibration } from './routes/calibration.js';
 import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
 import { handleStripe } from './routes/stripe.js';
-import { corsHeaders, jsonResponse, errorResponse } from './utils.js';
-
-const ALLOWED_ORIGINS = [
-  'https://caliro.dev',
-  'https://calorie-app.pages.dev',
-  'https://lucaeats.org',
-  'http://localhost:5173',  // local dev
-];
+import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 async function handleRequest(request, env, ctx) {
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: getCorsHeaders(request) });
   }
 
   // CSRF: reject mutations from unknown origins
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const origin = request.headers.get('Origin');
-    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-      return errorResponse('Origin not allowed', 403);
+    const dynamic = getCorsHeaders(request);
+    if (origin && dynamic['Access-Control-Allow-Origin'] !== origin) {
+      return errorResponse('Origin not allowed', 403, request);
     }
   }
 

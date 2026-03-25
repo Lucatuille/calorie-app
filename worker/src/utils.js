@@ -2,21 +2,41 @@
 //  UTILS — Responses, CORS, JWT
 // ============================================================
 
+const ALLOWED_ORIGINS = [
+  'https://caliro.dev',
+  'https://calorie-app.pages.dev',
+  'https://lucaeats.org',
+  'http://localhost:5173',
+];
+
+export function getCorsHeaders(request) {
+  const origin = request?.headers?.get?.('Origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Vary': 'Origin',
+  };
+}
+
+// Legacy export for files that don't pass request — falls back to primary origin
 export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://caliro.dev',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Vary': 'Origin',
 };
 
-export function jsonResponse(data, status = 200) {
+export function jsonResponse(data, status = 200, request = null) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    headers: { 'Content-Type': 'application/json', ...(request ? getCorsHeaders(request) : corsHeaders) },
   });
 }
 
-export function errorResponse(message, status = 400) {
-  return jsonResponse({ error: message }, status);
+export function errorResponse(message, status = 400, request = null) {
+  return jsonResponse({ error: message }, status, request);
 }
 
 // ── JWT (no external libs — pure Web Crypto) ─────────────────
@@ -104,14 +124,46 @@ export function proAccessDenied(result) {
   return errorResponse('Se requiere plan Pro', 403);
 }
 
-// ── Password hashing (SHA-256 based, no bcrypt needed) ───────
+// ── Password hashing (PBKDF2 with salt — Web Crypto) ────────
+// Format: "pbkdf2:<iterations>:<base64salt>:<base64hash>"
+// Legacy SHA-256 hashes (no prefix) are auto-detected and verified,
+// then upgraded on next successful login.
+
+const PBKDF2_ITERATIONS = 100000;
 
 export async function hashPassword(password) {
-  const encoded = new TextEncoder().encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', encoded);
-  return base64url(hash);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const derived = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    key, 256
+  );
+  return `pbkdf2:${PBKDF2_ITERATIONS}:${base64url(salt)}:${base64url(derived)}`;
 }
 
-export async function verifyPassword(password, hash) {
-  return (await hashPassword(password)) === hash;
+export async function verifyPassword(password, storedHash) {
+  // PBKDF2 hash (new format)
+  if (storedHash.startsWith('pbkdf2:')) {
+    const [, iterations, saltB64, hashB64] = storedHash.split(':');
+    const salt = decodeBase64url(saltB64);
+    const key = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']
+    );
+    const derived = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations: Number(iterations), hash: 'SHA-256' },
+      key, 256
+    );
+    return base64url(derived) === hashB64;
+  }
+  // Legacy SHA-256 fallback (no salt, no prefix)
+  const encoded = new TextEncoder().encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return base64url(hash) === storedHash;
+}
+
+// Check if a stored hash needs upgrading to PBKDF2
+export function needsHashUpgrade(storedHash) {
+  return !storedHash.startsWith('pbkdf2:');
 }

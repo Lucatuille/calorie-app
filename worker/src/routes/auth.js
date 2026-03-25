@@ -2,7 +2,7 @@
 //  AUTH ROUTES — /api/auth/register  /api/auth/login
 // ============================================================
 
-import { jsonResponse, errorResponse, hashPassword, verifyPassword, signJWT, verifyJWT } from '../utils.js';
+import { jsonResponse, errorResponse, hashPassword, verifyPassword, needsHashUpgrade, signJWT, verifyJWT } from '../utils.js';
 
 // ── Rate limiting (fija ventana deslizante en D1) ────────────
 // Tabla: auth_attempts (key TEXT PK, count INT, window_start INT)
@@ -106,6 +106,13 @@ export async function handleAuth(request, env, path) {
 
     const valid = await verifyPassword(password, user.password);
     if (!valid)  return errorResponse('Credenciales incorrectas', 401);
+
+    // Auto-upgrade legacy SHA-256 hash to PBKDF2 on successful login
+    if (needsHashUpgrade(user.password)) {
+      const upgraded = await hashPassword(password);
+      await env.DB.prepare('UPDATE users SET password = ? WHERE id = ?')
+        .bind(upgraded, user.id).run().catch(() => {});
+    }
 
     const accessLevel = user.access_level ?? 3; // fail-safe: nivel desconocido → Free (restrictivo)
     const isAdmin     = user.is_admin || (accessLevel === 99 ? 1 : 0);

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { handleAuth } from '../auth.js';
 import { handleEntries } from '../entries.js';
 import { handleProfile } from '../profile.js';
-import { signJWT, hashPassword } from '../../utils.js';
+import { signJWT, hashPassword, verifyPassword, needsHashUpgrade } from '../../utils.js';
 
 // ── Mock D1 database using in-memory SQLite via better-sqlite3 ──
 // Since we can't use the Workers pool, we test route handlers directly
@@ -54,28 +54,38 @@ describe('JWT utilities', () => {
   });
 });
 
-describe('Password hashing', () => {
-  it('hashPassword returns a string', async () => {
+describe('Password hashing (PBKDF2)', () => {
+  it('hashPassword returns a pbkdf2 prefixed string', async () => {
     const hash = await hashPassword('mypassword');
     expect(typeof hash).toBe('string');
-    expect(hash.length).toBeGreaterThan(0);
+    expect(hash.startsWith('pbkdf2:')).toBe(true);
   });
 
-  it('same password produces same hash', async () => {
+  it('same password produces DIFFERENT hashes (random salt)', async () => {
     const hash1 = await hashPassword('consistent');
     const hash2 = await hashPassword('consistent');
-    expect(hash1).toBe(hash2);
+    expect(hash1).not.toBe(hash2); // different salts
   });
 
-  it('different passwords produce different hashes', async () => {
-    const hash1 = await hashPassword('password1');
-    const hash2 = await hashPassword('password2');
-    expect(hash1).not.toBe(hash2);
+  it('verifyPassword matches correct password', async () => {
+    const hash = await hashPassword('correct-horse');
+    expect(await verifyPassword('correct-horse', hash)).toBe(true);
+    expect(await verifyPassword('wrong-password', hash)).toBe(false);
   });
 
-  it('hash is not the plaintext password', async () => {
-    const hash = await hashPassword('mysecretpass');
-    expect(hash).not.toBe('mysecretpass');
+  it('verifyPassword works with legacy SHA-256 hashes', async () => {
+    // Simulate a legacy SHA-256 hash (no prefix)
+    const encoded = new TextEncoder().encode('legacypass');
+    const digest = await crypto.subtle.digest('SHA-256', encoded);
+    const legacyHash = btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    expect(await verifyPassword('legacypass', legacyHash)).toBe(true);
+    expect(await verifyPassword('wrongpass', legacyHash)).toBe(false);
+  });
+
+  it('needsHashUpgrade detects legacy hashes', async () => {
+    expect(needsHashUpgrade('someSHA256hash')).toBe(true);
+    expect(needsHashUpgrade('pbkdf2:100000:salt:hash')).toBe(false);
   });
 });
 
