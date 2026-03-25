@@ -92,7 +92,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     setData(null);
     api.getAdvancedAnalytics(period, token)
       .then(setData)
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [isOpen, period, token]);
 

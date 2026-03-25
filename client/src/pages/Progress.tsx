@@ -90,7 +90,7 @@ export default function Progress() {
       }));
       setData(formatted);
       setSummary(sum.summary);
-    }).catch(console.error)
+    }).catch(() => {})
       .finally(() => setLoading(false));
   }, [days, token]);
 

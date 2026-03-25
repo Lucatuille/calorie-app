@@ -783,8 +783,7 @@ export default function TDEECalculator({ isOpen, onClose, onSave }) {
       });
       setSaved(true);
       setTimeout(() => { setSaved(false); onClose(); }, 1800);
-    } catch (err) {
-      console.error(err);
+    } catch {
     } finally { setSaving(false); }
   }
 

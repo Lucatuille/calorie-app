@@ -668,7 +668,6 @@ export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
         onClose();
         return;
       }
-      console.error('Admin fetch error:', e);
     } finally {
       setLoading(prev => ({ ...prev, [tab]: false }));
     }

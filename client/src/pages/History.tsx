@@ -51,7 +51,7 @@ export default function History() {
     try {
       const data = await api.getAllEntries(lim, token);
       setEntries(data);
-    } catch (e) { console.error(e); }
+    } catch { }
     finally { setLoading(false); }
   }
 
@@ -88,7 +88,7 @@ export default function History() {
       }, token);
       setEditingId(null);
       load();
-    } catch (e) { console.error(e); }
+    } catch { }
     finally { setSaving(false); }
   }
 
@@ -97,7 +97,7 @@ export default function History() {
       await api.deleteEntry(id, token);
       setDeletingId(null);
       setEntries(prev => prev.filter(e => e.id !== id));
-    } catch (e) { console.error(e); }
+    } catch { }
   }
 
   async function loadMore() {

@@ -103,11 +103,11 @@ export async function handleSupplements(request, env, path) {
     const items = await request.json();
     if (!Array.isArray(items)) return errorResponse('Se esperaba un array', 400);
 
-    for (const { id, order_index } of items) {
-      await env.DB.prepare(
-        'UPDATE user_supplements SET order_index = ? WHERE id = ? AND user_id = ?'
-      ).bind(order_index, id, user.userId).run();
-    }
+    const stmts = items.map(({ id, order_index }) =>
+      env.DB.prepare('UPDATE user_supplements SET order_index = ? WHERE id = ? AND user_id = ?')
+        .bind(Number(order_index), Number(id), user.userId)
+    );
+    await env.DB.batch(stmts);
 
     return jsonResponse({ success: true });
   }

@@ -88,7 +88,7 @@ export default function Profile() {
         target_fat:      p.target_fat      || '',
         goal_weight:     p.goal_weight     || '',
       });
-    }).catch(console.error);
+    }).catch(() => {});
   }, [token]);
 
   async function handleSave(e) {
@@ -127,7 +127,7 @@ export default function Profile() {
     try {
       const entries = await api.getAllEntries(365, token);
       exportCSV(entries);
-    } catch (e) { console.error(e); }
+    } catch { }
     finally { setExporting(false); }
   }
 

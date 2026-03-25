@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import { MEAL_HOURS, MAX_IMAGE_PX, JPEG_QUALITY } from '../utils/constants';
-import { useAuth as useAuthProfile } from '../context/AuthContext';
 import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
 
@@ -176,7 +175,7 @@ export default function Calculator() {
       await api.deleteEntry(id, token);
       setEntries(prev => prev.filter(e => e.id !== id));
       setDeletingId(null);
-    } catch (err) { console.error(err); }
+    } catch { }
   }
 
   function handlePhotoChange(e) {

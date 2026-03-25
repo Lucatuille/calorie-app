@@ -94,7 +94,6 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
       await fetchSupplements();
       onUpdate?.();
     } catch (err) {
-      if (!err.message?.includes('409') && !err.message?.includes('nombre')) console.error(err);
     } finally { setAddingId(null); }
   }
 
@@ -104,7 +103,7 @@ export default function SupplementManager({ isOpen, onClose, onUpdate }) {
       setDeletingId(null);
       await fetchSupplements();
       onUpdate?.();
-    } catch (err) { console.error(err); }
+    } catch { }
   }
 
   const existingNames  = new Set(supplements.map(s => s.name.toLowerCase()));
