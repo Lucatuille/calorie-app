@@ -26,9 +26,9 @@ const METHODS = [
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="1" y="3" width="16" height="12" rx="2"
-          stroke={active ? '#16a34a' : '#888'} strokeWidth="1.2"/>
+          stroke={active ? 'var(--accent)' : 'var(--text-secondary)'} strokeWidth="1.2"/>
         <circle cx="9" cy="9" r="3.5"
-          stroke={active ? '#16a34a' : '#888'} strokeWidth="1.2"/>
+          stroke={active ? 'var(--accent)' : 'var(--text-secondary)'} strokeWidth="1.2"/>
       </svg>
     ),
   },
@@ -37,9 +37,9 @@ const METHODS = [
     label: 'Escanear',
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="4" width="14" height="2" rx="1" fill={active ? '#16a34a' : '#888'}/>
-        <rect x="2" y="8" width="14" height="2" rx="1" fill={active ? '#16a34a' : '#888'}/>
-        <rect x="2" y="12" width="9" height="2" rx="1" fill={active ? '#16a34a' : '#888'}/>
+        <rect x="2" y="4" width="14" height="2" rx="1" fill={active ? 'var(--accent)' : 'var(--text-secondary)'}/>
+        <rect x="2" y="8" width="14" height="2" rx="1" fill={active ? 'var(--accent)' : 'var(--text-secondary)'}/>
+        <rect x="2" y="12" width="9" height="2" rx="1" fill={active ? 'var(--accent)' : 'var(--text-secondary)'}/>
       </svg>
     ),
   },
@@ -49,7 +49,7 @@ const METHODS = [
     icon: (active) => (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <path d="M3 13 L6 10 L10 12 L15 6"
-          stroke={active ? '#16a34a' : '#888'} strokeWidth="1.2" strokeLinecap="round"/>
+          stroke={active ? 'var(--accent)' : 'var(--text-secondary)'} strokeWidth="1.2" strokeLinecap="round"/>
       </svg>
     ),
   },
@@ -362,8 +362,8 @@ export default function Calculator() {
                   }}
                   disabled={m.key === 'photo' && analyzing}
                   style={{
-                    background: active ? '#f0fdf4' : 'var(--surface-2)',
-                    border: active ? '1.5px solid #16a34a' : '0.5px solid var(--border)',
+                    background: active ? 'var(--accent-light)' : 'var(--surface-2)',
+                    border: active ? '1.5px solid var(--accent)' : '0.5px solid var(--border)',
                     borderRadius: 'var(--radius-md)',
                     padding: '12px 8px',
                     textAlign: 'center',
@@ -375,7 +375,7 @@ export default function Calculator() {
                 >
                   <div style={{
                     width: 32, height: 32,
-                    background: active ? '#dcfce7' : 'var(--surface)',
+                    background: active ? 'var(--accent-light)' : 'var(--surface)',
                     borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     margin: '0 auto 6px',
@@ -386,7 +386,7 @@ export default function Calculator() {
                   </div>
                   <span style={{
                     fontSize: 11, fontWeight: 500,
-                    color: active ? '#16a34a' : 'var(--text-secondary)',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
                   }}>
                     {m.key === 'photo' && analyzing ? 'Analizando…' : m.label}
                   </span>

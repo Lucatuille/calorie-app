@@ -58,6 +58,9 @@ export async function handleAuth(request, env, path) {
     if (!name || !email || !password) {
       return errorResponse('Nombre, email y contraseña son obligatorios');
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return errorResponse('Formato de email inválido');
+    }
     if (password.length < 8) {
       return errorResponse('La contraseña debe tener al menos 8 caracteres');
     }

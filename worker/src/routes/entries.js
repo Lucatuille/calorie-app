@@ -2,7 +2,7 @@
 //  ENTRIES ROUTES — /api/entries
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate } from '../utils.js';
+import { jsonResponse, errorResponse, authenticate, getClientToday } from '../utils.js';
 
 function validateNumber(val, name, { min = 0, max = 99999, required = false } = {}) {
   if (val == null || val === '') return required ? `${name} es obligatorio` : null;
@@ -31,7 +31,7 @@ export async function handleEntries(request, env, path) {
     const weightErr = validateNumber(weight, 'Peso', { min: 20, max: 300 });
     if (weightErr) return errorResponse(weightErr);
 
-    const entryDate  = date || new Date().toISOString().split('T')[0];
+    const entryDate  = date || getClientToday(request);
     const mealType   = meal_type || 'other';
 
     const { meta } = await env.DB.prepare(
@@ -61,7 +61,7 @@ export async function handleEntries(request, env, path) {
 
   // GET /api/entries/today — return all of today's entries as array
   if (path === '/api/entries/today' && request.method === 'GET') {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getClientToday(request);
     const { results } = await env.DB.prepare(
       `SELECT * FROM entries WHERE user_id = ? AND date = ? ORDER BY created_at ASC`
     ).bind(user.userId, today).all();

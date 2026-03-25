@@ -10,7 +10,10 @@ let _on401 = null;
 export function setLogoutHandler(fn) { _on401 = fn; }
 
 async function request(method, path, body, token) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, {

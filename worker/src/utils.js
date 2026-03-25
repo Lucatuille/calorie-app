@@ -15,7 +15,7 @@ export function getCorsHeaders(request) {
   return {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Timezone',
     'Vary': 'Origin',
   };
 }
@@ -24,7 +24,7 @@ export function getCorsHeaders(request) {
 export const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://caliro.dev',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Timezone',
   'Vary': 'Origin',
 };
 
@@ -122,6 +122,17 @@ export async function requireProAccess(request, env) {
 export function proAccessDenied(result) {
   if (result === 'waitlist') return errorResponse('Tu cuenta está en lista de espera.', 403);
   return errorResponse('Se requiere plan Pro', 403);
+}
+
+// ── Client timezone — get "today" from X-Timezone header ─────
+export function getClientToday(request) {
+  const tz = request?.headers?.get?.('X-Timezone');
+  if (tz) {
+    try {
+      return new Date().toLocaleDateString('en-CA', { timeZone: tz });
+    } catch { /* invalid timezone — fall through */ }
+  }
+  return new Date().toISOString().split('T')[0]; // UTC fallback
 }
 
 // ── Password hashing (PBKDF2 with salt — Web Crypto) ────────

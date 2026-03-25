@@ -22,6 +22,10 @@ async function verifyStripeSignature(rawBody, sigHeader, secret) {
   const v1 = parts['v1'];
   if (!timestamp || !v1) return false;
 
+  // Reject events older than 5 minutes (replay attack protection)
+  const age = Math.floor(Date.now() / 1000) - Number(timestamp);
+  if (age > 300 || age < -60) return false;
+
   const signedPayload = `${timestamp}.${rawBody}`;
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(

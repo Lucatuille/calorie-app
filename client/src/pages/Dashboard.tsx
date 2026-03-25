@@ -53,10 +53,12 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
+        setLoadError(false);
         const [e, s, p] = await Promise.all([
           api.getTodayEntries(token),
           api.getSummary(token),
@@ -65,21 +67,37 @@ export default function Dashboard() {
         setEntries(e);
         setSummary(s.summary);
         setProfile(p);
-      } catch (err) { console.error(err); }
+      } catch { setLoadError(true); }
       finally { setLoading(false); }
     }
     load();
   }, [token]);
 
+  const [deletingId, setDeletingId] = useState(null);
+
   async function handleDelete(id) {
-    await api.deleteEntry(id, token);
-    setEntries(prev => prev.filter(e => e.id !== id));
+    if (deletingId !== id) { setDeletingId(id); return; }
+    try {
+      await api.deleteEntry(id, token);
+      setEntries(prev => prev.filter(e => e.id !== id));
+    } catch { /* Sentry captures */ }
+    setDeletingId(null);
   }
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
       <div className="spinner" style={{ width: 32, height: 32 }} />
     </div>
+  );
+
+  if (loadError) return (
+    <section style={{ margin: '0 auto', maxWidth: 640, padding: '0 16px', textAlign: 'center', paddingTop: 80 }}>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>No se pudieron cargar los datos</p>
+      <button onClick={() => { setLoading(true); setLoadError(false); location.reload(); }}
+        style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontSize: 13 }}>
+        Reintentar
+      </button>
+    </section>
   );
 
   // ── Totales del día ────────────────────────────────────────
@@ -330,15 +348,19 @@ export default function Dashboard() {
                       </span>
                       <button
                         onClick={() => handleDelete(entry.id)}
+                        onBlur={() => { if (deletingId === entry.id) setDeletingId(null); }}
                         aria-label="Eliminar comida"
                         style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: 'var(--text-tertiary)', fontSize: 16,
-                          padding: '0 2px', lineHeight: 1,
-                          borderRadius: 4,
+                          background: deletingId === entry.id ? 'var(--danger)' : 'none',
+                          border: 'none', cursor: 'pointer',
+                          color: deletingId === entry.id ? '#fff' : 'var(--text-tertiary)',
+                          fontSize: deletingId === entry.id ? 10 : 16,
+                          padding: deletingId === entry.id ? '2px 6px' : '0 2px',
+                          lineHeight: 1, borderRadius: 4,
+                          transition: 'all 0.15s ease',
                         }}
                       >
-                        ×
+                        {deletingId === entry.id ? '¿Borrar?' : '×'}
                       </button>
                     </div>
                   </div>
