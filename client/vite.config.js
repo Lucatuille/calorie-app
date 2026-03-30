@@ -10,7 +10,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        app: './spa.html',
+        app: './index.html',
       }
     }
   }
