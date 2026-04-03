@@ -87,6 +87,7 @@ async function handleRequest(request, env, ctx) {
     }
 
     if (path === '/api/create-checkout-session' ||
+        path === '/api/create-portal-session' ||
         path === '/api/stripe-webhook' ||
         path === '/api/subscription-status') {
       return await handleStripe(request, env, path);

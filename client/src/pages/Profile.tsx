@@ -64,6 +64,7 @@ export default function Profile() {
   const [error,        setError]        = useState('');
   const [loading,      setLoading]      = useState(false);
   const [exporting,    setExporting]    = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [showTDEE,     setShowTDEE]     = useState(false);
   const [calibration,  setCalibration]  = useState(null);
   const [resetConfirm, setResetConfirm] = useState(false);
@@ -157,6 +158,39 @@ export default function Profile() {
           {user?.email}
         </p>
       </header>
+
+      {/* ── Gestionar suscripción (solo Pro activo) ── */}
+      {user?.access_level === 2 && (
+        <button
+          onClick={async () => {
+            setPortalLoading(true);
+            try {
+              const { url } = await api.createPortalSession(token);
+              window.location.href = url;
+            } catch { /* silent */ }
+            finally { setPortalLoading(false); }
+          }}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            width: '100%', padding: '14px 16px', marginBottom: 12,
+            background: 'var(--surface)', border: '0.5px solid var(--border)',
+            borderRadius: 'var(--radius-lg)', textDecoration: 'none',
+            cursor: 'pointer', opacity: portalLoading ? 0.5 : 1,
+            pointerEvents: portalLoading ? 'none' : 'auto',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 16 }}>💳</span>
+            <span style={{ fontSize: 14, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
+              Gestionar suscripción
+            </span>
+          </div>
+          <span style={{ fontSize: 16, color: 'var(--text-tertiary)' }}>›</span>
+        </button>
+      )}
 
       {/* ── Upgrade entry (solo Free) ── */}
       {isFree(user?.access_level) && (

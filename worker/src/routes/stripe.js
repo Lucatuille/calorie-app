@@ -139,5 +139,42 @@ export async function handleStripe(request, env, path) {
     return jsonResponse({ access_level: user.access_level ?? 3 });
   }
 
+  // ── POST /api/create-portal-session ────────────────────────
+  if (path === '/api/create-portal-session' && request.method === 'POST') {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) return errorResponse('Token requerido', 401);
+
+    const payload = await verifyJWT(authHeader.slice(7), env.JWT_SECRET);
+    if (!payload) return errorResponse('Token inválido', 401);
+
+    const user = await env.DB.prepare(
+      'SELECT stripe_customer_id, access_level FROM users WHERE id = ?'
+    ).bind(payload.userId).first();
+
+    if (!user) return errorResponse('Usuario no encontrado', 404);
+    if (!user.stripe_customer_id) return errorResponse('No hay suscripción activa', 400);
+
+    const res = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        customer: user.stripe_customer_id,
+        return_url: 'https://caliro.dev/app/profile',
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('Stripe portal error:', res.status, err);
+      return errorResponse('Error al crear sesión de portal', 502);
+    }
+
+    const session = await res.json();
+    return jsonResponse({ url: session.url });
+  }
+
   return errorResponse('Not found', 404);
 }

@@ -96,4 +96,5 @@ export const api = {
 
   // Stripe
   createCheckoutSession: (priceId, token) => request('POST', '/api/create-checkout-session', { priceId }, token),
+  createPortalSession: (token) => request('POST', '/api/create-portal-session', {}, token),
 };
