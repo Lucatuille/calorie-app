@@ -1,0 +1,31 @@
+{
+  "nombre": "Lentejas con chorizo",
+  "categoria": "Legumbres",
+  "raciones": 4,
+  "porcion_g": 350,
+  "porcion_desc": "plato hondo estándar español",
+  "ingredientes": [
+    { "nombre_usda": "lentils raw", "cantidad_g": 320, "nota": "lentejas secas — cocidas pesan x2.5 = 800g" },
+    { "nombre_usda": "chorizo espanol", "cantidad_g": 80, "nota": "1 chorizo en rodajas" },
+    { "nombre_usda": "potato raw", "cantidad_g": 150, "nota": "1 patata mediana en trozos" },
+    { "nombre_usda": "onion raw", "cantidad_g": 100, "nota": "1 cebolla mediana picada" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 80, "nota": "1 tomate maduro rallado" },
+    { "nombre_usda": "red bell pepper raw", "cantidad_g": 50, "nota": "medio pimiento rojo" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 8, "nota": "2 dientes de ajo" },
+    { "nombre_usda": "olive oil", "cantidad_g": 25, "nota": "aceite para sofrito" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["lentejas", "lentejas estofadas", "lentejas con verduras", "plato de lentejas"],
+  "token_principal": "lentejas",
+  "tokens_secundarios": ["chorizo", "verduras", "estofadas"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "plato pequeño", "g": 250},
+    {"desc": "plato estándar", "g": 350},
+    {"desc": "plato grande", "g": 450}
+  ],
+  "referencias_visuales": "Plato hondo estándar español lleno = 350g. Si dice 'un plato' sin especificar usar 350g. Tupper mediano = 400-450g.",
+  "notas_claude": "Porción española de legumbres = 300-400g (mucho más que serving americana de 180g). Siempre llevan sofrito base (aceite+cebolla+tomate = ya incluido). Sin chorizo: -100 kcal/ración. Con morcilla: +30 kcal/ración.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

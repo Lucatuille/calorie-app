@@ -1,0 +1,26 @@
+{
+  "nombre": "Gambas al ajillo",
+  "categoria": "Pescados y mariscos",
+  "raciones": 1,
+  "porcion_g": 200,
+  "porcion_desc": "cazuelita estándar",
+  "ingredientes": [
+    { "nombre_usda": "shrimp raw", "cantidad_g": 120, "nota": "gambas peladas crudas", "factor_coccion": 0.85 },
+    { "nombre_usda": "olive oil", "cantidad_g": 40, "nota": "aceite abundante en cazuelita — componente principal de calorías" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 10, "nota": "3-4 dientes de ajo laminados" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["gambas ajillo", "gambas al ajillo", "langostinos al ajillo"],
+  "token_principal": "gambas",
+  "tokens_secundarios": ["ajillo", "ajo"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "tapa pequeña", "g": 120},
+    {"desc": "cazuelita estándar", "g": 200},
+    {"desc": "plato principal", "g": 320}
+  ],
+  "referencias_visuales": "Cazuelita de barro pequeña = ~150-200g. Si es plato principal con pan = 300g+. El aceite en el fondo de la cazuela = ~30-40ml ya incluido.",
+  "notas_claude": "El aceite de oliva es el componente principal de calorías — la cazuelita lleva 30-50ml de aceite. Las gambas en sí son muy bajas en calorías (~85 kcal/100g). NO subestimar el aceite del fondo. Si se moja pan en el aceite: +100-150 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

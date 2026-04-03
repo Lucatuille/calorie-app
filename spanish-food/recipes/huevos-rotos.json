@@ -1,0 +1,51 @@
+{
+  "nombre": "Huevos rotos",
+  "categoria": "Huevos y tortillas",
+  "raciones": 1,
+  "porcion_g": 380,
+  "porcion_desc": "plato individual estándar",
+  "ingredientes": [
+    {
+      "nombre_usda": "potato french fries",
+      "cantidad_g": 220,
+      "nota": "patatas fritas en aceite abundante, peso cocinado"
+    },
+    {
+      "nombre_usda": "egg whole raw",
+      "cantidad_g": 110,
+      "nota": "2 huevos L fritos, sin cáscara",
+      "factor_coccion": 0.95
+    },
+    {
+      "nombre_usda": "olive oil",
+      "cantidad_g": 12,
+      "nota": "aceite absorbido al freír los huevos (~8g) + residual patatas"
+    },
+    {
+      "nombre_usda": "jamon serrano",
+      "cantidad_g": 40,
+      "nota": "jamón serrano en tiras — habitual, asumir con jamón por defecto"
+    }
+  ],
+  "varianza_pct": 15,
+  "aliases": [
+    "huevos rotos",
+    "huevos estrellados",
+    "huevos rotos con patatas",
+    "huevos rotos con jamón",
+    "patatas con huevo",
+    "huevos con patatas fritas"
+  ],
+  "token_principal": "huevos",
+  "tokens_secundarios": ["rotos", "estrellados", "patatas"],
+  "tokens_exclusion": ["revueltos", "cocidos", "escalfados", "fritos"],
+  "porciones_guia": [
+    {"desc": "plato pequeño", "g": 270},
+    {"desc": "plato estándar", "g": 380},
+    {"desc": "plato grande bar", "g": 480}
+  ],
+  "referencias_visuales": "Plato llano con base de patatas fritas irregulares cubiertas de 2 huevos fritos rotos encima con jamón en tiras. Plato estándar = lleno. Si dice 'para compartir' multiplicar x1.5-2.",
+  "notas_claude": "Huevos rotos = patatas fritas + 2 huevos fritos rotos encima. Casi siempre llevan jamón serrano — si no lo menciona asumir CON jamón. Sin jamón: -90 kcal. Con chorizo en lugar de jamón: +60 kcal. Con morcilla: +80 kcal. NO confundir con huevos revueltos ni huevos fritos solos.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

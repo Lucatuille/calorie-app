@@ -1,0 +1,26 @@
+{
+  "nombre": "Patatas bravas",
+  "categoria": "Tapas y aperitivos",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "ración estándar de tapa",
+  "ingredientes": [
+    { "nombre_usda": "potato french fries", "cantidad_g": 135, "nota": "patatas fritas cortadas irregular, peso cocinado" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 10, "nota": "salsa brava: base tomate + pimentón + picante" },
+    { "nombre_usda": "olive oil", "cantidad_g": 5, "nota": "aceite en salsa brava" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["bravas", "patatas con bravas", "patatas con salsa brava"],
+  "token_principal": "bravas",
+  "tokens_secundarios": ["patatas", "patata"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "media ración", "g": 75},
+    {"desc": "ración estándar tapa", "g": 150},
+    {"desc": "ración grande", "g": 220}
+  ],
+  "referencias_visuales": "Ración estándar de tapa en cazuelita pequeña = ~150g. Si es plato compartido entre 2-3 personas multiplicar. Cazuelita de barro pequeña = ~150g.",
+  "notas_claude": "Patatas fritas con salsa brava (tomate picante) y a veces alioli. La fritura en aceite de oliva es el componente calórico principal. Con alioli: +60 kcal por ración.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

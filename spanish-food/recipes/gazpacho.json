@@ -1,0 +1,30 @@
+{
+  "nombre": "Gazpacho",
+  "categoria": "Sopas y cremas",
+  "raciones": 4,
+  "porcion_g": 250,
+  "porcion_desc": "bowl/vaso estándar",
+  "ingredientes": [
+    { "nombre_usda": "tomato raw", "cantidad_g": 600, "nota": "tomate maduro pera" },
+    { "nombre_usda": "cucumber raw", "cantidad_g": 100, "nota": "medio pepino pelado" },
+    { "nombre_usda": "red bell pepper raw", "cantidad_g": 50, "nota": "medio pimiento verde/rojo" },
+    { "nombre_usda": "wheat bread", "cantidad_g": 30, "nota": "miga de pan remojada" },
+    { "nombre_usda": "olive oil", "cantidad_g": 35, "nota": "aceite oliva virgen extra" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 5, "nota": "1 diente de ajo" },
+    { "nombre_usda": "vinegar", "cantidad_g": 15, "nota": "vinagre de Jerez" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["gazpacho andaluz", "gazpacho casero"],
+  "token_principal": "gazpacho",
+  "tokens_secundarios": ["andaluz"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "vaso pequeño", "g": 180},
+    {"desc": "vaso/bowl estándar", "g": 250},
+    {"desc": "bowl grande", "g": 350}
+  ],
+  "referencias_visuales": "Vaso de agua estándar = 200ml. Bowl de sopa = 250-300ml. Taza de desayuno = 200ml. Brick individual = 330ml.",
+  "notas_claude": "Gazpacho lleva aceite de oliva (15-25ml por ración). NO es solo verdura triturada — el aceite aporta más de la mitad de las calorías. Casero más calórico que industrial. Con toppings (huevo duro, jamón picado): +40-60 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

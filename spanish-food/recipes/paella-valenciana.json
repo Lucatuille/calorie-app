@@ -1,0 +1,30 @@
+{
+  "nombre": "Paella valenciana",
+  "categoria": "Arroces",
+  "raciones": 4,
+  "porcion_g": 350,
+  "porcion_desc": "ración estándar",
+  "ingredientes": [
+    { "nombre_usda": "white rice raw", "cantidad_g": 320, "nota": "arroz bomba/redondo seco — cocido x3 peso" },
+    { "nombre_usda": "chicken thigh meat raw", "cantidad_g": 300, "nota": "muslos de pollo troceados con hueso", "factor_coccion": 0.75 },
+    { "nombre_usda": "green beans raw", "cantidad_g": 100, "nota": "judías verdes planas (bajoqueta)" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 80, "nota": "tomate rallado para sofrito" },
+    { "nombre_usda": "olive oil", "cantidad_g": 40, "nota": "aceite para sofreír" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 5, "nota": "1-2 dientes de ajo" },
+    { "nombre_usda": "red bell pepper raw", "cantidad_g": 30, "nota": "pimentón/ñora — aporte calórico bajo" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["paella", "paella de pollo", "paella mixta", "arroz paella"],
+  "token_principal": "paella",
+  "tokens_secundarios": ["arroz", "valenciana", "pollo", "mariscos"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "ración pequeña", "g": 250},
+    {"desc": "ración estándar", "g": 350},
+    {"desc": "ración grande", "g": 450}
+  ],
+  "referencias_visuales": "Paellera de 4 personas = ~1.4kg total = 350g por persona. Si es plato de restaurante individual = 300-400g. Paella casera sirve más.",
+  "notas_claude": "Paella lleva sofrito + aceite abundante. El arroz absorbe caldo con grasa. Ración española es generosa (300-400g). Paella de mariscos: -50 kcal vs valenciana. Paella mixta: similar.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

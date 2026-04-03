@@ -1,0 +1,26 @@
+{
+  "nombre": "Pan con tomate y aceite",
+  "categoria": "Pan y desayunos",
+  "raciones": 1,
+  "porcion_g": 80,
+  "porcion_desc": "rebanada estándar con tomate y aceite",
+  "ingredientes": [
+    { "nombre_usda": "wheat bread", "cantidad_g": 50, "nota": "rebanada de barra española, 2cm grosor" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 18, "nota": "tomate frotado (no triturado)" },
+    { "nombre_usda": "olive oil", "cantidad_g": 12, "nota": "aceite de oliva virgen, chorro generoso español" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["pan con tomate", "pa amb tomaquet", "tostada con tomate", "pan tumaca"],
+  "token_principal": "tomate",
+  "tokens_secundarios": ["pan", "tostada", "aceite"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "rebanada pequeña", "g": 55},
+    {"desc": "rebanada estándar", "g": 80},
+    {"desc": "rebanada grande/tosta bar", "g": 110}
+  ],
+  "referencias_visuales": "Rebanada estándar barra pan = 2cm grosor, ~50g pan. Con tomate frotado y aceite el peso total es ~80g. Tosta de bar suele ser más grande ~100-110g.",
+  "notas_claude": "El aceite es el componente más variable — en España se echa generosamente (10-15ml). El tomate frotado apenas aporta calorías (~4 kcal). Pan de barra español estándar.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

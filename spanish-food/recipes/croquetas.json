@@ -1,0 +1,31 @@
+{
+  "nombre": "Croquetas caseras",
+  "categoria": "Carnes",
+  "raciones": 12,
+  "porcion_g": 40,
+  "porcion_desc": "1 croqueta mediana",
+  "ingredientes": [
+    { "nombre_usda": "butter salted", "cantidad_g": 50, "nota": "mantequilla para bechamel" },
+    { "nombre_usda": "flour wheat all purpose", "cantidad_g": 50, "nota": "harina para bechamel" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 400, "nota": "leche entera para bechamel" },
+    { "nombre_usda": "jamon serrano", "cantidad_g": 100, "nota": "jamón picado fino para el relleno" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 55, "nota": "1 huevo para rebozar" },
+    { "nombre_usda": "breadcrumbs dry", "cantidad_g": 60, "nota": "pan rallado para rebozar" },
+    { "nombre_usda": "olive oil", "cantidad_g": 40, "nota": "aceite absorbido en fritura (~8-10% peso)" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["croquetas", "croquetas de jamon", "croqueta"],
+  "token_principal": "croqueta",
+  "tokens_secundarios": ["jamon", "caseras", "casera"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "1 croqueta mediana", "g": 40},
+    {"desc": "2 croquetas", "g": 80},
+    {"desc": "ración 3 croquetas", "g": 120},
+    {"desc": "ración bar 4-5 croquetas", "g": 200}
+  ],
+  "referencias_visuales": "Croqueta casera media = tamaño de un huevo pequeño, ~40g. Croqueta de bar suele ser más grande ~50-60g. Ración estándar en bar = 4-5 uds.",
+  "notas_claude": "Croqueta casera = bechamel + relleno (jamón/pollo/bacalao) + rebozado + fritura. La fritura absorbe 8-12% del peso en aceite. De pollo: -10 kcal/ud. De bacalao: -15 kcal/ud.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

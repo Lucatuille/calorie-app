@@ -1,0 +1,28 @@
+{
+  "nombre": "Salmorejo",
+  "categoria": "Sopas y cremas",
+  "raciones": 4,
+  "porcion_g": 200,
+  "porcion_desc": "bowl estándar",
+  "ingredientes": [
+    { "nombre_usda": "tomato raw", "cantidad_g": 500, "nota": "tomate maduro pera" },
+    { "nombre_usda": "wheat bread", "cantidad_g": 100, "nota": "miga de pan de telera (más pan que gazpacho)" },
+    { "nombre_usda": "olive oil", "cantidad_g": 60, "nota": "aceite oliva virgen extra — más que gazpacho" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 5, "nota": "1 diente de ajo" },
+    { "nombre_usda": "vinegar", "cantidad_g": 10, "nota": "vinagre de Jerez" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["salmorejo cordobes", "salmorejo casero"],
+  "token_principal": "salmorejo",
+  "tokens_secundarios": ["cordobes"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    {"desc": "vaso pequeño", "g": 150},
+    {"desc": "bowl estándar", "g": 200},
+    {"desc": "bowl grande", "g": 280}
+  ],
+  "referencias_visuales": "Bowl de sopa = 200-250ml. En restaurante suele servirse en cuenco pequeño ~150-200ml. Es más denso que el gazpacho — mismo volumen pesa más.",
+  "notas_claude": "Más denso y calórico que el gazpacho — lleva más pan y aceite. NO confundir con gazpacho (gazpacho es más líquido, menos calorías por 100g). Con toppings (jamón + huevo duro): +60-80 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

@@ -1,0 +1,27 @@
+{
+  "nombre": "Bocadillo de jamon serrano",
+  "categoria": "Pan y desayunos",
+  "raciones": 1,
+  "porcion_g": 180,
+  "porcion_desc": "bocadillo estándar de barra",
+  "ingredientes": [
+    { "nombre_usda": "wheat bread", "cantidad_g": 110, "nota": "cuarto de barra de panadería española" },
+    { "nombre_usda": "jamon serrano", "cantidad_g": 50, "nota": "4-5 lonchas de jamón serrano" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 15, "nota": "tomate rallado opcional (incluido por defecto)" },
+    { "nombre_usda": "olive oil", "cantidad_g": 5, "nota": "chorrito de aceite" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["bocadillo de jamon", "bocata de jamon", "bocadillo de serrano", "bocata jamon"],
+  "token_principal": "bocadillo",
+  "tokens_secundarios": ["jamon", "serrano"],
+  "tokens_exclusion": ["iberico"],
+  "porciones_guia": [
+    {"desc": "bocadillo pequeño", "g": 130},
+    {"desc": "bocadillo estándar", "g": 180},
+    {"desc": "bocadillo grande", "g": 240}
+  ],
+  "referencias_visuales": "Bocadillo estándar = barra 1/4 (~110g pan) + jamón. Si es de cuarto de barra normal de panadería española = 180g total. Bocadillo de bar suele ser más grande.",
+  "notas_claude": "Bocadillo español = pan de barra (no pan de molde). Cuarto de barra ≈ 110g pan + 40-60g jamón serrano. Con tomate y aceite: ya incluido. Sin tomate ni aceite: -50 kcal.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}
