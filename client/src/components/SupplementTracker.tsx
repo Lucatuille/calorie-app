@@ -128,18 +128,18 @@ export default function SupplementTracker() {
           </button>
         ) : (
           /* Supplement grid */
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8, ...(count === 1 && { maxWidth: 280, margin: '0 auto' }) }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
             {supplements.map(sup => (
               <button
                 key={sup.id}
                 onClick={() => handleToggle(sup)}
                 style={{
-                  height: count === 1 ? 60 : 80, borderRadius: 12,
+                  height: 80, borderRadius: 12,
                   border: sup.taken ? '1px solid transparent' : '1px solid var(--border)',
                   background: sup.taken ? 'var(--accent)' : 'var(--bg)',
                   cursor: 'pointer',
-                  display: 'flex', flexDirection: count === 1 ? 'row' : 'column',
-                  alignItems: 'center', justifyContent: 'center', gap: count === 1 ? 10 : 4,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: 4,
                   position: 'relative', overflow: 'hidden',
                   transition: 'background-color 0.25s ease, color 0.2s ease, border-color 0.25s ease',
                 }}
@@ -164,7 +164,7 @@ export default function SupplementTracker() {
 
                 {/* Name */}
                 <span style={{
-                  fontSize: count === 1 ? 13 : 10, fontWeight: 600, lineHeight: 1.2,
+                  fontSize: 10, fontWeight: 600, lineHeight: 1.2,
                   color: sup.taken ? 'rgba(255,255,255,0.95)' : 'var(--text-2)',
                   textAlign: 'center', padding: '0 4px',
                   maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
