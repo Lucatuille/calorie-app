@@ -1,6 +1,7 @@
-const CACHE_NAME = 'caliro-v8';
+const CACHE_NAME = 'caliro-v10';
 const STATIC_ASSETS = [
   '/app/',
+  '/offline.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -29,7 +30,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Páginas estáticas fuera de la app — no interceptar, dejar al navegador
+  // Páginas estáticas fuera de la app — no interceptar
   if (url.pathname === '/invite' || url.pathname === '/invite.html') {
     return;
   }
@@ -40,13 +41,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegación a rutas de la app (/app/*) — Network First, fallback a /app/ cacheado
-  // Usa request.url (string) en lugar de request (objeto) para evitar problemas con
-  // mode:'navigate' en subrequests de iOS PWA standalone
+  // Navegación a rutas de la app (/app/*) — Network First, fallback a cache, luego offline.html
   if (request.mode === 'navigate' && url.pathname.startsWith('/app')) {
     event.respondWith(
       fetch(request.url)
-        .catch(() => caches.match('/app/').then(r => r || fetch('/app/')))
+        .catch(() => caches.match('/app/').then(r => r || caches.match('/offline.html')))
+    );
+    return;
+  }
+
+  // Navegación fuera de /app — Network First, fallback offline.html
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request.url)
+        .catch(() => caches.match('/offline.html'))
     );
     return;
   }
