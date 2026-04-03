@@ -1,0 +1,26 @@
+{
+  "nombre": "Morcilla de Burgos con pimientos",
+  "categoria": "Tapas y aperitivos",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "tapa/entrante estándar",
+  "ingredientes": [
+    { "nombre_usda": "morcilla", "cantidad_g": 80, "nota": "morcilla de Burgos a la plancha" },
+    { "nombre_usda": "green pepper raw", "cantidad_g": 60, "nota": "pimientos verdes fritos" },
+    { "nombre_usda": "sunflower oil", "cantidad_g": 10, "nota": "aceite de fritura pimientos" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["morcilla con pimientos", "morcilla de burgos", "morcilla a la plancha"],
+  "token_principal": "morcilla",
+  "tokens_secundarios": ["burgos", "pimientos"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "tapa pequeña", "g": 100 },
+    { "desc": "tapa/entrante estándar", "g": 150 },
+    { "desc": "ración grande", "g": 200 }
+  ],
+  "referencias_visuales": "Rodajas de morcilla oscura + tiras de pimiento verde frito al lado. Morcilla cortada en rodajas de 1.5cm.",
+  "notas_claude": "Morcilla de Burgos = con arroz (diferente de la andaluza o vasca). Muy calórica por la grasa del cerdo y el arroz interior. A la plancha (sin aceite extra). Los pimientos fritos SÍ llevan aceite.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

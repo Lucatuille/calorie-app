@@ -1,0 +1,27 @@
+{
+  "nombre": "Butifarra con mongetes",
+  "categoria": "Carnes",
+  "raciones": 1,
+  "porcion_g": 280,
+  "porcion_desc": "butifarra con mongetes estándar",
+  "ingredientes": [
+    { "nombre_usda": "butifarra blanca", "cantidad_g": 150, "nota": "butifarra a la brasa", "factor_coccion": 0.80 },
+    { "nombre_usda": "white beans raw", "cantidad_g": 50, "nota": "mongetes cocidas = ~125g, peso seco" },
+    { "nombre_usda": "olive oil", "cantidad_g": 12, "nota": "aliño mongetes" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 3, "nota": "ajo para mongetes" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["butifarra con mongetes", "butifarra amb mongetes", "botifarra con judias", "butifarra con alubias"],
+  "token_principal": "butifarra",
+  "tokens_secundarios": ["mongetes", "alubias"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "ración pequeña", "g": 200 },
+    { "desc": "ración estándar", "g": 280 },
+    { "desc": "ración grande", "g": 350 }
+  ],
+  "referencias_visuales": "Butifarra entera cortada en rodajas + montón de alubias blancas al lado. Plato llano. Butifarra con marcas de brasa visibles.",
+  "notas_claude": "Plato catalán clásico. Butifarra blanca es más calórica que la negra. Las mongetes (alubias) llevan aceite de aliño generoso. Claude no conoce butifarra — es embutido fresco catalán, similar a salchicha pero más grueso y con especias.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

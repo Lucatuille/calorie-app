@@ -1,0 +1,27 @@
+{
+  "nombre": "Trinxat de la Cerdanya",
+  "categoria": "Verduras",
+  "raciones": 1,
+  "porcion_g": 200,
+  "porcion_desc": "ración estándar",
+  "ingredientes": [
+    { "nombre_usda": "cabbage raw", "cantidad_g": 100, "nota": "col cocida", "factor_coccion": 0.90 },
+    { "nombre_usda": "potato raw", "cantidad_g": 80, "nota": "patata cocida", "factor_coccion": 0.95 },
+    { "nombre_usda": "pork belly raw", "cantidad_g": 40, "nota": "panceta frita", "factor_coccion": 0.65 },
+    { "nombre_usda": "olive oil", "cantidad_g": 8, "nota": "para freír" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["trinxat", "trinxat de la cerdanya", "trinxat de col"],
+  "token_principal": "trinxat",
+  "tokens_secundarios": ["col", "cerdanya"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "ración pequeña", "g": 150 },
+    { "desc": "ración estándar", "g": 200 },
+    { "desc": "ración grande", "g": 280 }
+  ],
+  "referencias_visuales": "Disco aplastado de col+patata mezcladas, frito, con tiras de panceta crujiente encima. Color verde-dorado. Se sirve en plato llano.",
+  "notas_claude": "Mucho más calórico de lo que parece visualmente — la col y patata se fríen en la grasa de la panceta. Claude vería 'col con patata' y estimaría MUCHO menos. Plato pirenaico de invierno.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

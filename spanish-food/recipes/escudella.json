@@ -1,0 +1,32 @@
+{
+  "nombre": "Escudella i carn d'olla",
+  "categoria": "Legumbres",
+  "raciones": 4,
+  "porcion_g": 400,
+  "porcion_desc": "plato estándar con caldo, galets y carne",
+  "ingredientes": [
+    { "nombre_usda": "chickpeas raw", "cantidad_g": 200, "nota": "garbanzos secos — cocidos x2.5" },
+    { "nombre_usda": "pasta dry", "cantidad_g": 80, "nota": "galets" },
+    { "nombre_usda": "beef ground raw", "cantidad_g": 120, "nota": "pilota de carne", "factor_coccion": 0.75 },
+    { "nombre_usda": "pork sausage Italian raw", "cantidad_g": 80, "nota": "butifarra como proxy", "factor_coccion": 0.80 },
+    { "nombre_usda": "chicken thigh meat raw", "cantidad_g": 150, "nota": "gallina", "factor_coccion": 0.75 },
+    { "nombre_usda": "pork belly raw", "cantidad_g": 60, "nota": "tocino", "factor_coccion": 0.70 },
+    { "nombre_usda": "potato raw", "cantidad_g": 150, "nota": "patata troceada" },
+    { "nombre_usda": "carrot raw", "cantidad_g": 80, "nota": "zanahoria" },
+    { "nombre_usda": "cabbage raw", "cantidad_g": 80, "nota": "col" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["escudella", "escudella i carn d'olla", "carn d'olla", "escudella catalana"],
+  "token_principal": "escudella",
+  "tokens_secundarios": ["carn d'olla", "catalana"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "plato pequeño", "g": 300 },
+    { "desc": "plato estándar", "g": 400 },
+    { "desc": "plato grande", "g": 500 }
+  ],
+  "referencias_visuales": "Plato hondo con caldo, galets grandes visibles, trozos de carne variada, garbanzos y verdura. Más voluminoso que cocido por los galets.",
+  "notas_claude": "Cocido catalán — se come todo junto, no en vuelcos. La pilota (bola de carne picada) es obligatoria. Los galets son pasta grande de Navidad pero se come todo el año. Sin galets: -80 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

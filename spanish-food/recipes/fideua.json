@@ -1,0 +1,31 @@
+{
+  "nombre": "Fideuà",
+  "categoria": "Arroces",
+  "raciones": 4,
+  "porcion_g": 350,
+  "porcion_desc": "ración estándar de fideuà",
+  "ingredientes": [
+    { "nombre_usda": "pasta dry", "cantidad_g": 280, "nota": "fideos finos n.0-2" },
+    { "nombre_usda": "shrimp raw", "cantidad_g": 150, "nota": "gambas", "factor_coccion": 0.85 },
+    { "nombre_usda": "squid raw", "cantidad_g": 100, "nota": "calamar", "factor_coccion": 0.80 },
+    { "nombre_usda": "tomato raw", "cantidad_g": 80, "nota": "tomate rallado para sofrito" },
+    { "nombre_usda": "onion raw", "cantidad_g": 40, "nota": "cebolla picada" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 5, "nota": "ajo picado" },
+    { "nombre_usda": "olive oil", "cantidad_g": 45, "nota": "más aceite que paella — fideos absorben más" },
+    { "nombre_usda": "red bell pepper raw", "cantidad_g": 30, "nota": "pimiento rojo" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["fideuà", "fideua", "fideuá", "fideos a banda"],
+  "token_principal": "fideua",
+  "tokens_secundarios": ["fideos"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "ración pequeña", "g": 250 },
+    { "desc": "ración estándar", "g": 350 },
+    { "desc": "ración grande", "g": 450 }
+  ],
+  "referencias_visuales": "Paellera con fideos cortos dorados en lugar de arroz. Se ve igual que paella pero los fideos son más finos y oscuros. Mariscos visibles encima.",
+  "notas_claude": "Igual que paella pero con fideos — MÁS calórica porque los fideos absorben más aceite que el arroz. De Valencia/Castellón. Confusión visual con paella en fotos.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

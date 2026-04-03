@@ -1,0 +1,27 @@
+{
+  "nombre": "Pulpo a la gallega",
+  "categoria": "Pescados y mariscos",
+  "raciones": 1,
+  "porcion_g": 200,
+  "porcion_desc": "ración estándar con patata",
+  "ingredientes": [
+    { "nombre_usda": "octopus raw", "cantidad_g": 120, "nota": "pulpo cocido", "factor_coccion": 0.80 },
+    { "nombre_usda": "potato raw", "cantidad_g": 60, "nota": "patata cocida", "factor_coccion": 0.95 },
+    { "nombre_usda": "olive oil", "cantidad_g": 20, "nota": "aceite abundante por encima" },
+    { "nombre_usda": "paprika", "cantidad_g": 2, "nota": "pimentón" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["pulpo a la gallega", "pulpo a feira", "pulpo con patatas", "pulpo"],
+  "token_principal": "pulpo",
+  "tokens_secundarios": ["gallega", "feira", "patatas"],
+  "tokens_exclusion": ["plancha", "parrilla"],
+  "porciones_guia": [
+    { "desc": "tapa pequeña", "g": 130 },
+    { "desc": "ración estándar", "g": 200 },
+    { "desc": "ración generosa", "g": 280 }
+  ],
+  "referencias_visuales": "Rodajas de pulpo morado sobre base de patata en plato de madera. Pimentón rojo y aceite brillante por encima. Sal gorda visible.",
+  "notas_claude": "El aceite por encima es ABUNDANTE y visible — Claude lo subestima. La patata ya está incluida. 'Pulpo a la plancha' es diferente: sin patata y con menos aceite (~40% menos calorías).",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

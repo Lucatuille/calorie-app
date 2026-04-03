@@ -1,0 +1,30 @@
+{
+  "nombre": "Pimientos del piquillo rellenos de bacalao",
+  "categoria": "Pescados y mariscos",
+  "raciones": 1,
+  "porcion_g": 180,
+  "porcion_desc": "3-4 pimientos rellenos con salsa",
+  "ingredientes": [
+    { "nombre_usda": "pimiento piquillo", "cantidad_g": 80, "nota": "3-4 pimientos" },
+    { "nombre_usda": "cod raw", "cantidad_g": 50, "nota": "bacalao desmigado", "factor_coccion": 0.85 },
+    { "nombre_usda": "heavy cream", "cantidad_g": 25, "nota": "nata para bechamel interior" },
+    { "nombre_usda": "flour wheat all purpose", "cantidad_g": 8, "nota": "harina para bechamel" },
+    { "nombre_usda": "butter salted", "cantidad_g": 8, "nota": "mantequilla para bechamel" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 30, "nota": "leche para bechamel" },
+    { "nombre_usda": "olive oil", "cantidad_g": 5, "nota": "aceite para salsa" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["pimientos del piquillo rellenos", "pimientos rellenos de bacalao", "piquillos rellenos"],
+  "token_principal": "piquillo",
+  "tokens_secundarios": ["rellenos", "bacalao", "pimientos"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "2 pimientos", "g": 100 },
+    { "desc": "3-4 pimientos", "g": 180 },
+    { "desc": "5-6 pimientos", "g": 260 }
+  ],
+  "referencias_visuales": "Pimientos rojos pequeños (5-6cm) en plato con salsa por encima. Color rojo intenso. Se ven 3-4 pimientos por ración.",
+  "notas_claude": "Los pimientos solos son muy poco calóricos (~30 kcal/100g) — el relleno de bechamel+bacalao MULTIPLICA por 3. Confusión frecuente: pimientos del piquillo sin relleno ≠ rellenos.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

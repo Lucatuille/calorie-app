@@ -1,0 +1,25 @@
+{
+  "nombre": "Pa amb oli mallorquín",
+  "categoria": "Pan y desayunos",
+  "raciones": 1,
+  "porcion_g": 90,
+  "porcion_desc": "rebanada estándar con tomate y aceite",
+  "ingredientes": [
+    { "nombre_usda": "wheat bread", "cantidad_g": 60, "nota": "pan moreno mallorquín, más denso" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 15, "nota": "tomate de ramellet frotado" },
+    { "nombre_usda": "olive oil", "cantidad_g": 15, "nota": "aceite MUY generoso, más que pa amb tomaquet" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["pa amb oli", "pan amb oli", "pan con aceite mallorquin", "pa amb tomàquet mallorquí"],
+  "token_principal": "pa amb oli",
+  "tokens_secundarios": ["mallorquin", "oli"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "rebanada estándar", "g": 90 },
+    { "desc": "con sobrasada", "g": 110 }
+  ],
+  "referencias_visuales": "Rebanada de pan moreno rústico con tomate y aceite brillante por encima. Pan más oscuro y denso que la barra catalana.",
+  "notas_claude": "Diferente del pan con tomate catalán — pan más denso, aceite MÁS abundante. Con sobrasada: +120 kcal (30g sobrasada = 141 kcal). Sin sobrasada por defecto.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

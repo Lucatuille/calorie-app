@@ -1,0 +1,31 @@
+{
+  "nombre": "Calçots con romesco",
+  "categoria": "Verduras",
+  "raciones": 1,
+  "porcion_g": 300,
+  "porcion_desc": "ración estándar (10-12 calçots) con romesco",
+  "ingredientes": [
+    { "nombre_usda": "scallion raw", "cantidad_g": 200, "nota": "calçots asados — pierde agua", "factor_coccion": 0.60 },
+    { "nombre_usda": "nuts almonds", "cantidad_g": 15, "nota": "salsa romesco" },
+    { "nombre_usda": "nuts hazelnuts", "cantidad_g": 10, "nota": "romesco" },
+    { "nombre_usda": "tomato raw", "cantidad_g": 20, "nota": "romesco" },
+    { "nombre_usda": "olive oil", "cantidad_g": 15, "nota": "romesco" },
+    { "nombre_usda": "wheat bread", "cantidad_g": 10, "nota": "romesco" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 3, "nota": "romesco" },
+    { "nombre_usda": "red bell pepper raw", "cantidad_g": 10, "nota": "ñora en romesco" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["calçots", "calcots", "calçots con romesco", "calçotada"],
+  "token_principal": "calcots",
+  "tokens_secundarios": ["romesco", "calçots"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "ración pequeña (6-8)", "g": 200 },
+    { "desc": "ración estándar (10-12)", "g": 300 },
+    { "desc": "ración grande (15+)", "g": 400 }
+  ],
+  "referencias_visuales": "Cebolletas largas (20-30cm) negras por fuera del asado, blancas por dentro. Se pelan y se mojan en salsa romesco marrón-rojiza en cuenco.",
+  "notas_claude": "Los calçots son cebolletas quemadas a la brasa — bajas en calorías. La salsa romesco (frutos secos + aceite + pan) es el componente calórico principal. Sin romesco: -60% calorías. Temporada enero-abril. Claude NO conoce ni calçots ni romesco.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

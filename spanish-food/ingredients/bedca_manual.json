@@ -96,5 +96,33 @@
       "fibra_g": 3.5
     },
     "nota": "Parte comestible ~80% (sin hueso). 10 aceitunas ≈ 40g. Fuente: BEDCA"
+  },
+  "butifarra blanca": {
+    "nombre_busqueda": "butifarra blanca",
+    "nombre_es": "Butifarra blanca cruda",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 310,
+      "proteina_g": 15.0,
+      "carbos_g": 1.0,
+      "grasa_g": 27.0,
+      "fibra_g": 0
+    },
+    "nota": "Butifarra blanca fresca catalana. La negra es ~280 kcal. Fuente: CESNID"
+  },
+  "pimiento piquillo": {
+    "nombre_busqueda": "pimiento piquillo",
+    "nombre_es": "Pimiento del piquillo (conserva)",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 30,
+      "proteina_g": 1.0,
+      "carbos_g": 5.5,
+      "grasa_g": 0.3,
+      "fibra_g": 2.0
+    },
+    "nota": "Pimiento asado en conserva. Muy bajo en calorías. Fuente: BEDCA"
   }
 }

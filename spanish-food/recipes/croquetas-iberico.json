@@ -1,0 +1,30 @@
+{
+  "nombre": "Croquetas de jamón ibérico",
+  "categoria": "Tapas y aperitivos",
+  "raciones": 1,
+  "porcion_g": 100,
+  "porcion_desc": "2 croquetas de restaurante",
+  "ingredientes": [
+    { "nombre_usda": "butter salted", "cantidad_g": 15, "nota": "bechamel" },
+    { "nombre_usda": "flour wheat all purpose", "cantidad_g": 15, "nota": "harina para bechamel" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 100, "nota": "leche para bechamel" },
+    { "nombre_usda": "jamon iberico", "cantidad_g": 30, "nota": "más graso que serrano" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 12, "nota": "rebozar" },
+    { "nombre_usda": "breadcrumbs dry", "cantidad_g": 15, "nota": "pan rallado" },
+    { "nombre_usda": "olive oil", "cantidad_g": 12, "nota": "fritura" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["croquetas de ibérico", "croquetas ibérico", "croquetas de restaurante"],
+  "token_principal": "croqueta",
+  "tokens_secundarios": ["iberico", "ibérico", "restaurante"],
+  "tokens_exclusion": ["casera", "caseras", "serrano"],
+  "porciones_guia": [
+    { "desc": "1 croqueta grande", "g": 50 },
+    { "desc": "2 croquetas", "g": 100 },
+    { "desc": "3 croquetas", "g": 150 }
+  ],
+  "referencias_visuales": "Croquetas más grandes que caseras (~50g/ud vs 40g). Color dorado uniforme. En plato de restaurante con decoración.",
+  "notas_claude": "De restaurante: más grandes, bechamel más rica, jamón IBÉRICO más graso. ~30% más calóricas que las caseras de serrano. Si dice 'croquetas' sin especificar en restaurante: asumir estas.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}
