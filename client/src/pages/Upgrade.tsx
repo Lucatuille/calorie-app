@@ -154,7 +154,7 @@ export default function Upgrade() {
         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)',
           fontFamily: 'var(--font-sans)', marginBottom: 16,
           textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
-          Precio de fundadores
+          Precio especial de lanzamiento
         </p>
 
         {error && (
@@ -163,13 +163,45 @@ export default function Upgrade() {
         )}
 
         <div style={{ display: 'flex', gap: 8 }}>
-          {/* Monthly */}
+          {/* Yearly — prominent */}
+          <button
+            onClick={() => handleUpgrade('yearly')}
+            disabled={upgrading !== null}
+            style={{
+              flex: 1,
+              background: '#22c55e',
+              color: 'white',
+              border: 'none',
+              borderRadius: 12,
+              padding: '14px 8px',
+              cursor: upgrading ? 'not-allowed' : 'pointer',
+              opacity: upgrading === 'monthly' ? 0.4 : 1,
+              fontFamily: 'var(--font-sans)',
+              transition: 'opacity 0.15s',
+              position: 'relative',
+            }}
+          >
+            {/* Best value badge */}
+            <span style={{
+              position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
+              background: 'white', color: '#22c55e',
+              fontSize: 8, fontWeight: 700, letterSpacing: '0.4px',
+              padding: '2px 7px', borderRadius: 99,
+              whiteSpace: 'nowrap',
+            }}>MEJOR PRECIO</span>
+            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
+              {upgrading === 'yearly' ? '…' : '14,99€'}
+            </div>
+            <div style={{ fontSize: 10, opacity: 0.85, marginTop: 3 }}>al año · 1,25€/mes</div>
+          </button>
+
+          {/* Monthly — secondary */}
           <button
             onClick={() => handleUpgrade('monthly')}
             disabled={upgrading !== null}
             style={{
               flex: 1,
-              background: 'var(--accent)',
+              background: '#1a1a1a',
               color: 'white',
               border: 'none',
               borderRadius: 12,
@@ -183,39 +215,7 @@ export default function Upgrade() {
             <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
               {upgrading === 'monthly' ? '…' : '1,99€'}
             </div>
-            <div style={{ fontSize: 10, opacity: 0.8, marginTop: 3 }}>al mes</div>
-          </button>
-
-          {/* Yearly */}
-          <button
-            onClick={() => handleUpgrade('yearly')}
-            disabled={upgrading !== null}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              color: 'rgba(255,255,255,0.85)',
-              border: '0.5px solid rgba(255,255,255,0.15)',
-              borderRadius: 12,
-              padding: '14px 8px',
-              cursor: upgrading ? 'not-allowed' : 'pointer',
-              opacity: upgrading === 'monthly' ? 0.4 : 1,
-              fontFamily: 'var(--font-sans)',
-              transition: 'opacity 0.15s',
-              position: 'relative',
-            }}
-          >
-            {/* Best value badge */}
-            <span style={{
-              position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
-              background: 'var(--accent)', color: 'white',
-              fontSize: 8, fontWeight: 700, letterSpacing: '0.4px',
-              padding: '2px 7px', borderRadius: 99,
-              whiteSpace: 'nowrap',
-            }}>MEJOR PRECIO</span>
-            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
-              {upgrading === 'yearly' ? '…' : '14,99€'}
-            </div>
-            <div style={{ fontSize: 10, opacity: 0.6, marginTop: 3 }}>al año · 1,25€/mes</div>
+            <div style={{ fontSize: 10, opacity: 0.6, marginTop: 3 }}>al mes</div>
           </button>
         </div>
 

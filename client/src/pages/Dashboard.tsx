@@ -544,7 +544,7 @@ export default function Dashboard() {
           </button>
         ) : (
           <button
-            onClick={() => navigate('/planes')}
+            onClick={() => navigate('/upgrade')}
             style={{
               width: '100%', background: 'var(--surface-2)',
               border: '0.5px solid var(--border)',
