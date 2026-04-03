@@ -46,9 +46,11 @@ function ProOnlyCard({ onNavigate }) {
 // ── Markdown mínimo ──────────────────────────────────────────
 
 function inlineFormat(text) {
-  // bold + italic inline
-  const parts = text.split(/(\*\*.*?\*\*|\*[^*]+\*)/g);
+  // links, bold, italic inline
+  const parts = text.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*|\*[^*]+\*)/g);
   return parts.map((p, i) => {
+    const linkMatch = p.match(/^\[(.*?)\]\((.*?)\)$/);
+    if (linkMatch) return <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>{linkMatch[1]}</a>;
     if (p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>;
     if (p.startsWith('*')  && p.endsWith('*'))  return <em key={i}>{p.slice(1, -1)}</em>;
     return p;
