@@ -139,7 +139,9 @@ function AppRoutes() {
       {user && <BottomNav />}
       <InstallPrompt />
       {user?.is_admin === 1 && (
-        <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} forceWhatsNew={whatsNew.forceOpen} />
+        <Suspense fallback={null}>
+          <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} forceWhatsNew={whatsNew.forceOpen} />
+        </Suspense>
       )}
       {user && whatsNew.isOpen && whatsNew.releaseToShow && (
         <WhatsNew
@@ -148,7 +150,11 @@ function AppRoutes() {
           isClosing={whatsNew.isClosing}
         />
       )}
-      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {helpOpen && (
+        <Suspense fallback={null}>
+          <HelpModal onClose={() => setHelpOpen(false)} />
+        </Suspense>
+      )}
 
       <main>
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><div className="spinner" style={{ width: 32, height: 32 }} /></div>}>
@@ -181,7 +187,7 @@ function AppFallback() {
       background: 'var(--bg)', padding: 24, textAlign: 'center',
     }}>
       <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 28, color: 'var(--accent)', marginBottom: 16 }}>
-        kcal
+        Caliro
       </div>
       <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: 'var(--text-primary)', marginBottom: 8 }}>
         Algo salió mal
