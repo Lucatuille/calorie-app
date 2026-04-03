@@ -83,7 +83,10 @@ async function searchUSDA(query, apiKey) {
 function extractNutrients(food) {
   const nutrients = {};
   for (const [key, id] of Object.entries(NUTRIENT_IDS)) {
-    const found = food.foodNutrients?.find(n => n.nutrientId === id);
+    // Search API returns nutrientId; some data types also use nutrientNumber as string
+    const found = food.foodNutrients?.find(n =>
+      n.nutrientId === id || n.nutrientNumber === String(id)
+    );
     nutrients[key] = found ? Math.round(found.value * 10) / 10 : 0;
   }
   return nutrients;
@@ -92,15 +95,24 @@ function extractNutrients(food) {
 function selectBestResult(foods) {
   if (!foods.length) return null;
 
-  // Priority: Foundation > SR Legacy > anything else
-  const priority = { Foundation: 0, 'SR Legacy': 1 };
-  foods.sort((a, b) => {
+  // Prefer results that actually have energy data
+  // SR Legacy has better nutrient coverage in search API than Foundation
+  const withEnergy = foods.filter(f => {
+    const e = f.foodNutrients?.find(n => n.nutrientId === 1008 || n.nutrientNumber === '1008');
+    return e && e.value > 0;
+  });
+
+  const pool = withEnergy.length ? withEnergy : foods;
+
+  // Among those with energy, prefer SR Legacy (more complete) then Foundation
+  const priority = { 'SR Legacy': 0, Foundation: 1 };
+  pool.sort((a, b) => {
     const pa = priority[a.dataType] ?? 99;
     const pb = priority[b.dataType] ?? 99;
     return pa - pb;
   });
 
-  return foods[0];
+  return pool[0];
 }
 
 async function extractIngredient(query, apiKey) {
@@ -135,11 +147,11 @@ const BASE_QUERIES = [
   { query: 'olive oil',                nombre_es: 'Aceite de oliva' },
   { query: 'wheat bread',              nombre_es: 'Pan de trigo (barra)' },
   { query: 'pork loin raw',            nombre_es: 'Lomo de cerdo crudo' },
-  { query: 'chicken breast raw',       nombre_es: 'Pechuga de pollo cruda' },
-  { query: 'chicken thigh raw',        nombre_es: 'Muslo de pollo crudo' },
+  { query: 'chicken breast meat raw',   nombre_es: 'Pechuga de pollo cruda' },
+  { query: 'chicken thigh meat raw',   nombre_es: 'Muslo de pollo crudo' },
   { query: 'beef ground raw',          nombre_es: 'Carne picada ternera cruda' },
   { query: 'cod raw',                  nombre_es: 'Bacalao fresco crudo' },
-  { query: 'hake raw',                 nombre_es: 'Merluza cruda' },
+  { query: 'hake atlantic raw',         nombre_es: 'Merluza cruda' },
   { query: 'shrimp raw',               nombre_es: 'Gambas crudas' },
   { query: 'tomato raw',               nombre_es: 'Tomate crudo' },
   { query: 'onion raw',                nombre_es: 'Cebolla cruda' },
@@ -148,7 +160,7 @@ const BASE_QUERIES = [
   { query: 'chickpeas raw',            nombre_es: 'Garbanzos crudos' },
   { query: 'white rice raw',           nombre_es: 'Arroz blanco crudo' },
   { query: 'pasta dry',                nombre_es: 'Pasta cruda' },
-  { query: 'milk whole',               nombre_es: 'Leche entera' },
+  { query: 'milk whole 3.25% fat',     nombre_es: 'Leche entera' },
   { query: 'flour wheat all purpose',  nombre_es: 'Harina de trigo' },
   { query: 'breadcrumbs dry',          nombre_es: 'Pan rallado' },
   { query: 'green beans raw',          nombre_es: 'Judías verdes crudas' },
@@ -158,7 +170,7 @@ const BASE_QUERIES = [
   { query: 'tuna canned in oil',       nombre_es: 'Atún en aceite (conserva)' },
   { query: 'mayonnaise',               nombre_es: 'Mayonesa' },
   { query: 'sugar white',              nombre_es: 'Azúcar blanco' },
-  { query: 'butter',                   nombre_es: 'Mantequilla' },
+  { query: 'butter salted',             nombre_es: 'Mantequilla' },
 ];
 
 // ── Main ───────────────────────────────────────────────────
