@@ -134,7 +134,7 @@ function AppRoutes() {
           ¡Bienvenido a Pro! Tu cuenta ya tiene acceso completo.
         </div>
       )}
-      {user && <Navbar />}
+      {user && <Navbar onHelpOpen={() => setHelpOpen(true)} />}
       {user && <BottomNav />}
       <InstallPrompt />
       {user?.is_admin === 1 && (
@@ -146,22 +146,6 @@ function AppRoutes() {
           onDismiss={whatsNew.dismiss}
           isClosing={whatsNew.isClosing}
         />
-      )}
-      {/* Help button + modal */}
-      {user && !helpOpen && (
-        <button
-          onClick={() => setHelpOpen(true)}
-          aria-label="Abrir guía de Caliro"
-          style={{
-            position: 'fixed', top: 16, right: 16,
-            width: 32, height: 32, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.06)', border: '0.5px solid rgba(0,0,0,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)',
-            zIndex: 90, transition: 'background 0.2s',
-            fontFamily: 'var(--font-sans)', fontWeight: 500,
-          }}
-        >?</button>
       )}
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
 

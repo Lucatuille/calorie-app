@@ -31,7 +31,7 @@ const linkStyle = ({ isActive }) => ({
   transition: 'color 0.15s',
 });
 
-export default function Navbar() {
+export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [theme, toggleTheme] = useTheme();
@@ -87,6 +87,19 @@ export default function Navbar() {
           <span className="nav-username" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             {user?.name}
           </span>
+
+          {/* Help */}
+          {onHelpOpen && (
+            <button
+              onClick={onHelpOpen}
+              aria-label="Abrir guía de Caliro"
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 14, color: 'var(--text-secondary)', padding: '4px',
+                lineHeight: 1,
+              }}
+            >?</button>
+          )}
 
           {/* Theme toggle */}
           <button

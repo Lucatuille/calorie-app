@@ -836,13 +836,14 @@ export default function HelpModal({ onClose }) {
 
         {/* Footer */}
         <div style={{
-          padding: '12px 20px',
+          padding: '12px 20px env(safe-area-inset-bottom, 12px)',
           borderTop: '0.5px solid var(--border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           background: '#fff',
           flexShrink: 0,
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}>
           {/* Prev */}
           <button
