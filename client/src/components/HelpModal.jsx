@@ -539,9 +539,9 @@ function Page5() {
   const minW = 69.5;
   const maxW = 71.0;
   const rangeW = maxW - minW;
-  const padTop = 15;
-  const padBottom = 25;
-  const chartH = 120 - padTop - padBottom;
+  const padTop = 14;
+  const padBottom = 18;
+  const chartH = 100 - padTop - padBottom;
 
   const points = weights.map((w, i) => {
     const x = 20 + i * (240 / 6);
@@ -580,7 +580,7 @@ function Page5() {
       </div>
 
       <DemoBox>
-        <svg viewBox="0 0 280 120" style={{ width: '100%', height: 'auto' }}>
+        <svg viewBox="0 0 280 100" style={{ width: '100%', maxHeight: 140 }}>
           <polyline
             points={polyline}
             fill="none"
@@ -598,7 +598,7 @@ function Page5() {
           </text>
           {/* X labels */}
           {labels.map((l, i) => (
-            <text key={i} x={20 + i * (240 / 6)} y={112} textAnchor="middle" fontSize="9" fill="#9ca3af">
+            <text key={i} x={20 + i * (240 / 6)} y={94} textAnchor="middle" fontSize="9" fill="#9ca3af">
               {l}
             </text>
           ))}
@@ -684,28 +684,26 @@ function Page6() {
         }}>
           {count}/3 tomados hoy
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {supplements.map((sup, i) => (
             <button
               key={i}
               onClick={() => toggle(i)}
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: 10,
-                padding: '12px 14px',
-                borderRadius: 10,
+                justifyContent: 'center',
+                padding: '12px 8px',
+                borderRadius: 12,
                 border: taken[i] ? '1.5px solid #22c55e' : '1.5px solid transparent',
                 background: taken[i] ? '#dcfce7' : '#F5F2EE',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                width: '100%',
-                textAlign: 'left',
               }}
             >
-              <span style={{ fontSize: 20 }}>{sup.icon}</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-1, #111)', flex: 1 }}>{sup.name}</span>
-              {taken[i] && <span style={{ color: '#22c55e', fontSize: 16, fontWeight: 700 }}>✓</span>}
+              <span style={{ fontSize: 28, marginBottom: 6 }}>{sup.icon}</span>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' }}>{sup.name}</span>
             </button>
           ))}
         </div>
@@ -751,12 +749,15 @@ const PAGE_TITLES = [
 
 export default function HelpModal({ onClose }) {
   const [page, setPage] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth > 768);
 
   // Lock body scroll while modal is open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    const handleResize = () => setIsDesktop(window.innerWidth > 768);
+    window.addEventListener('resize', handleResize);
+    return () => { document.body.style.overflow = prev; window.removeEventListener('resize', handleResize); };
   }, []);
 
   const PageComponent = PAGES[page];
@@ -774,16 +775,19 @@ export default function HelpModal({ onClose }) {
         background: 'rgba(0,0,0,0.55)',
         zIndex: 100,
         display: 'flex',
-        alignItems: 'flex-end',
+        alignItems: isDesktop ? 'center' : 'flex-end',
+        justifyContent: isDesktop ? 'center' : 'stretch',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
           background: '#fff',
-          borderRadius: '20px 20px 0 0',
+          borderRadius: isDesktop ? '20px' : '20px 20px 0 0',
           width: '100%',
-          height: '92dvh',
+          maxWidth: isDesktop ? 480 : 'none',
+          height: isDesktop ? 'auto' : '92dvh',
+          maxHeight: isDesktop ? '85vh' : 'none',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
