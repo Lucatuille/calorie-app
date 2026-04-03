@@ -67,6 +67,11 @@ export const api = {
   deleteSupplement:    (id, token)         => request('DELETE', `/api/supplements/${id}`, null, token),
   toggleSupplement:    (id, body, token)   => request('POST',   `/api/supplements/${id}/toggle`, body, token),
 
+  // Weight
+  getWeightToday:  (token)       => request('GET',  '/api/weight/today', null, token),
+  getWeightRecent: (token)       => request('GET',  '/api/weight/recent', null, token),
+  saveWeight:      (body, token) => request('POST', '/api/weight', body, token),
+
   // Admin
   getAdminOverview:   (token) => request('GET', '/api/admin/overview',   null, token),
   getAdminUsers:      (token) => request('GET', '/api/admin/users',      null, token),

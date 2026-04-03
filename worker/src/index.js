@@ -14,6 +14,7 @@ import { handleCalibration } from './routes/calibration.js';
 import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
 import { handleStripe } from './routes/stripe.js';
+import { handleWeight } from './routes/weight.js';
 import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse } from './utils.js';
 
 async function handleRequest(request, env, ctx) {
@@ -75,6 +76,10 @@ async function handleRequest(request, env, ctx) {
 
     if (path.startsWith('/api/products')) {
       return await handleProducts(request, env, path);
+    }
+
+    if (path.startsWith('/api/weight')) {
+      return await handleWeight(request, env, path);
     }
 
     if (path.startsWith('/api/assistant')) {
