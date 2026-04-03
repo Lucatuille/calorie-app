@@ -1,0 +1,41 @@
+{
+  "nombre": "Tortilla española",
+  "categoria": "Huevos y tortillas",
+  "raciones": 4,
+  "porcion_g": 130,
+  "porcion_desc": "cuña estándar (1/4 tortilla)",
+  "ingredientes": [
+    {
+      "nombre_usda": "potato french fries",
+      "cantidad_g": 600,
+      "nota": "patata ya frita, peso cocinado"
+    },
+    {
+      "nombre_usda": "egg whole raw",
+      "cantidad_g": 275,
+      "nota": "5 huevos L sin cáscara, ajuste cocción -5%",
+      "factor_coccion": 0.95
+    },
+    {
+      "nombre_usda": "olive oil",
+      "cantidad_g": 43,
+      "nota": "aceite absorbido durante fritura (~30% del total usado)"
+    }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["tortilla de patatas", "tortilla de patata", "tortilla casera", "pincho de tortilla", "trozo de tortilla", "tortilla con cebolla"],
+  "token_principal": "tortilla",
+  "tokens_secundarios": ["patata", "patatas"],
+  "tokens_exclusion": ["francesa", "de maiz", "mexicana", "wrap"],
+  "porciones_guia": [
+    {"desc": "pincho bar", "g": 50},
+    {"desc": "cuña pequeña", "g": 90},
+    {"desc": "cuña estándar", "g": 130},
+    {"desc": "cuña grande", "g": 180},
+    {"desc": "media tortilla", "g": 260}
+  ],
+  "referencias_visuales": "Tortilla entera: 22-24cm diámetro, 3cm altura, ~600g total. Una cuña = 1/4 tortilla. Si ocupa 2/3 del plato: cuña grande ~180g. Pincho en plato pequeño de bar: ~50g.",
+  "notas_claude": "La tortilla española siempre lleva aceite de oliva para freír la patata. NO confundir con tortilla francesa (solo huevo, sin patata, ~145 kcal). Con cebolla: +20 kcal. Restaurante: +15%. El aceite es el componente más variable.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

@@ -1,0 +1,100 @@
+{
+  "jamon serrano": {
+    "nombre_busqueda": "jamon serrano",
+    "nombre_es": "Jamón serrano",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 241,
+      "proteina_g": 31.0,
+      "carbos_g": 0.5,
+      "grasa_g": 12.5,
+      "fibra_g": 0
+    },
+    "nota": "Jamón serrano curado, sin grasa visible. Fuente: BEDCA bedca.net"
+  },
+  "jamon iberico": {
+    "nombre_busqueda": "jamon iberico",
+    "nombre_es": "Jamón ibérico",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 350,
+      "proteina_g": 28.0,
+      "carbos_g": 0,
+      "grasa_g": 26.0,
+      "fibra_g": 0
+    },
+    "nota": "Jamón ibérico de bellota. Más graso que serrano. Fuente: BEDCA + CESNID"
+  },
+  "chorizo espanol": {
+    "nombre_busqueda": "chorizo espanol",
+    "nombre_es": "Chorizo español",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 380,
+      "proteina_g": 22.0,
+      "carbos_g": 2.0,
+      "grasa_g": 32.0,
+      "fibra_g": 0
+    },
+    "nota": "Chorizo curado tipo sarta. El fresco es ~280 kcal/100g. Fuente: BEDCA"
+  },
+  "morcilla": {
+    "nombre_busqueda": "morcilla",
+    "nombre_es": "Morcilla de Burgos",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 310,
+      "proteina_g": 12.0,
+      "carbos_g": 18.0,
+      "grasa_g": 22.0,
+      "fibra_g": 0
+    },
+    "nota": "Morcilla de arroz/cebolla tipo Burgos. Varianza alta según región. Fuente: BEDCA"
+  },
+  "sobrasada": {
+    "nombre_busqueda": "sobrasada",
+    "nombre_es": "Sobrasada mallorquina",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 470,
+      "proteina_g": 14.0,
+      "carbos_g": 1.5,
+      "grasa_g": 46.0,
+      "fibra_g": 0
+    },
+    "nota": "Sobrasada de Mallorca. Muy alta en grasa. Fuente: BEDCA + etiquetado"
+  },
+  "queso manchego semicurado": {
+    "nombre_busqueda": "queso manchego",
+    "nombre_es": "Queso manchego semicurado",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 370,
+      "proteina_g": 26.0,
+      "carbos_g": 0.5,
+      "grasa_g": 29.0,
+      "fibra_g": 0
+    },
+    "nota": "Semicurado. El curado es ~410 kcal, el tierno ~310 kcal. Fuente: BEDCA"
+  },
+  "aceitunas verdes": {
+    "nombre_busqueda": "aceitunas",
+    "nombre_es": "Aceitunas verdes con hueso",
+    "nombre_usda": null,
+    "fuente": "BEDCA manual",
+    "por_100g": {
+      "kcal": 145,
+      "proteina_g": 1.0,
+      "carbos_g": 1.0,
+      "grasa_g": 15.0,
+      "fibra_g": 3.5
+    },
+    "nota": "Parte comestible ~80% (sin hueso). 10 aceitunas ≈ 40g. Fuente: BEDCA"
+  }
+}
