@@ -85,6 +85,20 @@ export async function handleAuth(request, env, path) {
     const userId = result.meta.last_row_id;
     const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 3 }, env.JWT_SECRET);
 
+    // Welcome email (non-blocking)
+    if (env.RESEND_API_KEY) {
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Caliro <noreply@caliro.dev>',
+          to: [email.toLowerCase()],
+          subject: 'Bienvenido a Caliro',
+          html: welcomeEmailHTML(name),
+        }),
+      }).catch(() => {});
+    }
+
     return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0, age: age||null, weight: weight||null, height: height||null, gender: gender||null } }, 201);
   }
 
@@ -295,6 +309,41 @@ function resetEmailHTML(name, link) {
       Este enlace expira en <strong>1 hora</strong>.<br>
       Si no solicitaste este cambio, ignora este email — tu contraseña no cambiará.
     </p>
+  </div>
+  <p style="text-align:center;font-size:11px;color:#bbb;margin-top:24px;">
+    caliro.dev — Seguimiento calórico con IA
+  </p>
+</div>
+</body></html>`;
+}
+
+function welcomeEmailHTML(name) {
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F5F2EE;font-family:'DM Sans',system-ui,sans-serif;">
+<div style="max-width:440px;margin:40px auto;padding:32px 24px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <span style="font-family:Georgia,serif;font-size:28px;font-style:italic;color:#22c55e;">Caliro</span>
+  </div>
+  <div style="background:#ffffff;border-radius:16px;padding:28px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <h1 style="font-size:18px;font-weight:600;margin:0 0 12px;color:#111;">Bienvenido, ${name}!</h1>
+    <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 16px;">
+      Tu cuenta en Caliro está lista. Ya puedes registrar tus comidas con foto, texto o escáner
+      — la IA aprende de tu dieta real y mejora con cada corrección.
+    </p>
+    <p style="font-size:13px;color:#888;line-height:1.5;margin:0 0 20px;">
+      Tres cosas para empezar bien:
+    </p>
+    <div style="margin:0 0 20px;">
+      <p style="font-size:13px;color:#555;margin:0 0 8px;">1. <strong>Registra tu primera comida</strong> — foto, texto o escáner</p>
+      <p style="font-size:13px;color:#555;margin:0 0 8px;">2. <strong>Configura tu objetivo</strong> con la calculadora TDEE en Perfil</p>
+      <p style="font-size:13px;color:#555;margin:0;">3. <strong>Corrige las estimaciones</strong> si no son exactas — el motor aprende</p>
+    </div>
+    <div style="text-align:center;">
+      <a href="https://caliro.dev/app" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:500;">
+        Abrir Caliro
+      </a>
+    </div>
   </div>
   <p style="text-align:center;font-size:11px;color:#bbb;margin-top:24px;">
     caliro.dev — Seguimiento calórico con IA
