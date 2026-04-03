@@ -101,7 +101,8 @@ async function handleRequest(request, env, ctx) {
       const user = await authenticate(request, env);
       if (user) {
         const { event } = await request.json();
-        if (event) {
+        const VALID_EVENTS = ['ai_limit_shown', 'ai_limit_click_pro', 'assistant_lock_click', 'upgrade_page_view'];
+        if (event && VALID_EVENTS.includes(event)) {
           await env.DB.prepare('INSERT INTO upgrade_events (user_id, event) VALUES (?, ?)')
             .bind(user.userId, event).run().catch(() => {});
         }

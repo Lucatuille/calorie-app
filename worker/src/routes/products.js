@@ -41,6 +41,13 @@ export async function handleProducts(request, env, path) {
       calories_100g, protein_100g, carbs_100g, fat_100g, source,
     } = body;
 
+    // Basic validation to prevent cache poisoning
+    if (!barcode || barcode.length > 20) return errorResponse('Código de barras inválido');
+    if (!name || name.length > 200) return errorResponse('Nombre inválido');
+    if (calories_100g == null || calories_100g < 0 || calories_100g > 1000) return errorResponse('Calorías inválidas');
+    if (protein_100g != null && (protein_100g < 0 || protein_100g > 100)) return errorResponse('Proteína inválida');
+    if (carbs_100g != null && (carbs_100g < 0 || carbs_100g > 100)) return errorResponse('Carbos inválidos');
+    if (fat_100g != null && (fat_100g < 0 || fat_100g > 100)) return errorResponse('Grasa inválida');
     if (!barcode || !name || calories_100g == null) {
       return errorResponse('barcode, name y calories_100g son obligatorios');
     }

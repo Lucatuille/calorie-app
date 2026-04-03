@@ -36,7 +36,11 @@ async function verifyStripeSignature(rawBody, sigHeader, secret) {
   const sigBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
   const expected = Array.from(new Uint8Array(sigBuffer))
     .map(b => b.toString(16).padStart(2, '0')).join('');
-  return expected === v1;
+  // Constant-time comparison to prevent timing attacks
+  if (expected.length !== v1.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) mismatch |= expected.charCodeAt(i) ^ v1.charCodeAt(i);
+  return mismatch === 0;
 }
 
 export async function handleStripe(request, env, path) {
