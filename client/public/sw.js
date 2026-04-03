@@ -1,4 +1,4 @@
-const CACHE_NAME = 'caliro-v8';
+const CACHE_NAME = 'caliro-v9';
 const STATIC_ASSETS = [
   '/app/',
   '/manifest.json',

@@ -5,7 +5,7 @@
   "start_url": "/app/",
   "display": "standalone",
   "background_color": "#F5F2EE",
-  "theme_color": "#2d6a4f",
+  "theme_color": "#F5F2EE",
   "orientation": "portrait-primary",
   "icons": [
     { "src": "/icons/icon-72x72.png",   "sizes": "72x72",   "type": "image/png" },
