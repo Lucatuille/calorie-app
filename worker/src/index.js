@@ -15,7 +15,7 @@ import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
 import { handleStripe } from './routes/stripe.js';
 import { handleWeight } from './routes/weight.js';
-import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse } from './utils.js';
+import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse, authenticate } from './utils.js';
 
 async function handleRequest(request, env, ctx) {
   // Handle CORS preflight
@@ -91,6 +91,19 @@ async function handleRequest(request, env, ctx) {
         path === '/api/stripe-webhook' ||
         path === '/api/subscription-status') {
       return await handleStripe(request, env, path);
+    }
+
+    // Upgrade event tracking
+    if (path === '/api/track-upgrade-event' && request.method === 'POST') {
+      const user = await authenticate(request, env);
+      if (user) {
+        const { event } = await request.json();
+        if (event) {
+          await env.DB.prepare('INSERT INTO upgrade_events (user_id, event) VALUES (?, ?)')
+            .bind(user.userId, event).run().catch(() => {});
+        }
+      }
+      return jsonResponse({ ok: true });
     }
 
     // Health check

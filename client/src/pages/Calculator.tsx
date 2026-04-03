@@ -229,6 +229,7 @@ export default function Calculator() {
     } catch (err) {
       if (err.data?.error === 'ai_limit_reached') {
         setAiLimitData(err.data);
+        api.trackUpgradeEvent('ai_limit_shown', token);
       } else {
         setAiResult({ error: err.data?.message || err.message });
       }
@@ -900,7 +901,7 @@ export default function Calculator() {
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
-                onClick={() => { setAiLimitData(null); navigate('/upgrade'); }}
+                onClick={() => { setAiLimitData(null); api.trackUpgradeEvent('ai_limit_click_pro', token); navigate('/upgrade'); }}
                 style={{
                   background: '#111', color: 'white', border: 'none',
                   borderRadius: 'var(--radius-sm)', padding: '8px 16px',

@@ -446,6 +446,7 @@ export async function handleAdmin(request, env, path) {
       per_user: perUserBreakdown,
       features,
       assistant: assistantStats,
+      upgrade_funnel: await getUpgradeFunnel(env),
     });
   }
 
@@ -488,4 +489,26 @@ export async function handleAdmin(request, env, path) {
   }
 
   return errorResponse('Not found', 404);
+}
+
+async function getUpgradeFunnel(env) {
+  try {
+    const [total, byEvent, recent] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) as n FROM upgrade_events').first(),
+      env.DB.prepare(`
+        SELECT event, COUNT(*) as n, COUNT(DISTINCT user_id) as users
+        FROM upgrade_events GROUP BY event ORDER BY n DESC
+      `).all(),
+      env.DB.prepare(`
+        SELECT event, COUNT(*) as n
+        FROM upgrade_events WHERE created_at >= datetime('now', '-7 days')
+        GROUP BY event ORDER BY n DESC
+      `).all(),
+    ]);
+    return {
+      total: total?.n || 0,
+      by_event: byEvent?.results || [],
+      last_7d: recent?.results || [],
+    };
+  } catch { return { total: 0, by_event: [], last_7d: [] }; }
 }

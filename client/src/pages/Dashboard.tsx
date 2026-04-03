@@ -546,7 +546,7 @@ export default function Dashboard() {
           </button>
         ) : (
           <button
-            onClick={() => navigate('/upgrade')}
+            onClick={() => { api.trackUpgradeEvent('assistant_lock_click', token); navigate('/upgrade'); }}
             style={{
               width: '100%',
               background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',
