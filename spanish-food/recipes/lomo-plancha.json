@@ -1,0 +1,25 @@
+{
+  "nombre": "Lomo de cerdo a la plancha",
+  "categoria": "Carnes",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "filete estándar",
+  "ingredientes": [
+    { "nombre_usda": "pork loin raw", "cantidad_g": 180, "nota": "filete crudo", "factor_coccion": 0.72 },
+    { "nombre_usda": "olive oil", "cantidad_g": 5, "nota": "plancha casi seca" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["lomo a la plancha", "filete de lomo", "lomo de cerdo"],
+  "token_principal": "lomo",
+  "tokens_secundarios": ["plancha", "cerdo"],
+  "tokens_exclusion": ["bocadillo", "bocata", "adobo"],
+  "porciones_guia": [
+    { "desc": "filete pequeño", "g": 110 },
+    { "desc": "filete estándar", "g": 150 },
+    { "desc": "filete grande", "g": 200 }
+  ],
+  "referencias_visuales": "Filete ovalado en plato llano, marcas de plancha. Tamaño palma de mano, grosor 1-1.5cm.",
+  "notas_claude": "Plancha casi seca — poco aceite. Guarnición NO incluida. 'Lomo en bocadillo' es registro distinto — sumar pan. Lomo adobado: +15 kcal (el adobo aporta poco).",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

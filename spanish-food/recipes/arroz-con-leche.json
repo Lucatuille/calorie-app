@@ -1,0 +1,27 @@
+{
+  "nombre": "Arroz con leche",
+  "categoria": "Postres",
+  "raciones": 4,
+  "porcion_g": 200,
+  "porcion_desc": "cuenco estándar postre",
+  "ingredientes": [
+    { "nombre_usda": "white rice raw", "cantidad_g": 120, "nota": "arroz redondo" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 600, "nota": "leche entera" },
+    { "nombre_usda": "sugar white", "cantidad_g": 80, "nota": "azúcar" },
+    { "nombre_usda": "cinnamon ground", "cantidad_g": 2, "nota": "canela decorativa" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["arroz con leche", "arroz con leche casero"],
+  "token_principal": "arroz",
+  "tokens_secundarios": ["leche"],
+  "tokens_exclusion": ["pollo", "negro", "caldoso", "paella", "horno"],
+  "porciones_guia": [
+    { "desc": "cuenco pequeño", "g": 150 },
+    { "desc": "cuenco estándar", "g": 200 },
+    { "desc": "cuenco grande", "g": 260 }
+  ],
+  "referencias_visuales": "Cuenco individual con superficie blanco-cremosa y canela espolvoreada. Se come frío. Cuenco estándar postre = 200g.",
+  "notas_claude": "Más calórico de lo que parece por la reducción de leche y el azúcar. Se come frío. Casero tiene más azúcar que industrial. Con leche condensada: +40 kcal. Con piel de limón o naranja: 0 kcal extra.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

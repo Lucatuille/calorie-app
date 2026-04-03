@@ -1,0 +1,27 @@
+{
+  "nombre": "Flan casero",
+  "categoria": "Postres",
+  "raciones": 4,
+  "porcion_g": 120,
+  "porcion_desc": "cazuelita estándar",
+  "ingredientes": [
+    { "nombre_usda": "egg whole raw", "cantidad_g": 165, "nota": "3 huevos" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 400, "nota": "leche entera" },
+    { "nombre_usda": "sugar white", "cantidad_g": 80, "nota": "azúcar crema" },
+    { "nombre_usda": "sugar white", "cantidad_g": 30, "nota": "azúcar caramelo" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["flan casero", "flan de huevo", "flan"],
+  "token_principal": "flan",
+  "tokens_secundarios": ["casero", "huevo"],
+  "tokens_exclusion": ["queso"],
+  "porciones_guia": [
+    { "desc": "cazuelita pequeña", "g": 100 },
+    { "desc": "cazuelita estándar", "g": 120 },
+    { "desc": "cazuelita grande", "g": 160 }
+  ],
+  "referencias_visuales": "Cazuelita individual desmoldada con caramelo líquido por encima. Color amarillo claro. Tamaño puño cerrado.",
+  "notas_claude": "El caramelo líquido aporta ~25 kcal incluidas. Flan industrial es menos calórico (~100 kcal/ud). Si dice 'flan' sin especificar asumir casero. Flan de queso: +30-40 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

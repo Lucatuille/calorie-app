@@ -1,0 +1,25 @@
+{
+  "nombre": "Pechuga de pollo a la plancha",
+  "categoria": "Carnes",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "pechuga entera",
+  "ingredientes": [
+    { "nombre_usda": "chicken breast meat raw", "cantidad_g": 190, "nota": "pechuga cruda entera", "factor_coccion": 0.75 },
+    { "nombre_usda": "olive oil", "cantidad_g": 3, "nota": "plancha casi seca" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["pechuga a la plancha", "pechuga de pollo", "pollo a la plancha"],
+  "token_principal": "pechuga",
+  "tokens_secundarios": ["plancha", "pollo"],
+  "tokens_exclusion": ["empanada", "rebozada", "frita"],
+  "porciones_guia": [
+    { "desc": "media pechuga", "g": 100 },
+    { "desc": "pechuga entera", "g": 150 },
+    { "desc": "pechuga grande", "g": 200 }
+  ],
+  "referencias_visuales": "Pechuga entera aplanada en plato, marcas de plancha. Color blanco-dorado. Tamaño algo mayor que palma de mano.",
+  "notas_claude": "Plancha casi sin aceite — el plato más 'fitness'. Si dice 'pollo a la plancha' sin especificar corte: asumir pechuga. Muslo a la plancha es más graso (+50 kcal). Guarnición NO incluida.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

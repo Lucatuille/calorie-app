@@ -1,0 +1,31 @@
+{
+  "nombre": "Albóndigas en salsa",
+  "categoria": "Carnes",
+  "raciones": 1,
+  "porcion_g": 220,
+  "porcion_desc": "5-6 albóndigas estándar con salsa",
+  "ingredientes": [
+    { "nombre_usda": "beef ground raw", "cantidad_g": 100, "nota": "carne picada mixta" },
+    { "nombre_usda": "pork loin raw", "cantidad_g": 50, "nota": "cerdo picado" },
+    { "nombre_usda": "breadcrumbs dry", "cantidad_g": 10, "nota": "pan rallado" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 15, "nota": "huevo para ligar" },
+    { "nombre_usda": "tomato sauce canned", "cantidad_g": 60, "nota": "salsa tomate" },
+    { "nombre_usda": "onion raw", "cantidad_g": 20, "nota": "sofrito" },
+    { "nombre_usda": "olive oil", "cantidad_g": 10, "nota": "aceite sofrito" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 3, "nota": "ajo" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["albóndigas en salsa", "albóndigas", "albóndigas con tomate", "albóndigas en salsa de tomate"],
+  "token_principal": "albondigas",
+  "tokens_secundarios": ["salsa", "tomate"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "3-4 albóndigas", "g": 160 },
+    { "desc": "5-6 albóndigas estándar", "g": 220 },
+    { "desc": "ración grande 7-8", "g": 300 }
+  ],
+  "referencias_visuales": "5-6 bolas de carne en salsa roja de tomate en plato hondo. Cada albóndiga = tamaño nuez grande, ~35g.",
+  "notas_claude": "La salsa de tomate con sofrito CUENTA — no ignorarla. Carne mixta cerdo+ternera es lo estándar en España. Solo ternera: -20 kcal. Con guisantes: +15 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

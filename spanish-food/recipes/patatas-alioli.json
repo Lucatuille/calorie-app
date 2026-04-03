@@ -1,0 +1,26 @@
+{
+  "nombre": "Patatas alioli",
+  "categoria": "Tapas y aperitivos",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "ración estándar tapa",
+  "ingredientes": [
+    { "nombre_usda": "potato raw", "cantidad_g": 120, "nota": "patata cocida en dados", "factor_coccion": 0.95 },
+    { "nombre_usda": "mayonnaise", "cantidad_g": 30, "nota": "alioli casero (ajo+aceite+huevo ≈ mayonesa en calorías)" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 3, "nota": "ajo del alioli" }
+  ],
+  "varianza_pct": 18,
+  "aliases": ["patatas alioli", "patatas con alioli", "patatas ali oli"],
+  "token_principal": "alioli",
+  "tokens_secundarios": ["patatas", "patata"],
+  "tokens_exclusion": ["bravas"],
+  "porciones_guia": [
+    { "desc": "media ración", "g": 80 },
+    { "desc": "ración estándar tapa", "g": 150 },
+    { "desc": "ración generosa", "g": 220 }
+  ],
+  "referencias_visuales": "Dados de patata cocida con salsa blanca (alioli) por encima. Ración de tapa en plato pequeño. Color blanco-amarillento del alioli.",
+  "notas_claude": "Patata COCIDA (no frita como bravas). El alioli casero es casi puro aceite+ajo+huevo — tan calórico como mayonesa. El alioli es el componente más subestimado. Con más alioli (bar): +60 kcal. Sin alioli no es este plato.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

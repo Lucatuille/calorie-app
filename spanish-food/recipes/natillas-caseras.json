@@ -1,0 +1,28 @@
+{
+  "nombre": "Natillas caseras",
+  "categoria": "Postres",
+  "raciones": 4,
+  "porcion_g": 150,
+  "porcion_desc": "cuenco estándar",
+  "ingredientes": [
+    { "nombre_usda": "egg yolk raw", "cantidad_g": 60, "nota": "3 yemas" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 500, "nota": "leche entera" },
+    { "nombre_usda": "sugar white", "cantidad_g": 60, "nota": "azúcar" },
+    { "nombre_usda": "cornstarch", "cantidad_g": 15, "nota": "maicena para espesar" },
+    { "nombre_usda": "cookie plain", "cantidad_g": 32, "nota": "1 galleta María por ración" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["natillas caseras", "natillas", "natillas de la abuela"],
+  "token_principal": "natillas",
+  "tokens_secundarios": ["caseras"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "cuenco pequeño", "g": 120 },
+    { "desc": "cuenco estándar", "g": 150 },
+    { "desc": "cuenco grande", "g": 200 }
+  ],
+  "referencias_visuales": "Cuenco individual color amarillo pálido con galleta María encima. Textura cremosa. Cuenco postre estándar = 150g.",
+  "notas_claude": "La galleta María encima añade ~30 kcal incluida. Menos calóricas que el flan. Caseras son más calóricas que industriales. Sin galleta: -30 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

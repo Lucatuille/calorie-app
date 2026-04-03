@@ -1,0 +1,25 @@
+{
+  "nombre": "Filete de ternera a la plancha",
+  "categoria": "Carnes",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "filete estándar",
+  "ingredientes": [
+    { "nombre_usda": "beef ground raw", "cantidad_g": 190, "nota": "proxy de filete ternera magro (valores nutricionales similares)", "factor_coccion": 0.70 },
+    { "nombre_usda": "olive oil", "cantidad_g": 3, "nota": "plancha casi seca" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["filete de ternera", "filete a la plancha", "ternera a la plancha"],
+  "token_principal": "filete",
+  "tokens_secundarios": ["ternera", "plancha"],
+  "tokens_exclusion": ["empanado", "rebozado", "cerdo", "pollo"],
+  "porciones_guia": [
+    { "desc": "filete pequeño", "g": 110 },
+    { "desc": "filete estándar", "g": 150 },
+    { "desc": "filete grande/entrecot", "g": 200 }
+  ],
+  "referencias_visuales": "Filete fino en plato llano con marcas de plancha. Grosor 1cm, tamaño palma de mano. Si es entrecot: más grueso y con veta de grasa visible.",
+  "notas_claude": "Filete fino a la plancha casi sin aceite. Si dice 'filete con patatas' sumar guarnición aparte. Entrecot es más graso: +60 kcal. Solomillo: similar calorías pero más tierno.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

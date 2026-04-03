@@ -1,0 +1,29 @@
+{
+  "nombre": "Macarrones a la boloñesa",
+  "categoria": "Pasta",
+  "raciones": 1,
+  "porcion_g": 320,
+  "porcion_desc": "plato estándar",
+  "ingredientes": [
+    { "nombre_usda": "pasta dry", "cantidad_g": 80, "nota": "peso seco, cocido x2.5" },
+    { "nombre_usda": "beef ground raw", "cantidad_g": 80, "nota": "carne picada mixta", "factor_coccion": 0.75 },
+    { "nombre_usda": "tomato sauce canned", "cantidad_g": 80, "nota": "salsa tomate" },
+    { "nombre_usda": "onion raw", "cantidad_g": 25, "nota": "sofrito" },
+    { "nombre_usda": "olive oil", "cantidad_g": 10, "nota": "aceite sofrito" },
+    { "nombre_usda": "cheese parmesan grated", "cantidad_g": 10, "nota": "queso rallado encima" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["macarrones a la boloñesa", "pasta boloñesa", "espaguetis boloñesa", "boloñesa"],
+  "token_principal": "bolognesa",
+  "tokens_secundarios": ["macarrones", "pasta", "espaguetis", "boloñesa"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "plato pequeño", "g": 230 },
+    { "desc": "plato estándar", "g": 320 },
+    { "desc": "plato grande", "g": 400 }
+  ],
+  "referencias_visuales": "Plato hondo con pasta + salsa roja con trozos de carne picada visible. Queso rallado encima. Más voluminoso que macarrones con tomate.",
+  "notas_claude": "En España 'boloñesa' SIEMPRE lleva carne picada. Carne picada mixta (cerdo+ternera) es lo estándar. ~120-150 kcal más que macarrones con tomate solo. Con queso extra: +40 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

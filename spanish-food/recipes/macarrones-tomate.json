@@ -1,0 +1,28 @@
+{
+  "nombre": "Macarrones con tomate",
+  "categoria": "Pasta",
+  "raciones": 1,
+  "porcion_g": 280,
+  "porcion_desc": "plato estándar",
+  "ingredientes": [
+    { "nombre_usda": "pasta dry", "cantidad_g": 80, "nota": "peso seco, cocido x2.5" },
+    { "nombre_usda": "tomato sauce canned", "cantidad_g": 100, "nota": "salsa tomate frito" },
+    { "nombre_usda": "olive oil", "cantidad_g": 10, "nota": "sofrito" },
+    { "nombre_usda": "onion raw", "cantidad_g": 20, "nota": "cebolla sofrito" },
+    { "nombre_usda": "cheese parmesan grated", "cantidad_g": 10, "nota": "queso rallado encima opcional, incluido por defecto" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["macarrones con tomate", "macarrones", "pasta con tomate"],
+  "token_principal": "macarrones",
+  "tokens_secundarios": ["tomate", "pasta"],
+  "tokens_exclusion": ["boloñesa", "bolognesa", "carne", "carbonara"],
+  "porciones_guia": [
+    { "desc": "plato pequeño", "g": 200 },
+    { "desc": "plato estándar", "g": 280 },
+    { "desc": "plato grande", "g": 360 }
+  ],
+  "referencias_visuales": "Plato hondo con pasta + salsa roja. Si se ve queso rallado encima: ya incluido. Plato hondo estándar lleno = 280g.",
+  "notas_claude": "Sin carne — si menciona carne es boloñesa. El tomate frito español ya lleva aceite. Queso rallado encima incluido por defecto (~40 kcal). Sin queso: -40 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

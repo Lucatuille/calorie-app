@@ -1,0 +1,27 @@
+{
+  "nombre": "Pollo al ajillo",
+  "categoria": "Carnes",
+  "raciones": 1,
+  "porcion_g": 250,
+  "porcion_desc": "ración estándar",
+  "ingredientes": [
+    { "nombre_usda": "chicken thigh meat raw", "cantidad_g": 280, "nota": "muslo+contramuslo crudo", "factor_coccion": 0.75 },
+    { "nombre_usda": "olive oil", "cantidad_g": 25, "nota": "aceite fritura+ajo" },
+    { "nombre_usda": "garlic raw", "cantidad_g": 10, "nota": "ajos laminados" },
+    { "nombre_usda": "white wine", "cantidad_g": 20, "nota": "chorro vino blanco" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["pollo al ajillo", "pollo con ajo"],
+  "token_principal": "pollo",
+  "tokens_secundarios": ["ajillo", "ajo"],
+  "tokens_exclusion": ["asado", "horno", "plancha", "pechuga"],
+  "porciones_guia": [
+    { "desc": "ración pequeña", "g": 180 },
+    { "desc": "ración estándar", "g": 250 },
+    { "desc": "ración grande", "g": 320 }
+  ],
+  "referencias_visuales": "Trozos de pollo dorado con ajos laminados visibles en plato. Charco de aceite+jugo en el fondo. Si son muslos: piezas con hueso visibles.",
+  "notas_claude": "Frito en aceite abundante con ajo — el pollo absorbe bastante aceite. Confusión con pollo asado: el asado es menos calórico. Con piel: +60 kcal. Sin piel: -40 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}
