@@ -155,7 +155,7 @@ export default function SupplementTracker() {
 
                 {/* Emoji with bounce */}
                 <span style={{
-                  fontSize: count === 1 ? 26 : 22, lineHeight: 1,
+                  fontSize: 22, lineHeight: 1,
                   animation: bouncingId === sup.id ? 'emojiPop 0.25s ease' : 'none',
                   display: 'block',
                 }}>
