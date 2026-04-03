@@ -305,6 +305,7 @@ export async function handleAdmin(request, env, path) {
       { results: usersWithEntries },
       { results: usersWithSupps },
       { results: usersWithTDEE },
+      { results: usersWithWeight },
       aiTotal,
       aiWeek,
       aiMonth,
@@ -317,6 +318,7 @@ export async function handleAdmin(request, env, path) {
       env.DB.prepare('SELECT DISTINCT user_id FROM entries').all(),
       env.DB.prepare('SELECT DISTINCT user_id FROM user_supplements').all(),
       env.DB.prepare('SELECT id FROM users WHERE tdee IS NOT NULL').all(),
+      env.DB.prepare('SELECT DISTINCT user_id FROM weight_logs').all().catch(() => ({ results: [] })),
       // Total AI calls + tokens
       env.DB.prepare(`
         SELECT COUNT(*) as calls, SUM(input_tokens) as input, SUM(output_tokens) as output
@@ -332,7 +334,7 @@ export async function handleAdmin(request, env, path) {
         SELECT COUNT(*) as calls, SUM(input_tokens) as input, SUM(output_tokens) as output
         FROM ai_usage_logs WHERE created_at >= datetime('now', '-30 days')
       `).first(),
-      // Per user (total calls)
+      // Per user (total AI calls from token audit table — includes admin)
       env.DB.prepare(`
         SELECT user_id, COUNT(*) as calls
         FROM ai_usage_logs GROUP BY user_id
@@ -345,18 +347,19 @@ export async function handleAdmin(request, env, path) {
         FROM ai_usage_logs
         GROUP BY month ORDER BY month DESC LIMIT 6
       `).all(),
-      // Per-user: today
+      // Per-user: today (from token audit table — counts ALL users including admin)
       env.DB.prepare(`
-        SELECT u.id, u.name, COALESCE(a.count, 0) as today_calls
+        SELECT u.id, u.name, COUNT(a.user_id) as today_calls
         FROM users u
-        LEFT JOIN ai_usage_log a ON u.id = a.user_id AND a.date = date('now')
+        LEFT JOIN ai_usage_logs a ON u.id = a.user_id AND date(a.created_at) = date('now')
+        GROUP BY u.id
         ORDER BY today_calls DESC
       `).all(),
-      // Per-user: this week
+      // Per-user: this week (from token audit table)
       env.DB.prepare(`
-        SELECT user_id, SUM(count) as week_calls
-        FROM ai_usage_log
-        WHERE date >= date('now', '-7 days')
+        SELECT user_id, COUNT(*) as week_calls
+        FROM ai_usage_logs
+        WHERE created_at >= datetime('now', '-7 days')
         GROUP BY user_id
       `).all(),
     ]);
@@ -382,18 +385,20 @@ export async function handleAdmin(request, env, path) {
     const withSupps   = new Set(usersWithSupps.map(r => r.user_id));
     const withTDEE    = new Set(usersWithTDEE.map(r => r.id));
     const withAI      = new Set(aiPerUser.map(r => r.user_id));
+    const withWeight  = new Set(usersWithWeight.map(r => r.user_id));
 
     const features = [
       { feature: 'Registro manual',      users: withEntries.size, total: totalUsers },
-      { feature: 'Análisis por foto',    users: withAI.size,      total: totalUsers },
+      { feature: 'Análisis IA',          users: withAI.size,      total: totalUsers },
       { feature: 'Calculadora TDEE',     users: withTDEE.size,    total: totalUsers },
+      { feature: 'Registro de peso',     users: withWeight.size,  total: totalUsers },
       { feature: 'Suplementos',          users: withSupps.size,   total: totalUsers },
     ];
 
     const totalCalls = aiTotal?.calls || 0;
     const costTotal  = calcCost(aiTotal?.input, aiTotal?.output);
     const costMonth  = calcCost(aiMonth?.input, aiMonth?.output);
-    const costPerPhoto = totalCalls > 0 ? +((costTotal / totalCalls).toFixed(4)) : null;
+    const costPerCall = totalCalls > 0 ? +((costTotal / totalCalls).toFixed(4)) : null;
 
     // Assistant stats (tabla puede no existir aún si el SQL no se ha ejecutado)
     let assistantStats = { conversations: 0, messages: 0, users: 0, today: 0, this_week: 0, haiku_pct: 0, sonnet_pct: 0 };
@@ -431,7 +436,7 @@ export async function handleAdmin(request, env, path) {
       cost: {
         total:     costTotal,
         this_month: costMonth,
-        per_photo: costPerPhoto,
+        per_call: costPerCall,
       },
       monthly_breakdown: aiMonthlyTotals.map(r => ({
         month: r.month,

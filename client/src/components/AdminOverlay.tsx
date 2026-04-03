@@ -514,7 +514,7 @@ function TabAI({ data, loading }) {
           </p>
           <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
             <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Total acumulado: <strong style={{ color: 'var(--text-2)' }}>${cost.total?.toFixed(3)}</strong></p>
-            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Por foto: <strong style={{ color: 'var(--text-2)' }}>{cost.per_photo != null ? `$${cost.per_photo}` : '—'}</strong></p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Por llamada IA: <strong style={{ color: 'var(--text-2)' }}>{cost.per_call != null ? `$${cost.per_call}` : '—'}</strong></p>
             <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontStyle: 'italic' }}>Haiku 4.5: $0.80/$4.00 por MTok</p>
           </div>
         </div>
