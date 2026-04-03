@@ -10,6 +10,7 @@ import WelcomeDisclaimer from './components/WelcomeDisclaimer';
 import WhatsNew from './components/WhatsNew';
 import WaitlistScreen from './components/WaitlistScreen';
 import { useWhatsNew } from './hooks/useWhatsNew';
+import HelpModal from './components/HelpModal';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 
 // Eager: login/register (first screen), dashboard (most visited)
@@ -47,6 +48,7 @@ function AppRoutes() {
   const navigate = useNavigate();
   const [adminOpen, setAdminOpen] = useState(false);
   const [showUpgradedBanner, setShowUpgradedBanner] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const whatsNew = useWhatsNew();
 
   // Detectar retorno desde Stripe con ?upgraded=true
@@ -145,6 +147,24 @@ function AppRoutes() {
           isClosing={whatsNew.isClosing}
         />
       )}
+      {/* Help button + modal */}
+      {user && !helpOpen && (
+        <button
+          onClick={() => setHelpOpen(true)}
+          aria-label="Abrir guía de Caliro"
+          style={{
+            position: 'fixed', top: 16, right: 16,
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'rgba(0,0,0,0.06)', border: '0.5px solid rgba(0,0,0,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)',
+            zIndex: 90, transition: 'background 0.2s',
+            fontFamily: 'var(--font-sans)', fontWeight: 500,
+          }}
+        >?</button>
+      )}
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+
       <main>
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}><div className="spinner" style={{ width: 32, height: 32 }} /></div>}>
         <Routes>
