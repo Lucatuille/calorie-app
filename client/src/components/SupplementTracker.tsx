@@ -57,7 +57,8 @@ export default function SupplementTracker() {
 
   const takenCount = supplements.filter(s => s.taken).length;
   const allDone    = supplements.length > 0 && takenCount === supplements.length;
-  const columns    = supplements.length <= 2 ? 2 : supplements.length <= 6 ? 3 : 4;
+  const count      = supplements.length;
+  const columns    = count === 1 ? 1 : count === 2 ? 2 : 3;
 
   // Loading skeletons
   if (loading) {
@@ -133,12 +134,12 @@ export default function SupplementTracker() {
                 key={sup.id}
                 onClick={() => handleToggle(sup)}
                 style={{
-                  height: 80, borderRadius: 12,
+                  height: count === 1 ? 60 : 80, borderRadius: 12,
                   border: sup.taken ? '1px solid transparent' : '1px solid var(--border)',
                   background: sup.taken ? 'var(--accent)' : 'var(--bg)',
                   cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center', gap: 4,
+                  display: 'flex', flexDirection: count === 1 ? 'row' : 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: count === 1 ? 10 : 4,
                   position: 'relative', overflow: 'hidden',
                   transition: 'background-color 0.25s ease, color 0.2s ease, border-color 0.25s ease',
                 }}
@@ -154,7 +155,7 @@ export default function SupplementTracker() {
 
                 {/* Emoji with bounce */}
                 <span style={{
-                  fontSize: 22, lineHeight: 1,
+                  fontSize: count === 1 ? 26 : 22, lineHeight: 1,
                   animation: bouncingId === sup.id ? 'emojiPop 0.25s ease' : 'none',
                   display: 'block',
                 }}>
@@ -163,7 +164,7 @@ export default function SupplementTracker() {
 
                 {/* Name */}
                 <span style={{
-                  fontSize: 10, fontWeight: 600, lineHeight: 1.2,
+                  fontSize: count === 1 ? 13 : 10, fontWeight: 600, lineHeight: 1.2,
                   color: sup.taken ? 'rgba(255,255,255,0.95)' : 'var(--text-2)',
                   textAlign: 'center', padding: '0 4px',
                   maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
