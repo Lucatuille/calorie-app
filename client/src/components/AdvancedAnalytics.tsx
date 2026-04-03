@@ -458,7 +458,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                       {/* Días al objetivo — dark */}
                       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
-                        <div style={{ height: 2, background: '#111111' }} />
+                        <div style={{ height: 2, background: 'var(--text-primary)' }} />
                         <div style={{ padding: '10px 10px 12px' }}>
                           <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Días al objetivo</p>
                           <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
@@ -486,7 +486,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           {[
-                            { color: '#111111', label: 'Real',        dash: false },
+                            { color: 'var(--text-primary)', label: 'Real', dash: false },
                             { color: '#f59e0b', label: 'Realista',    dash: true  },
                             { color: 'var(--color-success)', label: 'Optimista',   dash: true  },
                             { color: '#94a3b8', label: 'Conservador', dash: true  },
@@ -607,7 +607,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             <Line
                               type="monotone"
                               dataKey="actual"
-                              stroke="#111111"
+                              stroke="var(--text-primary, #111111)"
                               strokeWidth={2}
                               connectNulls={false}
                               legendType="none"
@@ -617,12 +617,12 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                 if (payload.date === 'Hoy') {
                                   return (
                                     <g key={`dot-hoy-${cx}-${cy}`}>
-                                      <circle cx={cx} cy={cy} r={10} fill="#111111" fillOpacity={0.1} />
-                                      <circle cx={cx} cy={cy} r={5} fill="#111111" />
+                                      <circle cx={cx} cy={cy} r={10} fill="var(--text-primary, #111111)" fillOpacity={0.1} />
+                                      <circle cx={cx} cy={cy} r={5} fill="var(--text-primary, #111111)" />
                                     </g>
                                   );
                                 }
-                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill="#111111" />;
+                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill="var(--text-primary, #111111)" />;
                               }}
                               activeDot={{ r: 5, fill: '#111111' }}
                             />

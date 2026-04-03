@@ -168,7 +168,7 @@ export default function Progress() {
             }}>
               <div style={{
                 fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase',
-                color: '#555', marginBottom: 6, fontFamily: 'var(--font-sans)', fontWeight: 600,
+                color: 'rgba(255,255,255,0.4)', marginBottom: 6, fontFamily: 'var(--font-sans)', fontWeight: 600,
               }}>
                 Media · {days}d
               </div>
@@ -178,7 +178,7 @@ export default function Progress() {
               }}>
                 {periodAvgCal?.toLocaleString('es') ?? '—'}
               </div>
-              <div style={{ fontSize: 10, color: '#555', marginTop: 3, fontFamily: 'var(--font-sans)' }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 3, fontFamily: 'var(--font-sans)' }}>
                 kcal/día
               </div>
             </div>
