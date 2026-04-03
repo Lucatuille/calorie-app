@@ -771,6 +771,11 @@ export default function Calculator() {
         </div>
       </div>
 
+      {/* ── Peso del día ── */}
+      <div style={{ padding: '0 16px', marginBottom: 10, display: 'flex', justifyContent: 'center' }}>
+        <WeightInput />
+      </div>
+
       {/* ── 2. Historial de hoy — debajo ── */}
       {entries.length > 0 && (
         <div style={{ padding: '0 16px', marginBottom: 10 }}>
@@ -921,10 +926,6 @@ export default function Calculator() {
         </>
       )}
 
-      {/* ── Peso del día ── */}
-      <div style={{ padding: '0 16px', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-        <WeightInput />
-      </div>
     </section>
   );
 }
