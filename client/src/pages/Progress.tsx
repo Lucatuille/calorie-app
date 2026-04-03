@@ -1,5 +1,5 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -7,7 +7,7 @@ import {
 import { ADHERENCE_TOLERANCE } from '../utils/constants';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import AdvancedAnalytics from '../components/AdvancedAnalytics';
+const AdvancedAnalytics = lazy(() => import('../components/AdvancedAnalytics'));
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -421,11 +421,15 @@ export default function Progress() {
         </button>
       </div>
 
-      <AdvancedAnalytics
-        isOpen={showAdvanced}
-        onClose={() => setShowAdvanced(false)}
-        userTarget={summary?.targetCalories}
-      />
+      {showAdvanced && (
+        <Suspense fallback={null}>
+          <AdvancedAnalytics
+            isOpen={showAdvanced}
+            onClose={() => setShowAdvanced(false)}
+            userTarget={summary?.targetCalories}
+          />
+        </Suspense>
+      )}
     </section>
   );
 }

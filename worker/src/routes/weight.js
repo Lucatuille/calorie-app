@@ -10,6 +10,9 @@ export async function handleWeight(request, env, path) {
     if (!weight_kg || weight_kg < 20 || weight_kg > 300) {
       return errorResponse('Peso inválido (20-300 kg)');
     }
+    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return errorResponse('Formato de fecha inválido (YYYY-MM-DD)');
+    }
     const entryDate = date || new Date().toISOString().split('T')[0];
 
     await env.DB.prepare(

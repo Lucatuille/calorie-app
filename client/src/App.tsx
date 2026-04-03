@@ -5,12 +5,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import InstallPrompt from './components/InstallPrompt';
-import AdminOverlay from './components/AdminOverlay';
+const AdminOverlay = lazy(() => import('./components/AdminOverlay'));
 import WelcomeDisclaimer from './components/WelcomeDisclaimer';
 import WhatsNew from './components/WhatsNew';
 import WaitlistScreen from './components/WaitlistScreen';
 import { useWhatsNew } from './hooks/useWhatsNew';
-import HelpModal from './components/HelpModal';
+const HelpModal = lazy(() => import('./components/HelpModal'));
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 
 // Eager: login/register (first screen), dashboard (most visited)

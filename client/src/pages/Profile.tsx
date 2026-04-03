@@ -1,10 +1,10 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { isFree } from '../utils/levels';
-import TDEECalculator from '../components/TDEECalculator';
+const TDEECalculator = lazy(() => import('../components/TDEECalculator'));
 
 function exportCSV(entries) {
   const header = 'Fecha,Calorías,Proteína(g),Carbos(g),Grasa(g),Peso(kg),Notas';
@@ -357,11 +357,15 @@ export default function Profile() {
         </div>
       </form>
 
-      <TDEECalculator
-        isOpen={showTDEE}
-        onClose={() => setShowTDEE(false)}
-        onSave={handleTDEESave}
-      />
+      {showTDEE && (
+        <Suspense fallback={null}>
+          <TDEECalculator
+            isOpen={showTDEE}
+            onClose={() => setShowTDEE(false)}
+            onSave={handleTDEESave}
+          />
+        </Suspense>
+      )}
 
       {/* ── Motor personal (dark card) ── */}
       {calibration && calibration.data_points >= 3 && (

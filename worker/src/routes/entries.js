@@ -4,6 +4,10 @@
 
 import { jsonResponse, errorResponse, authenticate, getClientToday } from '../utils.js';
 
+function isValidDate(d) {
+  return !d || /^\d{4}-\d{2}-\d{2}$/.test(d);
+}
+
 function validateNumber(val, name, { min = 0, max = 99999, required = false } = {}) {
   if (val == null || val === '') return required ? `${name} es obligatorio` : null;
   const n = Number(val);
@@ -30,6 +34,10 @@ export async function handleEntries(request, env, path) {
     if (fatErr) return errorResponse(fatErr);
     const weightErr = validateNumber(weight, 'Peso', { min: 20, max: 300 });
     if (weightErr) return errorResponse(weightErr);
+
+    if (!isValidDate(date)) return errorResponse('Formato de fecha inválido (YYYY-MM-DD)');
+    if (name && String(name).length > 200) return errorResponse('Nombre demasiado largo');
+    if (notes && String(notes).length > 1000) return errorResponse('Notas demasiado largas');
 
     const entryDate  = date || getClientToday(request);
     const mealType   = meal_type || 'other';

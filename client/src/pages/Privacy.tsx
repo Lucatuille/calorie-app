@@ -108,7 +108,7 @@ export default function Privacy() {
 function Section({ title, children }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: 'var(--text)' }}>
+      <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: 'var(--text-primary)' }}>
         {title}
       </h2>
       <div style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.7 }}>

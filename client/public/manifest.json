@@ -1,11 +1,13 @@
 {
+  "id": "/app/",
   "name": "Caliro — Seguimiento calórico con IA",
   "short_name": "Caliro",
   "description": "Registra tus comidas y sigue tu progreso nutricional",
   "start_url": "/app/",
+  "scope": "/app/",
   "display": "standalone",
   "background_color": "#F5F2EE",
-  "theme_color": "#2d6a4f",
+  "theme_color": "#F5F2EE",
   "orientation": "portrait-primary",
   "icons": [
     { "src": "/icons/icon-72x72.png",   "sizes": "72x72",   "type": "image/png" },
@@ -13,9 +15,9 @@
     { "src": "/icons/icon-128x128.png", "sizes": "128x128", "type": "image/png" },
     { "src": "/icons/icon-144x144.png", "sizes": "144x144", "type": "image/png" },
     { "src": "/icons/icon-152x152.png", "sizes": "152x152", "type": "image/png" },
-    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-384x384.png", "sizes": "384x384", "type": "image/png" },
-    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ],
   "categories": ["health", "fitness", "food"],
   "lang": "es"

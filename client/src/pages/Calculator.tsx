@@ -9,16 +9,7 @@ import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
 
 
-const BarcodeIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
-    <rect x="1" y="4" width="2" height="16"/>
-    <rect x="5" y="4" width="1" height="16"/>
-    <rect x="8" y="4" width="2" height="16"/>
-    <rect x="12" y="4" width="1" height="16"/>
-    <rect x="15" y="4" width="3" height="16"/>
-    <rect x="20" y="4" width="2" height="16"/>
-  </svg>
-);
+
 
 const METHODS = [
   {
