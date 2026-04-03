@@ -128,7 +128,7 @@ export default function SupplementTracker() {
           </button>
         ) : (
           /* Supplement grid */
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8, ...(count === 1 && { maxWidth: 280, margin: '0 auto' }) }}>
             {supplements.map(sup => (
               <button
                 key={sup.id}
