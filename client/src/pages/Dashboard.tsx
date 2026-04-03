@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,6 @@ import { LEVEL_CONFIG, getBadgeStyle, isPro } from '../utils/levels';
 import { MEAL_TYPES } from '../utils/meals';
 import { getEstadoCalorico } from '../utils/assistantMessages';
 import SupplementTracker from '../components/SupplementTracker';
-import WeightInput from '../components/WeightInput';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -56,18 +55,32 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
+  // Weight state
+  const [weightToday, setWeightToday]       = useState(null);
+  const [weightYesterday, setWeightYesterday] = useState(null);
+  const [weightLast, setWeightLast]         = useState(null);
+  const [weightEditing, setWeightEditing]   = useState(false);
+  const [weightValue, setWeightValue]       = useState('');
+  const [weightSaving, setWeightSaving]     = useState(false);
+  const weightRef = useRef(null);
+
   useEffect(() => {
     async function load() {
       try {
         setLoadError(false);
-        const [e, s, p] = await Promise.all([
+        const [e, s, p, w] = await Promise.all([
           api.getTodayEntries(token),
           api.getSummary(token),
           api.getProfile(token),
+          api.getWeightToday(token).catch(() => ({ today: null, yesterday: null, last_recorded: null })),
         ]);
         setEntries(e);
         setSummary(s.summary);
         setProfile(p);
+        setWeightToday(w.today);
+        setWeightYesterday(w.yesterday);
+        setWeightLast(w.last_recorded);
+        if (w.today) setWeightValue(String(w.today));
       } catch { setLoadError(true); }
       finally { setLoading(false); }
     }
@@ -154,6 +167,29 @@ export default function Dashboard() {
     ? getEstadoCalorico({ todayCalories, todayProtein }, targetCalories, targetProtein)
     : 'Tu nutricionista con IA';
 
+  // ── Peso: delta vs ayer ────────────────────────────────────
+  let wDelta = null;
+  let wArrow = null;
+  let wColor = 'var(--text-secondary)';
+  if (weightToday && weightYesterday) {
+    const diff = Math.round((weightToday - weightYesterday) * 10) / 10;
+    if (diff < -0.05) { wArrow = '↓'; wDelta = String(Math.abs(diff)); wColor = 'var(--accent)'; }
+    else if (diff > 0.05) { wArrow = '↑'; wDelta = String(diff); wColor = '#ef4444'; }
+    else { wArrow = '—'; }
+  }
+
+  async function handleWeightSave() {
+    const kg = parseFloat(weightValue);
+    if (!kg || kg < 20 || kg > 300) return;
+    setWeightSaving(true);
+    try {
+      await api.saveWeight({ weight_kg: kg }, token);
+      setWeightYesterday(weightToday ?? weightYesterday);
+      setWeightToday(kg);
+      setWeightEditing(false);
+    } catch {} finally { setWeightSaving(false); }
+  }
+
   // ── Badge de nivel ─────────────────────────────────────────
   const levelBadge = (() => {
     const info  = LEVEL_CONFIG[user?.access_level];
@@ -198,9 +234,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* ── 1.5. Peso del día ── */}
-      <WeightInput />
-
       {/* ── 2. Hero calórico ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
         <div style={{
@@ -242,6 +275,80 @@ export default function Dashboard() {
                   de {targetCalories.toLocaleString('es')} kcal
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Peso inline pill */}
+          <div style={{ marginBottom: 12 }}>
+            {weightEditing ? (
+              <form
+                onSubmit={e => { e.preventDefault(); handleWeightSave(); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <input
+                  ref={weightRef}
+                  autoFocus
+                  type="text"
+                  inputMode="decimal"
+                  value={weightValue}
+                  onChange={e => {
+                    const v = e.target.value.replace(',', '.');
+                    if (/^\d{0,3}\.?\d{0,1}$/.test(v)) setWeightValue(v);
+                  }}
+                  placeholder={weightLast ? String(weightLast) : '70.0'}
+                  style={{
+                    width: 52, textAlign: 'center', fontWeight: 600,
+                    fontSize: 13, border: '1px solid var(--accent)',
+                    borderRadius: 6, padding: '2px 4px',
+                    background: 'var(--bg)', color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-sans)', outline: 'none',
+                  }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>kg</span>
+                <button
+                  type="submit"
+                  disabled={weightSaving}
+                  style={{
+                    background: 'var(--accent)', color: 'white', border: 'none',
+                    borderRadius: 5, padding: '2px 8px',
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >{weightSaving ? '…' : '✓'}</button>
+                <button
+                  type="button"
+                  onClick={() => { setWeightEditing(false); setWeightValue(weightToday ? String(weightToday) : ''); }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-tertiary)', fontSize: 13, padding: 0,
+                  }}
+                >×</button>
+              </form>
+            ) : weightToday ? (
+              <button
+                onClick={() => { setWeightValue(String(weightToday)); setWeightEditing(true); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+                }}
+              >
+                {weightToday} kg
+                {wArrow && (
+                  <span style={{ fontWeight: 600, color: wColor }}>
+                    {wArrow}{wDelta && <span style={{ fontSize: 11 }}> {wDelta}</span>}
+                  </span>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => { setWeightValue(weightLast ? String(weightLast) : ''); setWeightEditing(true); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)',
+                }}
+              >
+                + peso{weightLast ? ` (${weightLast} kg)` : ''}
+              </button>
             )}
           </div>
 
