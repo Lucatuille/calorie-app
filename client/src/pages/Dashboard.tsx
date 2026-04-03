@@ -546,22 +546,51 @@ export default function Dashboard() {
           <button
             onClick={() => navigate('/upgrade')}
             style={{
-              width: '100%', background: 'var(--surface-2)',
-              border: '0.5px solid var(--border)',
-              borderRadius: 'var(--radius-lg)', padding: '16px',
+              width: '100%',
+              background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',
+              border: '0.5px solid rgba(255,255,255,0.06)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '18px 16px',
               display: 'flex', alignItems: 'center',
               justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{
+                  fontSize: 10, background: 'rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.5)', padding: '2px 8px',
+                  borderRadius: 'var(--radius-full)', fontWeight: 600,
+                  fontFamily: 'var(--font-sans)', letterSpacing: '0.3px',
+                }}>
+                  Pro
+                </span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>🔒</span>
+              </div>
+              <span style={{
+                fontSize: 15, fontWeight: 500, color: '#ffffff',
+                fontFamily: 'var(--font-sans)', marginTop: 2,
+              }}>
                 Asistente personal
               </span>
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
-                Tu nutricionista con IA · Plan Pro
+              <span style={{
+                fontSize: 11, color: 'rgba(255,255,255,0.35)',
+                fontFamily: 'var(--font-sans)', lineHeight: 1.4,
+                maxWidth: 280,
+              }}>
+                {targetCalories > 0
+                  ? `Tienes ${remaining.toLocaleString('es')} kcal libres hoy. El asistente te diría qué cenar para llegar a tu objetivo.`
+                  : 'Tu nutricionista con IA — analiza tus patrones y responde con tus datos reales.'}
               </span>
             </div>
-            <span style={{ fontSize: 16 }}>🔒</span>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, marginLeft: 12,
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>→</span>
+            </div>
           </button>
         )}
       </div>
