@@ -7,32 +7,29 @@ function HeroBanner({ num, title, subtitle, color, textColor }) {
   return (
     <div style={{
       background: color,
-      padding: '28px 20px 22px',
+      height: 100,
+      padding: '0 20px',
       display: 'flex',
       flexDirection: 'column',
-      gap: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
+      borderRadius: 14,
+      margin: '14px 18px',
     }}>
-      <div style={{
-        fontSize: 12,
-        fontWeight: 600,
-        color: textColor,
-        opacity: 1,
-        letterSpacing: '0.08em',
-        marginBottom: 6,
-        fontFamily: "'DM Sans', sans-serif",
-      }}>{num}</div>
       <span style={{
-        fontFamily: "'Instrument Serif', serif",
-        fontSize: 22,
-        fontWeight: 400,
+        fontFamily: "'Instrument Serif', Georgia, serif",
+        fontSize: 26,
         color: textColor,
-        lineHeight: 1.1,
+        lineHeight: 1.15,
+        marginBottom: 4,
       }}>{title}</span>
       <span style={{
+        fontFamily: "'DM Sans', sans-serif",
         fontSize: 13,
         color: textColor,
-        opacity: 0.8,
-        marginTop: 2,
+        opacity: 0.65,
+        marginTop: 0,
       }}>{subtitle}</span>
     </div>
   );
