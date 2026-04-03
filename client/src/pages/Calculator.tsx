@@ -611,8 +611,19 @@ export default function Calculator() {
                   background: 'rgba(239,68,68,0.08)', border: '0.5px solid rgba(239,68,68,0.2)',
                   borderRadius: 'var(--radius-sm)', padding: '10px 12px',
                   fontSize: 13, color: '#ef4444', fontFamily: 'var(--font-sans)',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
                 }}>
-                  {aiResult.error}
+                  <span>{aiResult.error}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setAiResult(null); analyzePhoto(); }}
+                    style={{
+                      background: 'none', border: '0.5px solid rgba(239,68,68,0.3)',
+                      borderRadius: 6, padding: '4px 10px', fontSize: 12,
+                      color: '#ef4444', cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                      whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >Reintentar</button>
                 </div>
               )}
             </div>
