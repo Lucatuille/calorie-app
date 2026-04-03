@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -53,6 +54,7 @@ const microLabel = {
 };
 
 export default function Profile() {
+  usePageTitle('Perfil');
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({

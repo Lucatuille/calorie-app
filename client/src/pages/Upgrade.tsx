@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -15,6 +16,7 @@ const FEATURES = [
 ];
 
 export default function Upgrade() {
+  usePageTitle('Pro');
   const { token, user } = useAuth();
   const navigate = useNavigate();
   const [upgrading, setUpgrading] = useState(null); // 'monthly' | 'yearly' | null

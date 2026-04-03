@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -49,6 +50,7 @@ function MacroCard({ val, target, label, color }) {
 export default function Dashboard() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  usePageTitle("Inicio");
   const [entries, setEntries] = useState([]);
   const [summary, setSummary] = useState(null);
   const [profile, setProfile] = useState(null);

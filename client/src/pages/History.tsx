@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +37,7 @@ const MACRO_META = [
 ];
 
 export default function History() {
+  usePageTitle('Historial');
   const { token } = useAuth();
   const [entries,    setEntries]    = useState([]);
   const [loading,    setLoading]    = useState(true);

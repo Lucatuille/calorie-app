@@ -1,9 +1,11 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
+  usePageTitle("Iniciar sesión");
   const [form, setForm]   = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

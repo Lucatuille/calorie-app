@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -5,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { CURRENT_VERSION } from '../data/whatsNew';
 
 export default function Register() {
+  usePageTitle("Registro");
   const [form, setForm]   = useState({ name: '', email: '', password: '', age: '', weight: '', height: '', gender: 'male' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

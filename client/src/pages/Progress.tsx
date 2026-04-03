@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -71,6 +72,7 @@ function MacroBar({ protein, carbs, fat }) {
 }
 
 export default function Progress() {
+  usePageTitle('Progreso');
   const { token } = useAuth();
   const [data,         setData]         = useState([]);
   const [summary,      setSummary]      = useState(null);

@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -347,6 +348,7 @@ function DigestSheet({ digest, onClose }) {
 // ── Página principal ─────────────────────────────────────────
 
 export default function Assistant() {
+  usePageTitle('Asistente');
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages]             = useState([]);

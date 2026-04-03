@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -87,6 +88,7 @@ const CONFIDENCE_STYLE = {
 export default function Calculator() {
   const { token, user } = useAuth();
 
+  usePageTitle("Registrar");
   const [entries,    setEntries]    = useState([]);
   const [profile,    setProfile]    = useState(null);
   const [form,       setForm]       = useState(emptyForm);
