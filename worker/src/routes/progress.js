@@ -66,6 +66,24 @@ export async function handleProgress(request, env, path) {
        GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
 
+    // Merge weight from weight_logs into daily entries
+    try {
+      const { results: weightRows } = await env.DB.prepare(
+        'SELECT date, weight_kg FROM weight_logs WHERE user_id = ? AND date >= date(\'now\', \'-30 days\')'
+      ).bind(user.userId).all();
+      const weightMap = Object.fromEntries(weightRows.map(r => [r.date, r.weight_kg]));
+      for (const e of entries) {
+        if (!e.weight && weightMap[e.date]) e.weight = weightMap[e.date];
+      }
+      // Add weight-only days (days with weight but no food entries)
+      for (const [date, wkg] of Object.entries(weightMap)) {
+        if (!entries.find(e => e.date === date)) {
+          entries.push({ date, calories: 0, protein: 0, carbs: 0, fat: 0, weight: wkg });
+        }
+      }
+      entries.sort((a, b) => a.date.localeCompare(b.date));
+    } catch { /* weight_logs table might not exist yet */ }
+
     // Streak: distinct dates (one per day even with multiple meals)
     const { results: streakRows } = await env.DB.prepare(
       `SELECT DISTINCT date FROM entries WHERE user_id = ?
@@ -148,6 +166,24 @@ export async function handleProgress(request, env, path) {
        AND date > date('now', '-${days} days')
        GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
+
+    // Merge weight from weight_logs
+    try {
+      const { results: wRows } = await env.DB.prepare(
+        `SELECT date, weight_kg FROM weight_logs WHERE user_id = ? AND date > date('now', '-${days} days')`
+      ).bind(user.userId).all();
+      const wMap = Object.fromEntries(wRows.map(r => [r.date, r.weight_kg]));
+      for (const e of results) {
+        if (!e.weight && wMap[e.date]) e.weight = wMap[e.date];
+      }
+      for (const [date, wkg] of Object.entries(wMap)) {
+        if (!results.find(e => e.date === date)) {
+          results.push({ date, calories: 0, protein: 0, carbs: 0, fat: 0, weight: wkg });
+        }
+      }
+      results.sort((a, b) => a.date.localeCompare(b.date));
+    } catch {}
+
     return jsonResponse(results);
   }
 
@@ -170,6 +206,23 @@ export async function handleProgress(request, env, path) {
        AND date >= date('now', '-${days} days') AND date < date('now')
        GROUP BY date ORDER BY date ASC`
     ).bind(user.userId).all();
+
+    // Merge weight from weight_logs
+    try {
+      const { results: wRows } = await env.DB.prepare(
+        `SELECT date, weight_kg FROM weight_logs WHERE user_id = ? AND date >= date('now', '-${days} days') AND date < date('now')`
+      ).bind(user.userId).all();
+      const wMap = Object.fromEntries(wRows.map(r => [r.date, r.weight_kg]));
+      for (const e of daily) {
+        if (!e.weight && wMap[e.date]) e.weight = wMap[e.date];
+      }
+      for (const [date, wkg] of Object.entries(wMap)) {
+        if (!daily.find(e => e.date === date)) {
+          daily.push({ date, calories: 0, protein: 0, carbs: 0, fat: 0, weight: wkg });
+        }
+      }
+      daily.sort((a, b) => a.date.localeCompare(b.date));
+    } catch {}
 
     if (!daily.length) {
       return jsonResponse({ period, days_with_data: 0, total_days: days });
