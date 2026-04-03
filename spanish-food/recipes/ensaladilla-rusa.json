@@ -1,0 +1,30 @@
+{
+  "nombre": "Ensaladilla rusa",
+  "categoria": "Tapas y aperitivos",
+  "raciones": 4,
+  "porcion_g": 150,
+  "porcion_desc": "ración estándar de tapa",
+  "ingredientes": [
+    { "nombre_usda": "potato raw", "cantidad_g": 300, "nota": "patata cocida en trozos", "factor_coccion": 0.95 },
+    { "nombre_usda": "carrot raw", "cantidad_g": 80, "nota": "zanahoria cocida en dados", "factor_coccion": 0.95 },
+    { "nombre_usda": "tuna canned in oil", "cantidad_g": 80, "nota": "atún en aceite escurrido" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 55, "nota": "1 huevo cocido picado", "factor_coccion": 0.95 },
+    { "nombre_usda": "aceitunas verdes", "cantidad_g": 30, "nota": "aceitunas verdes picadas" },
+    { "nombre_usda": "peas frozen", "cantidad_g": 40, "nota": "guisantes cocidos" },
+    { "nombre_usda": "mayonnaise", "cantidad_g": 80, "nota": "mayonesa ABUNDANTE — componente más calórico" }
+  ],
+  "varianza_pct": 18,
+  "aliases": ["ensaladilla rusa", "ensaladilla", "rusa"],
+  "token_principal": "ensaladilla",
+  "tokens_secundarios": ["rusa", "patata"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "tapa pequeña", "g": 100 },
+    { "desc": "ración estándar tapa", "g": 150 },
+    { "desc": "ración generosa", "g": 220 }
+  ],
+  "referencias_visuales": "Montaña de ensaladilla en plato pequeño de tapa, color blanquecino-amarillento por la mayonesa. Ración de tapa = bola del tamaño de un puño. Si es plato individual de restaurante: ~200-250g.",
+  "notas_claude": "La mayonesa es el componente más calórico y más variable — en bar ponen más que en casa. SIN mayonesa NO es ensaladilla rusa. Versión 'light' con yogur en vez de mayo: -40% calorías. Con pimiento rojo: +5 kcal (irrelevante).",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

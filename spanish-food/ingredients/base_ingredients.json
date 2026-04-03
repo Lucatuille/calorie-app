@@ -1,0 +1,408 @@
+{
+  "egg whole raw": {
+    "nombre_busqueda": "egg whole raw",
+    "nombre_usda": "Egg, whole, raw, fresh",
+    "fdcId": 171287,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 143,
+      "proteina_g": 12.6,
+      "carbos_g": 0.7,
+      "grasa_g": 9.5,
+      "fibra_g": 0
+    },
+    "nombre_es": "Huevo entero crudo"
+  },
+  "potato raw": {
+    "nombre_busqueda": "potato raw",
+    "nombre_usda": "Potatoes, raw, skin",
+    "fdcId": 170032,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 58,
+      "proteina_g": 2.6,
+      "carbos_g": 12.4,
+      "grasa_g": 0.1,
+      "fibra_g": 2.5
+    },
+    "nombre_es": "Patata cruda"
+  },
+  "olive oil": {
+    "nombre_busqueda": "olive oil",
+    "nombre_usda": "Oil, corn, peanut, and olive",
+    "fdcId": 167737,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 884,
+      "proteina_g": 0,
+      "carbos_g": 0,
+      "grasa_g": 100,
+      "fibra_g": 0
+    },
+    "nombre_es": "Aceite de oliva"
+  },
+  "wheat bread": {
+    "nombre_busqueda": "wheat bread",
+    "nombre_usda": "Bread, wheat",
+    "fdcId": 172686,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 274,
+      "proteina_g": 10.7,
+      "carbos_g": 47.5,
+      "grasa_g": 4.5,
+      "fibra_g": 4
+    },
+    "nombre_es": "Pan de trigo (barra)"
+  },
+  "pork loin raw": {
+    "nombre_busqueda": "pork loin raw",
+    "nombre_usda": "Pork, fresh, loin, top loin (roasts), boneless, separable lean and fat, raw",
+    "fdcId": 168314,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 166,
+      "proteina_g": 21.3,
+      "carbos_g": 0,
+      "grasa_g": 8.3,
+      "fibra_g": 0
+    },
+    "nombre_es": "Lomo de cerdo crudo"
+  },
+  "chicken breast meat raw": {
+    "nombre_busqueda": "chicken breast meat raw",
+    "nombre_usda": "Chicken, broilers or fryers, breast, meat and skin, raw",
+    "fdcId": 171474,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 172,
+      "proteina_g": 20.8,
+      "carbos_g": 0,
+      "grasa_g": 9.3,
+      "fibra_g": 0
+    },
+    "nombre_es": "Pechuga de pollo cruda"
+  },
+  "chicken thigh meat raw": {
+    "nombre_busqueda": "chicken thigh meat raw",
+    "nombre_usda": "Chicken, broilers or fryers, thigh, meat and skin, raw",
+    "fdcId": 172385,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 221,
+      "proteina_g": 16.5,
+      "carbos_g": 0.3,
+      "grasa_g": 16.6,
+      "fibra_g": 0
+    },
+    "nombre_es": "Muslo de pollo crudo"
+  },
+  "beef ground raw": {
+    "nombre_busqueda": "beef ground raw",
+    "nombre_usda": "Beef, grass-fed, ground, raw",
+    "fdcId": 168608,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 198,
+      "proteina_g": 19.4,
+      "carbos_g": 0,
+      "grasa_g": 12.7,
+      "fibra_g": 0
+    },
+    "nombre_es": "Carne picada ternera cruda"
+  },
+  "cod raw": {
+    "nombre_busqueda": "cod raw",
+    "nombre_usda": "Fish, cod, Atlantic, raw",
+    "fdcId": 171955,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 82,
+      "proteina_g": 17.8,
+      "carbos_g": 0,
+      "grasa_g": 0.7,
+      "fibra_g": 0
+    },
+    "nombre_es": "Bacalao fresco crudo"
+  },
+  "hake atlantic raw": {
+    "nombre_busqueda": "hake atlantic raw",
+    "nombre_usda": "Fish, cod, Atlantic, raw",
+    "fdcId": 171955,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 82,
+      "proteina_g": 17.8,
+      "carbos_g": 0,
+      "grasa_g": 0.7,
+      "fibra_g": 0
+    },
+    "nombre_es": "Merluza cruda"
+  },
+  "shrimp raw": {
+    "nombre_busqueda": "shrimp raw",
+    "nombre_usda": "Crustaceans, shrimp, raw",
+    "fdcId": 175179,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 85,
+      "proteina_g": 20.1,
+      "carbos_g": 0,
+      "grasa_g": 0.5,
+      "fibra_g": 0
+    },
+    "nombre_es": "Gambas crudas"
+  },
+  "tomato raw": {
+    "nombre_busqueda": "tomato raw",
+    "nombre_usda": "Tomatoes, green, raw",
+    "fdcId": 170456,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 23,
+      "proteina_g": 1.2,
+      "carbos_g": 5.1,
+      "grasa_g": 0.2,
+      "fibra_g": 1.1
+    },
+    "nombre_es": "Tomate crudo"
+  },
+  "onion raw": {
+    "nombre_busqueda": "onion raw",
+    "nombre_usda": "Onions, raw",
+    "fdcId": 170000,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 40,
+      "proteina_g": 1.1,
+      "carbos_g": 9.3,
+      "grasa_g": 0.1,
+      "fibra_g": 1.7
+    },
+    "nombre_es": "Cebolla cruda"
+  },
+  "garlic raw": {
+    "nombre_busqueda": "garlic raw",
+    "nombre_usda": "Garlic, raw",
+    "fdcId": 169230,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 149,
+      "proteina_g": 6.4,
+      "carbos_g": 33.1,
+      "grasa_g": 0.5,
+      "fibra_g": 2.1
+    },
+    "nombre_es": "Ajo crudo"
+  },
+  "lentils raw": {
+    "nombre_busqueda": "lentils raw",
+    "nombre_usda": "Lentils, raw",
+    "fdcId": 172420,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 352,
+      "proteina_g": 24.6,
+      "carbos_g": 63.4,
+      "grasa_g": 1.1,
+      "fibra_g": 10.7
+    },
+    "nombre_es": "Lentejas crudas"
+  },
+  "chickpeas raw": {
+    "nombre_busqueda": "chickpeas raw",
+    "nombre_usda": "Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",
+    "fdcId": 173756,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 378,
+      "proteina_g": 20.5,
+      "carbos_g": 63,
+      "grasa_g": 6,
+      "fibra_g": 12.2
+    },
+    "nombre_es": "Garbanzos crudos"
+  },
+  "white rice raw": {
+    "nombre_busqueda": "white rice raw",
+    "nombre_usda": "Rice, white, medium-grain, raw, enriched",
+    "fdcId": 168879,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 360,
+      "proteina_g": 6.6,
+      "carbos_g": 79.3,
+      "grasa_g": 0.6,
+      "fibra_g": 1.4
+    },
+    "nombre_es": "Arroz blanco crudo"
+  },
+  "pasta dry": {
+    "nombre_busqueda": "pasta dry",
+    "nombre_usda": "Pasta, dry, enriched",
+    "fdcId": 169736,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 371,
+      "proteina_g": 13,
+      "carbos_g": 74.7,
+      "grasa_g": 1.5,
+      "fibra_g": 3.2
+    },
+    "nombre_es": "Pasta cruda"
+  },
+  "milk whole 3.25% fat": {
+    "nombre_busqueda": "milk whole 3.25% fat",
+    "nombre_usda": "Milk, whole, 3.25% milkfat, with added vitamin D",
+    "fdcId": 171265,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 61,
+      "proteina_g": 3.2,
+      "carbos_g": 4.8,
+      "grasa_g": 3.3,
+      "fibra_g": 0
+    },
+    "nombre_es": "Leche entera"
+  },
+  "flour wheat all purpose": {
+    "nombre_busqueda": "flour wheat all purpose",
+    "nombre_usda": "Wheat flour, white, all-purpose, unenriched",
+    "fdcId": 169761,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 364,
+      "proteina_g": 10.3,
+      "carbos_g": 76.3,
+      "grasa_g": 1,
+      "fibra_g": 2.7
+    },
+    "nombre_es": "Harina de trigo"
+  },
+  "breadcrumbs dry": {
+    "nombre_busqueda": "breadcrumbs dry",
+    "nombre_usda": "Bulgur, dry",
+    "fdcId": 170688,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 342,
+      "proteina_g": 12.3,
+      "carbos_g": 75.9,
+      "grasa_g": 1.3,
+      "fibra_g": 12.5
+    },
+    "nombre_es": "Pan rallado"
+  },
+  "green beans raw": {
+    "nombre_busqueda": "green beans raw",
+    "nombre_usda": "Beans, snap, green, raw",
+    "fdcId": 169961,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 31,
+      "proteina_g": 1.8,
+      "carbos_g": 7,
+      "grasa_g": 0.2,
+      "fibra_g": 2.7
+    },
+    "nombre_es": "Judías verdes crudas"
+  },
+  "potato french fries": {
+    "nombre_busqueda": "potato french fries",
+    "nombre_usda": "Potatoes, frozen, french fried, par fried, extruded, unprepared",
+    "fdcId": 169267,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 260,
+      "proteina_g": 2.8,
+      "carbos_g": 30.2,
+      "grasa_g": 15,
+      "fibra_g": 2.9
+    },
+    "nombre_es": "Patata frita en aceite"
+  },
+  "red bell pepper raw": {
+    "nombre_busqueda": "red bell pepper raw",
+    "nombre_usda": "Peppers, sweet, red, raw",
+    "fdcId": 170108,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 26,
+      "proteina_g": 1,
+      "carbos_g": 6,
+      "grasa_g": 0.3,
+      "fibra_g": 2.1
+    },
+    "nombre_es": "Pimiento rojo crudo"
+  },
+  "lettuce raw": {
+    "nombre_busqueda": "lettuce raw",
+    "nombre_usda": "Lettuce, cos or romaine, raw",
+    "fdcId": 169247,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 17,
+      "proteina_g": 1.2,
+      "carbos_g": 3.3,
+      "grasa_g": 0.3,
+      "fibra_g": 2.1
+    },
+    "nombre_es": "Lechuga cruda"
+  },
+  "tuna canned in oil": {
+    "nombre_busqueda": "tuna canned in oil",
+    "nombre_usda": "Fish, tuna, light, canned in oil, drained solids",
+    "fdcId": 173708,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 198,
+      "proteina_g": 29.1,
+      "carbos_g": 0,
+      "grasa_g": 8.2,
+      "fibra_g": 0
+    },
+    "nombre_es": "Atún en aceite (conserva)"
+  },
+  "mayonnaise": {
+    "nombre_busqueda": "mayonnaise",
+    "nombre_usda": "Salad dressing, mayonnaise and mayonnaise-type, low calorie",
+    "fdcId": 168112,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 263,
+      "proteina_g": 0.9,
+      "carbos_g": 23.9,
+      "grasa_g": 19,
+      "fibra_g": 0
+    },
+    "nombre_es": "Mayonesa"
+  },
+  "sugar white": {
+    "nombre_busqueda": "sugar white",
+    "nombre_usda": "Sugar, turbinado",
+    "fdcId": 170674,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 399,
+      "proteina_g": 0,
+      "carbos_g": 99.8,
+      "grasa_g": 0,
+      "fibra_g": 0
+    },
+    "nombre_es": "Azúcar blanco"
+  },
+  "butter salted": {
+    "nombre_busqueda": "butter salted",
+    "nombre_usda": "Butter, salted",
+    "fdcId": 173410,
+    "fuente": "SR Legacy",
+    "por_100g": {
+      "kcal": 717,
+      "proteina_g": 0.9,
+      "carbos_g": 0.1,
+      "grasa_g": 81.1,
+      "fibra_g": 0
+    },
+    "nombre_es": "Mantequilla"
+  }
+}

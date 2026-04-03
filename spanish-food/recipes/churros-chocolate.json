@@ -1,0 +1,30 @@
+{
+  "nombre": "Churros con chocolate",
+  "categoria": "Pan y desayunos",
+  "raciones": 1,
+  "porcion_g": 250,
+  "porcion_desc": "ración churrería (6 churros + taza chocolate)",
+  "ingredientes": [
+    { "nombre_usda": "flour wheat all purpose", "cantidad_g": 60, "nota": "masa de churros: harina + agua + sal" },
+    { "nombre_usda": "sunflower oil", "cantidad_g": 18, "nota": "aceite de girasol absorbido en fritura de churros" },
+    { "nombre_usda": "sugar white", "cantidad_g": 8, "nota": "azúcar espolvoreado sobre churros" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 130, "nota": "leche entera para chocolate a la taza" },
+    { "nombre_usda": "cocoa powder unsweetened", "cantidad_g": 10, "nota": "cacao en polvo" },
+    { "nombre_usda": "sugar white", "cantidad_g": 20, "nota": "azúcar del chocolate" },
+    { "nombre_usda": "cornstarch", "cantidad_g": 8, "nota": "maicena para espesar el chocolate" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["churros con chocolate", "churros", "chocolate con churros"],
+  "token_principal": "churros",
+  "tokens_secundarios": ["chocolate"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "solo churros (6 uds)", "g": 100 },
+    { "desc": "churros + chocolate", "g": 250 },
+    { "desc": "ración doble", "g": 400 }
+  ],
+  "referencias_visuales": "Plato con 6 churros alargados (~15cm cada uno) + taza pequeña de chocolate espeso marrón oscuro. Churros = dedos largos y estriados, dorados. Porras son más gruesas y cortas.",
+  "notas_claude": "El chocolate español a la taza es ESPESO, con azúcar y leche entera — no es chocolate negro ni cacao solo. Solo churros sin chocolate: ~290 kcal. Porras: ligeramente más calóricas que churros (+10%). Con azúcar extra: +20 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

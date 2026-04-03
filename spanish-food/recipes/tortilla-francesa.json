@@ -1,0 +1,24 @@
+{
+  "nombre": "Tortilla francesa",
+  "categoria": "Huevos y tortillas",
+  "raciones": 1,
+  "porcion_g": 85,
+  "porcion_desc": "1 tortilla individual",
+  "ingredientes": [
+    { "nombre_usda": "egg whole raw", "cantidad_g": 110, "nota": "2 huevos L batidos", "factor_coccion": 0.95 },
+    { "nombre_usda": "olive oil", "cantidad_g": 8, "nota": "aceite o mantequilla para la sartén" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["tortilla francesa", "tortilla simple", "tortilla de huevo"],
+  "token_principal": "tortilla",
+  "tokens_secundarios": ["francesa", "huevo"],
+  "tokens_exclusion": ["patata", "patatas", "española"],
+  "porciones_guia": [
+    { "desc": "1 tortilla (2 huevos)", "g": 85 },
+    { "desc": "2 tortillas", "g": 170 }
+  ],
+  "referencias_visuales": "Tortilla doblada en medio plato, forma de media luna. Una tortilla de 2 huevos ocupa medio plato llano. Color amarillo uniforme sin relleno visible.",
+  "notas_claude": "Solo huevo y aceite/mantequilla — SIN patata. 'Tortilla' a secas en desayuno/merienda suele ser FRANCESA, no española. Con jamón york: +40 kcal. Con queso: +80 kcal. Con jamón y queso: +120 kcal. NO confundir con tortilla española (lleva patata, ~600 kcal).",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

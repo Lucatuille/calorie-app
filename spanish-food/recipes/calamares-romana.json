@@ -1,0 +1,27 @@
+{
+  "nombre": "Calamares a la romana",
+  "categoria": "Pescados y mariscos",
+  "raciones": 1,
+  "porcion_g": 150,
+  "porcion_desc": "ración de bar (6-8 anillas)",
+  "ingredientes": [
+    { "nombre_usda": "squid raw", "cantidad_g": 100, "nota": "anillas de calamar limpias", "factor_coccion": 0.80 },
+    { "nombre_usda": "flour wheat all purpose", "cantidad_g": 20, "nota": "harina de rebozado" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 15, "nota": "huevo batido para rebozar" },
+    { "nombre_usda": "sunflower oil", "cantidad_g": 18, "nota": "aceite de GIRASOL absorbido en fritura (~10-12% peso)" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["calamares a la romana", "calamares fritos", "calamares rebozados", "anillas de calamar"],
+  "token_principal": "calamares",
+  "tokens_secundarios": ["romana", "fritos", "rebozados", "anillas"],
+  "tokens_exclusion": ["plancha", "parrilla", "grilled"],
+  "porciones_guia": [
+    { "desc": "tapa pequeña (4 anillas)", "g": 80 },
+    { "desc": "ración bar (6-8 anillas)", "g": 150 },
+    { "desc": "ración grande", "g": 220 }
+  ],
+  "referencias_visuales": "Anillas doradas en plato con limón. Ración de bar = plato pequeño cubierto. 6-8 anillas medianas = ~150g. En bocadillo de calamares sumar pan (~110g = +300 kcal).",
+  "notas_claude": "Rebozados y fritos en aceite de GIRASOL (no oliva). 'Calamares a la plancha' son completamente distintos: ~60% menos calorías. Si dice solo 'calamares' sin especificar en contexto de bar/tapa → asumir fritos. En bocadillo: sumar pan aparte.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

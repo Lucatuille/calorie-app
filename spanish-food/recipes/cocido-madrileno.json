@@ -1,0 +1,31 @@
+{
+  "nombre": "Cocido madrileño",
+  "categoria": "Legumbres",
+  "raciones": 4,
+  "porcion_g": 400,
+  "porcion_desc": "plato único (garbanzos + carne, sin sopa)",
+  "ingredientes": [
+    { "nombre_usda": "chickpeas raw", "cantidad_g": 300, "nota": "garbanzos secos — cocidos x2.5 = 750g" },
+    { "nombre_usda": "chicken thigh meat raw", "cantidad_g": 200, "nota": "pollo troceado", "factor_coccion": 0.75 },
+    { "nombre_usda": "beef ground raw", "cantidad_g": 200, "nota": "morcillo/falda de ternera", "factor_coccion": 0.70 },
+    { "nombre_usda": "chorizo espanol", "cantidad_g": 80, "nota": "1 chorizo en trozos" },
+    { "nombre_usda": "morcilla", "cantidad_g": 80, "nota": "1 morcilla en rodajas" },
+    { "nombre_usda": "potato raw", "cantidad_g": 200, "nota": "2 patatas medianas" },
+    { "nombre_usda": "carrot raw", "cantidad_g": 80, "nota": "1 zanahoria" },
+    { "nombre_usda": "olive oil", "cantidad_g": 15, "nota": "aceite del sofrito base" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["cocido madrileño", "cocido", "cocido completo"],
+  "token_principal": "cocido",
+  "tokens_secundarios": ["madrileño", "garbanzos"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "plato pequeño", "g": 300 },
+    { "desc": "plato estándar único", "g": 400 },
+    { "desc": "plato grande", "g": 500 }
+  ],
+  "referencias_visuales": "Plato hondo con garbanzos + trozos de carne + rodajas de chorizo y morcilla visibles. Plato único = hondo lleno. Caldo se sirve aparte (no incluido en kcal).",
+  "notas_claude": "Se sirve en tres vuelcos en casa: 1) sopa/caldo, 2) garbanzos + verdura, 3) carnes. En bar/restaurante suele ser todo junto. Esta estimación es SIN caldo (el caldo aparte: ~45 kcal/250ml). Morcilla y chorizo son obligatorios en versión madrileña.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

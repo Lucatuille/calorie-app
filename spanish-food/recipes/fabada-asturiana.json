@@ -1,0 +1,28 @@
+{
+  "nombre": "Fabada asturiana",
+  "categoria": "Legumbres",
+  "raciones": 4,
+  "porcion_g": 380,
+  "porcion_desc": "plato hondo lleno",
+  "ingredientes": [
+    { "nombre_usda": "white beans raw", "cantidad_g": 400, "nota": "fabes de la Granja secas — cocidas x2.5" },
+    { "nombre_usda": "chorizo espanol", "cantidad_g": 80, "nota": "chorizo del compango" },
+    { "nombre_usda": "morcilla", "cantidad_g": 80, "nota": "morcilla asturiana del compango" },
+    { "nombre_usda": "pork belly raw", "cantidad_g": 80, "nota": "tocino/panceta del compango", "factor_coccion": 0.70 },
+    { "nombre_usda": "pork shoulder raw", "cantidad_g": 80, "nota": "lacón del compango", "factor_coccion": 0.75 }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["fabada asturiana", "fabada", "fabes con compango", "fabes"],
+  "token_principal": "fabada",
+  "tokens_secundarios": ["asturiana", "fabes", "compango"],
+  "tokens_exclusion": [],
+  "porciones_guia": [
+    { "desc": "plato pequeño", "g": 280 },
+    { "desc": "plato estándar", "g": 380 },
+    { "desc": "plato grande", "g": 480 }
+  ],
+  "referencias_visuales": "Plato hondo con fabes blancas grandes visibles + trozos de chorizo rojo, morcilla oscura y tocino. Plato hondo lleno = 380g. Muy denso y pesado.",
+  "notas_claude": "'Fabada' sin especificar SIEMPRE es asturiana con compango completo (chorizo + morcilla + lacón + tocino). NO es 'alubias blancas simples'. Muy calórica por la grasa del compango. Sin compango (solo fabes): -40% calorías.",
+  "fuente_primaria": "USDA SR Legacy + BEDCA + cálculo desde ingredientes",
+  "confianza": "alta"
+}

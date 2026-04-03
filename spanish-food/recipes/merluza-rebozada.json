@@ -1,0 +1,27 @@
+{
+  "nombre": "Merluza rebozada",
+  "categoria": "Pescados y mariscos",
+  "raciones": 1,
+  "porcion_g": 160,
+  "porcion_desc": "filete mediano rebozado",
+  "ingredientes": [
+    { "nombre_usda": "hake atlantic raw", "cantidad_g": 120, "nota": "filete merluza fresco sin espinas", "factor_coccion": 0.85 },
+    { "nombre_usda": "flour wheat all purpose", "cantidad_g": 15, "nota": "harina para rebozar" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 15, "nota": "huevo batido para rebozar" },
+    { "nombre_usda": "olive oil", "cantidad_g": 15, "nota": "aceite de oliva absorbido en fritura" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["merluza rebozada", "merluza frita", "filete de merluza rebozado"],
+  "token_principal": "merluza",
+  "tokens_secundarios": ["rebozada", "frita", "filete"],
+  "tokens_exclusion": ["plancha", "horno", "vapor", "hervida"],
+  "porciones_guia": [
+    { "desc": "filete pequeño", "g": 120 },
+    { "desc": "filete mediano", "g": 160 },
+    { "desc": "filete grande", "g": 200 }
+  ],
+  "referencias_visuales": "Filete dorado rectangular en plato, del tamaño de la palma de la mano. Con limón al lado. Si dice 2 filetes: x2.",
+  "notas_claude": "Merluza rebozada = frita en aceite con capa de harina+huevo. 'Merluza a la plancha' es COMPLETAMENTE diferente (~100 kcal menos). Si dice solo 'merluza' sin especificar: en casa española suele ser rebozada. 2 filetes: x2 calorías.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

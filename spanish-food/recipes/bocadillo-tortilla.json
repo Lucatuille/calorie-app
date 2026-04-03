@@ -1,0 +1,27 @@
+{
+  "nombre": "Bocadillo de tortilla",
+  "categoria": "Pan y desayunos",
+  "raciones": 1,
+  "porcion_g": 250,
+  "porcion_desc": "bocadillo estándar con cuña de tortilla",
+  "ingredientes": [
+    { "nombre_usda": "wheat bread", "cantidad_g": 110, "nota": "cuarto de barra española" },
+    { "nombre_usda": "potato french fries", "cantidad_g": 80, "nota": "patata frita dentro de la tortilla (proporción cuña)" },
+    { "nombre_usda": "egg whole raw", "cantidad_g": 40, "nota": "huevo en la tortilla (proporción cuña)", "factor_coccion": 0.95 },
+    { "nombre_usda": "olive oil", "cantidad_g": 12, "nota": "aceite de la tortilla (proporción) + pan" }
+  ],
+  "varianza_pct": 12,
+  "aliases": ["bocadillo de tortilla", "bocata de tortilla", "bocadillo tortilla española"],
+  "token_principal": "bocadillo",
+  "tokens_secundarios": ["tortilla"],
+  "tokens_exclusion": ["jamon", "atun", "lomo", "calamares"],
+  "porciones_guia": [
+    { "desc": "bocadillo pequeño", "g": 180 },
+    { "desc": "bocadillo estándar", "g": 250 },
+    { "desc": "bocadillo grande", "g": 320 }
+  ],
+  "referencias_visuales": "Bocadillo de barra con cuña de tortilla visible dentro. Más grueso que un bocadillo de jamón por el volumen de la tortilla. Cuarto de barra estándar.",
+  "notas_claude": "Pan de barra + cuña de tortilla española. Más calórico de lo que parece: suma pan + tortilla con aceite. Con alioli: +80 kcal. Sin alioli por defecto.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

@@ -1,0 +1,28 @@
+{
+  "nombre": "Crema catalana",
+  "categoria": "Postres",
+  "raciones": 4,
+  "porcion_g": 150,
+  "porcion_desc": "cazuelita individual",
+  "ingredientes": [
+    { "nombre_usda": "egg yolk raw", "cantidad_g": 80, "nota": "4 yemas de huevo" },
+    { "nombre_usda": "milk whole 3.25% fat", "cantidad_g": 400, "nota": "leche entera" },
+    { "nombre_usda": "sugar white", "cantidad_g": 80, "nota": "azúcar para la crema" },
+    { "nombre_usda": "cornstarch", "cantidad_g": 20, "nota": "maicena para espesar (diferencia con crème brûlée)" },
+    { "nombre_usda": "sugar white", "cantidad_g": 20, "nota": "azúcar para la costra quemada" }
+  ],
+  "varianza_pct": 10,
+  "aliases": ["crema catalana", "crema quemada", "crema de sant josep"],
+  "token_principal": "crema",
+  "tokens_secundarios": ["catalana", "quemada"],
+  "tokens_exclusion": ["de verduras", "de calabaza", "de champinones"],
+  "porciones_guia": [
+    { "desc": "cazuelita pequeña", "g": 120 },
+    { "desc": "cazuelita estándar", "g": 150 },
+    { "desc": "cazuelita grande", "g": 190 }
+  ],
+  "referencias_visuales": "Cazuelita de barro individual con superficie dorada/quemada. Color amarillo crema debajo. Tamaño = puño cerrado, ~10cm diámetro.",
+  "notas_claude": "Lleva maicena en lugar de solo nata, lo que la hace algo menos calórica que la crème brûlée francesa. La costra de azúcar quemado aporta ~20 kcal extra. Si dice 'crema catalana' asumir versión tradicional con costra. Sin costra: -20 kcal.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}

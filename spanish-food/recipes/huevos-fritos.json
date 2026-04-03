@@ -1,0 +1,25 @@
+{
+  "nombre": "Huevos fritos",
+  "categoria": "Huevos y tortillas",
+  "raciones": 1,
+  "porcion_g": 130,
+  "porcion_desc": "2 huevos fritos con puntilla",
+  "ingredientes": [
+    { "nombre_usda": "egg fried", "cantidad_g": 110, "nota": "2 huevos L fritos en aceite abundante, con puntilla" },
+    { "nombre_usda": "olive oil", "cantidad_g": 20, "nota": "aceite absorbido — fritura española con puntilla usa aceite abundante" }
+  ],
+  "varianza_pct": 15,
+  "aliases": ["huevos fritos", "huevo frito", "2 huevos fritos", "huevos con puntilla"],
+  "token_principal": "huevos fritos",
+  "tokens_secundarios": ["frito", "fritos", "puntilla"],
+  "tokens_exclusion": ["rotos", "estrellados", "revueltos", "cocidos"],
+  "porciones_guia": [
+    { "desc": "1 huevo frito", "g": 65 },
+    { "desc": "2 huevos fritos", "g": 130 },
+    { "desc": "3 huevos fritos", "g": 195 }
+  ],
+  "referencias_visuales": "2 huevos fritos en plato llano con bordes crujientes dorados (puntilla). Yema visible, clara con bordes irregulares. Charquito de aceite en el plato = normal en España.",
+  "notas_claude": "En España los huevos se fríen SIEMPRE en aceite de oliva abundante (no a la plancha). La puntilla crujiente indica más aceite absorbido. SIN patatas por defecto. Si dice 'huevos fritos con patatas' → sumar patatas fritas aparte (~260 kcal por 100g de patata frita). Confusión: a veces 'huevos fritos' implica con patatas — si el contexto es 'comida' o 'cena' es más probable que lleve patatas.",
+  "fuente_primaria": "USDA SR Legacy + cálculo desde ingredientes",
+  "confianza": "alta"
+}
