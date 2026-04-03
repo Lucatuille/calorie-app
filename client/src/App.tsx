@@ -25,7 +25,8 @@ const History    = lazy(() => import('./pages/History'));
 const Assistant  = lazy(() => import('./pages/Assistant'));
 const Privacy    = lazy(() => import('./pages/Privacy'));
 const Terms      = lazy(() => import('./pages/Terms'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Onboarding     = lazy(() => import('./pages/Onboarding'));
+const ResetPassword  = lazy(() => import('./pages/ResetPassword'));
 const Upgrade    = lazy(() => import('./pages/Upgrade'));
 
 function ProtectedRoute({ children }) {
@@ -149,6 +150,7 @@ function AppRoutes() {
         <Routes>
           <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/privacy"  element={<Privacy />} />
           <Route path="/terms"    element={<Terms />} />
           <Route path="/"           element={<ProtectedRoute><RouteErrorBoundary><Dashboard /></RouteErrorBoundary></ProtectedRoute>} />

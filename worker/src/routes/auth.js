@@ -162,5 +162,136 @@ export async function handleAuth(request, env, path) {
     });
   }
 
+  // POST /api/auth/forgot-password
+  if (path === '/api/auth/forgot-password' && request.method === 'POST') {
+    const { email } = await request.json();
+
+    // Always respond the same way — prevent email enumeration
+    const okResponse = () => jsonResponse({ message: 'Si el email existe, recibirás un enlace para restablecer tu contraseña.' });
+
+    if (!email) return okResponse();
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Rate limit: 3 per email per hour
+    const allowed = await checkRateLimit(env, `reset:${normalizedEmail}`, 3, 3600);
+    if (!allowed) return okResponse(); // silent — don't reveal rate limit
+
+    // Artificial delay to prevent timing attacks
+    await new Promise(r => setTimeout(r, 200));
+
+    const user = await env.DB.prepare(
+      'SELECT id, name FROM users WHERE email = ?'
+    ).bind(normalizedEmail).first();
+
+    if (!user) return okResponse(); // user doesn't exist — same response
+
+    // Generate token
+    const rawToken = crypto.randomUUID() + crypto.randomUUID();
+    const tokenHash = await sha256(rawToken);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = now + 3600; // 1 hour
+
+    // Delete any existing unused tokens for this user
+    await env.DB.prepare(
+      'DELETE FROM password_reset_tokens WHERE user_id = ? AND used_at IS NULL'
+    ).bind(user.id).run();
+
+    // Store hashed token
+    await env.DB.prepare(
+      'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)'
+    ).bind(user.id, tokenHash, expiresAt).run();
+
+    // Send email via Resend
+    const resetLink = `https://caliro.dev/app/reset-password?token=${rawToken}`;
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Caliro <noreply@caliro.dev>',
+          to: [normalizedEmail],
+          subject: 'Restablecer contraseña — Caliro',
+          html: resetEmailHTML(user.name || 'usuario', resetLink),
+        }),
+      });
+    } catch { /* silent — don't fail the request if email fails */ }
+
+    return okResponse();
+  }
+
+  // POST /api/auth/reset-password
+  if (path === '/api/auth/reset-password' && request.method === 'POST') {
+    const { token, newPassword } = await request.json();
+
+    if (!token || !newPassword) {
+      return errorResponse('Token y nueva contraseña son obligatorios');
+    }
+    if (newPassword.length < 8) {
+      return errorResponse('La contraseña debe tener al menos 8 caracteres');
+    }
+
+    const tokenHash = await sha256(token);
+    const now = Math.floor(Date.now() / 1000);
+
+    const row = await env.DB.prepare(
+      'SELECT id, user_id, expires_at, used_at FROM password_reset_tokens WHERE token_hash = ?'
+    ).bind(tokenHash).first();
+
+    if (!row) return errorResponse('Enlace inválido o expirado', 400);
+    if (row.used_at) return errorResponse('Este enlace ya fue utilizado', 400);
+    if (now > row.expires_at) return errorResponse('El enlace ha expirado. Solicita uno nuevo.', 400);
+
+    // Hash new password and update user
+    const hashed = await hashPassword(newPassword);
+    await env.DB.batch([
+      env.DB.prepare('UPDATE users SET password = ? WHERE id = ?').bind(hashed, row.user_id),
+      env.DB.prepare('UPDATE password_reset_tokens SET used_at = ? WHERE id = ?').bind(now, row.id),
+    ]);
+
+    return jsonResponse({ message: 'Contraseña actualizada correctamente' });
+  }
+
   return errorResponse('Not found', 404);
+}
+
+// ── Helpers ─────────────────────────────────────────────────
+
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function resetEmailHTML(name, link) {
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F5F2EE;font-family:'DM Sans',system-ui,sans-serif;">
+<div style="max-width:440px;margin:40px auto;padding:32px 24px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <span style="font-family:Georgia,serif;font-size:28px;font-style:italic;color:#16a34a;">Caliro</span>
+  </div>
+  <div style="background:#ffffff;border-radius:16px;padding:28px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <h1 style="font-size:18px;font-weight:600;margin:0 0 12px;color:#111;">Hola ${name},</h1>
+    <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 20px;">
+      Has solicitado restablecer tu contraseña. Haz clic en el botón para crear una nueva.
+    </p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${link}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:500;">
+        Restablecer contraseña
+      </a>
+    </div>
+    <p style="font-size:12px;color:#999;line-height:1.5;margin:16px 0 0;">
+      Este enlace expira en <strong>1 hora</strong>.<br>
+      Si no solicitaste este cambio, ignora este email — tu contraseña no cambiará.
+    </p>
+  </div>
+  <p style="text-align:center;font-size:11px;color:#bbb;margin-top:24px;">
+    caliro.dev — Seguimiento calórico con IA
+  </p>
+</div>
+</body></html>`;
 }

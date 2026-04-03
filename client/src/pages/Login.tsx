@@ -7,10 +7,25 @@ export default function Login() {
   const [form, setForm]   = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent]   = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const { login } = useAuth();
   const navigate  = useNavigate();
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  async function handleForgot(e) {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    try {
+      await api.forgotPassword({ email: forgotEmail });
+    } catch {} // always show success
+    setForgotSent(true);
+    setForgotLoading(false);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -74,6 +89,62 @@ export default function Login() {
               {loading ? <span className="spinner" /> : 'Entrar'}
             </button>
           </form>
+
+          {/* Forgot password */}
+          {!showForgot ? (
+            <button
+              onClick={() => { setShowForgot(true); setForgotEmail(form.email); }}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 13, color: 'var(--text-2)', marginTop: 12,
+                fontFamily: 'var(--font-sans)', padding: 0, width: '100%', textAlign: 'center',
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          ) : forgotSent ? (
+            <div style={{
+              marginTop: 12, padding: '10px 14px',
+              background: 'rgba(16,185,129,0.08)', borderRadius: 'var(--radius-sm)',
+              fontSize: 13, color: 'var(--accent)', textAlign: 'center',
+              lineHeight: 1.5,
+            }}>
+              Si el email existe, recibirás un enlace para restablecer tu contraseña.
+            </div>
+          ) : (
+            <form onSubmit={handleForgot} style={{ marginTop: 12 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 8 }}>
+                Introduce tu email y te enviaremos un enlace:
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={forgotEmail}
+                  onChange={e => setForgotEmail(e.target.value)}
+                  required
+                  style={{
+                    flex: 1, padding: '8px 10px', fontSize: 13,
+                    border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+                    background: 'var(--bg)', color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-sans)', outline: 'none',
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  style={{
+                    background: 'var(--accent)', color: 'white', border: 'none',
+                    borderRadius: 'var(--radius-sm)', padding: '8px 14px',
+                    fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  {forgotLoading ? '…' : 'Enviar'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--text-2)' }}>

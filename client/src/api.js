@@ -36,8 +36,10 @@ async function request(method, path, body, token) {
 
 export const api = {
   // Auth
-  register: (body)          => request('POST', '/api/auth/register', body),
-  login:    (body)          => request('POST', '/api/auth/login', body),
+  register:       (body) => request('POST', '/api/auth/register', body),
+  login:          (body) => request('POST', '/api/auth/login', body),
+  forgotPassword: (body) => request('POST', '/api/auth/forgot-password', body),
+  resetPassword:  (body) => request('POST', '/api/auth/reset-password', body),
 
   // Profile
   getProfile:    (token)        => request('GET',  '/api/profile', null, token),
