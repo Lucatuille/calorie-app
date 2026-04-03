@@ -7,6 +7,7 @@ import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 import { applyCalibration, findSimilarMeal } from '../utils/calibration.js';
 import { getAiLimit, canAccess } from '../utils/levels.js';
 import { SONNET_PHOTO_DAILY_LIMIT, MAX_TEXT_LENGTH, ADHERENCE_TOLERANCE } from '../constants.js';
+import { matchDish, formatDishContext, formatDishValidation } from '../utils/spanishDishes.js';
 
 // Tamaño máximo de imagen permitido (base64, ~2 MB de imagen original)
 const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
@@ -338,7 +339,17 @@ export async function handleAnalyzeText(request, env, ctx) {
     calibNote = ` [Calibración: usuario consume ${biasPct}% ${dir} de lo estimado]`;
   }
 
-  const userMessage = `${text.trim()}${calibNote}`;
+  // Spanish dishes database lookup (feature flag)
+  let dishContext = '';
+  let dishMatch = null;
+  if (env.SPANISH_DB_ENABLED === 'true') {
+    try {
+      dishMatch = await matchDish(text.trim(), env);
+      if (dishMatch) dishContext = formatDishContext(dishMatch);
+    } catch {}
+  }
+
+  const userMessage = `${text.trim()}${calibNote}${dishContext}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -425,6 +436,7 @@ export async function handleAnalyzeText(request, env, ctx) {
     calibration_confidence:  calibrationProfile?.confidence  || 0,
     calibration_data_points: calibrationProfile?.data_points || 0,
     similar_meal:            similarMeal,
+    spanish_db_match:        dishMatch ? { nombre: dishMatch.dish.nombre, confidence: dishMatch.confidence, kcal_ref: dishMatch.dish.kcal_ref } : null,
     usage: { used: limitCheck.used + 1, limit: limitCheck.limit ?? null },
   });
 }
