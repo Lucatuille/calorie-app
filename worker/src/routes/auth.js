@@ -64,6 +64,9 @@ export async function handleAuth(request, env, path) {
     if (password.length < 8) {
       return errorResponse('La contraseña debe tener al menos 8 caracteres');
     }
+    if (age && Number(age) < 16) {
+      return errorResponse('Debes tener al menos 16 años para registrarte');
+    }
 
     // Check if user exists
     const existing = await env.DB.prepare(

@@ -21,6 +21,10 @@ export default function Register() {
       setError('La contraseña debe tener al menos 8 caracteres');
       return;
     }
+    if (form.age && Number(form.age) < 16) {
+      setError('Caliro está diseñado para mayores de 16 años. Si tienes menos de 16, consulta con un adulto o profesional de salud antes de hacer seguimiento calórico.');
+      return;
+    }
     setLoading(true);
     try {
       const data = await api.register(form);

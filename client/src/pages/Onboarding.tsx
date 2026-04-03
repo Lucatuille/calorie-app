@@ -66,7 +66,9 @@ export default function Onboarding() {
   const [saveError, setSaveError]       = useState(false);
 
   const set = (k, v) => setData(d => ({ ...d, [k]: v }));
-  const canProceed = data.gender && data.age && data.weight && data.height && data.activity;
+  const ageNum = Number(data.age);
+  const ageTooYoung = data.age && ageNum < 16;
+  const canProceed = data.gender && data.age && !ageTooYoung && data.weight && data.height && data.activity;
 
   function computeAndAdvance() {
     const tdeeVal   = calculateTDEE({
@@ -241,6 +243,17 @@ export default function Onboarding() {
                     </div>
                   ))}
                 </div>
+
+                {ageTooYoung && (
+                  <div style={{
+                    padding: '10px 14px', marginBottom: 16,
+                    background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
+                    borderRadius: 'var(--radius-sm)', fontSize: 13, color: '#b91c1c',
+                    lineHeight: 1.5,
+                  }}>
+                    Caliro está diseñado para mayores de 16 años. Si tienes menos de 16, consulta con un adulto o profesional de salud antes de hacer seguimiento calórico.
+                  </div>
+                )}
 
                 {/* Peso objetivo — solo si goal=lose */}
                 {data.goal === 'lose' && (
