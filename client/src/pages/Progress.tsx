@@ -1,5 +1,6 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -7,6 +8,7 @@ import {
 import { ADHERENCE_TOLERANCE } from '../utils/constants';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { isPro } from '../utils/levels';
 const AdvancedAnalytics = lazy(() => import('../components/AdvancedAnalytics'));
 
 function CustomTooltip({ active, payload, label }) {
@@ -73,7 +75,9 @@ function MacroBar({ protein, carbs, fat }) {
 
 export default function Progress() {
   usePageTitle('Progreso');
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const navigate = useNavigate();
+  const userIsPro = isPro(user?.access_level);
   const [data,         setData]         = useState([]);
   const [summary,      setSummary]      = useState(null);
   const [days,         setDays]         = useState(7);
@@ -376,7 +380,7 @@ export default function Progress() {
       {/* ── 5. Análisis profundo — dark card, al final ── */}
       <div style={{ padding: '4px 16px 32px' }}>
         <button
-          onClick={() => setShowAdvanced(true)}
+          onClick={() => userIsPro ? setShowAdvanced(true) : navigate('/upgrade')}
           style={{
             width: '100%',
             background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',
@@ -388,15 +392,17 @@ export default function Progress() {
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{
-              fontSize: 10, background: 'rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.6)', padding: '2px 8px',
-              borderRadius: 'var(--radius-full)', fontWeight: 600,
-              alignSelf: 'flex-start', fontFamily: 'var(--font-sans)',
-              letterSpacing: '0.3px',
-            }}>
-              Pro
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{
+                fontSize: 10, background: userIsPro ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
+                color: 'white', padding: '2px 8px',
+                borderRadius: 'var(--radius-full)', fontWeight: 600,
+                fontFamily: 'var(--font-sans)', letterSpacing: '0.3px',
+              }}>
+                Pro
+              </span>
+              {!userIsPro && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>🔒</span>}
+            </div>
             <span style={{
               fontSize: 15, fontWeight: 500, color: '#ffffff',
               fontFamily: 'var(--font-sans)', marginTop: 2,
@@ -407,7 +413,9 @@ export default function Progress() {
               fontSize: 11, color: 'rgba(255,255,255,0.35)',
               fontFamily: 'var(--font-sans)', lineHeight: 1.4,
             }}>
-              Proyección de peso · patrón calórico · tendencias por día
+              {userIsPro
+                ? 'Proyección de peso · patrón calórico · tendencias por día'
+                : 'Patrones semanales, proyección personalizada y recomendaciones'}
             </span>
           </div>
           <div style={{
@@ -416,7 +424,7 @@ export default function Progress() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, marginLeft: 12,
           }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>→</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>{userIsPro ? '→' : '→'}</span>
           </div>
         </button>
       </div>
