@@ -12,17 +12,18 @@ function HeroBanner({ num, title, subtitle, color, textColor }) {
       flexDirection: 'column',
       gap: 4,
     }}>
-      <span style={{
-        fontFamily: "'Instrument Serif', serif",
-        fontSize: 48,
-        fontWeight: 400,
-        lineHeight: 1,
+      <div style={{
+        fontSize: 12,
+        fontWeight: 600,
         color: textColor,
-        opacity: 0.25,
-      }}>{num}</span>
+        opacity: 1,
+        letterSpacing: '0.08em',
+        marginBottom: 6,
+        fontFamily: "'DM Sans', sans-serif",
+      }}>{num}</div>
       <span style={{
         fontFamily: "'Instrument Serif', serif",
-        fontSize: 28,
+        fontSize: 22,
         fontWeight: 400,
         color: textColor,
         lineHeight: 1.1,
