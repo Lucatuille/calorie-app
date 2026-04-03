@@ -78,10 +78,13 @@ export default function Progress() {
   const [summary,      setSummary]      = useState(null);
   const [days,         setDays]         = useState(7);
   const [loading,      setLoading]      = useState(true);
+  const [loadError,    setLoadError]    = useState(false);
+  const [retryKey,     setRetryKey]     = useState(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     setLoading(true);
+    setLoadError(false);
     Promise.all([
       api.getChart(days, token),
       api.getSummary(token),
@@ -92,9 +95,10 @@ export default function Progress() {
       }));
       setData(formatted);
       setSummary(sum.summary);
-    }).catch(() => {})
+    }).catch(() => { setLoadError(true); })
       .finally(() => setLoading(false));
-  }, [days, token]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days, token, retryKey]);
 
   // Métricas del período
   const periodCalories = data.map(d => d.calories).filter(Boolean);
@@ -131,6 +135,22 @@ export default function Progress() {
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
       <div className="spinner" style={{ width: 32, height: 32 }} />
+    </div>
+  );
+
+  if (loadError && data.length === 0) return (
+    <div style={{ padding: '80px 20px', textAlign: 'center' }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, fontFamily: 'var(--font-sans)' }}>
+        No se pudo cargar el progreso
+      </p>
+      <button
+        onClick={() => setRetryKey(k => k + 1)}
+        style={{
+          background: 'var(--text-primary)', color: 'var(--bg)', border: 'none',
+          borderRadius: 'var(--radius-sm)', padding: '8px 20px',
+          fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans)',
+        }}
+      >Reintentar</button>
     </div>
   );
 

@@ -47,13 +47,15 @@ export default function History() {
   const [saving,     setSaving]     = useState(false);
   const [limit,      setLimit]      = useState(90);
   const [addingForDate, setAddingForDate] = useState(null);
+  const [loadError,  setLoadError]  = useState(false);
 
   async function load(lim = limit) {
     setLoading(true);
+    setLoadError(false);
     try {
       const data = await api.getAllEntries(lim, token);
       setEntries(data);
-    } catch { }
+    } catch { setLoadError(true); }
     finally { setLoading(false); }
   }
 
@@ -114,6 +116,22 @@ export default function History() {
   if (loading && entries.length === 0) return (
     <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
       <div className="spinner" style={{ width: 32, height: 32 }} />
+    </div>
+  );
+
+  if (loadError && entries.length === 0) return (
+    <div style={{ padding: '80px 20px', textAlign: 'center' }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, fontFamily: 'var(--font-sans)' }}>
+        No se pudo cargar el historial
+      </p>
+      <button
+        onClick={() => load()}
+        style={{
+          background: 'var(--text-primary)', color: 'var(--bg)', border: 'none',
+          borderRadius: 'var(--radius-sm)', padding: '8px 20px',
+          fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans)',
+        }}
+      >Reintentar</button>
     </div>
   );
 
