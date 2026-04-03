@@ -29,6 +29,7 @@ const Terms      = lazy(() => import('./pages/Terms'));
 const Onboarding     = lazy(() => import('./pages/Onboarding'));
 const ResetPassword  = lazy(() => import('./pages/ResetPassword'));
 const Upgrade    = lazy(() => import('./pages/Upgrade'));
+const NotFound   = lazy(() => import('./pages/NotFound'));
 
 function ProtectedRoute({ children }) {
   const { user, ready } = useAuth();
@@ -164,7 +165,7 @@ function AppRoutes() {
           <Route path="/profile"    element={<ProtectedRoute><RouteErrorBoundary><Profile /></RouteErrorBoundary></ProtectedRoute>} />
           <Route path="/asistente"  element={<ProtectedRoute><RouteErrorBoundary><Assistant /></RouteErrorBoundary></ProtectedRoute>} />
           <Route path="/upgrade"    element={<ProtectedRoute><RouteErrorBoundary><Upgrade /></RouteErrorBoundary></ProtectedRoute>} />
-          <Route path="*"           element={<Navigate to="/" replace />} />
+          <Route path="*"           element={<NotFound />} />
         </Routes>
         </Suspense>
       </main>
