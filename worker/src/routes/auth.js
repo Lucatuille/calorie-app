@@ -205,7 +205,7 @@ export async function handleAuth(request, env, path) {
     // Send email via Resend
     const resetLink = `https://caliro.dev/app/reset-password?token=${rawToken}`;
     try {
-      await fetch('https://api.resend.com/emails', {
+      const emailRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${env.RESEND_API_KEY}`,
@@ -218,7 +218,11 @@ export async function handleAuth(request, env, path) {
           html: resetEmailHTML(user.name || 'usuario', resetLink),
         }),
       });
-    } catch { /* silent — don't fail the request if email fails */ }
+      if (!emailRes.ok) {
+        const err = await emailRes.text();
+        console.error('Resend error:', emailRes.status, err);
+      }
+    } catch (e) { console.error('Resend fetch error:', e.message); }
 
     return okResponse();
   }
