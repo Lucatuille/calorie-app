@@ -100,6 +100,7 @@ export default function SupplementTracker() {
               </span>
               <button
                 onClick={() => setShowManager(true)}
+                aria-label="Editar suplementos"
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   fontSize: 14, color: 'var(--text-3)', padding: '2px 4px',

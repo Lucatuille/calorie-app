@@ -823,6 +823,7 @@ export default function Calculator() {
                         <button
                           type="button"
                           onClick={() => setDeletingId(d => d === entry.id ? null : entry.id)}
+                          aria-label="Eliminar comida"
                           style={{
                             background: 'none', border: 'none', cursor: 'pointer',
                             color: 'var(--text-tertiary)', fontSize: 16,

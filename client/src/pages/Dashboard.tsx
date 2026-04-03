@@ -346,6 +346,7 @@ export default function Dashboard() {
                 <button
                   type="submit"
                   disabled={weightSaving}
+                  aria-label="Guardar peso"
                   style={{
                     background: 'var(--accent)', color: 'white', border: 'none',
                     borderRadius: 5, padding: '2px 8px',
@@ -355,6 +356,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => { setWeightEditing(false); setWeightValue(weightToday ? String(weightToday) : ''); }}
+                  aria-label="Cancelar"
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer',
                     color: 'var(--text-tertiary)', fontSize: 13, padding: 0,

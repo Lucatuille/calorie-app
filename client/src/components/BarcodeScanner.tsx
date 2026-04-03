@@ -236,6 +236,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
           <p style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>Escanear producto</p>
           <button
             onClick={handleClose}
+            aria-label="Cerrar escáner"
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text-3)', padding: 4 }}
           >✕</button>
         </div>
@@ -327,6 +328,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
                     onClick={() => setGramsInput(s => String(Math.max(1, (parseInt(s) || 0) - 10)))}
+                    aria-label="Reducir cantidad"
                     style={{ width: 38, height: 38, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer', fontSize: 20, fontWeight: 600, flexShrink: 0 }}
                   >−</button>
                   <div style={{ flex: 1, position: 'relative' }}>
@@ -345,6 +347,7 @@ export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
                   </div>
                   <button
                     onClick={() => setGramsInput(s => String((parseInt(s) || 0) + 10))}
+                    aria-label="Aumentar cantidad"
                     style={{ width: 38, height: 38, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', cursor: 'pointer', fontSize: 20, fontWeight: 600, flexShrink: 0 }}
                   >+</button>
                 </div>

@@ -758,16 +758,19 @@ export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
                 <button
                   onClick={forceWhatsNew}
                   title="Preview What's New"
+                  aria-label="Vista previa de novedades"
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: 13, padding: '4px 6px', opacity: 0.5 }}
                 >✨</button>
               )}
               <button
                 onClick={() => fetchTab(activeTab)}
                 title="Actualizar"
+                aria-label="Actualizar"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: 16, padding: '4px 6px' }}
               >🔄</button>
               <button
                 onClick={onClose}
+                aria-label="Cerrar panel"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: 22, padding: '4px 8px', lineHeight: 1 }}
               >✕</button>
             </div>

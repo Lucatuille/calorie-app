@@ -74,6 +74,7 @@ export default function WhatsNew({ release, onDismiss, isClosing }) {
               </span>
               <button
                 onClick={onDismiss}
+                aria-label="Cerrar novedades"
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   color: 'var(--text-3)', fontSize: 18, lineHeight: 1,

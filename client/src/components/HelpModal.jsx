@@ -812,6 +812,7 @@ export default function HelpModal({ onClose }) {
           </span>
           <button
             onClick={onClose}
+            aria-label="Cerrar ayuda"
             style={{
               width: 26,
               height: 26,
@@ -874,6 +875,7 @@ export default function HelpModal({ onClose }) {
               <button
                 key={i}
                 onClick={() => goTo(i)}
+                aria-label={`Página ${i + 1}`}
                 style={{
                   width: i === page ? 16 : 6,
                   height: 6,

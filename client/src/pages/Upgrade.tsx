@@ -205,7 +205,7 @@ export default function Upgrade() {
               flex: 1,
               background: '#1a1a1a',
               color: 'white',
-              border: 'none',
+              border: '0.5px solid rgba(255,255,255,0.15)',
               borderRadius: 12,
               padding: '14px 8px',
               cursor: upgrading ? 'not-allowed' : 'pointer',
