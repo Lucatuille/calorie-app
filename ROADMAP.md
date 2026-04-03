@@ -120,3 +120,11 @@ is unclear. What specific wall does a Free user hit that makes them want to upgr
    the calibration + assistant system is worth more. Underpricing signals low quality.
 4. The weekly digest is a strong retention hook for Pro but invisible to Free users.
    Surface it: "Pro users get a weekly analysis of their patterns" with a sample in the upgrade page.
+
+
+E2E tests (Phase 3.3) — the last quality roadmap item, dedicated session
+
+OG image — design task, not code
+Calibration Engine V2 — waiting for more user data (~500 corrections)
+
+iOS native app — blocked until everything above is solid

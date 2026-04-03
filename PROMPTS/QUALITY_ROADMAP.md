@@ -92,21 +92,21 @@ This gives keyboard users visible focus without affecting mouse/touch users.
 
 ---
 
-## Phase 1 — Foundation (3–5 sessions, low risk)
+## Phase 1 — Foundation (3–5 sessions, low risk) 
 
-### 1.1 CSS Class Extraction (Inline Styles → Classes)
+### 1.1 CSS Class Extraction (Inline Styles → Classes) [X]
 **Effort:** 4–6 hours | **Risk:** Low (visual only) | **Cost:** Free
 
 This is the biggest quality-of-life improvement. Strategy:
 
-**Step 1:** Identify repeated style patterns across components:
+**Step 1:** Identify repeated style patterns across components: [X]
 - Card containers (`background: var(--surface)`, border, radius, shadow)
 - Section labels (9px uppercase, letter-spacing, weight 600)
 - Input fields (border, radius, padding, font)
 - Pill buttons (border-radius 99, padding, font, active/inactive states)
 - Grid layouts (4-column macro grid)
 
-**Step 2:** Add classes to `global.css`:
+**Step 2:** Add classes to `global.css`: [X]
 ```css
 .card         { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
 .card-padded  { padding: 14px 16px; }
@@ -117,7 +117,7 @@ This is the biggest quality-of-life improvement. Strategy:
 .macro-grid   { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 ```
 
-**Step 3:** Replace inline styles one component at a time. Order:
+**Step 3:** Replace inline styles one component at a time. Order: [X]
 1. History.jsx (simplest, edit form has lots of repetition)
 2. Calculator.jsx (biggest file, most benefit)
 3. Dashboard.jsx
@@ -146,7 +146,7 @@ No logic changes — purely cosmetic refactor.
 6. **Test in browser BEFORE committing.** Open the exact page, click through every
    interaction (edit, delete, pills), compare with a screenshot of the original.
 
-### 1.2 Error Boundaries Per Route
+### 1.2 Error Boundaries Per Route [X]
 **Effort:** 1 hour | **Risk:** None | **Cost:** Free
 
 Currently one boundary wraps the entire app. If Dashboard crashes, everything
@@ -175,7 +175,7 @@ Wrap each route in App.jsx:
 <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
 ```
 
-### 1.3 Modal Focus Trap
+### 1.3 Modal Focus Trap [X]
 **Effort:** 30 min | **Risk:** None | **Cost:** Free
 
 PastMealRegistrar, TextAnalyzer, BarcodeScanner, and SupplementManager all
@@ -184,7 +184,7 @@ render portals. None of them trap focus — Tab key goes behind the modal.
 Solution: small `useFocusTrap` hook or use `focus-trap-react` package (~3KB).
 Apply to every portal-based component.
 
-### 1.4 Color Contrast Audit
+### 1.4 Color Contrast Audit [X]
 **Effort:** 1 hour | **Risk:** Low (may need color tweaks) | **Cost:** Free
 
 Run every page through Chrome DevTools Accessibility panel or axe-core.
@@ -200,7 +200,7 @@ for large text). Update CSS variables — all components pick it up automaticall
 
 ## Phase 2 — Type Safety (2–3 sessions, medium risk)
 
-### 2.1 TypeScript Migration — Incremental
+### 2.1 TypeScript Migration — Incremental 
 **Effort:** 8–12 hours total | **Risk:** Medium | **Cost:** Free
 
 Do NOT convert the whole project at once. Incremental strategy:
@@ -242,7 +242,7 @@ API response shapes. Start with `utils.ts`, then routes one at a time.
 
 ## Phase 3 — Testing (3–5 sessions, zero risk to production)
 
-### 3.1 Unit Tests for Critical Functions
+### 3.1 Unit Tests for Critical Functions [X]
 **Effort:** 3 hours | **Risk:** None | **Cost:** Free
 
 Test pure functions first (no mocking needed):
@@ -256,7 +256,7 @@ worker/src/utils/calibration.js → calculateCalibrationProfile, applyCalibratio
 Framework: vitest (already installed in worker, add to client).
 These tests are fast, stable, and catch formula regressions.
 
-### 3.2 API Integration Tests
+### 3.2 API Integration Tests [X]
 **Effort:** 4 hours | **Risk:** None | **Cost:** Free
 
 Test Worker endpoints with vitest + Miniflare (Cloudflare's local runtime):
@@ -304,9 +304,9 @@ Fails the build if regressions happen.
 
 ---
 
-## Phase 4 — Performance (2–3 sessions, low risk)
+## Phase 4 — Performance (2–3 sessions, low risk) 
 
-### 4.1 Code Splitting / Lazy Loading
+### 4.1 Code Splitting / Lazy Loading [X]
 **Effort:** 2 hours | **Risk:** Low | **Cost:** Free
 
 React.lazy + Suspense for route-level splitting:
@@ -328,7 +328,7 @@ Lazy loading them means the Dashboard loads instantly.
 
 **Expected impact:** Initial bundle from ~335KB gzipped → ~180KB gzipped.
 
-### 4.2 Bundle Analysis
+### 4.2 Bundle Analysis [X]
 **Effort:** 30 min | **Risk:** None | **Cost:** Free
 
 ```bash
@@ -355,7 +355,7 @@ Then decide: tree-shake, lazy-load, or replace.
 
 ## Phase 5 — Security Hardening (1–2 sessions, medium risk)
 
-### 5.1 CSRF Protection
+### 5.1 CSRF Protection[X]
 **Effort:** 2 hours | **Risk:** Medium (touches auth flow) | **Cost:** Free
 
 **Option A (simple):** Check `Origin` header on all POST/PUT/DELETE requests
@@ -372,7 +372,7 @@ both a cookie and a header. Worker validates they match.
 
 Option A is sufficient for this app's threat model.
 
-### 5.2 Password Policy
+### 5.2 Password Policy [X]
 **Effort:** 30 min | **Risk:** None | **Cost:** Free
 
 Add to `/api/auth/register`:
@@ -472,14 +472,14 @@ This is essential if you ever:
 
 ```
 Week 1:  Phase 0 (quick wins) — zero risk, immediate quality boost [X]
-Week 2:  Phase 1.1 (CSS extraction) — start with History.jsx
-Week 3:  Phase 1.2-1.4 (error boundaries, focus trap, contrast)
-Week 4:  Phase 3.1 (unit tests for pure functions)
-Week 5:  Phase 2.1 steps 1-2 (TS setup + type utilities)
-Week 6:  Phase 4.1-4.2 (code splitting + bundle analysis)
-Week 7:  Phase 3.2 (API integration tests)
-Week 8:  Phase 5.1-5.2 (CSRF + password policy)
-Week 9:  Phase 2.1 steps 3-4 (type context + pages)
+Week 2:  Phase 1.1 (CSS extraction) — start with History.jsx [X]
+Week 3:  Phase 1.2-1.4 (error boundaries, focus trap, contrast) [X]
+Week 4:  Phase 3.1 (unit tests for pure functions) [X]
+Week 5:  Phase 2.1 steps 1-2 (TS setup + type utilities) [X]
+Week 6:  Phase 4.1-4.2 (code splitting + bundle analysis) [X]
+Week 7:  Phase 3.2 (API integration tests) [X]
+Week 8:  Phase 5.1-5.2 (CSRF + password policy) [X]
+Week 9:  Phase 2.1 steps 3-4 (type context + pages) [X]
 Week 10: Phase 3.3 (E2E tests)
 Week 11: Phase 5.4 (CSP headers)
 Week 12: Phase 6 (documentation)
