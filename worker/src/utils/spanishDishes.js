@@ -88,38 +88,52 @@ export function formatDishContext(match) {
 
   const { dish, confidence } = match;
 
+  // Parse porciones guide
+  let porcionesText = '';
+  try {
+    const porciones = JSON.parse(dish.porciones_guia || '[]');
+    if (porciones.length) {
+      porcionesText = '\nGuía de porciones:\n' + porciones.map(p => `  - ${p.desc}: ${p.g}g = ${p.kcal} kcal`).join('\n');
+    }
+  } catch {}
+
+  const refVisuales = dish.referencias_visuales
+    ? `\nReferencias visuales: ${dish.referencias_visuales}` : '';
+
   if (confidence === 'high') {
     return `
 DATOS OFICIALES VERIFICADOS — USAR COMO BASE OBLIGATORIA:
 Fuente: ${dish.fuente_primaria}
 Plato identificado: ${dish.nombre}
-Porción de referencia: ${dish.porcion_g}g (${dish.porcion_desc})
 
-Valores por porción de referencia:
-  Calorías: ${dish.kcal_ref} kcal [rango verificado: ${dish.kcal_min}-${dish.kcal_max} kcal]
-  Proteína: ${dish.proteina_g}g
-  Carbohidratos: ${dish.carbos_g}g
-  Grasa: ${dish.grasa_g}g
+Valores por 100g: ${dish.kcal_per_100g} kcal | ${dish.proteina_per_100g}g prot | ${dish.carbos_per_100g}g carb | ${dish.grasa_per_100g}g grasa
 
-Instrucción: Estos valores son datos oficiales españoles verificados. Úsalos como base. Ajusta proporcionalmente si el usuario indica cantidad diferente a la porción de referencia.
+Porción de referencia: ${dish.porcion_g}g (${dish.porcion_desc}) = ${dish.kcal_ref} kcal [${dish.kcal_min}-${dish.kcal_max}]
+  Proteína: ${dish.proteina_g}g | Carbohidratos: ${dish.carbos_g}g | Grasa: ${dish.grasa_g}g
+${porcionesText}${refVisuales}
+
+Instrucción: Usa los valores por 100g para calcular la cantidad que estimas. La guía de porciones es tu ancla para textos ambiguos. Las referencias visuales son para estimación desde foto.
 ${dish.notas_claude || ''}`;
   }
 
   if (confidence === 'medium') {
     return `
 POSIBLE COINCIDENCIA EN BASE DE DATOS ESPAÑOLA:
-Plato probable: ${dish.nombre} (${dish.porcion_g}g = ${dish.kcal_ref} kcal)
+Plato probable: ${dish.nombre}
+Valores por 100g: ${dish.kcal_per_100g} kcal | ${dish.proteina_per_100g}g prot | ${dish.carbos_per_100g}g carb | ${dish.grasa_per_100g}g grasa
+Porción ref: ${dish.porcion_g}g = ${dish.kcal_ref} kcal [${dish.kcal_min}-${dish.kcal_max}]
+${porcionesText}
 Confianza: MEDIA — verifica por contexto antes de usar.
-${dish.notas_claude || ''}
-Si el plato coincide, usa estos valores como base.`;
+${dish.notas_claude || ''}`;
   }
 
   // Low confidence
   return `
-POSIBLE REFERENCIA (verificar con el usuario):
+POSIBLE REFERENCIA (verificar):
 El texto menciona "${dish.token_principal}" — podría ser ${dish.nombre}.
 Si es así: ${dish.porcion_g}g = ${dish.kcal_ref} kcal [${dish.kcal_min}-${dish.kcal_max}]
-Indica en las notas de tu respuesta si hay ambigüedad.`;
+Por 100g: ${dish.kcal_per_100g} kcal
+Indica en las notas si hay ambigüedad.`;
 }
 
 /**
@@ -130,9 +144,24 @@ export function formatDishValidation(match) {
   if (!match || match.confidence === 'low') return '';
 
   const { dish } = match;
+
+  let porcionesText = '';
+  try {
+    const porciones = JSON.parse(dish.porciones_guia || '[]');
+    if (porciones.length) {
+      porcionesText = '\nPorciones de referencia:\n' + porciones.map(p => `  - ${p.desc}: ${p.g}g = ${p.kcal} kcal`).join('\n');
+    }
+  } catch {}
+
+  const refVisuales = dish.referencias_visuales
+    ? `\nReferencias visuales para estimar tamaño: ${dish.referencias_visuales}` : '';
+
   return `
 VALIDACIÓN CON BASE DE DATOS ESPAÑOLA:
 El plato parece ser "${dish.nombre}".
-Referencia verificada: ${dish.kcal_ref} kcal por ${dish.porcion_g}g [${dish.kcal_min}-${dish.kcal_max}].
-Si tu estimación difiere >20% de este rango, revisa tu cálculo.`;
+Valores por 100g: ${dish.kcal_per_100g} kcal | ${dish.proteina_per_100g}g prot | ${dish.carbos_per_100g}g carb | ${dish.grasa_per_100g}g grasa
+Referencia: ${dish.kcal_ref} kcal por ${dish.porcion_g}g [${dish.kcal_min}-${dish.kcal_max}]
+${porcionesText}${refVisuales}
+Instrucción: Usa las referencias visuales para estimar el tamaño en la foto. Calcula con valores por 100g. Si tu estimación difiere >20% del rango verificado, revisa.
+${dish.notas_claude || ''}`;
 }
