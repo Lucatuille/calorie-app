@@ -278,80 +278,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Peso inline pill */}
-          <div style={{ marginBottom: 12 }}>
-            {weightEditing ? (
-              <form
-                onSubmit={e => { e.preventDefault(); handleWeightSave(); }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-              >
-                <input
-                  ref={weightRef}
-                  autoFocus
-                  type="text"
-                  inputMode="decimal"
-                  value={weightValue}
-                  onChange={e => {
-                    const v = e.target.value.replace(',', '.');
-                    if (/^\d{0,3}\.?\d{0,1}$/.test(v)) setWeightValue(v);
-                  }}
-                  placeholder={weightLast ? String(weightLast) : '70.0'}
-                  style={{
-                    width: 52, textAlign: 'center', fontWeight: 600,
-                    fontSize: 13, border: '1px solid var(--accent)',
-                    borderRadius: 6, padding: '2px 4px',
-                    background: 'var(--bg)', color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-sans)', outline: 'none',
-                  }}
-                />
-                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>kg</span>
-                <button
-                  type="submit"
-                  disabled={weightSaving}
-                  style={{
-                    background: 'var(--accent)', color: 'white', border: 'none',
-                    borderRadius: 5, padding: '2px 8px',
-                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                  }}
-                >{weightSaving ? '…' : '✓'}</button>
-                <button
-                  type="button"
-                  onClick={() => { setWeightEditing(false); setWeightValue(weightToday ? String(weightToday) : ''); }}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: 'var(--text-tertiary)', fontSize: 13, padding: 0,
-                  }}
-                >×</button>
-              </form>
-            ) : weightToday ? (
-              <button
-                onClick={() => { setWeightValue(String(weightToday)); setWeightEditing(true); }}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
-                }}
-              >
-                {weightToday} kg
-                {wArrow && (
-                  <span style={{ fontWeight: 600, color: wColor }}>
-                    {wArrow}{wDelta && <span style={{ fontSize: 11 }}> {wDelta}</span>}
-                  </span>
-                )}
-              </button>
-            ) : (
-              <button
-                onClick={() => { setWeightValue(weightLast ? String(weightLast) : ''); setWeightEditing(true); }}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                  fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)',
-                }}
-              >
-                + peso{weightLast ? ` (${weightLast} kg)` : ''}
-              </button>
-            )}
-          </div>
-
           {/* Barra segmentada */}
           {targetCalories > 0 && (
             <>
@@ -382,6 +308,85 @@ export default function Dashboard() {
             <MacroCard val={todayProtein} target={targetProtein} label="proteína" color="var(--color-protein)" />
             <MacroCard val={todayCarbs}   target={targetCarbs}   label="carbos"   color="var(--color-carbs)" />
             <MacroCard val={todayFat}     target={targetFat}     label="grasa"    color="var(--color-fat)" />
+          </div>
+
+          {/* Peso pill */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+            {weightEditing ? (
+              <form
+                onSubmit={e => { e.preventDefault(); handleWeightSave(); }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'var(--bg)', border: '0.5px solid var(--border)',
+                  borderRadius: 'var(--radius-full)', padding: '5px 14px',
+                }}
+              >
+                <input
+                  ref={weightRef}
+                  autoFocus
+                  type="text"
+                  inputMode="decimal"
+                  value={weightValue}
+                  onChange={e => {
+                    const v = e.target.value.replace(',', '.');
+                    if (/^\d{0,3}\.?\d{0,1}$/.test(v)) setWeightValue(v);
+                  }}
+                  placeholder={weightLast ? String(weightLast) : '70.0'}
+                  style={{
+                    width: 48, textAlign: 'center', fontWeight: 600,
+                    fontSize: 13, border: '1px solid var(--accent)',
+                    borderRadius: 6, padding: '2px 4px',
+                    background: 'var(--surface)', color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-sans)', outline: 'none',
+                  }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>kg</span>
+                <button
+                  type="submit"
+                  disabled={weightSaving}
+                  style={{
+                    background: 'var(--accent)', color: 'white', border: 'none',
+                    borderRadius: 5, padding: '2px 8px',
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >{weightSaving ? '…' : '✓'}</button>
+                <button
+                  type="button"
+                  onClick={() => { setWeightEditing(false); setWeightValue(weightToday ? String(weightToday) : ''); }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-tertiary)', fontSize: 13, padding: 0,
+                  }}
+                >×</button>
+              </form>
+            ) : (
+              <button
+                onClick={() => { setWeightValue(weightToday ? String(weightToday) : (weightLast ? String(weightLast) : '')); setWeightEditing(true); }}
+                style={{
+                  background: 'var(--bg)', border: '0.5px solid var(--border)',
+                  borderRadius: 'var(--radius-full)', padding: '5px 14px',
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5,
+                  fontFamily: 'var(--font-sans)',
+                }}
+              >
+                {weightToday ? (
+                  <>
+                    <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
+                      ⚖ {weightToday} kg
+                    </span>
+                    {wArrow && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: wColor }}>
+                        {wArrow}{wDelta && ` ${wDelta}`}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    + Registrar peso
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
