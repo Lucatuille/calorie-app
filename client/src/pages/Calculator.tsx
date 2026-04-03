@@ -6,6 +6,7 @@ import { MEAL_TYPES, getMeal } from '../utils/meals';
 import { MEAL_HOURS, MAX_IMAGE_PX, JPEG_QUALITY } from '../utils/constants';
 import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
+import WeightInput    from '../components/WeightInput';
 
 const BarcodeIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
@@ -919,6 +920,11 @@ export default function Calculator() {
           </div>
         </>
       )}
+
+      {/* ── Peso del día ── */}
+      <div style={{ padding: '0 16px', marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+        <WeightInput />
+      </div>
     </section>
   );
 }

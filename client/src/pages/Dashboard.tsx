@@ -6,7 +6,6 @@ import { LEVEL_CONFIG, getBadgeStyle, isPro } from '../utils/levels';
 import { MEAL_TYPES } from '../utils/meals';
 import { getEstadoCalorico } from '../utils/assistantMessages';
 import SupplementTracker from '../components/SupplementTracker';
-import WeightInput from '../components/WeightInput';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -198,8 +197,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* ── 1.5. Peso del día ── */}
-      <WeightInput />
+
 
       {/* ── 2. Hero calórico ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
