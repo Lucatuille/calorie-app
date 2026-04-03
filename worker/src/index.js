@@ -15,9 +15,12 @@ import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
 import { handleStripe } from './routes/stripe.js';
 import { handleWeight } from './routes/weight.js';
-import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse, authenticate } from './utils.js';
+import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse, authenticate, setRequestContext } from './utils.js';
 
 async function handleRequest(request, env, ctx) {
+  // Set request context for CORS — all jsonResponse/errorResponse calls pick it up
+  setRequestContext(request);
+
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: getCorsHeaders(request) });

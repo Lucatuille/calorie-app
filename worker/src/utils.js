@@ -28,10 +28,15 @@ export const corsHeaders = {
   'Vary': 'Origin',
 };
 
+// Request context — set once per request in index.js, used by jsonResponse/errorResponse
+let _currentRequest = null;
+export function setRequestContext(request) { _currentRequest = request; }
+
 export function jsonResponse(data, status = 200, request = null) {
+  const req = request || _currentRequest;
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...(request ? getCorsHeaders(request) : corsHeaders) },
+    headers: { 'Content-Type': 'application/json', ...(req ? getCorsHeaders(req) : corsHeaders) },
   });
 }
 
