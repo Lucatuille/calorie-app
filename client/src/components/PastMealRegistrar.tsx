@@ -694,8 +694,9 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
       {/* BarcodeScanner portal */}
       {scannerOpen && (
         <BarcodeScanner
+          isOpen={true}
           onClose={() => setScannerOpen(false)}
-          onAdd={handleAddScannedProduct}
+          onAddProduct={handleAddScannedProduct}
         />
       )}
     </div>

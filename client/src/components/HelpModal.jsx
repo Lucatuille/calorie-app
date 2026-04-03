@@ -779,8 +779,10 @@ export default function HelpModal({ onClose }) {
     >
       <div
         onClick={e => e.stopPropagation()}
+        data-theme="light"
         style={{
           background: '#fff',
+          colorScheme: 'light',
           borderRadius: isDesktop ? '20px' : '20px 20px 0 0',
           width: '100%',
           maxWidth: isDesktop ? 480 : 'none',

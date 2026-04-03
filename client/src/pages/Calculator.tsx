@@ -619,7 +619,7 @@ export default function Calculator() {
                   <span>{aiResult.error}</span>
                   <button
                     type="button"
-                    onClick={() => { setAiResult(null); analyzePhoto(); }}
+                    onClick={() => { setAiResult(null); handleAnalyze(); }}
                     style={{
                       background: 'none', border: '0.5px solid rgba(239,68,68,0.3)',
                       borderRadius: 6, padding: '4px 10px', fontSize: 12,
