@@ -1,2 +1,3 @@
 /landing  /  301
+/blog     /blog/index.html  200
 /app/*    /app/   200
