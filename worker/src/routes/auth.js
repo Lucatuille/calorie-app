@@ -85,18 +85,20 @@ export async function handleAuth(request, env, path) {
     const userId = result.meta.last_row_id;
     const token  = await signJWT({ userId, email, name, is_admin: 0, access_level: 3 }, env.JWT_SECRET);
 
-    // Welcome email (non-blocking)
+    // Welcome email — await to ensure it completes before Worker exits
     if (env.RESEND_API_KEY) {
-      fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'Caliro <noreply@caliro.dev>',
-          to: [email.toLowerCase()],
-          subject: 'Bienvenido a Caliro',
-          html: welcomeEmailHTML(name, email.toLowerCase()),
-        }),
-      }).catch(() => {});
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Caliro <noreply@caliro.dev>',
+            to: [email.toLowerCase()],
+            subject: 'Bienvenido a Caliro',
+            html: welcomeEmailHTML(name, email.toLowerCase()),
+          }),
+        });
+      } catch { /* silent — don't fail registration if email fails */ }
     }
 
     return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0, age: age||null, weight: weight||null, height: height||null, gender: gender||null } }, 201);
