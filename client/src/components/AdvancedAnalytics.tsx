@@ -42,7 +42,7 @@ function Skeleton({ h = 16, mb = 0 }) {
   );
 }
 
-function Section({ title, children, style }) {
+function Section({ title, children, style = {} }) {
   return (
     <div style={{ marginBottom: 28, ...style }}>
       <p style={{
@@ -84,15 +84,17 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
   const [period,          setPeriod]          = useState('month');
   const [data,            setData]            = useState(null);
   const [loading,         setLoading]         = useState(false);
+  const [loadError,       setLoadError]       = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
     setData(null);
+    setLoadError(false);
     api.getAdvancedAnalytics(period, token)
       .then(setData)
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [isOpen, period, token]);
 
@@ -240,8 +242,19 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
             </div>
           )}
 
+          {/* Error state */}
+          {!loading && loadError && (
+            <div style={{ textAlign: 'center', padding: '56px 0', color: 'var(--text-2)' }}>
+              <p style={{ fontSize: 14, marginBottom: 12 }}>No se pudo cargar el análisis</p>
+              <button
+                onClick={() => { setLoadError(false); setLoading(true); api.getAdvancedAnalytics(period, token).then(setData).catch(() => setLoadError(true)).finally(() => setLoading(false)); }}
+                style={{ background: 'var(--text-primary)', color: 'var(--bg)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '8px 20px', fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
+              >Reintentar</button>
+            </div>
+          )}
+
           {/* No data */}
-          {!loading && data && data.days_with_data === 0 && (
+          {!loading && !loadError && data && data.days_with_data === 0 && (
             <div style={{ textAlign: 'center', padding: '56px 0', color: 'var(--text-3)' }}>
               <p style={{ fontSize: 36, marginBottom: 12 }}>📊</p>
               <p style={{ fontWeight: 500 }}>No hay datos para este período</p>
@@ -272,7 +285,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     value={data.calories.best_day_of_week
                       ? `${DAY_EMOJIS[data.calories.best_day_of_week] || ''} ${data.calories.best_day_of_week}`
                       : '—'}
-                    sub="menos calorías"
+                    sub={userTarget ? "más en objetivo" : "menos calorías"}
                   />
                   <StatBox
                     label="Racha más larga"
@@ -280,6 +293,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     sub={data.streaks.longest_in_period === 1 ? 'día seguido' : 'días seguidos'}
                   />
                 </div>
+                {data.streaks.current > 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--accent)', textAlign: 'center', marginTop: 6, fontFamily: 'var(--font-sans)' }}>
+                    🔥 Racha actual: {data.streaks.current} {data.streaks.current === 1 ? 'día' : 'días'}
+                  </p>
+                )}
               </Section>
 
               {/* ── Sección 2: Calorías ── */}
@@ -426,6 +444,32 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                 </Section>
               )}
 
+              {/* ── Top comidas ── */}
+              {data.top_foods?.length > 0 && (
+                <Section title="Comidas más registradas">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {data.top_foods.map((f, i) => (
+                      <div key={i} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
+                        padding: '8px 12px', border: '0.5px solid var(--border)',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                          <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 600, width: 18, flexShrink: 0 }}>{i + 1}</span>
+                          <span style={{ fontSize: 13, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {f.name}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>{f.times}×</span>
+                          <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600, fontFamily: 'var(--font-sans)' }}>{f.avg_cal} kcal</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               {/* ── Sección 4: Proyección de peso ── */}
               <Section title="Proyección de peso">
                 {data.weight?.current == null ? (
@@ -462,11 +506,27 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         <div style={{ padding: '10px 10px 12px' }}>
                           <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Días al objetivo</p>
                           <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
-                            {data.projection?.days_to_goal_realistic ? `~${data.projection.days_to_goal_realistic}` : '—'}
+                            {data.projection?.days_to_goal_realistic
+                              ? data.projection.days_to_goal_realistic >= 730 ? '>2 años' : `~${data.projection.days_to_goal_realistic}`
+                              : '—'}
                           </p>
                           <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>días</p>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Déficit + cambio de peso */}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      {data.projection?.daily_deficit_effective != null && (
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 'var(--radius-full)' }}>
+                          Déficit real: {Math.round(data.projection.daily_deficit_effective)} kcal/día
+                        </span>
+                      )}
+                      {data.weight?.change != null && (
+                        <span style={{ fontSize: 11, color: data.weight.change <= 0 ? 'var(--accent)' : 'var(--color-carbs)', fontFamily: 'var(--font-sans)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 'var(--radius-full)' }}>
+                          {data.weight.change > 0 ? '+' : ''}{data.weight.change} kg en el período
+                        </span>
+                      )}
                     </div>
 
                     {/* Gráfico de proyección */}

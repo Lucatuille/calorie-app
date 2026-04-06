@@ -21,7 +21,7 @@ function projectWeightScenario(startWeight, dailyDeficit, adherenceRate, days) {
     const tdeeReduction = weightLost * 22;
     const adjustedDeficit = (dailyDeficit - tdeeReduction) * adaptationFactor * adherenceRate;
     const tissueEnergyDensity = day < 14 ? 5000 : 7200;
-    weight -= Math.max(0, adjustedDeficit) / tissueEnergyDensity;
+    weight -= adjustedDeficit / tissueEnergyDensity;
   }
   return Math.round(weight * 10) / 10;
 }
@@ -236,6 +236,14 @@ export async function handleProgress(request, env, path) {
        GROUP BY meal_type`
     ).bind(user.userId).all();
 
+    // Top 5 most logged foods
+    const { results: topFoods } = await env.DB.prepare(
+      `SELECT name, COUNT(*) as times, ROUND(AVG(calories)) as avg_cal
+       FROM entries WHERE user_id = ? AND name IS NOT NULL AND name != ''
+       AND date >= date('now', '-${days} days') AND date < date('now')
+       GROUP BY LOWER(name) ORDER BY times DESC LIMIT 5`
+    ).bind(user.userId).all();
+
     // Best/worst day of week by average calories
     const { results: dowStats } = await env.DB.prepare(
       `SELECT
@@ -313,8 +321,12 @@ export async function handleProgress(request, env, path) {
     const startWeight   = weightVals.length ? weightVals[0] : null;
     const weightChange  = (currentWeight != null && startWeight != null)
       ? +((currentWeight - startWeight).toFixed(1)) : null;
-    const trendPerWeek  = (weightChange != null && weightEntries.length >= 2)
-      ? +((weightChange / (days / 7)).toFixed(2)) : null;
+    // Use actual span between first and last weight entry, not total period
+    const weightSpanDays = weightEntries.length >= 2
+      ? (new Date(weightEntries[weightEntries.length-1].date + 'T12:00:00Z') - new Date(weightEntries[0].date + 'T12:00:00Z')) / 86400000
+      : 0;
+    const trendPerWeek = (weightChange != null && weightSpanDays >= 3)
+      ? +((weightChange / (weightSpanDays / 7)).toFixed(2)) : null;
 
     // ── Scientific projection (dynamic adaptive model) ─────────
     // Calorie variability (coefficient of variation)
@@ -377,7 +389,9 @@ export async function handleProgress(request, env, path) {
 
       const lossIn30 = currentWeight - r30;
       if (goalWeight && lossIn30 > 0 && currentWeight > goalWeight) {
-        daysToGoalRealistic = Math.round((currentWeight - goalWeight) * (30 / lossIn30));
+        daysToGoalRealistic = Math.min(730, Math.round((currentWeight - goalWeight) * (30 / lossIn30)));
+      } else if (goalWeight && lossIn30 <= 0 && currentWeight > goalWeight) {
+        daysToGoalRealistic = 730; // surplus or no progress — cap at 2 years
       }
     }
 
@@ -424,7 +438,7 @@ export async function handleProgress(request, env, path) {
 
     return jsonResponse({
       period,
-      days_with_data: daily.length,
+      days_with_data: calDays.length,
       total_days: days,
 
       calories: {
@@ -433,7 +447,7 @@ export async function handleProgress(request, env, path) {
         adherence_pct: adherencePct,
         best_day_of_week: bestDay,
         worst_day_of_week: worstDay, worst_day_avg: worstDayAvg,
-        trend, trend_pct: Math.abs(trendPct),
+        trend, trend_pct: trendPct,
       },
 
       meals: {
@@ -471,6 +485,7 @@ export async function handleProgress(request, env, path) {
         current: currentStreak,
       },
 
+      top_foods: topFoods || [],
       daily_data: daily,
     });
   }
