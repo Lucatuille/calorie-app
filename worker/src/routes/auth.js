@@ -93,6 +93,7 @@ export async function handleAuth(request, env, path) {
           headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             from: 'Caliro <noreply@caliro.dev>',
+            reply_to: 'contacto@caliro.dev',
             to: [email.toLowerCase()],
             subject: 'Bienvenido a Caliro',
             html: welcomeEmailHTML(name, email.toLowerCase()),
@@ -232,6 +233,7 @@ export async function handleAuth(request, env, path) {
         },
         body: JSON.stringify({
           from: 'Caliro <noreply@caliro.dev>',
+          reply_to: 'contacto@caliro.dev',
           to: [normalizedEmail],
           subject: 'Restablecer contraseña — Caliro',
           html: resetEmailHTML(user.name || 'usuario', resetLink),
@@ -426,7 +428,7 @@ function welcomeEmailHTML(name, email) {
                 </tr>
                 <tr>
                   <td align="center" style="padding-bottom:32px;">
-                    <a href="https://caliro.dev/app" target="_blank"
+                    <a href="https://caliro.dev/app/" target="_blank"
                        style="display:inline-block;background-color:#111111;color:#ffffff;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:15px;font-weight:500;text-decoration:none;padding:14px 40px;border-radius:9999px;letter-spacing:0.1px;">
                       Abrir Caliro
                     </a>
