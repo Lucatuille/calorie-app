@@ -46,7 +46,7 @@ export const api = {
   updateProfile: (body, token)  => request('PUT',  '/api/profile', body, token),
 
   // Entries
-  getAllEntries:    (limit, token)    => request('GET',    `/api/entries?limit=${limit}`, null, token),
+  getAllEntries:    (limit, token, offset = 0) => request('GET', `/api/entries?limit=${limit}&offset=${offset}`, null, token),
   getTodayEntries: (token)           => request('GET',    '/api/entries/today', null, token),
   saveEntry:       (body, token)     => request('POST',   '/api/entries', body, token),
   updateEntry:     (id, body, token) => request('PUT',    `/api/entries/${id}`, body, token),

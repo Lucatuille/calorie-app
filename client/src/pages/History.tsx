@@ -39,22 +39,24 @@ const MACRO_META = [
 export default function History() {
   usePageTitle('Historial');
   const { token } = useAuth();
+  const PAGE_SIZE = 90;
   const [entries,    setEntries]    = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [editingId,  setEditingId]  = useState(null);
   const [editForm,   setEditForm]   = useState(EMPTY_FORM);
   const [deletingId, setDeletingId] = useState(null);
   const [saving,     setSaving]     = useState(false);
-  const [limit,      setLimit]      = useState(90);
+  const [hasMore,    setHasMore]    = useState(true);
   const [addingForDate, setAddingForDate] = useState(null);
   const [loadError,  setLoadError]  = useState(false);
 
-  async function load(lim = limit) {
+  async function load() {
     setLoading(true);
     setLoadError(false);
     try {
-      const data = await api.getAllEntries(lim, token);
+      const data = await api.getAllEntries(PAGE_SIZE, token);
       setEntries(data);
+      setHasMore(data.length === PAGE_SIZE);
     } catch { setLoadError(true); }
     finally { setLoading(false); }
   }
@@ -105,9 +107,13 @@ export default function History() {
   }
 
   async function loadMore() {
-    const newLimit = limit + 90;
-    setLimit(newLimit);
-    load(newLimit);
+    setLoading(true);
+    try {
+      const data = await api.getAllEntries(PAGE_SIZE, token, entries.length);
+      setEntries(prev => [...prev, ...data]);
+      setHasMore(data.length === PAGE_SIZE);
+    } catch { }
+    finally { setLoading(false); }
   }
 
   const set = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
@@ -424,7 +430,7 @@ export default function History() {
             );
           })}
 
-          {entries.length >= limit && (
+          {hasMore && (
             <button
               onClick={loadMore}
               disabled={loading}

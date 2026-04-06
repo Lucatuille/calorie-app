@@ -57,13 +57,14 @@ export async function handleEntries(request, env, path) {
     return jsonResponse(entry, 201);
   }
 
-  // GET /api/entries — list with optional ?limit=N (default 90, max 365)
+  // GET /api/entries — list with optional ?limit=N&offset=N (default limit 90, max 365)
   if (path === '/api/entries' && request.method === 'GET') {
-    const url   = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '90'), 365);
+    const url    = new URL(request.url);
+    const limit  = Math.min(parseInt(url.searchParams.get('limit') || '90'), 365);
+    const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
     const { results } = await env.DB.prepare(
-      `SELECT * FROM entries WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT ?`
-    ).bind(user.userId, limit).all();
+      `SELECT * FROM entries WHERE user_id = ? ORDER BY date DESC, created_at DESC LIMIT ? OFFSET ?`
+    ).bind(user.userId, limit, offset).all();
     return jsonResponse(results);
   }
 
