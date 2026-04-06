@@ -128,7 +128,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     : '#ef4444';
 
   const trendText = (() => {
-    const t = data?.calories?.trend, p = data?.calories?.trend_pct;
+    const t = data?.calories?.trend, p = Math.abs(data?.calories?.trend_pct || 0);
     if (!t) return null;
     if (t === 'improving') return `¡Vas mejorando! Tu segunda mitad ha sido un ${p}% mejor`;
     if (t === 'worsening') return `Cuidado — tu segunda mitad ha sido un ${p}% peor`;
@@ -294,9 +294,17 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                   />
                 </div>
                 {data.streaks.current > 0 && (
-                  <p style={{ fontSize: 12, color: 'var(--accent)', textAlign: 'center', marginTop: 6, fontFamily: 'var(--font-sans)' }}>
-                    🔥 Racha actual: {data.streaks.current} {data.streaks.current === 1 ? 'día' : 'días'}
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+                    <span style={{
+                      fontSize: 11, color: 'var(--color-carbs)',
+                      background: 'rgba(245,158,11,0.1)',
+                      border: '0.5px solid rgba(245,158,11,0.25)',
+                      padding: '3px 10px', borderRadius: 'var(--radius-full)',
+                      fontWeight: 500, fontFamily: 'var(--font-sans)',
+                    }}>
+                      🔥 {data.streaks.current} {data.streaks.current === 1 ? 'día' : 'días'}
+                    </span>
+                  </div>
                 )}
               </Section>
 
