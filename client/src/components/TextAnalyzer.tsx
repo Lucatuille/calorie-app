@@ -74,10 +74,12 @@ export default function TextAnalyzer({ isOpen, onClose, mealType, onResult, onAi
       fat:      parseFloat((result.total.fat     * ratio).toFixed(1)),
       // Calibration metadata for correction tracking
       _ai: {
-        ai_raw:       result.ai_raw_calories,
-        ai_calibrated: result.total.calories,
-        categories:   result.categories,
-        source:       'text',
+        ai_raw:            result.ai_raw_calories,
+        ai_calibrated:     result.total.calories,
+        categories:        result.categories,
+        source:            'text',
+        input_text:        result.input_text || null,
+        ai_response_text:  result.ai_response_text || null,
       },
     });
     handleClose();

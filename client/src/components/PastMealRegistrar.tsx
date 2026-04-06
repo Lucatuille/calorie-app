@@ -144,6 +144,9 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
       categories:    aiResult.categories || [],
       has_context:   photoContext.trim().length > 0 || !!photoLocation || !!photoPlateSize,
       name:          aiResult.name,
+      input_text:    photoContext.trim() || null,
+      input_type:    'photo',
+      ai_response_text: aiResult.ai_response_text || null,
     };
     setPhotoPreview(null);
     setPhotoData(null);
@@ -192,6 +195,9 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
       categories:    textResult.categories || [],
       has_context:   true,
       name:          textResult.name,
+      input_text:    textResult.input_text || null,
+      input_type:    'text',
+      ai_response_text: textResult.ai_response_text || null,
     };
     setTextResult(null);
     setTextStatus('idle');
@@ -245,6 +251,9 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
           meal_name:               finalName || pa.name,
           has_context:             pa.has_context,
           accepted_without_change: finalCalories === pa.ai_calibrated,
+          input_text:              pa.input_text,
+          input_type:              pa.input_type,
+          ai_response_text:        pa.ai_response_text,
         }, token).catch(() => {});
         photoAnalysisRef.current = null;
       }

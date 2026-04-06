@@ -14,6 +14,7 @@ export async function handleCalibration(request, env, path) {
       entry_id, ai_raw, ai_calibrated, user_final,
       food_categories, meal_type, meal_name,
       has_context, accepted_without_change,
+      input_text, input_type, ai_response_text,
     } = await request.json();
 
     if (ai_calibrated == null || user_final == null) {
@@ -41,8 +42,9 @@ export async function handleCalibration(request, env, path) {
       INSERT INTO ai_corrections
       (user_id, entry_id, ai_raw_estimate, ai_calibrated, user_final,
        correction_pct, food_categories, meal_type, has_context,
-       is_weekend, day_of_week, hour_of_day, accepted_without_change)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       is_weekend, day_of_week, hour_of_day, accepted_without_change,
+       input_text, input_type, ai_response_text)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       user.userId,
       entry_id || null,
@@ -57,6 +59,9 @@ export async function handleCalibration(request, env, path) {
       refDate.getDay(),
       refDate.getHours(),
       accepted_without_change ? 1 : 0,
+      input_text || null,
+      input_type || 'photo',
+      ai_response_text || null,
     ).run();
 
     // 2. Recalcular perfil con últimas 50 correcciones

@@ -156,6 +156,9 @@ export default function Calculator() {
           meal_name:               finalName || pa.name,
           has_context:             pa.has_context,
           accepted_without_change: finalCalories === pa.ai_calibrated,
+          input_text:              pa.input_text,
+          input_type:              pa.input_type,
+          ai_response_text:        pa.ai_response_text,
         }, token).catch(() => {});
         photoAnalysisRef.current = null;
       }
@@ -243,6 +246,9 @@ export default function Calculator() {
         categories:    r._ai.categories,
         has_context:   true,
         name:          r.name,
+        input_text:    r._ai.input_text || null,
+        input_type:    r._ai.source || 'text',
+        ai_response_text: r._ai.ai_response_text || null,
       };
     }
     setScanFeedback(true);
@@ -280,6 +286,9 @@ export default function Calculator() {
       categories:    aiResult.categories || [],
       has_context:   photoContext.trim().length > 0 || !!photoLocation || !!photoPlateSize,
       name:          aiResult.name,
+      input_text:    photoContext.trim() || null,
+      input_type:    'photo',
+      ai_response_text: aiResult.ai_response_text || null,
     };
     setPhotoPreview(null);
     setPhotoData(null);

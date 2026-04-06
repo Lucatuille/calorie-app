@@ -277,6 +277,7 @@ export async function handleAnalyze(request, env, path, ctx) {
         notes:        result.notes      || '',
         categories,
         ai_raw:       aiRaw,
+        ai_response_text: text,
         similar_meal: similarMeal,
         usage: { used: limitCheck.used + 1, limit: limitCheck.limit ?? null },
       });
@@ -431,6 +432,8 @@ export async function handleAnalyzeText(request, env, ctx) {
     confidence:              result.confidence || 'medium',
     notes:                   result.notes      || '',
     ai_raw_calories:         rawCalories,
+    ai_response_text:        rawText,
+    input_text:              text,
     calibration_applied:     calibrationApplied,
     calibration_confidence:  calibrationProfile?.confidence  || 0,
     calibration_data_points: calibrationProfile?.data_points || 0,
