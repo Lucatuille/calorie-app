@@ -1,14 +1,12 @@
-import { Link } from 'react-router-dom';
-
 export default function Terms() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '40px 20px' }}>
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 32 }}>
-          <Link to="/" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>
+          <a href="/" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>
             ← Volver
-          </Link>
+          </a>
         </div>
 
         <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 400, marginBottom: 4 }}>

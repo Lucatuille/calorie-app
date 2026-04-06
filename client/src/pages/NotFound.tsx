@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 export default function NotFound() {
   return (
     <div style={{
@@ -28,8 +26,8 @@ export default function NotFound() {
         }}>
           La página que buscas no existe o ha sido movida.
         </p>
-        <Link
-          to="/"
+        <a
+          href="/"
           style={{
             display: 'inline-block',
             background: 'var(--text-primary)', color: 'var(--bg)',
@@ -39,7 +37,7 @@ export default function NotFound() {
           }}
         >
           Volver al inicio
-        </Link>
+        </a>
       </div>
     </div>
   );
