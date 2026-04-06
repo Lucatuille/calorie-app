@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ═══ EDITAR: título, description, URLs ═══ -->
+<title>Calorías de la NOMBRE_PLATO: el cálculo real — Caliro blog</title>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="0ea8f133-f719-429d-8876-b1d4a901c556"></script>
+<meta name="description" content="DESCRIPCION_META — desglose real desde ingredientes con datos BEDCA y USDA.">
+<link rel="canonical" href="https://caliro.dev/blog/calorias-SLUG">
+<link rel="alternate" hreflang="es" href="https://caliro.dev/blog/calorias-SLUG">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://caliro.dev/blog/calorias-SLUG">
+<meta property="og:title" content="Calorías de la NOMBRE_PLATO: el cálculo real">
+<meta property="og:description" content="DESCRIPCION_META">
+<meta property="og:image" content="https://caliro.dev/og-image.png">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- ═══ Schema: BlogPosting ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Calorías de la NOMBRE_PLATO: el cálculo real",
+  "description": "DESCRIPCION_META",
+  "inLanguage": "es",
+  "author": { "@type": "Person", "name": "Luca" },
+  "publisher": { "@type": "Organization", "name": "Caliro" },
+  "datePublished": "YYYY-MM-DD",
+  "mainEntityOfPage": "https://caliro.dev/blog/calorias-SLUG"
+}
+</script>
+
+<!-- ═══ Schema: Recipe + NutritionInformation ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  "name": "NOMBRE_PLATO",
+  "description": "Receta tradicional con desglose calórico verificado.",
+  "recipeCategory": "CATEGORIA",
+  "recipeCuisine": "Española",
+  "recipeYield": "PORCIONES porciones",
+  "nutrition": {
+    "@type": "NutritionInformation",
+    "calories": "KCAL_REF kcal por porción",
+    "proteinContent": "PROTEIN_G g",
+    "carbohydrateContent": "CARBS_G g",
+    "fatContent": "FAT_G g",
+    "servingSize": "1 porción (GRAMOS_PORCION g)"
+  }
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/blog/blog.css">
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Caliro</a>
+  <ul class="nav-links">
+    <li><a href="/blog/">Blog</a></li>
+    <li><a href="/#precios">Precios</a></li>
+    <li><a href="/app/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrap">
+
+  <div class="article-meta">
+    <span class="meta-tag">Calorías de platos</span>
+    <span class="meta-date">MES AÑO</span>
+    <span class="meta-read">· X min de lectura</span>
+  </div>
+
+  <h1 class="article-title">
+    Cuántas calorías tiene<br>
+    <em>la NOMBRE_PLATO</em>
+  </h1>
+
+  <p class="article-lead">
+    LEAD — 2-3 frases que enganchen. Ej: "La tortilla española es el plato más
+    buscado en apps de calorías en España. Pero las cifras que encuentras online
+    varían entre 150 y 350 kcal por porción. ¿Cuál es la real?"
+  </p>
+
+  <div class="article-body">
+
+    <!-- ═══ 1. La cifra rápida ═══ -->
+    <div class="quick-stat">
+      <div class="qs-number">KCAL_REF</div>
+      <div class="qs-unit">kcal por porción</div>
+      <div class="qs-range">Rango: KCAL_MIN — KCAL_MAX kcal según preparación</div>
+      <div class="qs-source">Fuente: cálculo desde ingredientes BEDCA / USDA FoodData Central</div>
+    </div>
+
+    <!-- ═══ 2. De dónde salen estas calorías ═══ -->
+    <h2>De dónde salen estas calorías</h2>
+    <p>
+      EXPLICAR el desglose por ingrediente principal. Ej: "El aceite de oliva
+      aporta el 45% de las calorías totales. Los huevos un 30%. La patata solo
+      un 25%."
+    </p>
+
+    <!-- Tabla de ingredientes -->
+    <table class="nutrition-table">
+      <thead>
+        <tr><th>Ingrediente</th><th>Cantidad</th><th>kcal</th><th>% del total</th></tr>
+      </thead>
+      <tbody>
+        <!-- RELLENAR desde el JSON de la receta -->
+        <tr><td>INGREDIENTE_1</td><td>X g</td><td class="nt-highlight">XXX</td><td>XX%</td></tr>
+        <tr><td>INGREDIENTE_2</td><td>X g</td><td class="nt-highlight">XXX</td><td>XX%</td></tr>
+        <tr><td>INGREDIENTE_3</td><td>X g</td><td class="nt-highlight">XXX</td><td>XX%</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ═══ 3. Variantes que cambian todo ═══ -->
+    <h2>Variantes que cambian todo</h2>
+    <p>
+      EXPLICAR variantes del JSON (ej: "con cebolla sube a X kcal",
+      "con menos aceite baja a Y kcal"). Usar datos del campo "variants"
+      del recipe JSON.
+    </p>
+
+    <div class="callout">
+      <p>DATO_CLAVE — ej: "La diferencia entre una tortilla de bar y una casera
+      puede ser de 100 kcal por ración solo por la cantidad de aceite."</p>
+    </div>
+
+    <!-- ═══ 4. Cómo registrarlo con precisión ═══ -->
+    <h2>Cómo registrarlo con precisión</h2>
+    <p>
+      Tres opciones cuando registras NOMBRE_PLATO en una app de calorías:
+    </p>
+    <ul>
+      <li><strong>Búsqueda manual</strong> — la mayoría de apps muestran cifras genéricas de bases de datos americanas que no reflejan la receta española real.</li>
+      <li><strong>Foto con IA</strong> — apps como Caliro analizan la foto y estiman las calorías. La ventaja: con el tiempo, la IA aprende de tus correcciones y mejora.</li>
+      <li><strong>Texto descriptivo</strong> — describe "NOMBRE_PLATO, porción de restaurante" y la IA calcula desde la receta, no desde un genérico.</li>
+    </ul>
+
+    <div class="tip-box">
+      <div class="tip-label">Consejo</div>
+      <p>Si corriges la estimación de la IA, esa corrección se guarda. La próxima vez que registres NOMBRE_PLATO, la estimación será más precisa para ti.</p>
+    </div>
+
+    <!-- ═══ 5. Tabla nutricional completa ═══ -->
+    <h2>Tabla nutricional completa</h2>
+    <table class="nutrition-table">
+      <thead>
+        <tr><th>Nutriente</th><th>Por porción (GRAMOS g)</th><th>Por 100 g</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Calorías</td><td class="nt-highlight">KCAL_REF kcal</td><td>KCAL_100G kcal</td></tr>
+        <tr><td>Proteína</td><td>PROTEIN_G g</td><td>PROTEIN_100G g</td></tr>
+        <tr><td>Carbohidratos</td><td>CARBS_G g</td><td>CARBS_100G g</td></tr>
+        <tr><td>Grasa</td><td>FAT_G g</td><td>FAT_100G g</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p>Datos calculados desde ingredientes individuales con valores de BEDCA
+      (Base de Datos Española de Composición de Alimentos) y USDA FoodData Central.
+      Los valores son orientativos — la preparación real puede variar.</p>
+    </div>
+
+    <!-- ═══ CTA ═══ -->
+    <div class="article-cta">
+      <h3>Registra tus comidas con IA</h3>
+      <p>Caliro analiza fotos y texto con inteligencia artificial que aprende de tus correcciones. Gratis para siempre.</p>
+      <a href="/app/register">Empieza gratis &rarr;</a>
+    </div>
+
+    <!-- ═══ Autor ═══ -->
+    <div class="article-author">
+      <div class="author-avatar">L</div>
+      <div>
+        <div class="author-name">Luca</div>
+        <div class="author-bio">Creador de Caliro. Ingeniero y entusiasta de la nutrición basada en datos.</div>
+      </div>
+    </div>
+
+    <!-- ═══ Artículos relacionados ═══ -->
+    <div class="related">
+      <div class="related-label">También te puede interesar</div>
+      <div class="related-grid">
+        <a href="/blog/contar-calorias-ia" class="related-card">
+          <div class="related-tag">Guías</div>
+          <div class="related-title">Cómo contar calorías con IA en 2026</div>
+        </a>
+        <!-- AÑADIR más artículos relacionados aquí -->
+        <a href="/blog/alternativa-myfitnesspal-espana" class="related-card">
+          <div class="related-tag">Opinión</div>
+          <div class="related-title">Por qué dejé MyFitnessPal</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</article>
+
+<footer>
+  <a href="/" class="f-logo">Caliro</a>
+  <ul class="f-links">
+    <li><a href="/blog/">Blog</a></li>
+    <li><a href="/app/privacy">Privacidad</a></li>
+    <li><a href="mailto:contacto@caliro.dev">Contacto</a></li>
+  </ul>
+  <div class="f-copy">&copy; 2026 Caliro. Hecho en Barcelona.</div>
+</footer>
+
+</body>
+</html>
