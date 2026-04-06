@@ -270,7 +270,7 @@ function TabUsers({ data, loading, defaultSort }) {
               </tr>
               {expanded === u.id && (
                 <tr key={`exp-${u.id}`} style={{ background: 'var(--bg)' }}>
-                  <td colSpan={5} style={{ padding: '12px 16px' }}>
+                  <td colSpan={6} style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8, fontSize: 12 }}>
                       <div>
                         <p style={{ color: 'var(--text-3)', marginBottom: 2 }}>Peso / Objetivo</p>
