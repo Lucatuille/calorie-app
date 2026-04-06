@@ -173,6 +173,16 @@ nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 40
 .proj-label { color: var(--mid); }
 .proj-value { font-weight: 600; }
 
+/* Energy breakdown bar */
+.energy-card { background: var(--white); border-radius: 14px; padding: 20px; border: 1px solid var(--light); margin-bottom: 16px; }
+.energy-title { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+.energy-bar { display: flex; height: 32px; border-radius: 8px; overflow: hidden; gap: 2px; margin-bottom: 14px; }
+.energy-bar div { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: white; border-radius: 6px; transition: width 0.6s ease; min-width: 0; overflow: hidden; }
+.energy-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+.energy-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mid); }
+.energy-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.energy-legend-val { font-weight: 600; color: var(--dark); margin-left: 2px; }
+
 /* CTA */
 .result-cta {
   background: linear-gradient(135deg, var(--dark) 0%, #1a3a2a 100%);
@@ -408,6 +418,12 @@ footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 4
       </div>
     </div>
 
+    <div class="energy-card" id="energy-card" style="display:none;">
+      <div class="energy-title">De dónde viene tu gasto</div>
+      <div class="energy-bar" id="energy-bar"></div>
+      <div class="energy-legend" id="energy-legend"></div>
+    </div>
+
     <div class="projection-card" id="projection-card" style="display:none;">
       <div class="proj-title">Proyección</div>
       <div id="proj-rows"></div>
@@ -583,10 +599,27 @@ $('calc-btn').addEventListener('click', () => {
   const carbs   = Math.round(target * ratios.c / 4);
   const fat     = Math.round(target * ratios.f / 9);
 
+  // ── Count-up animation ──────────────────────────────────
+  function countUp(el, end, duration = 800) {
+    const start = parseInt(el.textContent.replace(/\D/g, '')) || 0;
+    if (start === end) return;
+    const range = end - start;
+    const startTime = performance.now();
+    function tick(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const current = Math.round(start + range * eased);
+      el.textContent = current.toLocaleString('es');
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   // ── Render results ──────────────────────────────────────
-  $('r-target').textContent = target.toLocaleString('es');
-  $('r-bmr').textContent    = Math.round(bmr).toLocaleString('es');
-  $('r-tdee').textContent   = tdee.toLocaleString('es');
+  countUp($('r-target'), target);
+  countUp($('r-bmr'), Math.round(bmr));
+  countUp($('r-tdee'), tdee);
 
   const goalLabel = goal === 'lose' ? 'Déficit' : goal === 'gain' ? 'Superávit' : 'Mantenimiento';
   const adjText   = adjustment ? `${goalLabel}: ${Math.abs(adjustment)} kcal/día` : 'Sin ajuste';
@@ -628,6 +661,36 @@ $('calc-btn').addEventListener('click', () => {
   } else {
     projCard.style.display = 'none';
   }
+
+  // Energy breakdown bar
+  const bmrKcal = Math.round(bmr);
+  const activityKcal = Math.round(bmr * (basePAL - 1.2));
+  const exerciseKcal = Math.round(bmr * exPAL);
+  const totalEnergy = bmrKcal + activityKcal + exerciseKcal;
+  const bmrPct = Math.round(bmrKcal / totalEnergy * 100);
+  const actPct = Math.round(activityKcal / totalEnergy * 100);
+  const exPct  = 100 - bmrPct - actPct;
+
+  $('energy-bar').innerHTML = `
+    <div style="width:${bmrPct}%;background:#6366f1;">${bmrPct}%</div>
+    <div style="width:${actPct}%;background:var(--carbs);">${actPct > 5 ? actPct + '%' : ''}</div>
+    <div style="width:${exPct}%;background:var(--green);">${exPct > 5 ? exPct + '%' : ''}</div>
+  `;
+  $('energy-legend').innerHTML = `
+    <div class="energy-legend-item">
+      <div class="energy-legend-dot" style="background:#6366f1;"></div>
+      Metabolismo basal <span class="energy-legend-val">${bmrKcal} kcal</span>
+    </div>
+    <div class="energy-legend-item">
+      <div class="energy-legend-dot" style="background:var(--carbs);"></div>
+      Actividad diaria <span class="energy-legend-val">${activityKcal} kcal</span>
+    </div>
+    <div class="energy-legend-item">
+      <div class="energy-legend-dot" style="background:var(--green);"></div>
+      Ejercicio <span class="energy-legend-val">${exerciseKcal} kcal</span>
+    </div>
+  `;
+  $('energy-card').style.display = 'block';
 
   // Warning
   const warn = $('warning');
