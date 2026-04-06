@@ -6,11 +6,11 @@
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://cloud.umami.is",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://calorie-app-api.lucatuille.workers.dev https://*.sentry.io https://*.ingest.sentry.io",
+  "connect-src 'self' https://calorie-app-api.lucatuille.workers.dev https://*.sentry.io https://*.ingest.sentry.io https://cloud.umami.is",
   "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",
