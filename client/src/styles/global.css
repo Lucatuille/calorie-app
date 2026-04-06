@@ -344,6 +344,7 @@ input, select, textarea { font-family: inherit; }
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { to { background-position: -200% 0; } }
 
 /* ── Barcode scanner ─────────────────────────────────────── */
 @keyframes scanLine {

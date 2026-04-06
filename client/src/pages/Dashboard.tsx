@@ -7,6 +7,7 @@ import { LEVEL_CONFIG, getBadgeStyle, isPro } from '../utils/levels';
 import { MEAL_TYPES } from '../utils/meals';
 import { getEstadoCalorico } from '../utils/assistantMessages';
 import SupplementTracker from '../components/SupplementTracker';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -100,11 +101,7 @@ export default function Dashboard() {
     setDeletingId(null);
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-      <div className="spinner" style={{ width: 32, height: 32 }} />
-    </div>
-  );
+  if (loading) return <DashboardSkeleton />;
 
   if (loadError) return (
     <section style={{ margin: '0 auto', maxWidth: 640, padding: '0 16px', textAlign: 'center', paddingTop: 80 }}>

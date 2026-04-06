@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import PastMealRegistrar from '../components/PastMealRegistrar';
+import { HistorySkeleton } from '../components/Skeleton';
 
 function formatDateParts(dateStr) {
   const d = new Date(dateStr + 'T12:00:00Z');
@@ -119,11 +120,7 @@ export default function History() {
   const set = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
   const groups = groupByDate(entries);
 
-  if (loading && entries.length === 0) return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-      <div className="spinner" style={{ width: 32, height: 32 }} />
-    </div>
-  );
+  if (loading && entries.length === 0) return <HistorySkeleton />;
 
   if (loadError && entries.length === 0) return (
     <div style={{ padding: '80px 20px', textAlign: 'center' }}>

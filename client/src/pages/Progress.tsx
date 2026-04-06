@@ -9,6 +9,7 @@ import { ADHERENCE_TOLERANCE } from '../utils/constants';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { isPro } from '../utils/levels';
+import { ProgressSkeleton } from '../components/Skeleton';
 const AdvancedAnalytics = lazy(() => import('../components/AdvancedAnalytics'));
 
 function CustomTooltip({ active, payload, label }) {
@@ -136,11 +137,7 @@ export default function Progress() {
     };
   })();
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-      <div className="spinner" style={{ width: 32, height: 32 }} />
-    </div>
-  );
+  if (loading) return <ProgressSkeleton />;
 
   if (loadError && data.length === 0) return (
     <div style={{ padding: '80px 20px', textAlign: 'center' }}>
