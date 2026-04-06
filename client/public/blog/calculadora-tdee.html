@@ -703,7 +703,11 @@ $('calc-btn').addEventListener('click', () => {
 
   // Show results with animation
   $('results').classList.add('visible');
-  $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Scroll to results with offset for fixed nav
+  setTimeout(() => {
+    const y = $('results').getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+  }, 50);
 
   // Track event
   if (window.umami) umami.track('tdee_calculated', { goal, formula });
