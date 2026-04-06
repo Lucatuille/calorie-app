@@ -26,7 +26,7 @@ export default function WelcomeDisclaimer({ onAccept }) {
           fontSize: 40, color: 'var(--accent)',
           marginBottom: 6, lineHeight: 1,
         }}>
-          kcal
+          Caliro
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 32 }}>Caliro</p>
 

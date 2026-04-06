@@ -116,7 +116,7 @@ export default function Onboarding() {
           fontFamily: 'var(--font-serif)', fontStyle: 'italic',
           fontSize: 20, color: 'var(--text-primary)',
         }}>
-          kcal
+          Caliro
         </span>
 
         {/* Barra de progreso */}

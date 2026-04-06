@@ -52,8 +52,8 @@ export default function ResetPassword() {
       <div className="fade-up" style={{ width: '100%', maxWidth: 400 }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, color: 'var(--accent)', marginBottom: 8 }}>
-            kcal
+          <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 36, color: 'var(--accent)', marginBottom: 8 }}>
+            Caliro
           </div>
           <h1 className="title-lg" style={{ marginBottom: 6 }}>Nueva contraseña</h1>
           <p className="body-sm">Introduce tu nueva contraseña</p>

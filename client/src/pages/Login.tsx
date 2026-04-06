@@ -54,8 +54,8 @@ export default function Login() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 36, color: 'var(--accent)', marginBottom: 8 }}>
-            kcal
+          <div style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 36, color: 'var(--accent)', marginBottom: 8 }}>
+            Caliro
           </div>
           <h1 className="title-lg" style={{ marginBottom: 6 }}>Bienvenido de nuevo</h1>
           <p className="body-sm">Registra tus calorías y sigue tu progreso</p>
