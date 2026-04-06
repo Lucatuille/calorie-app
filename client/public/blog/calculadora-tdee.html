@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora TDEE — Calcula tus calorías diarias gratis | Caliro</title>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="0ea8f133-f719-429d-8876-b1d4a901c556"></script>
+<meta name="description" content="Calcula tu TDEE (gasto calórico diario) con la calculadora más completa en español. Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados y plan según tu objetivo.">
+<link rel="canonical" href="https://caliro.dev/blog/calculadora-tdee">
+<link rel="alternate" hreflang="es" href="https://caliro.dev/blog/calculadora-tdee">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://caliro.dev/blog/calculadora-tdee">
+<meta property="og:title" content="Calculadora TDEE — Calcula tus calorías diarias gratis">
+<meta property="og:description" content="Calcula tu gasto calórico diario con la calculadora más completa en español. Gratis, sin registro.">
+<meta property="og:image" content="https://caliro.dev/og-image.png">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Calculadora TDEE — Caliro",
+  "description": "Calcula tu gasto calórico diario (TDEE) con fórmulas científicas. Gratis y en español.",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "es",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Qué es el TDEE?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "TDEE (Total Daily Energy Expenditure) es la cantidad total de calorías que tu cuerpo quema en un día, incluyendo metabolismo basal, actividad diaria y ejercicio."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué fórmula es más precisa para calcular el TDEE?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Mifflin-St Jeor es la más precisa para la mayoría. Si conoces tu porcentaje de grasa corporal, Katch-McArdle puede ser más exacta porque usa tu masa magra real."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuántas calorías debo comer para perder peso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Para perder peso de forma sostenible, se recomienda un déficit de 275-550 kcal diarias respecto a tu TDEE, lo que equivale a perder 0.25-0.5 kg por semana."
+      }
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE; --white: #FFFFFF; --dark: #111111; --mid: #888888;
+  --light: #E8E4DE; --green: #22c55e; --green-d: #16a34a;
+  --serif: 'Instrument Serif', Georgia, serif; --sans: 'DM Sans', sans-serif;
+  --protein: #3b82f6; --carbs: #f59e0b; --fat: #ef4444;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); }
+
+/* Nav */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(245,242,238,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--light); }
+.nav-logo { font-family: var(--serif); font-size: 20px; color: var(--green); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { font-size: 13px; color: var(--mid); text-decoration: none; }
+.nav-links a:hover { color: var(--dark); }
+.nav-cta { background: var(--dark) !important; color: white !important; padding: 8px 18px; border-radius: 100px; font-weight: 500 !important; }
+@media (max-width: 640px) { nav { padding: 14px 20px; } .nav-links { display: none; } }
+
+/* Layout */
+.page { max-width: 720px; margin: 0 auto; padding: 100px 24px 60px; }
+.hero { text-align: center; margin-bottom: 48px; }
+.hero-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--green); font-weight: 600; margin-bottom: 12px; }
+.hero h1 { font-family: var(--serif); font-size: clamp(32px, 5vw, 48px); line-height: 1.1; margin-bottom: 12px; }
+.hero h1 em { font-style: italic; color: var(--green); }
+.hero p { font-size: 16px; color: var(--mid); line-height: 1.6; max-width: 500px; margin: 0 auto; }
+
+/* Calculator card */
+.calc-card { background: var(--white); border-radius: 20px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); margin-bottom: 32px; }
+.calc-section { margin-bottom: 28px; }
+.calc-section:last-child { margin-bottom: 0; }
+.section-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--mid); font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.section-label span { font-size: 16px; }
+
+/* Inputs */
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.input-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.input-group { display: flex; flex-direction: column; gap: 4px; }
+.input-group label { font-size: 12px; color: var(--mid); font-weight: 500; }
+.input-group input, .input-group select {
+  padding: 10px 12px; border: 1px solid var(--light); border-radius: 10px;
+  font-family: var(--sans); font-size: 14px; background: var(--cream);
+  color: var(--dark); outline: none; transition: border-color 0.2s;
+}
+.input-group input:focus, .input-group select:focus { border-color: var(--green); }
+.input-group select { cursor: pointer; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+/* Toggle pills */
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill {
+  padding: 8px 16px; border-radius: 100px; border: 1px solid var(--light);
+  background: var(--cream); font-size: 13px; cursor: pointer; transition: all 0.2s;
+  font-family: var(--sans); color: var(--mid); font-weight: 500;
+}
+.pill:hover { border-color: var(--green); color: var(--dark); }
+.pill.active { background: var(--dark); color: white; border-color: var(--dark); }
+.pill.goal-lose.active { background: var(--green); border-color: var(--green); }
+.pill.goal-gain.active { background: var(--protein); border-color: var(--protein); }
+
+/* Body fat toggle */
+.bf-toggle { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; color: var(--mid); cursor: pointer; }
+.bf-toggle input[type="checkbox"] { accent-color: var(--green); }
+
+/* Results */
+.results { opacity: 0; transform: translateY(16px); transition: all 0.4s ease; pointer-events: none; }
+.results.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+
+.result-hero {
+  background: var(--dark); border-radius: 20px; padding: 36px; text-align: center;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.result-hero::before {
+  content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px;
+  border-radius: 50%; background: rgba(34,197,94,0.08);
+}
+.result-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+.result-number { font-family: var(--serif); font-size: 64px; color: white; line-height: 1; margin-bottom: 4px; }
+.result-unit { font-size: 14px; color: var(--green); font-weight: 500; }
+.result-sub { font-size: 13px; color: #666; margin-top: 12px; line-height: 1.5; }
+
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.result-stat {
+  background: var(--white); border-radius: 14px; padding: 18px;
+  border: 1px solid var(--light);
+}
+.result-stat .rs-label { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+.result-stat .rs-value { font-family: var(--serif); font-size: 28px; line-height: 1; }
+.result-stat .rs-unit { font-size: 12px; color: var(--mid); margin-left: 2px; }
+
+/* Macros */
+.macros-card { background: var(--white); border-radius: 14px; padding: 20px; border: 1px solid var(--light); margin-bottom: 16px; }
+.macros-title { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+.macro-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px; gap: 2px; }
+.macro-bar div { border-radius: 5px; transition: width 0.6s ease; }
+.macros-detail { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.macro-item { text-align: center; }
+.macro-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.macro-name { font-size: 12px; color: var(--mid); }
+.macro-value { font-family: var(--serif); font-size: 22px; margin-top: 2px; }
+.macro-sub { font-size: 11px; color: var(--mid); }
+
+/* Projection */
+.projection-card { background: var(--white); border-radius: 14px; padding: 20px; border: 1px solid var(--light); margin-bottom: 16px; }
+.proj-title { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+.proj-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--light); font-size: 14px; }
+.proj-row:last-child { border: none; }
+.proj-label { color: var(--mid); }
+.proj-value { font-weight: 600; }
+
+/* CTA */
+.result-cta {
+  background: linear-gradient(135deg, var(--dark) 0%, #1a3a2a 100%);
+  border-radius: 16px; padding: 28px; text-align: center; margin-top: 24px;
+}
+.result-cta h3 { font-family: var(--serif); font-size: 22px; color: white; margin-bottom: 8px; }
+.result-cta p { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.6; }
+.result-cta a {
+  display: inline-block; background: var(--green); color: white; padding: 12px 28px;
+  border-radius: 100px; font-size: 14px; font-weight: 500; text-decoration: none;
+  transition: background 0.2s; font-family: var(--sans);
+}
+.result-cta a:hover { background: var(--green-d); }
+
+/* FAQ */
+.faq { margin-top: 48px; }
+.faq h2 { font-family: var(--serif); font-size: 28px; margin-bottom: 20px; }
+.faq-item { border-bottom: 1px solid var(--light); padding: 16px 0; cursor: pointer; }
+.faq-q { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 500; gap: 16px; }
+.faq-plus { color: var(--mid); font-size: 20px; transition: transform 0.25s; font-family: var(--serif); }
+.faq-item.open .faq-plus { transform: rotate(45deg); }
+.faq-a { font-size: 14px; color: var(--mid); line-height: 1.7; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; }
+.faq-item.open .faq-a { max-height: 200px; padding-top: 10px; }
+
+/* Footer */
+footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 60px; }
+.f-logo { font-family: var(--serif); font-size: 18px; color: var(--green); text-decoration: none; }
+.f-links { display: flex; gap: 24px; list-style: none; }
+.f-links a { font-size: 12px; color: #555; text-decoration: none; }
+.f-copy { font-size: 12px; color: #444; }
+
+/* Warning */
+.warning { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #dc2626; display: none; }
+.warning.visible { display: block; }
+
+@media (max-width: 520px) {
+  .calc-card { padding: 20px; }
+  .input-row { grid-template-columns: 1fr; }
+  .input-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .result-number { font-size: 48px; }
+  .result-grid { grid-template-columns: 1fr; }
+  .macros-detail { grid-template-columns: 1fr 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Caliro</a>
+  <ul class="nav-links">
+    <li><a href="/blog/">Blog</a></li>
+    <li><a href="/#precios">Precios</a></li>
+    <li><a href="/app/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-label">Herramienta gratuita</div>
+    <h1>Calcula tu <em>TDEE</em></h1>
+    <p>Tu gasto calórico diario real. Fórmulas científicas, macros personalizados y un plan según tu objetivo.</p>
+  </div>
+
+  <!-- ═══ CALCULATOR ═══ -->
+  <div class="calc-card">
+
+    <!-- Body -->
+    <div class="calc-section">
+      <div class="section-label"><span>📐</span> Tu cuerpo</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Peso (kg)</label>
+          <input type="number" id="weight" placeholder="70" min="30" max="300" step="0.1">
+        </div>
+        <div class="input-group">
+          <label>Altura (cm)</label>
+          <input type="number" id="height" placeholder="175" min="100" max="250">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Edad</label>
+          <input type="number" id="age" placeholder="25" min="14" max="99">
+        </div>
+        <div class="input-group">
+          <label>Sexo</label>
+          <div class="pills" id="gender">
+            <button class="pill active" data-v="male">Hombre</button>
+            <button class="pill" data-v="female">Mujer</button>
+          </div>
+        </div>
+      </div>
+      <label class="bf-toggle">
+        <input type="checkbox" id="bf-check"> Conozco mi % de grasa corporal
+      </label>
+      <div id="bf-row" style="display:none; margin-top: 10px;">
+        <div class="input-group" style="max-width: 200px;">
+          <label>Grasa corporal (%)</label>
+          <input type="number" id="bodyfat" placeholder="18" min="3" max="60" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity -->
+    <div class="calc-section">
+      <div class="section-label"><span>🚶</span> Actividad diaria</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Tipo de trabajo</label>
+          <select id="job">
+            <option value="desk">Oficina / sentado</option>
+            <option value="standing">De pie (tienda, hostelería)</option>
+            <option value="physical">Físico (obra, almacén)</option>
+            <option value="home">Casa / teletrabajo</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Pasos diarios</label>
+          <select id="steps">
+            <option value="low">&lt; 4.000</option>
+            <option value="medium" selected>4.000 – 8.000</option>
+            <option value="high">8.000 – 12.000</option>
+            <option value="very">&gt; 12.000</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exercise -->
+    <div class="calc-section">
+      <div class="section-label"><span>💪</span> Ejercicio</div>
+      <div class="input-row triple">
+        <div class="input-group">
+          <label>Días/semana</label>
+          <select id="exDays">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Duración</label>
+          <select id="exDuration">
+            <option value="0.4">30 min</option>
+            <option value="0.75">45 min</option>
+            <option value="1" selected>1 hora</option>
+            <option value="1.5">1.5 horas</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Tipo</label>
+          <select id="exType">
+            <option value="5">Pesas</option>
+            <option value="7">Cardio</option>
+            <option value="6" selected>Mixto</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goal -->
+    <div class="calc-section">
+      <div class="section-label"><span>🎯</span> Objetivo</div>
+      <div class="pills" id="goal">
+        <button class="pill goal-lose active" data-v="lose">Perder peso</button>
+        <button class="pill" data-v="maintain">Mantener</button>
+        <button class="pill goal-gain" data-v="gain">Ganar músculo</button>
+      </div>
+      <div id="rate-section" style="margin-top: 12px;">
+        <div class="pills" id="rate">
+          <button class="pill" data-v="gentle">Suave</button>
+          <button class="pill active" data-v="moderate">Moderado</button>
+          <button class="pill" data-v="aggressive">Agresivo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculate button -->
+    <button id="calc-btn" style="
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      background: var(--dark); color: white; font-family: var(--sans);
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+    ">Calcular mi TDEE</button>
+
+  </div>
+
+  <!-- ═══ RESULTS ═══ -->
+  <div class="results" id="results">
+
+    <div class="result-hero">
+      <div class="result-label">Tu objetivo diario</div>
+      <div class="result-number" id="r-target">—</div>
+      <div class="result-unit">kcal / día</div>
+      <div class="result-sub" id="r-sub"></div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result-stat">
+        <div class="rs-label">Metabolismo basal</div>
+        <div><span class="rs-value" id="r-bmr">—</span><span class="rs-unit"> kcal</span></div>
+      </div>
+      <div class="result-stat">
+        <div class="rs-label">TDEE (mantenimiento)</div>
+        <div><span class="rs-value" id="r-tdee">—</span><span class="rs-unit"> kcal</span></div>
+      </div>
+    </div>
+
+    <div class="macros-card">
+      <div class="macros-title">Macronutrientes recomendados</div>
+      <div class="macro-bar" id="macro-bar"></div>
+      <div class="macros-detail">
+        <div class="macro-item">
+          <div><span class="macro-dot" style="background:var(--protein)"></span><span class="macro-name">Proteína</span></div>
+          <div class="macro-value" id="r-protein">—</div>
+          <div class="macro-sub" id="r-protein-pct">—</div>
+        </div>
+        <div class="macro-item">
+          <div><span class="macro-dot" style="background:var(--carbs)"></span><span class="macro-name">Carbos</span></div>
+          <div class="macro-value" id="r-carbs">—</div>
+          <div class="macro-sub" id="r-carbs-pct">—</div>
+        </div>
+        <div class="macro-item">
+          <div><span class="macro-dot" style="background:var(--fat)"></span><span class="macro-name">Grasa</span></div>
+          <div class="macro-value" id="r-fat">—</div>
+          <div class="macro-sub" id="r-fat-pct">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="projection-card" id="projection-card" style="display:none;">
+      <div class="proj-title">Proyección</div>
+      <div id="proj-rows"></div>
+    </div>
+
+    <div class="warning" id="warning"></div>
+
+    <div class="result-cta">
+      <h3>Ahora registra lo que comes</h3>
+      <p>Caliro usa IA para registrar tus comidas con una foto o describiendo lo que comiste. La IA aprende de tus correcciones y se vuelve más precisa con el tiempo.</p>
+      <a href="/app/register">Empezar con Caliro &rarr;</a>
+    </div>
+
+  </div>
+
+  <!-- ═══ FAQ ═══ -->
+  <div class="faq">
+    <h2>Preguntas frecuentes</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Qué es el TDEE?<span class="faq-plus">+</span></div>
+      <div class="faq-a">TDEE (Total Daily Energy Expenditure) es la cantidad total de calorías que tu cuerpo quema en un día. Incluye tu metabolismo basal (BMR), la actividad de tu día a día, y el ejercicio. Si comes exactamente tu TDEE, mantienes tu peso.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Qué fórmula es más precisa?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Mifflin-St Jeor (1990) es la más validada para la mayoría de personas. Si conoces tu porcentaje de grasa corporal, Katch-McArdle puede ser más exacta porque usa tu masa magra real en vez de estimarla.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cuántas calorías para perder peso?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Un déficit moderado de 550 kcal/día (~0.5 kg/semana) es lo más sostenible. Déficits más agresivos pueden funcionar a corto plazo pero aumentan el riesgo de efecto rebote y pérdida de masa muscular.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Por qué mi TDEE es diferente al de otras calculadoras?<span class="faq-plus">+</span></div>
+      <div class="faq-a">La mayoría de calculadoras usan niveles de actividad genéricos ("moderadamente activo"). Esta calculadora separa tu actividad diaria (trabajo + pasos) de tu ejercicio estructurado, y aplica un factor conservador de 0.85 al ejercicio para no sobreestimar.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">¿Cuánta proteína necesito?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Para perder grasa conservando músculo, 30% de tus calorías en proteína (~2g por kg de peso corporal). Para mantener, 25% es suficiente. Para ganar músculo, 25% con más calorías totales.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <a href="/" class="f-logo">Caliro</a>
+  <ul class="f-links">
+    <li><a href="/blog/">Blog</a></li>
+    <li><a href="/app/privacy">Privacidad</a></li>
+    <li><a href="mailto:contacto@caliro.dev">Contacto</a></li>
+  </ul>
+  <div class="f-copy">&copy; 2026 Caliro. Hecho en Barcelona.</div>
+</footer>
+
+<script>
+// ── Pill toggles ──────────────────────────────────────────
+document.querySelectorAll('.pills').forEach(group => {
+  group.querySelectorAll('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      group.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      // Show/hide rate section based on goal
+      if (group.id === 'goal') {
+        const goal = pill.dataset.v;
+        const rateSection = document.getElementById('rate-section');
+        if (goal === 'maintain') {
+          rateSection.style.display = 'none';
+        } else {
+          rateSection.style.display = 'block';
+          const rateGroup = document.getElementById('rate');
+          rateGroup.innerHTML = goal === 'lose'
+            ? '<button class="pill" data-v="gentle">Suave</button><button class="pill active" data-v="moderate">Moderado</button><button class="pill" data-v="aggressive">Agresivo</button>'
+            : '<button class="pill active" data-v="lean">Limpio</button><button class="pill" data-v="moderate">Moderado</button>';
+          // Re-bind pill clicks
+          rateGroup.querySelectorAll('.pill').forEach(p => {
+            p.addEventListener('click', () => {
+              rateGroup.querySelectorAll('.pill').forEach(pp => pp.classList.remove('active'));
+              p.classList.add('active');
+            });
+          });
+        }
+      }
+    });
+  });
+});
+
+// ── Body fat toggle ───────────────────────────────────────
+document.getElementById('bf-check').addEventListener('change', e => {
+  document.getElementById('bf-row').style.display = e.target.checked ? 'block' : 'none';
+});
+
+// ── FAQ accordion ─────────────────────────────────────────
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.querySelector('.faq-q').addEventListener('click', () => {
+    document.querySelectorAll('.faq-item').forEach(i => { if (i !== item) i.classList.remove('open'); });
+    item.classList.toggle('open');
+  });
+});
+
+// ── TDEE Calculation ──────────────────────────────────────
+const $ = id => document.getElementById(id);
+const getActive = id => document.querySelector(`#${id} .pill.active`)?.dataset.v;
+
+const RATES = {
+  gentle: 275, moderate: 550, aggressive: 825,
+  lean: 275,
+};
+const MACRO_RATIOS = {
+  lose:     { p: 0.30, c: 0.40, f: 0.30 },
+  maintain: { p: 0.25, c: 0.45, f: 0.30 },
+  gain:     { p: 0.25, c: 0.50, f: 0.25 },
+};
+const JOB_FACTOR  = { desk: 0, standing: 0.1, physical: 0.3, home: 0.05 };
+const STEP_FACTOR = { low: 0, medium: 0.1, high: 0.2, very: 0.3 };
+
+$('calc-btn').addEventListener('click', () => {
+  const weight = parseFloat($('weight').value);
+  const height = parseFloat($('height').value);
+  const age    = parseInt($('age').value);
+  const gender = getActive('gender');
+  const goal   = getActive('goal');
+  const rate   = getActive('rate') || 'moderate';
+  const useBF  = $('bf-check').checked;
+  const bf     = useBF ? parseFloat($('bodyfat').value) : null;
+
+  if (!weight || !height || !age) {
+    alert('Rellena peso, altura y edad');
+    return;
+  }
+
+  // BMR
+  let bmr, formula, leanMass;
+  if (useBF && bf) {
+    leanMass = weight * (1 - bf / 100);
+    bmr = 370 + 21.6 * leanMass;
+    formula = 'Katch-McArdle';
+  } else {
+    bmr = gender === 'female'
+      ? 10 * weight + 6.25 * height - 5 * age - 161
+      : 10 * weight + 6.25 * height - 5 * age + 5;
+    formula = 'Mifflin-St Jeor';
+  }
+
+  // PAL
+  const job   = $('job').value;
+  const steps = $('steps').value;
+  const exDays     = parseInt($('exDays').value);
+  const exDuration = parseFloat($('exDuration').value);
+  const exMET      = parseFloat($('exType').value);
+
+  const basePAL    = Math.min(1.2 + (JOB_FACTOR[job] || 0) + (STEP_FACTOR[steps] || 0), 1.5);
+  const exPAL      = Math.min((exMET * exDuration * exDays) / 168 * 0.85, 0.5);
+  const finalPAL   = Math.min(basePAL + exPAL, 1.9);
+
+  const tdee = Math.round(bmr * finalPAL);
+
+  // Adjustment
+  let adjustment = 0;
+  if (goal === 'lose')  adjustment = -(RATES[rate] || 550);
+  if (goal === 'gain')  adjustment =  (RATES[rate] || 275);
+
+  const MIN_CAL = gender === 'female' ? 1200 : 1500;
+  let target = Math.round(tdee + adjustment);
+  const belowMin = target < MIN_CAL;
+  if (belowMin) target = MIN_CAL;
+
+  // Macros
+  const ratios = MACRO_RATIOS[goal] || MACRO_RATIOS.maintain;
+  const protein = Math.round(target * ratios.p / 4);
+  const carbs   = Math.round(target * ratios.c / 4);
+  const fat     = Math.round(target * ratios.f / 9);
+
+  // ── Render results ──────────────────────────────────────
+  $('r-target').textContent = target.toLocaleString('es');
+  $('r-bmr').textContent    = Math.round(bmr).toLocaleString('es');
+  $('r-tdee').textContent   = tdee.toLocaleString('es');
+
+  const goalLabel = goal === 'lose' ? 'Déficit' : goal === 'gain' ? 'Superávit' : 'Mantenimiento';
+  const adjText   = adjustment ? `${goalLabel}: ${Math.abs(adjustment)} kcal/día` : 'Sin ajuste';
+  const formulaText = `Fórmula: ${formula} · PAL: ${finalPAL.toFixed(2)}`;
+  $('r-sub').textContent = `${adjText} · ${formulaText}`;
+
+  // Macros bar
+  const pPct = Math.round(ratios.p * 100);
+  const cPct = Math.round(ratios.c * 100);
+  const fPct = Math.round(ratios.f * 100);
+  $('macro-bar').innerHTML = `
+    <div style="width:${pPct}%;background:var(--protein)"></div>
+    <div style="width:${cPct}%;background:var(--carbs)"></div>
+    <div style="width:${fPct}%;background:var(--fat)"></div>
+  `;
+  $('r-protein').textContent = protein + 'g';
+  $('r-carbs').textContent   = carbs + 'g';
+  $('r-fat').textContent     = fat + 'g';
+  $('r-protein-pct').textContent = pPct + '%';
+  $('r-carbs-pct').textContent   = cPct + '%';
+  $('r-fat-pct').textContent     = fPct + '%';
+
+  // Projection
+  const projCard = $('projection-card');
+  if (goal !== 'maintain') {
+    const weeklyKg = goal === 'lose'
+      ? -((RATES[rate] || 550) * 7 / 7700)
+      :  ((RATES[rate] || 275) * 7 / 7700);
+    const m1 = (weight + weeklyKg * 4).toFixed(1);
+    const m3 = (weight + weeklyKg * 12).toFixed(1);
+    const m6 = (weight + weeklyKg * 24).toFixed(1);
+    $('proj-rows').innerHTML = `
+      <div class="proj-row"><span class="proj-label">En 1 mes</span><span class="proj-value">${m1} kg</span></div>
+      <div class="proj-row"><span class="proj-label">En 3 meses</span><span class="proj-value">${m3} kg</span></div>
+      <div class="proj-row"><span class="proj-label">En 6 meses</span><span class="proj-value">${m6} kg</span></div>
+      <div class="proj-row"><span class="proj-label">Ritmo semanal</span><span class="proj-value">${weeklyKg > 0 ? '+' : ''}${weeklyKg.toFixed(2)} kg/semana</span></div>
+    `;
+    projCard.style.display = 'block';
+  } else {
+    projCard.style.display = 'none';
+  }
+
+  // Warning
+  const warn = $('warning');
+  if (belowMin) {
+    warn.textContent = `El déficit solicitado baja de ${MIN_CAL} kcal/día (mínimo recomendado para ${gender === 'female' ? 'mujeres' : 'hombres'}). Se ha ajustado al mínimo. Consulta con un profesional antes de hacer déficits agresivos.`;
+    warn.classList.add('visible');
+  } else {
+    warn.classList.remove('visible');
+  }
+
+  // Show results with animation
+  $('results').classList.add('visible');
+  $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Track event
+  if (window.umami) umami.track('tdee_calculated', { goal, formula });
+});
+</script>
+
+</body>
+</html>
