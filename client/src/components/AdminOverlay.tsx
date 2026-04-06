@@ -153,6 +153,8 @@ function TabUsers({ data, loading, defaultSort }) {
   const [users,      setUsers]      = useState(null);
   const [savingRole, setSavingRole] = useState(null);
   const [savedRole,  setSavedRole]  = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);  // userId pending confirmation
+  const [deleting,   setDeleting]   = useState(false);
   const { token } = useAuth();
 
   useEffect(() => { if (data) setUsers(data); }, [data]);
@@ -166,6 +168,18 @@ function TabUsers({ data, loading, defaultSort }) {
       setTimeout(() => setSavedRole(null), 2000);
     } catch { /* silencioso */ } finally {
       setSavingRole(null);
+    }
+  }
+
+  async function handleDelete(userId) {
+    setDeleting(true);
+    try {
+      await api.deleteUser(userId, token);
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      setExpanded(null);
+      setConfirmDelete(null);
+    } catch { /* silencioso */ } finally {
+      setDeleting(false);
     }
   }
 
@@ -315,8 +329,48 @@ function TabUsers({ data, loading, defaultSort }) {
                         (Actividad exacta por día disponible en análisis avanzado por usuario)
                       </p>
                     </div>
-                    {/* Selector de rol */}
+                    {/* Eliminar + Selector de rol */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+                      {confirmDelete === u.id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
+                          <span style={{ fontSize: 11, color: '#ef4444' }}>¿Seguro?</span>
+                          <button
+                            onClick={() => handleDelete(u.id)}
+                            disabled={deleting}
+                            style={{
+                              padding: '3px 10px', borderRadius: 6, border: 'none',
+                              background: '#ef4444', color: 'white', fontSize: 11,
+                              fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                            }}
+                          >
+                            {deleting ? '...' : 'Eliminar'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            style={{
+                              padding: '3px 8px', borderRadius: 6,
+                              border: '1px solid var(--border)', background: 'var(--surface)',
+                              fontSize: 11, cursor: 'pointer', color: 'var(--text-2)',
+                              fontFamily: 'var(--font-sans)',
+                            }}
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={e => { e.stopPropagation(); setConfirmDelete(u.id); }}
+                          style={{
+                            padding: '4px 10px', borderRadius: 6,
+                            border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
+                            fontSize: 11, cursor: 'pointer', color: '#ef4444',
+                            fontFamily: 'var(--font-sans)', fontWeight: 500,
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                      <div style={{ width: 1, height: 20, background: 'var(--border)' }} />
                       <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Rol:</span>
                       <select
                         value={u.access_level ?? 1}

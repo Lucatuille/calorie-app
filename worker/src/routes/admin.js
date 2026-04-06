@@ -488,6 +488,40 @@ export async function handleAdmin(request, env, path) {
     });
   }
 
+  // ── DELETE /api/admin/users/:id ──────────────────────────
+  const deleteMatch = path.match(/^\/api\/admin\/users\/(\d+)$/);
+  if (deleteMatch && request.method === 'DELETE') {
+    const userId = parseInt(deleteMatch[1]);
+
+    // Prevent deleting yourself
+    if (userId === admin.userId) {
+      return errorResponse('No puedes eliminar tu propia cuenta', 400);
+    }
+
+    // Verify user exists and is not admin
+    const target = await env.DB.prepare(
+      'SELECT id, name, is_admin FROM users WHERE id = ?'
+    ).bind(userId).first();
+    if (!target) return errorResponse('Usuario no encontrado', 404);
+    if (target.is_admin) return errorResponse('No se puede eliminar un admin', 400);
+
+    // 1. Delete from tables WITHOUT ON DELETE CASCADE
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM upgrade_events WHERE user_id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM weight_logs WHERE user_id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM ai_usage_logs WHERE user_id = ?').bind(userId),
+      env.DB.prepare('DELETE FROM assistant_digests WHERE user_id = ?').bind(userId),
+    ]);
+
+    // 2. Delete user — CASCADE handles: entries, user_supplements, supplement_logs,
+    //    ai_corrections, user_calibration, ai_usage_log, assistant_conversations,
+    //    assistant_messages, assistant_usage
+    await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+
+    return jsonResponse({ success: true, deleted_user_id: userId, name: target.name });
+  }
+
   return errorResponse('Not found', 404);
 }
 

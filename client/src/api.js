@@ -81,6 +81,8 @@ export const api = {
   getAdminAIStats:    (token) => request('GET', '/api/admin/ai-stats',   null, token),
   updateUserRole: (userId, accessLevel, token) =>
     request('PUT', `/api/admin/users/${userId}/role`, { access_level: accessLevel }, token),
+  deleteUser: (userId, token) =>
+    request('DELETE', `/api/admin/users/${userId}`, null, token),
 
   // Calibración
   saveAiCorrection:      (body, token) => request('POST',   '/api/calibration/correction', body, token),
