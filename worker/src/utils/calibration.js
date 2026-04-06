@@ -102,12 +102,17 @@ export function calculateCalibrationProfile(corrections) {
     globalBias = globalBias * Math.pow(0.5, halvings);
   }
 
-  // Factores por meal_type (mínimo 3 muestras)
+  // Factores por meal_type (mínimo 3 muestras, con time decay)
   const mealFactors = {};
   for (const [meal, items] of Object.entries(groupBy(actual, 'meal_type'))) {
     if (items.length >= CALIBRATION_MIN_POINTS) {
+      const itemWeights = items.map(c => {
+        const ts = Date.parse((c.created_at || '').replace(' ', 'T'));
+        const daysSince = isNaN(ts) ? 0 : Math.max(0, (now - ts) / 86400000);
+        return Math.pow(CALIBRATION_DECAY, daysSince);
+      });
       mealFactors[meal] = {
-        bias:       calculateWeightedMean(items.map(c => calcMixedBias(c))),
+        bias:       calculateWeightedMean(items.map(c => calcMixedBias(c)), itemWeights),
         samples:    items.length,
         confidence: Math.min(items.length / 8, 1),
       };
@@ -128,9 +133,15 @@ export function calculateCalibrationProfile(corrections) {
       } catch { return false; }
     });
     if (catItems.length >= CALIBRATION_MIN_POINTS) {
+      const catWeights = catItems.map(c => {
+        const ts = Date.parse((c.created_at || '').replace(' ', 'T'));
+        const daysSince = isNaN(ts) ? 0 : Math.max(0, (now - ts) / 86400000);
+        return Math.pow(CALIBRATION_DECAY, daysSince);
+      });
       foodFactors[cat] = {
-        bias:    calculateWeightedMean(catItems.map(c => calcMixedBias(c))),
-        samples: catItems.length,
+        bias:       calculateWeightedMean(catItems.map(c => calcMixedBias(c)), catWeights),
+        samples:    catItems.length,
+        confidence: Math.min(catItems.length / 8, 1),
       };
     }
   }
@@ -139,7 +150,7 @@ export function calculateCalibrationProfile(corrections) {
   const timeFactors = {};
   const weekendItems  = actual.filter(c => c.is_weekend);
   const weekdayItems  = actual.filter(c => !c.is_weekend);
-  if (weekendItems.length >= 2 && weekdayItems.length >= 2) {
+  if (weekendItems.length >= CALIBRATION_MIN_POINTS && weekdayItems.length >= CALIBRATION_MIN_POINTS) {
     const weekendBias = calculateWeightedMean(weekendItems.map(c => calcMixedBias(c)));
     const weekdayBias = calculateWeightedMean(weekdayItems.map(c => calcMixedBias(c)));
     if (Math.abs(weekendBias - weekdayBias) > 0.05) {
@@ -171,16 +182,19 @@ export function applyCalibration(baseEstimate, profile, context) {
     factor += (mealFactor.bias - profile.global_bias) * mealFactor.confidence;
   }
 
-  // Categorías de comida (peso moderado)
+  // Categorías de comida (peso moderado, escalado por confidence)
   if (context.food_categories?.length && profile.food_factors) {
-    let adj = 0, count = 0;
+    let adj = 0, confSum = 0, count = 0;
     for (const cat of context.food_categories) {
-      if (profile.food_factors[cat]) {
-        adj += profile.food_factors[cat].bias - profile.global_bias;
+      const ff = profile.food_factors[cat];
+      if (ff) {
+        const conf = ff.confidence || Math.min(ff.samples / 8, 1);
+        adj += (ff.bias - profile.global_bias) * conf;
+        confSum += conf;
         count++;
       }
     }
-    if (count > 0) factor += (adj / count) * 0.6;
+    if (count > 0) factor += (adj / confSum) * 0.6;
   }
 
   // Fin de semana

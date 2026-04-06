@@ -335,13 +335,8 @@ export async function handleAnalyzeText(request, env, ctx) {
     };
   }
 
-  // Nota de calibración — solo si confidence > 0.2 (y es corta)
-  let calibNote = '';
-  if (calibrationProfile?.confidence > 0.2) {
-    const biasPct = Math.round(Math.abs(calibrationProfile.global_bias) * 100);
-    const dir     = calibrationProfile.global_bias > 0 ? 'más' : 'menos';
-    calibNote = ` [Calibración: usuario consume ${biasPct}% ${dir} de lo estimado]`;
-  }
+  // Calibración se aplica SOLO post-proceso via applyCalibration().
+  // NO inyectar hint en el prompt — causaba doble corrección.
 
   // Spanish dishes database lookup (feature flag)
   let dishContext = '';
@@ -353,7 +348,7 @@ export async function handleAnalyzeText(request, env, ctx) {
     } catch {}
   }
 
-  const userMessage = `${text.trim()}${calibNote}${dishContext}`;
+  const userMessage = `${text.trim()}${dishContext}`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -421,7 +416,7 @@ export async function handleAnalyzeText(request, env, ctx) {
   ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
   if (ctx?.waitUntil) ctx.waitUntil(logPromise);
 
-  const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.1;
+  const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.05;
 
   return jsonResponse({
     name:       result.name  || '',
