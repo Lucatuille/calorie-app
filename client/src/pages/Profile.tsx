@@ -672,6 +672,8 @@ export default function Profile() {
         {deleteStep === 0 && (
           <button
             onClick={() => setDeleteStep(1)}
+            onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.opacity = '0.5'; }}
             style={{
               background: 'none', border: 'none',
               color: 'var(--text-tertiary)', fontSize: 11,
@@ -679,6 +681,7 @@ export default function Profile() {
               fontFamily: 'var(--font-sans)',
               textDecoration: 'underline',
               padding: 4,
+              transition: 'color 0.15s ease, opacity 0.15s ease',
             }}>
             Eliminar mi cuenta
           </button>
