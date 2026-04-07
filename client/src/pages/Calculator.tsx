@@ -537,7 +537,7 @@ export default function Calculator() {
                       background: 'rgba(99,102,241,0.1)', color: '#6366f1',
                       letterSpacing: '0.04em', textTransform: 'uppercase',
                     }}>
-                      ✨ Estimación IA
+                      Estimación IA
                     </span>
                     <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
                       aproximada · puede variar

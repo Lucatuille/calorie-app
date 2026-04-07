@@ -138,7 +138,7 @@ function MessageBubble({ msg }) {
           letterSpacing: '0.04em', textTransform: 'uppercase',
           marginBottom: 4, marginLeft: 4,
         }}>
-          ✨ IA
+          IA
         </span>
       )}
       <div style={{
