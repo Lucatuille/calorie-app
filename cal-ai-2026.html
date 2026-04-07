@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cal AI en 2026: opinión honesta después de usarla un mes — Caliro blog</title>
+<meta name="description" content="Cal AI es la app de calorías más descargada del momento. La usé durante un mes. Esto es lo que funciona, lo que no, y por qué cambié.">
+<link rel="canonical" href="https://caliro.dev/blog/cal-ai-2026-opinion">
+<link rel="alternate" hreflang="es" href="https://caliro.dev/blog/cal-ai-2026-opinion">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://caliro.dev/blog/cal-ai-2026-opinion">
+<meta property="og:title" content="Cal AI en 2026: opinión honesta después de usarla un mes">
+<meta property="og:description" content="Cal AI es la app de calorías más descargada del momento. La usé durante un mes. Esto es lo que funciona, lo que no, y por qué cambié.">
+<meta property="og:locale" content="es_ES">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Cal AI en 2026: opinión honesta después de usarla un mes",
+  "description": "Cal AI es la app de calorías más descargada del momento. La usé durante un mes. Esto es lo que funciona, lo que no, y por qué cambié.",
+  "inLanguage": "es",
+  "author": {
+    "@type": "Person",
+    "name": "Luca"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Caliro"
+  },
+  "datePublished": "2026-04-07",
+  "mainEntityOfPage": "https://caliro.dev/blog/cal-ai-2026-opinion"
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE;
+  --white: #FFFFFF;
+  --dark: #111111;
+  --mid: #888888;
+  --light: #E8E4DE;
+  --green: #22c55e;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(245,242,238,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--light);
+}
+.nav-logo { font-family: var(--serif); font-size: 20px; color: var(--green); text-decoration: none; font-style: italic; }
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { font-size: 13px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--dark); }
+.nav-cta { background: var(--dark) !important; color: white !important; padding: 8px 18px; border-radius: 100px; font-weight: 500 !important; }
+@media (max-width: 640px) { nav { padding: 14px 20px; } .nav-links { display: none; } }
+
+/* ARTICLE */
+.article-wrap {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+}
+
+/* Header */
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.meta-tag {
+  background: var(--white);
+  border: 1px solid var(--light);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--mid);
+}
+.meta-date { font-size: 12px; color: var(--mid); }
+.meta-read { font-size: 12px; color: var(--mid); }
+
+.article-title {
+  font-family: var(--serif);
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+.article-title em { font-style: italic; color: var(--green); }
+
+.article-lead {
+  font-size: 18px;
+  color: var(--mid);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--light);
+}
+
+/* Body */
+.article-body { font-size: 16px; line-height: 1.8; color: #333; }
+
+.article-body h2 {
+  font-family: var(--serif);
+  font-size: 28px;
+  color: var(--dark);
+  margin: 48px 0 16px;
+  line-height: 1.2;
+}
+.article-body h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--dark);
+  margin: 36px 0 12px;
+}
+.article-body p { margin-bottom: 20px; }
+.article-body p:last-child { margin-bottom: 0; }
+
+.article-body strong { color: var(--dark); font-weight: 600; }
+
+.article-body ul {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.article-body ul li {
+  padding-left: 20px;
+  position: relative;
+}
+.article-body ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-size: 14px;
+}
+
+/* Callout */
+.callout {
+  background: var(--white);
+  border-left: 3px solid var(--green);
+  border-radius: 0 12px 12px 0;
+  padding: 20px 24px;
+  margin: 32px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.callout p { margin: 0; font-size: 15px; color: var(--dark); font-style: italic; }
+
+/* Comparison box */
+.compare-box {
+  background: var(--dark);
+  border-radius: 16px;
+  padding: 28px;
+  margin: 32px 0;
+  color: white;
+}
+.compare-box h4 {
+  font-family: var(--serif);
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: white;
+}
+.compare-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #222;
+  font-size: 14px;
+}
+.compare-row:last-child { border: none; padding-bottom: 0; }
+.compare-label { color: #888; }
+.compare-val { font-weight: 500; }
+.compare-val.red { color: #ef4444; }
+.compare-val.green { color: var(--green); }
+
+/* CTA inline */
+.article-cta {
+  background: var(--dark);
+  border-radius: 20px;
+  padding: 36px 32px;
+  text-align: center;
+  margin: 48px 0;
+}
+.article-cta h3 { font-family: var(--serif); font-size: 24px; color: white; margin-bottom: 10px; }
+.article-cta p { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+.article-cta a {
+  display: inline-block;
+  background: var(--green);
+  color: white;
+  padding: 13px 28px;
+  border-radius: 100px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.article-cta a:hover { background: #16a34a; }
+
+/* Author */
+.article-author {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0;
+  border-top: 1px solid var(--light);
+  margin-top: 48px;
+}
+.author-avatar {
+  width: 44px; height: 44px;
+  background: var(--dark);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 18px; color: white;
+  flex-shrink: 0;
+}
+.author-name { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
+.author-bio { font-size: 13px; color: var(--mid); line-height: 1.5; }
+
+/* Related */
+.related { margin-top: 48px; }
+.related-label {
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--mid); margin-bottom: 20px;
+}
+.related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.related-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 20px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+.related-card:hover { transform: translateY(-2px); }
+.related-tag { font-size: 10px; color: var(--mid); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+.related-title { font-family: var(--serif); font-size: 17px; color: var(--dark); line-height: 1.3; }
+@media (max-width: 480px) { .related-grid { grid-template-columns: 1fr; } }
+
+/* Footer */
+footer {
+  background: var(--dark);
+  border-top: 1px solid #1e1e1e;
+  padding: 28px 40px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+  margin-top: 80px;
+}
+.f-logo { font-family: var(--serif); font-size: 18px; color: var(--green); text-decoration: none; font-style: italic; }
+.f-links { display: flex; gap: 24px; list-style: none; }
+.f-links a { font-size: 12px; color: #555; text-decoration: none; }
+.f-copy { font-size: 12px; color: #444; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Caliro</a>
+  <ul class="nav-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/#precios">Precios</a></li>
+    <li><a href="/app/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<article class="article-wrap">
+
+  <div class="article-meta">
+    <span class="meta-tag">Comparativas</span>
+    <span class="meta-date">Abril 2026</span>
+    <span class="meta-read">· 5 min de lectura</span>
+  </div>
+
+  <h1 class="article-title">
+    Cal AI en 2026:<br>
+    <em>opinión honesta después de usarla un mes</em>
+  </h1>
+
+  <p class="article-lead">
+    Cal AI es la app de calorías más descargada del momento. El concepto es bueno — haces una foto y la IA te devuelve las calorías. El problema es lo que pasa después.
+  </p>
+
+  <div class="article-body">
+
+    <p>
+      La descargué después de ver que todo el mundo la mencionaba en Reddit y TikTok. La promesa era clara: foto a la comida, calorías al instante, sin buscar nada manualmente. Eso es exactamente lo que quería.
+    </p>
+
+    <p>
+      Durante las primeras semanas cumplió. El reconocimiento es rápido, la interfaz es limpia, la experiencia de "foto y listo" funciona como promete. Entiendo perfectamente por qué tiene millones de descargas.
+    </p>
+
+    <p>
+      Pero después de un mes usando Cal AI a diario llegué a la misma conclusión que con MyFitnessPal: el problema no es el primer día. El problema es el día 30.
+    </p>
+
+    <h2>Lo que Cal AI hace bien</h2>
+
+    <p>
+      El reconocimiento visual es bueno. Devuelve un número razonable en segundos y la experiencia de registro es genuinamente más rápida que cualquier app basada en búsqueda manual.
+    </p>
+
+    <p>
+      La interfaz es limpia y moderna. No tiene la sobrecarga de MyFitnessPal ni los menús enterrados. Es una app que entiende que la mayoría de personas solo quieren saber si se están pasando de calorías, no gestionar 84 micronutrientes.
+    </p>
+
+    <p>
+      Para alguien que empieza a contar calorías por primera vez, Cal AI es una buena introducción. La fricción es mínima y los resultados son inmediatos.
+    </p>
+
+    <h2>El problema que descubrí en el día 15</h2>
+
+    <p>
+      Cal AI estima bien la media. El problema es que yo no soy la media.
+    </p>
+
+    <p>
+      Mis tortillas españolas siempre me salían bajas. El aceite de oliva es difícil de estimar visualmente y el modelo lo subestima de forma consistente. Cada vez que corregía la estimación, la siguiente tortilla tenía el mismo error — la app no recordaba nada.
+    </p>
+
+    <div class="callout">
+      <p>"Después de corregir la misma comida doce veces, me di cuenta de que Cal AI aprende del mercado, no de mí. Sus estimaciones mejoran para el usuario promedio, no para mis hábitos específicos."</p>
+    </div>
+
+    <p>
+      Este es el problema central: Cal AI es una IA estática. Da la misma respuesta para tu tortilla española que para la de cualquier otro usuario. Si comes siempre las mismas cosas, esos errores se acumulan — y acumulados pueden ser 200-300 kcal al día en la dirección equivocada.
+    </p>
+
+    <p>
+      Para referencia: 250 kcal diarias de error son 7.500 kcal al mes. La diferencia entre perder peso y no perderlo.
+    </p>
+
+    <h2>El precio que nadie menciona</h2>
+
+    <p>
+      Cal AI tiene plan gratuito con análisis muy limitados. Para uso diario real necesitas el plan de pago — y no es barato.
+    </p>
+
+    <div class="compare-box">
+      <h4>Lo que pagan los usuarios al año</h4>
+      <div class="compare-row">
+        <span class="compare-label">Cal AI</span>
+        <span class="compare-val red">~60€/año</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">MyFitnessPal Premium</span>
+        <span class="compare-val red">47,99€/año</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Caliro Pro</span>
+        <span class="compare-val green">14,99€/año</span>
+      </div>
+      <div class="compare-row">
+        <span class="compare-label">Caliro Free</span>
+        <span class="compare-val green">0€</span>
+      </div>
+    </div>
+
+    <p>
+      Sesenta euros al año por una app que no aprende de tus correcciones es mucho. Especialmente si comes comida española y la IA falla de forma sistemática con tus platos habituales.
+    </p>
+
+    <h2>El asistente que no tiene contexto</h2>
+
+    <p>
+      Cal AI tiene un chatbot integrado. El problema es que no tiene acceso a lo que has comido esta semana. Puedes preguntarle qué cenar, pero no sabe que llevas tres días por encima de tu objetivo de carbohidratos.
+    </p>
+
+    <p>
+      Las respuestas son genéricas porque los datos que tiene son genéricos. Es la misma respuesta que te daría cualquier artículo de nutrición de internet, sin ningún contexto tuyo.
+    </p>
+
+    <div class="callout">
+      <p>"La diferencia entre un asistente útil y un chatbot genérico es el contexto. Sin historial real, las recomendaciones son las mismas para ti que para cualquier otro usuario."</p>
+    </div>
+
+    <h2>Qué busqué cuando decidí cambiar</h2>
+
+    <p>
+      Tenía claro lo que no quería volver a repetir. Busqué algo que:
+    </p>
+
+    <ul>
+      <li><strong>Aprendiera de mis correcciones.</strong> Si corrijo la misma comida, quiero que la próxima estimación sea mejor. No para el usuario promedio — para mí.</li>
+      <li><strong>Entendiera la comida española real.</strong> El aceite de oliva, el sofrito, las raciones de un bar de barrio. No la versión americana de la dieta mediterránea.</li>
+      <li><strong>Tuviera un asistente con contexto real.</strong> Que supiera lo que comí ayer antes de recomendarme qué cenar hoy.</li>
+      <li><strong>No costara 60€ al año.</strong> La foto IA es tecnología, no magia. No debería costar lo que cuesta.</li>
+    </ul>
+
+    <h2>Lo que encontré</h2>
+
+    <p>
+      Después de probar varias opciones acabé en <a href="/app/register" style="color: var(--green); text-decoration: none; font-weight: 500;">Caliro</a>, una app desarrollada por un estudiante de ingeniería en Barcelona con exactamente este problema. La diferencia más visible es el <strong>motor de calibración personal</strong>: cada vez que corriges una estimación, el sistema aprende y aplica ese aprendizaje la próxima vez que registras el mismo plato.
+    </p>
+
+    <p>
+      Después de dos semanas, mis tortillas españolas ya salían bien. No porque el modelo general hubiera mejorado — sino porque el sistema había aprendido cómo hago yo la tortilla.
+    </p>
+
+    <p>
+      El asistente es la otra diferencia que no esperaba. Tiene acceso a todo tu historial real y responde con tus datos, no con consejos genéricos. Pregúntale "¿qué debería cenar para llegar a mi objetivo de proteína?" y te responde calculando lo que llevas hoy, no dándote una recomendación de manual.
+    </p>
+
+    <div class="callout">
+      <p>"La primera vez que el asistente me dijo 'tus viernes son tus peores días de la semana' me di cuenta de que ninguna otra app podía decir eso — porque ninguna otra tenía ese contexto."</p>
+    </div>
+
+    <h2>¿Cuándo tiene sentido Cal AI?</h2>
+
+    <p>
+      Cal AI tiene sentido si comes principalmente productos envasados o comida donde el peso es fácil de estimar visualmente, y si no te importa que la IA no mejore con el tiempo. Para ese perfil, la experiencia es buena y la curva de aprendizaje es cero.
+    </p>
+
+    <p>
+      Si comes comida española a diario, si quieres que las estimaciones mejoren con el uso, o si no quieres pagar 60€ al año por algo que comete los mismos errores indefinidamente — hay opciones que se ajustan mejor.
+    </p>
+
+    <h2>La conclusión honesta</h2>
+
+    <p>
+      Cal AI es una app bien hecha que ha democratizado el conteo de calorías por foto. El mérito es real.
+    </p>
+
+    <p>
+      Pero la foto IA es la misma tecnología en todas las apps. Lo que diferencia una buena app de nutrición de una mediocre no es que reconozca la comida — es lo que hace con esa información a lo largo del tiempo. Cal AI no hace suficiente con ella.
+    </p>
+
+    <p>
+      Si lo que buscas es una app que aprenda cómo comes tú, no cómo come el usuario promedio, la diferencia empieza a notarse en la semana dos.
+    </p>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="article-cta">
+    <h3>La IA que aprende cómo comes tú</h3>
+    <p>Foto IA, escáner y texto. Motor de calibración personal. Asistente con tu historial completo. Gratis para empezar — sin tarjeta de crédito.</p>
+    <a href="/app/register">Probar Caliro gratis →</a>
+  </div>
+
+  <!-- Author -->
+  <div class="article-author">
+    <div class="author-avatar">L</div>
+    <div>
+      <div class="author-name">Luca</div>
+      <div class="author-bio">Estudiante de ingeniería en Barcelona. Construí Caliro porque MyFitnessPal no entendía lo que comía.</div>
+    </div>
+  </div>
+
+  <!-- Related -->
+  <div class="related">
+    <div class="related-label">Más artículos</div>
+    <div class="related-grid">
+      <a href="/blog/alternativa-myfitnesspal-espana" class="related-card">
+        <div class="related-tag">Herramientas</div>
+        <div class="related-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
+      </a>
+      <a href="/blog/contar-calorias-ia" class="related-card">
+        <div class="related-tag">Guías</div>
+        <div class="related-title">Cómo contar calorías con IA en 2026</div>
+      </a>
+    </div>
+  </div>
+
+</article>
+
+<footer>
+  <a href="/" class="f-logo">Caliro</a>
+  <ul class="f-links">
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/app/privacy">Privacidad</a></li>
+    <li><a href="/cdn-cgi/l/email-protection#d4b7bbbaa0b5b7a0bb94b7b5b8bda6bbfab0b1a2">Contacto</a></li>
+  </ul>
+  <div class="f-copy">© 2026 Caliro. Hecho en Ba

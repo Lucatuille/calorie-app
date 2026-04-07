@@ -66,10 +66,14 @@ export default function Profile() {
   const [error,        setError]        = useState('');
   const [loading,      setLoading]      = useState(false);
   const [exporting,    setExporting]    = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [showTDEE,     setShowTDEE]     = useState(false);
   const [calibration,  setCalibration]  = useState(null);
   const [resetConfirm, setResetConfirm] = useState(false);
+  const [deleteStep,   setDeleteStep]   = useState(0); // 0=oculto 1=confirmando 2=ejecutando
+  const [deleteText,   setDeleteText]   = useState('');
+  const [deleteError,  setDeleteError]  = useState('');
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -132,6 +136,40 @@ export default function Profile() {
       exportCSV(entries);
     } catch { }
     finally { setExporting(false); }
+  }
+
+  async function handleExportAll() {
+    setExportingAll(true);
+    try {
+      const data = await api.exportAllData(token);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `caliro-mis-datos-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch { }
+    finally { setExportingAll(false); }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteText !== 'ELIMINAR') {
+      setDeleteError('Escribe ELIMINAR exactamente para confirmar');
+      return;
+    }
+    setDeleteError('');
+    setDeleteStep(2);
+    try {
+      await api.deleteAccount(token);
+      logout();
+      window.location.href = '/';
+    } catch (err) {
+      setDeleteError(err.message || 'Error al eliminar la cuenta');
+      setDeleteStep(1);
+    }
   }
 
   // Confidence label
@@ -558,6 +596,142 @@ export default function Profile() {
           }}>
           {exporting ? 'Exportando…' : 'CSV'}
         </button>
+      </div>
+
+      {/* ── Export GDPR completo ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '0.5px solid var(--border)' }}>
+        <div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
+            Descargar todos mis datos
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)', marginTop: 2 }}>
+            Portabilidad GDPR · perfil, comidas, peso, IA, asistente
+          </div>
+        </div>
+        <button
+          onClick={handleExportAll}
+          disabled={exportingAll}
+          style={{
+            fontSize: 12,
+            color: 'var(--text-secondary)',
+            background: 'transparent',
+            border: '0.5px solid var(--border)',
+            borderRadius: 'var(--radius-full)',
+            padding: '5px 14px',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-sans)',
+          }}>
+          {exportingAll ? 'Exportando…' : 'JSON'}
+        </button>
+      </div>
+
+      {/* ── Zona peligrosa ── */}
+      <div style={{
+        marginTop: 16, padding: '14px 16px',
+        border: '0.5px solid rgba(239,68,68,0.25)',
+        borderRadius: 'var(--radius-lg)',
+        background: 'rgba(239,68,68,0.02)',
+      }}>
+        <div style={{ fontSize: 11, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: 10, fontFamily: 'var(--font-sans)' }}>
+          Zona peligrosa
+        </div>
+        {deleteStep === 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
+                Eliminar mi cuenta
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>
+                Borra todos tus datos de forma permanente
+              </div>
+            </div>
+            <button
+              onClick={() => setDeleteStep(1)}
+              style={{
+                fontSize: 12,
+                color: '#ef4444',
+                background: 'transparent',
+                border: '0.5px solid rgba(239,68,68,0.4)',
+                borderRadius: 'var(--radius-full)',
+                padding: '5px 14px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-sans)',
+                whiteSpace: 'nowrap',
+              }}>
+              Eliminar
+            </button>
+          </div>
+        )}
+        {deleteStep === 1 && (
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', marginBottom: 8, lineHeight: 1.5 }}>
+              Esta acción <strong>no se puede deshacer</strong>. Se borrarán tu perfil, comidas, peso, correcciones de IA y conversaciones del asistente.
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', marginBottom: 6 }}>
+              Escribe <strong style={{ color: '#ef4444' }}>ELIMINAR</strong> para confirmar:
+            </div>
+            <input
+              type="text"
+              value={deleteText}
+              onChange={e => setDeleteText(e.target.value)}
+              placeholder="ELIMINAR"
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                fontSize: 13,
+                fontFamily: 'var(--font-sans)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                marginBottom: 10,
+              }}
+            />
+            {deleteError && (
+              <div style={{ fontSize: 11, color: '#ef4444', marginBottom: 8, fontFamily: 'var(--font-sans)' }}>
+                {deleteError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setDeleteStep(0); setDeleteText(''); setDeleteError(''); }}
+                style={{
+                  fontSize: 12,
+                  color: 'var(--text-secondary)',
+                  background: 'transparent',
+                  border: '0.5px solid var(--border)',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                style={{
+                  fontSize: 12,
+                  color: 'white',
+                  background: '#ef4444',
+                  border: 'none',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 600,
+                }}>
+                Eliminar cuenta
+              </button>
+            </div>
+          </div>
+        )}
+        {deleteStep === 2 && (
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', textAlign: 'center', padding: 8 }}>
+            Eliminando cuenta…
+          </div>
+        )}
       </div>
 
       <p style={{

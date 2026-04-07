@@ -2,7 +2,7 @@
 //  PROFILE ROUTES — /api/profile
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate } from '../utils.js';
+import { jsonResponse, errorResponse, authenticate, rateLimit } from '../utils.js';
 
 export async function handleProfile(request, env, path) {
   const user = await authenticate(request, env);
@@ -65,8 +65,106 @@ export async function handleProfile(request, env, path) {
     return jsonResponse(profile);
   }
 
+  // GET /api/profile/export — descarga GDPR de TODOS los datos del usuario
+  if (path === '/api/profile/export' && request.method === 'GET') {
+    const rl = await rateLimit(env, request, `profile-export:${user.userId}`, 5, 60 * 60);
+    if (rl) return rl;
+
+    // Helper para .all() defensivo (algunas tablas pueden no existir)
+    const safeAll = async (sql, ...args) => {
+      try {
+        const { results } = await env.DB.prepare(sql).bind(...args).all();
+        return results || [];
+      } catch { return []; }
+    };
+    const safeFirst = async (sql, ...args) => {
+      try {
+        return await env.DB.prepare(sql).bind(...args).first();
+      } catch { return null; }
+    };
+
+    // 1. Perfil (sin password_hash)
+    const userRow = await safeFirst(
+      `SELECT id, name, email, age, weight, height, gender,
+              target_calories, target_protein, target_carbs, target_fat,
+              goal_weight, tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
+              access_level, onboarding_completed, last_login, created_at
+       FROM users WHERE id = ?`,
+      user.userId
+    );
+
+    // 2. Comidas (sin LIMIT)
+    const entries = await safeAll(
+      'SELECT * FROM entries WHERE user_id = ? ORDER BY date DESC, created_at DESC',
+      user.userId
+    );
+
+    // 3. Peso histórico
+    const weightLogs = await safeAll(
+      'SELECT date, weight_kg, created_at FROM weight_logs WHERE user_id = ? ORDER BY date DESC',
+      user.userId
+    );
+
+    // 4. Suplementos
+    const supplements = await safeAll(
+      'SELECT * FROM user_supplements WHERE user_id = ?',
+      user.userId
+    );
+    const supplementLogs = await safeAll(
+      'SELECT * FROM supplement_logs WHERE user_id = ? ORDER BY date DESC',
+      user.userId
+    );
+
+    // 5. Correcciones de IA (incluye los nuevos input_text, ai_response_text)
+    const aiCorrections = await safeAll(
+      'SELECT * FROM ai_corrections WHERE user_id = ? ORDER BY created_at DESC',
+      user.userId
+    );
+
+    // 6. Perfil de calibración
+    const calibration = await safeFirst(
+      'SELECT * FROM user_calibration WHERE user_id = ?',
+      user.userId
+    );
+
+    // 7. Uso de IA diario
+    const aiUsage = await safeAll(
+      'SELECT * FROM ai_usage_log WHERE user_id = ? ORDER BY date DESC',
+      user.userId
+    );
+
+    // 8. Conversaciones del asistente
+    const assistantConversations = await safeAll(
+      'SELECT * FROM assistant_conversations WHERE user_id = ? ORDER BY created_at DESC',
+      user.userId
+    );
+    const assistantMessages = await safeAll(
+      'SELECT * FROM assistant_messages WHERE user_id = ? ORDER BY created_at DESC',
+      user.userId
+    );
+
+    return jsonResponse({
+      exported_at:  new Date().toISOString(),
+      format_version: '1.0',
+      user:         userRow,
+      entries,
+      weight_logs:  weightLogs,
+      supplements,
+      supplement_logs: supplementLogs,
+      ai_corrections:  aiCorrections,
+      calibration,
+      ai_usage:        aiUsage,
+      assistant: {
+        conversations: assistantConversations,
+        messages:      assistantMessages,
+      },
+    });
+  }
+
   // PUT /api/profile
   if (path === '/api/profile' && request.method === 'PUT') {
+    const rl = await rateLimit(env, request, `profile-write:${user.userId}`, 10, 60);
+    if (rl) return rl;
     const body = await request.json();
     const {
       name, age, weight, height, gender,
@@ -119,6 +217,43 @@ export async function handleProfile(request, env, path) {
     ).run();
 
     return jsonResponse({ message: 'Perfil actualizado' });
+  }
+
+  // DELETE /api/profile — borrar la propia cuenta (GDPR Art. 17)
+  if (path === '/api/profile' && request.method === 'DELETE') {
+    // Rate limit estricto: máx 3 intentos por hora (evita scripts maliciosos)
+    const rl = await rateLimit(env, request, `profile-delete:${user.userId}`, 3, 60 * 60);
+    if (rl) return rl;
+
+    const body = await request.json().catch(() => ({}));
+    if (body?.confirm !== 'ELIMINAR') {
+      return errorResponse('Confirmación requerida: enviar { "confirm": "ELIMINAR" }', 400);
+    }
+
+    // Verificar que el usuario existe y no es admin (admins no pueden auto-eliminarse así)
+    const target = await env.DB.prepare(
+      'SELECT id, is_admin FROM users WHERE id = ?'
+    ).bind(user.userId).first();
+    if (!target) return errorResponse('Usuario no encontrado', 404);
+    if (target.is_admin) return errorResponse('Los administradores no pueden eliminar su cuenta así', 400);
+
+    // 1. Borrar datos en tablas SIN ON DELETE CASCADE
+    try {
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').bind(user.userId),
+        env.DB.prepare('DELETE FROM upgrade_events WHERE user_id = ?').bind(user.userId),
+        env.DB.prepare('DELETE FROM weight_logs WHERE user_id = ?').bind(user.userId),
+        env.DB.prepare('DELETE FROM ai_usage_logs WHERE user_id = ?').bind(user.userId),
+        env.DB.prepare('DELETE FROM assistant_digests WHERE user_id = ?').bind(user.userId),
+      ]);
+    } catch { /* algunas tablas pueden no existir aún — continuar */ }
+
+    // 2. Borrar usuario — CASCADE limpia: entries, user_supplements, supplement_logs,
+    //    ai_corrections, user_calibration, ai_usage_log, assistant_conversations,
+    //    assistant_messages, assistant_usage
+    await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(user.userId).run();
+
+    return jsonResponse({ success: true, message: 'Cuenta eliminada' });
   }
 
   return errorResponse('Not found', 404);

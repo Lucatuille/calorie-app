@@ -44,6 +44,8 @@ export const api = {
   // Profile
   getProfile:    (token)        => request('GET',  '/api/profile', null, token),
   updateProfile: (body, token)  => request('PUT',  '/api/profile', body, token),
+  deleteAccount: (token)        => request('DELETE', '/api/profile', { confirm: 'ELIMINAR' }, token),
+  exportAllData: (token)        => request('GET',  '/api/profile/export', null, token),
 
   // Entries
   getAllEntries:    (limit, token, offset = 0) => request('GET', `/api/entries?limit=${limit}&offset=${offset}`, null, token),

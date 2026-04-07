@@ -183,3 +183,51 @@ export async function verifyPassword(password, storedHash) {
 export function needsHashUpgrade(storedHash) {
   return !storedHash.startsWith('pbkdf2:');
 }
+
+// ── Rate limiting (sliding window en D1) ─────────────────────
+// Tabla: auth_attempts (key TEXT PK, count INT, window_start INT)
+// Reutilizamos la misma tabla para todos los rate limits del worker.
+
+export async function checkRateLimit(env, key, limit, windowSecs) {
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    const row = await env.DB.prepare(
+      'SELECT count, window_start FROM auth_attempts WHERE key = ?'
+    ).bind(key).first();
+
+    if (!row || now - row.window_start >= windowSecs) {
+      // Nueva ventana — resetear
+      await env.DB.prepare(`
+        INSERT INTO auth_attempts (key, count, window_start) VALUES (?, 1, ?)
+        ON CONFLICT(key) DO UPDATE SET count = 1, window_start = excluded.window_start
+      `).bind(key, now).run();
+      return true;
+    }
+
+    if (row.count >= limit) return false;
+
+    await env.DB.prepare(
+      'UPDATE auth_attempts SET count = count + 1 WHERE key = ?'
+    ).bind(key).run();
+    return true;
+  } catch {
+    // Si la tabla no existe o falla D1 — dejar pasar (no bloquear usuarios legítimos)
+    return true;
+  }
+}
+
+export function getIP(request) {
+  return request.headers.get('CF-Connecting-IP')
+    || request.headers.get('X-Forwarded-For')?.split(',')[0].trim()
+    || 'unknown';
+}
+
+// Helper: aplica rate limit y devuelve Response 429 si bloqueado, o null si OK.
+// Uso típico:
+//   const limited = await rateLimit(env, request, `analyze:${userId}`, 10, 60);
+//   if (limited) return limited;
+export async function rateLimit(env, request, key, limit, windowSecs, message = 'Demasiadas peticiones. Espera un momento.') {
+  const ok = await checkRateLimit(env, key, limit, windowSecs);
+  if (!ok) return jsonResponse({ error: message }, 429, request);
+  return null;
+}

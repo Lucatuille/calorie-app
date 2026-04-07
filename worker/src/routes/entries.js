@@ -2,7 +2,7 @@
 //  ENTRIES ROUTES — /api/entries
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate, getClientToday } from '../utils.js';
+import { jsonResponse, errorResponse, authenticate, getClientToday, rateLimit } from '../utils.js';
 
 function isValidDate(d) {
   return !d || /^\d{4}-\d{2}-\d{2}$/.test(d);
@@ -23,6 +23,8 @@ export async function handleEntries(request, env, path) {
 
   // POST /api/entries — insert a new meal entry (no upsert)
   if (path === '/api/entries' && request.method === 'POST') {
+    const rl = await rateLimit(env, request, `entries-write:${user.userId}`, 30, 60);
+    if (rl) return rl;
     const { calories, protein, carbs, fat, weight, notes, meal_type, name, date } = await request.json();
     const calErr = validateNumber(calories, 'Calorías', { min: 1, max: 15000, required: true });
     if (calErr) return errorResponse(calErr);
@@ -79,6 +81,8 @@ export async function handleEntries(request, env, path) {
 
   // PUT /api/entries/:id — update specific entry
   if (path.match(/^\/api\/entries\/\d+$/) && request.method === 'PUT') {
+    const rl = await rateLimit(env, request, `entries-write:${user.userId}`, 30, 60);
+    if (rl) return rl;
     const id = parseInt(path.split('/').pop());
     const { calories, protein, carbs, fat, weight, notes, meal_type, name } = await request.json();
     const calErr = validateNumber(calories, 'Calorías', { min: 1, max: 15000, required: true });
@@ -106,6 +110,8 @@ export async function handleEntries(request, env, path) {
 
   // DELETE /api/entries/:id
   if (path.match(/^\/api\/entries\/\d+$/) && request.method === 'DELETE') {
+    const rl = await rateLimit(env, request, `entries-write:${user.userId}`, 30, 60);
+    if (rl) return rl;
     const id = parseInt(path.split('/').pop());
 
     const entry = await env.DB.prepare(

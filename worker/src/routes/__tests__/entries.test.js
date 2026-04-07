@@ -13,6 +13,7 @@ vi.mock('../../utils.js', () => ({
   errorResponse: (msg, status = 400) => ({ _json: true, status, data: { error: msg } }),
   authenticate: vi.fn(),
   getClientToday: vi.fn(() => '2026-04-06'),
+  rateLimit: vi.fn(async () => null),  // por defecto no bloquea
 }));
 
 import { authenticate } from '../../utils.js';

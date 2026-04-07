@@ -50,49 +50,7 @@
 
 ---
 
-## Pending Fixes 🔧
 
-### High priority
-
-**1. Registration bio fields — optional but critical**
-Fields (age, weight, height) are labeled optional but TDEE can't be computed without them.
-If a user skips them, they hit the onboarding wizard with empty fields and no TDEE calculation is possible.
-Fix: make them required, or add a graceful empty-state in Onboarding that explains why they're needed.
-
-**2. Branding — LucaEats still leaks**
-Register.jsx line 107: "Política de privacidad de LucaEats" in the terms checkbox.
-Likely more instances. Do a full grep for "LucaEats" across client/ and worker/.
-
-**3. MIN_WEEK_START hardcoded gate**
-`const MIN_WEEK_START = '2026-03-23'` in assistant.js prevents digest generation before that date.
-After the week of March 23 passes and first digests generate successfully, remove this constant
-and the guard — it becomes dead code.
-
-### Medium priority
-
-**4. No production error visibility**
-When the assistant route throws, D1 queries fail silently, or Stripe webhooks break —
-there's no alert. Find out from user complaints, not monitoring.
-Fix: Cloudflare Workers Logpush or a lightweight error beacon. Even structured console.error
-with enough context would help filter Worker logs.
-
-**5. Auth rate limiting — verify table exists**
-The code is correct and fails open safely (won't block users if table is missing).
-But if `auth_attempts` was never created in D1, brute-force protection is inactive.
-Fix: run `CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0, window_start INTEGER NOT NULL);` in D1 CLI and confirm.
-
-### Low priority / not blocking
-
-**D1 limitations**
-Not a production problem. The issues encountered (multi-statement SQL in web console, PRAGMA)
-are developer experience quirks, fully worked around with `wrangler d1 execute --file`.
-At current scale D1 is the right choice. Reassess if user base grows to tens of thousands.
-
-**Worker deploy is manual**
-Frontend auto-deploys on `git push`. Worker requires `cd worker && npm run deploy`.
-Risk: shipping a frontend that calls an API endpoint not yet deployed on the worker.
-Fix (optional): add a GitHub Action that runs `wrangler deploy` on push to main when
-files under `worker/` change.
 
 ---
 
@@ -122,9 +80,99 @@ is unclear. What specific wall does a Free user hit that makes them want to upgr
    Surface it: "Pro users get a weekly analysis of their patterns" with a sample in the upgrade page.
 
 
-E2E tests (Phase 3.3) — the last quality roadmap item, dedicated session
+
 
 OG image — design task, not code
 Calibration Engine V2 — waiting for more user data (~500 corrections)
 
 iOS native app — blocked until everything above is solid
+
+
+
+Fase 3 — Monetización suave
+3.1 Touchpoint 1 — Límite foto IA
+Cuando el Free usa su última foto del día, al guardar la comida mostrar un banner suave debajo:
+Has usado tus 3 análisis de hoy.
+Pro incluye foto IA ilimitada — 1,99€/mes
+[Ver Pro]  [Registrar manualmente]
+No bloquea, no interrumpe. Solo informa con alternativa.
+3.2 Touchpoint 2 — Asistente visible con candado
+El asistente no aparece en el Dashboard en usuarios free:
+
+En lugar de nada, mostrar un preview del tipo de respuesta que daría
+Texto en gris: "Todavía no has registrado nada hoy. Tienes X kcal para trabajar."
+Encima un badge sutil "Pro" y candado
+Al tocar: va a /app/upgrade
+
+El usuario ve el valor antes de ver el precio.
+3.3 Touchpoint 3 — Análisis profundo bloqueado
+En la página de Progreso, debajo de las métricas normales, añadir una card bloqueada:
+[Card con blur/opacidad reducida]
+Análisis profundo             🔒
+Patrones semanales, proyección
+personalizada y recomendaciones
+         [Desbloquear con Pro →]
+Al tocar: va a /app/upgrade.
+
+Fase 4 — Pulidos comerciales
+4.1 Página 404
+Ahora mismo si alguien llega a una ruta que no existe probablemente ve un error feo. Una página 404 simple con el Sistema C y un botón "Volver al inicio".
+4.2 Loading states
+Verificar que todas las acciones con tiempo de espera tienen un estado de carga visible — especialmente foto IA, el asistente y el checkout de Stripe.
+4.3 Título del tab del navegador
+Cada página debería tener un título específico:
+Inicio — Caliro
+Registrar — Caliro
+Historial — Caliro
+Progreso — Caliro
+Perfil — Caliro
+Asistente — Caliro
+4.4 El nombre en Stripe
+El portal de Stripe muestra "Entorno de prueba de Luca Eats". Cuando actives producción, actualiza el nombre del negocio a "Caliro" en la configuración de Stripe.
+4.5 Email de bienvenida
+Cuando alguien se registra, enviar un email automático via Resend:
+Asunto: Bienvenido a Caliro, [nombre]
+Cuerpo: simple, en texto, con el link a la app
+        y un recordatorio de que puede instalarla
+
+Fase 5 — Internacionalización (futuro)
+5.1 Evaluación
+El inglés no es prioritario ahora. El mercado hispanohablante tiene 500M de personas y está poco competido. Antes de expandir al inglés necesitas:
+
+50+ usuarios activos en español
+Al menos 10 usuarios Pro pagando
+Validación de que el producto retiene
+
+5.2 Si se hace — i18n correcto
+Implementar con react-i18next. Archivos de traducción separados por idioma. El código nunca tiene strings hardcodeados — todo pasa por el sistema de traducción. Es un refactor considerable pero limpio si se hace bien.
+
+Orden de ejecución
+Semana 1:  Fase 1 completa — bugs y smoke testing
+Semana 2:  Fase 2 — onboarding y estado vacío
+Semana 3:  Fase 3 — touchpoints de monetización
+Semana 4:  Fase 4 — pulidos comerciales
+Cuando toque: Fase 5 — inglés
+
+Bloque 8 — andaluz:
+Ajoblanco, fritura andaluza, tortilla de camarones,
+rabo de toro a la cordobesa, papas arrugadas con mojo,
+torrijas, leche frita, pestiños, pipirrana, tumbet
+
+Bloque 9 — castellano y del interior:
+Cochinillo asado, callos a la madrileña, sopa de ajo,
+migas manchegas, patatas revolconas, patatas a la riojana,
+torrezno de Soria, morteruelo, pollo al chilindrón,
+tarta de Santiago
+
+Bloque 10 — norte y marinero:
+Txangurro a la donostiarra, marmitako (ya en DB),
+merluza en salsa verde, merluza a la gallega,
+empanada gallega, pote gallego, filloas,
+bacalao a la vizcaína, almejas a la marinera,
+bonito con tomate
+
+Bloque 11 — arroces y guisos específicos:
+Arroz a banda, arroz al caldero, arroz con costra,
+calamares en su tinta, canelones, bacalao ajoarriero,
+potaje de vigilia, patatas a la importancia,
+gallina en pepitoria, conejo al ajillo

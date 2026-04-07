@@ -35,6 +35,7 @@ vi.mock('../utils.js', () => ({
     if (user === 'waitlist') return { ok: false, status: 403, msg: 'Waitlist' };
     return { ok: false, status: 403, msg: 'Pro required' };
   }),
+  rateLimit: vi.fn(async () => null),
 }));
 
 import { authenticate, requireProAccess, jsonResponse, errorResponse } from '../utils.js';

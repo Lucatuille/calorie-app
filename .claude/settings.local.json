@@ -18,7 +18,16 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(grep -r \"TODO\\\\|FIXME\\\\|BUG\\\\|HACK\" /c/Users/osesa/proyectos/calorie-app/client/src /c/Users/osesa/proyectos/calorie-app/worker/src --include=*.js --include=*.jsx)",
-      "Bash(npx wrangler:*)"
+      "Bash(npx wrangler:*)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)",
+      "Bash(ANALYZE=1 npm run build)",
+      "Bash(node spanish-food/recipe-calculator.js spanish-food/recipes/huevos-rotos.json)",
+      "Bash(node spanish-food/usda-extractor.js \"carrot raw\")",
+      "Bash(node spanish-food/usda-extractor.js \"sunflower oil\")",
+      "Bash(node spanish-food/usda-extractor.js \"egg yolk raw\")",
+      "Bash(node spanish-food/usda-extractor.js \"cornstarch\")",
+      "Bash(node spanish-food/usda-extractor.js \"cocoa powder unsweetened\")"
     ]
   }
 }

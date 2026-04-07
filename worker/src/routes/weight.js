@@ -1,4 +1,4 @@
-import { authenticate, jsonResponse, errorResponse } from '../utils.js';
+import { authenticate, jsonResponse, errorResponse, rateLimit } from '../utils.js';
 
 export async function handleWeight(request, env, path) {
   const user = await authenticate(request, env);
@@ -6,6 +6,8 @@ export async function handleWeight(request, env, path) {
 
   // POST /api/weight — upsert today's weight
   if (path === '/api/weight' && request.method === 'POST') {
+    const rl = await rateLimit(env, request, `weight:${user.userId}`, 10, 60);
+    if (rl) return rl;
     const { weight_kg, date } = await request.json();
     if (!weight_kg || weight_kg < 20 || weight_kg > 300) {
       return errorResponse('Peso inválido (20-300 kg)');

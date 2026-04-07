@@ -2,46 +2,7 @@
 //  AUTH ROUTES — /api/auth/register  /api/auth/login
 // ============================================================
 
-import { jsonResponse, errorResponse, hashPassword, verifyPassword, needsHashUpgrade, signJWT, verifyJWT } from '../utils.js';
-
-// ── Rate limiting (fija ventana deslizante en D1) ────────────
-// Tabla: auth_attempts (key TEXT PK, count INT, window_start INT)
-// Ejecutar una vez: CREATE TABLE IF NOT EXISTS auth_attempts
-//   (key TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0, window_start INTEGER NOT NULL);
-
-async function checkRateLimit(env, key, limit, windowSecs) {
-  const now = Math.floor(Date.now() / 1000);
-  try {
-    const row = await env.DB.prepare(
-      'SELECT count, window_start FROM auth_attempts WHERE key = ?'
-    ).bind(key).first();
-
-    if (!row || now - row.window_start >= windowSecs) {
-      // Nueva ventana — resetear
-      await env.DB.prepare(`
-        INSERT INTO auth_attempts (key, count, window_start) VALUES (?, 1, ?)
-        ON CONFLICT(key) DO UPDATE SET count = 1, window_start = excluded.window_start
-      `).bind(key, now).run();
-      return true;
-    }
-
-    if (row.count >= limit) return false; // límite superado
-
-    await env.DB.prepare(
-      'UPDATE auth_attempts SET count = count + 1 WHERE key = ?'
-    ).bind(key).run();
-    return true;
-  } catch {
-    // Si la tabla no existe o falla D1 — dejar pasar (no bloquear usuarios legítimos)
-    return true;
-  }
-}
-
-function getIP(request) {
-  return request.headers.get('CF-Connecting-IP')
-    || request.headers.get('X-Forwarded-For')?.split(',')[0].trim()
-    || 'unknown';
-}
+import { jsonResponse, errorResponse, hashPassword, verifyPassword, needsHashUpgrade, signJWT, verifyJWT, checkRateLimit, getIP } from '../utils.js';
 
 export async function handleAuth(request, env, path) {
 

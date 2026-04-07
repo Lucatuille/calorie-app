@@ -2,7 +2,7 @@
 //  CALIBRATION ROUTES — /api/calibration
 // ============================================================
 
-import { jsonResponse, errorResponse, requireProAccess, proAccessDenied } from '../utils.js';
+import { jsonResponse, errorResponse, requireProAccess, proAccessDenied, rateLimit } from '../utils.js';
 import { calculateCalibrationProfile, updateFrequentMeals } from '../utils/calibration.js';
 
 export async function handleCalibration(request, env, path) {
@@ -10,6 +10,8 @@ export async function handleCalibration(request, env, path) {
   if (path === '/api/calibration/correction' && request.method === 'POST') {
     const user = await requireProAccess(request, env);
     if (!user || user === 'waitlist') return proAccessDenied(user);
+    const rl = await rateLimit(env, request, `calibration:${user.userId}`, 30, 60);
+    if (rl) return rl;
     const {
       entry_id, ai_raw, ai_calibrated, user_final,
       food_categories, meal_type, meal_name,

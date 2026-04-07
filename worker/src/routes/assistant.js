@@ -6,7 +6,7 @@
 //  ALTER TABLE assistant_usage ADD COLUMN intros INTEGER DEFAULT 0;
 // ============================================================
 
-import { jsonResponse, errorResponse, requireProAccess, proAccessDenied } from '../utils.js';
+import { jsonResponse, errorResponse, requireProAccess, proAccessDenied, rateLimit } from '../utils.js';
 
 // ── Límites diarios por nivel ───────────────────────────────
 
@@ -443,6 +443,10 @@ export async function handleAssistant(request, env, path, ctx) {
   if (path === '/api/assistant/chat' && request.method === 'POST') {
     const user = await requireProAccess(request, env);
     if (!user || user === 'waitlist') return proAccessDenied(user);
+
+    // Burst protection (además del límite diario)
+    const rl = await rateLimit(env, request, `assistant:${user.userId}`, 10, 60);
+    if (rl) return rl;
 
     const body = await request.json().catch(() => ({}));
     const { message, conversation_id } = body;

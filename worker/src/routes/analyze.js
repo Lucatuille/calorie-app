@@ -3,7 +3,7 @@
 //  Análisis visual y textual de comidas con Claude Haiku Vision
 // ============================================================
 
-import { jsonResponse, errorResponse, authenticate } from '../utils.js';
+import { jsonResponse, errorResponse, authenticate, rateLimit, getIP } from '../utils.js';
 import { applyCalibration, findSimilarMeal } from '../utils/calibration.js';
 import { getAiLimit, canAccess } from '../utils/levels.js';
 import { SONNET_PHOTO_DAILY_LIMIT, MAX_TEXT_LENGTH, ADHERENCE_TOLERANCE } from '../constants.js';
@@ -136,6 +136,12 @@ export async function handleAnalyze(request, env, path, ctx) {
   }
 
   if (path === '/api/analyze' && request.method === 'POST') {
+    // Rate limiting per-minute (burst protection además del daily)
+    const rlUser = await rateLimit(env, request, `analyze:user:${user.userId}`, 10, 60);
+    if (rlUser) return rlUser;
+    const rlIP = await rateLimit(env, request, `analyze:ip:${getIP(request)}`, 60, 60);
+    if (rlIP) return rlIP;
+
     const { image, mediaType, context, meal_type, photo_location, photo_plate_size, date: entryDate } = await request.json();
 
     if (!image) return errorResponse('Imagen requerida');
@@ -307,6 +313,12 @@ export async function handleAnalyzeText(request, env, ctx) {
   if (!canAccess(accessLevel)) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
+
+  // Rate limiting per-minute (burst protection además del daily)
+  const rlUser = await rateLimit(env, request, `analyze-text:user:${user.userId}`, 15, 60);
+  if (rlUser) return rlUser;
+  const rlIP = await rateLimit(env, request, `analyze-text:ip:${getIP(request)}`, 60, 60);
+  if (rlIP) return rlIP;
 
   const { text, meal_type, date: entryDate } = await request.json();
   if (!text?.trim()) return errorResponse('Texto vacío', 400);

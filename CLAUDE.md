@@ -105,7 +105,7 @@ assistant_messages: id, conversation_id, role, content, created_at
 ## Commit Style
 - Messages in **Spanish**, descriptive body
 - Format: `tipo(scope): descripción`
-- Always include: `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`
+- Always include: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
 
 ## Known Landmines
 - `_redirects` routing — see above, handle with care
