@@ -134,8 +134,8 @@ function MessageBubble({ msg }) {
       {!isUser && (
         <span style={{
           fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
-          background: 'rgba(45,106,79,0.1)', color: 'var(--accent)',
-          letterSpacing: '0.04em', textTransform: 'uppercase',
+          background: 'var(--text-primary)', color: 'var(--bg)',
+          letterSpacing: '0.06em', textTransform: 'uppercase',
           marginBottom: 4, marginLeft: 4,
         }}>
           IA
