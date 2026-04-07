@@ -576,162 +576,48 @@ export default function Profile() {
         </button>
       )}
 
-      {/* ── Footer: export + legal ── */}
+      {/* ── Exportar mis datos (CSV histórico + JSON GDPR completo) ── */}
       <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '0.5px solid var(--border)' }}>
-        <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
-          Exportar historial
-        </span>
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          style={{
-            fontSize: 12,
-            color: 'var(--text-secondary)',
-            background: 'transparent',
-            border: '0.5px solid var(--border)',
-            borderRadius: 'var(--radius-full)',
-            padding: '5px 14px',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-sans)',
-          }}>
-          {exporting ? 'Exportando…' : 'CSV'}
-        </button>
-      </div>
-
-      {/* ── Export GDPR completo ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '0.5px solid var(--border)' }}>
         <div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
-            Descargar todos mis datos
+            Exportar mis datos
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)', marginTop: 2 }}>
-            Portabilidad GDPR · perfil, comidas, peso, IA, asistente
+            CSV: solo historial · JSON: portabilidad GDPR completa
           </div>
         </div>
-        <button
-          onClick={handleExportAll}
-          disabled={exportingAll}
-          style={{
-            fontSize: 12,
-            color: 'var(--text-secondary)',
-            background: 'transparent',
-            border: '0.5px solid var(--border)',
-            borderRadius: 'var(--radius-full)',
-            padding: '5px 14px',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-sans)',
-          }}>
-          {exportingAll ? 'Exportando…' : 'JSON'}
-        </button>
-      </div>
-
-      {/* ── Zona peligrosa ── */}
-      <div style={{
-        marginTop: 16, padding: '14px 16px',
-        border: '0.5px solid rgba(239,68,68,0.25)',
-        borderRadius: 'var(--radius-lg)',
-        background: 'rgba(239,68,68,0.02)',
-      }}>
-        <div style={{ fontSize: 11, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: 10, fontFamily: 'var(--font-sans)' }}>
-          Zona peligrosa
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            style={{
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              background: 'transparent',
+              border: '0.5px solid var(--border)',
+              borderRadius: 'var(--radius-full)',
+              padding: '5px 14px',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+            }}>
+            {exporting ? '…' : 'CSV'}
+          </button>
+          <button
+            onClick={handleExportAll}
+            disabled={exportingAll}
+            style={{
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              background: 'transparent',
+              border: '0.5px solid var(--border)',
+              borderRadius: 'var(--radius-full)',
+              padding: '5px 14px',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+            }}>
+            {exportingAll ? '…' : 'JSON'}
+          </button>
         </div>
-        {deleteStep === 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 13, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
-                Eliminar mi cuenta
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>
-                Borra todos tus datos de forma permanente
-              </div>
-            </div>
-            <button
-              onClick={() => setDeleteStep(1)}
-              style={{
-                fontSize: 12,
-                color: '#ef4444',
-                background: 'transparent',
-                border: '0.5px solid rgba(239,68,68,0.4)',
-                borderRadius: 'var(--radius-full)',
-                padding: '5px 14px',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-sans)',
-                whiteSpace: 'nowrap',
-              }}>
-              Eliminar
-            </button>
-          </div>
-        )}
-        {deleteStep === 1 && (
-          <div>
-            <div style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', marginBottom: 8, lineHeight: 1.5 }}>
-              Esta acción <strong>no se puede deshacer</strong>. Se borrarán tu perfil, comidas, peso, correcciones de IA y conversaciones del asistente.
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', marginBottom: 6 }}>
-              Escribe <strong style={{ color: '#ef4444' }}>ELIMINAR</strong> para confirmar:
-            </div>
-            <input
-              type="text"
-              value={deleteText}
-              onChange={e => setDeleteText(e.target.value)}
-              placeholder="ELIMINAR"
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                fontSize: 13,
-                fontFamily: 'var(--font-sans)',
-                border: '0.5px solid var(--border)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--bg)',
-                color: 'var(--text-primary)',
-                outline: 'none',
-                marginBottom: 10,
-              }}
-            />
-            {deleteError && (
-              <div style={{ fontSize: 11, color: '#ef4444', marginBottom: 8, fontFamily: 'var(--font-sans)' }}>
-                {deleteError}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => { setDeleteStep(0); setDeleteText(''); setDeleteError(''); }}
-                style={{
-                  fontSize: 12,
-                  color: 'var(--text-secondary)',
-                  background: 'transparent',
-                  border: '0.5px solid var(--border)',
-                  borderRadius: 'var(--radius-full)',
-                  padding: '6px 14px',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-sans)',
-                }}>
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                style={{
-                  fontSize: 12,
-                  color: 'white',
-                  background: '#ef4444',
-                  border: 'none',
-                  borderRadius: 'var(--radius-full)',
-                  padding: '6px 14px',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-sans)',
-                  fontWeight: 600,
-                }}>
-                Eliminar cuenta
-              </button>
-            </div>
-          </div>
-        )}
-        {deleteStep === 2 && (
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', textAlign: 'center', padding: 8 }}>
-            Eliminando cuenta…
-          </div>
-        )}
       </div>
 
       <p style={{
@@ -780,6 +666,91 @@ export default function Profile() {
         }}>
         Cerrar sesión
       </button>
+
+      {/* Eliminar cuenta — link discreto al fondo */}
+      <div style={{ marginTop: 16, textAlign: 'center' }}>
+        {deleteStep === 0 && (
+          <button
+            onClick={() => setDeleteStep(1)}
+            style={{
+              background: 'none', border: 'none',
+              color: 'var(--text-tertiary)', fontSize: 11,
+              opacity: 0.5, cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+              textDecoration: 'underline',
+              padding: 4,
+            }}>
+            Eliminar mi cuenta
+          </button>
+        )}
+        {deleteStep === 1 && (
+          <div style={{ maxWidth: 360, margin: '0 auto', textAlign: 'left' }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', marginBottom: 8, lineHeight: 1.5 }}>
+              Esta acción <strong>no se puede deshacer</strong>. Escribe <strong style={{ color: '#ef4444' }}>ELIMINAR</strong> para confirmar:
+            </p>
+            <input
+              type="text"
+              value={deleteText}
+              onChange={e => setDeleteText(e.target.value)}
+              placeholder="ELIMINAR"
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                fontSize: 13,
+                fontFamily: 'var(--font-sans)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                marginBottom: 8,
+              }}
+            />
+            {deleteError && (
+              <div style={{ fontSize: 11, color: '#ef4444', marginBottom: 8, fontFamily: 'var(--font-sans)' }}>
+                {deleteError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setDeleteStep(0); setDeleteText(''); setDeleteError(''); }}
+                style={{
+                  fontSize: 12,
+                  color: 'var(--text-secondary)',
+                  background: 'transparent',
+                  border: '0.5px solid var(--border)',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                style={{
+                  fontSize: 12,
+                  color: 'white',
+                  background: '#ef4444',
+                  border: 'none',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 600,
+                }}>
+                Eliminar cuenta
+              </button>
+            </div>
+          </div>
+        )}
+        {deleteStep === 2 && (
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
+            Eliminando cuenta…
+          </p>
+        )}
+      </div>
     </section>
   );
 }
