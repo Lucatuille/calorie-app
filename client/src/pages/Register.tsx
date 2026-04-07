@@ -19,8 +19,8 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (form.password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
+    if (form.password.length < 12) {
+      setError('La contraseña debe tener al menos 12 caracteres');
       return;
     }
     if (form.age && Number(form.age) < 17) {

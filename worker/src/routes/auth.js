@@ -22,11 +22,11 @@ export async function handleAuth(request, env, path) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return errorResponse('Formato de email inválido');
     }
-    if (password.length < 8) {
-      return errorResponse('La contraseña debe tener al menos 8 caracteres');
+    if (password.length < 12) {
+      return errorResponse('La contraseña debe tener al menos 12 caracteres');
     }
-    if (age && Number(age) < 16) {
-      return errorResponse('Debes tener al menos 16 años para registrarte');
+    if (age && Number(age) < 17) {
+      return errorResponse('Debes tener al menos 17 años para registrarte');
     }
 
     // Check if user exists
@@ -216,8 +216,8 @@ export async function handleAuth(request, env, path) {
     if (!token || !newPassword) {
       return errorResponse('Token y nueva contraseña son obligatorios');
     }
-    if (newPassword.length < 8) {
-      return errorResponse('La contraseña debe tener al menos 8 caracteres');
+    if (newPassword.length < 12) {
+      return errorResponse('La contraseña debe tener al menos 12 caracteres');
     }
 
     const tokenHash = await sha256(token);

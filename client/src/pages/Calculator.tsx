@@ -531,6 +531,18 @@ export default function Calculator() {
                   background: 'var(--surface-2)', border: '0.5px solid var(--border)',
                   borderRadius: 'var(--radius-md)', padding: '12px 14px',
                 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
+                      background: 'rgba(99,102,241,0.1)', color: '#6366f1',
+                      letterSpacing: '0.04em', textTransform: 'uppercase',
+                    }}>
+                      ✨ Estimación IA
+                    </span>
+                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+                      aproximada · puede variar
+                    </span>
+                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                     <p style={{ fontWeight: 600, fontSize: 14, margin: 0, color: 'var(--text-primary)' }}>{aiResult.name}</p>
                     <span style={{

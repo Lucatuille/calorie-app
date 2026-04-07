@@ -22,8 +22,8 @@ export default function ResetPassword() {
     e.preventDefault();
     setError('');
 
-    if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres');
+    if (password.length < 12) {
+      setError('La contraseña debe tener al menos 12 caracteres');
       return;
     }
     if (password !== confirm) {

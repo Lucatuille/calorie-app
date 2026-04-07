@@ -131,6 +131,16 @@ function MessageBubble({ msg }) {
       alignItems: isUser ? 'flex-end' : 'flex-start',
       marginBottom: 8,
     }}>
+      {!isUser && (
+        <span style={{
+          fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
+          background: 'rgba(99,102,241,0.1)', color: '#6366f1',
+          letterSpacing: '0.04em', textTransform: 'uppercase',
+          marginBottom: 4, marginLeft: 4,
+        }}>
+          ✨ IA
+        </span>
+      )}
       <div style={{
         maxWidth: '82%',
         padding: '10px 14px',
