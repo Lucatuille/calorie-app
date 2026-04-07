@@ -23,8 +23,12 @@ export default function Register() {
       setError('La contraseña debe tener al menos 8 caracteres');
       return;
     }
-    if (form.age && Number(form.age) < 16) {
-      setError('Caliro está diseñado para mayores de 16 años. Si tienes menos de 16, consulta con un adulto o profesional de salud antes de hacer seguimiento calórico.');
+    if (form.age && Number(form.age) < 17) {
+      setError('Caliro está diseñado para mayores de 17 años. Si tienes menos, consulta con un adulto o profesional de salud antes de hacer seguimiento calórico.');
+      return;
+    }
+    if (!termsAccepted) {
+      setError('Debes aceptar el aviso para continuar.');
       return;
     }
     setLoading(true);
@@ -103,7 +107,7 @@ export default function Register() {
 
             {error && <div className="alert alert-error">{error}</div>}
 
-            {/* Terms checkbox */}
+            {/* Terms + medical disclaimer checkbox (Apple compliance) */}
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 13, color: 'var(--text-2)' }}>
               <input
                 type="checkbox"
@@ -112,9 +116,9 @@ export default function Register() {
                 style={{ marginTop: 2, flexShrink: 0, accentColor: 'var(--accent)' }}
               />
               <span>
-                He leído y acepto los Términos de uso y la{' '}
-                <Link to="/privacy" style={{ color: 'var(--accent)' }}>Política de privacidad</Link>
-                {' '}de Caliro
+                Acepto los <Link to="/terms" style={{ color: 'var(--accent)' }}>Términos</Link> y la{' '}
+                <Link to="/privacy" style={{ color: 'var(--accent)' }}>Privacidad</Link>.
+                {' '}Entiendo que <strong>Caliro no es un dispositivo médico</strong> y que las estimaciones de IA pueden tener un margen de error.
               </span>
             </label>
 

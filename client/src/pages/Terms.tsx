@@ -13,7 +13,7 @@ export default function Terms() {
           Términos de Uso
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 36 }}>
-          Caliro · Última actualización: marzo 2026
+          Caliro · Última actualización: abril 2026
         </p>
 
         <Section title="1. Descripción del servicio">
@@ -44,10 +44,23 @@ export default function Terms() {
 
         <Section title="4. Cuentas y suscripciones">
           <ul>
-            <li>Las suscripciones Pro se facturan mensualmente y pueden cancelarse en cualquier momento</li>
+            <li>Para usar Caliro debes tener al menos 17 años</li>
+            <li>Las suscripciones Pro se facturan mensual o anualmente y pueden cancelarse en cualquier momento</li>
             <li>No se realizan reembolsos por períodos parciales salvo obligación legal</li>
             <li>Nos reservamos el derecho a suspender cuentas que incumplan estos términos</li>
           </ul>
+        </Section>
+
+        <Section title="4bis. Eliminación de cuenta">
+          <p style={{ marginBottom: 10 }}>
+            Puedes eliminar tu cuenta en cualquier momento desde <strong>Perfil → "Eliminar mi cuenta"</strong>. La eliminación es <strong>inmediata, permanente e irreversible</strong>.
+          </p>
+          <p style={{ marginBottom: 10 }}>
+            Al eliminar tu cuenta se borran de forma permanente: tu perfil, todas tus comidas registradas, tu historial de peso, las correcciones que hayas hecho a la IA, los datos de calibración personal, y todas tus conversaciones con el asistente nutricional.
+          </p>
+          <p>
+            Algunos datos pueden permanecer en copias de seguridad cifradas hasta 30 días, después de los cuales se eliminan automáticamente. Antes de eliminar tu cuenta puedes descargar todos tus datos en formato JSON desde Perfil → "Exportar mis datos".
+          </p>
         </Section>
 
         <Section title="5. Propiedad intelectual">

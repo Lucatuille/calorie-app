@@ -13,7 +13,7 @@ export default function Privacy() {
           Política de Privacidad
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 36 }}>
-          Caliro · Última actualización: marzo 2026
+          Caliro · Última actualización: abril 2026
         </p>
 
         <Section title="1. Qué datos recogemos">
@@ -58,6 +58,29 @@ export default function Privacy() {
           </p>
         </Section>
 
+        <Section title="3bis. Servicios de terceros utilizados">
+          <p style={{ marginBottom: 10 }}>
+            Para garantizar el funcionamiento y la calidad del servicio utilizamos los siguientes proveedores:
+          </p>
+          <ul>
+            <li><strong>Cloudflare</strong> (alojamiento, base de datos D1, almacenamiento R2 de copias de seguridad) — UE</li>
+            <li><strong>Anthropic</strong> (procesamiento de IA para análisis de comidas y asistente nutricional) — EE.UU.</li>
+            <li><strong>Stripe</strong> (procesamiento de pagos para suscripciones Pro) — EE.UU./UE</li>
+            <li><strong>Resend</strong> (envío de emails transaccionales: bienvenida, recuperación de contraseña) — UE</li>
+            <li><strong>Sentry</strong> (registro de errores técnicos para detectar fallos; puede incluir tu email asociado al error con fines de soporte) — UE</li>
+            <li><strong>Umami Cloud</strong> (analítica web sin cookies y sin seguimiento personal entre sitios) — UE</li>
+          </ul>
+        </Section>
+
+        <Section title="3ter. Estimaciones generadas por IA">
+          <p style={{ marginBottom: 10 }}>
+            Las estimaciones calóricas y nutricionales generadas por la inteligencia artificial son <strong>aproximadas</strong> y pueden tener un margen de error de aproximadamente <strong>±150-200 kcal</strong> por comida, especialmente en platos preparados o con ingredientes ocultos (aceites, salsas).
+          </p>
+          <p>
+            Caliro no garantiza la exactitud de los valores nutricionales proporcionados. Estas estimaciones <strong>no constituyen consejo médico ni nutricional profesional</strong> y no deben utilizarse para tomar decisiones críticas de salud. Si tienes condiciones médicas o necesitas precisión clínica, consulta con un profesional sanitario cualificado.
+          </p>
+        </Section>
+
         <Section title="4. Tus derechos (RGPD)">
           <p style={{ marginBottom: 12 }}>
             Puedes ejercer tus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a{' '}
@@ -66,9 +89,9 @@ export default function Privacy() {
             <a href="https://www.aepd.es" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>aepd.es</a>.
           </p>
           <ul>
-            <li><strong>Acceso a tus datos:</strong> escríbenos a <a href="mailto:contacto@caliro.dev" style={{ color: 'var(--accent)' }}>contacto@caliro.dev</a></li>
-            <li><strong>Eliminación de cuenta y datos:</strong> desde Perfil → contacta con soporte</li>
-            <li><strong>Portabilidad:</strong> exporta tu historial en CSV desde la sección Perfil</li>
+            <li><strong>Acceso a tus datos:</strong> descarga todos tus datos en formato JSON desde Perfil → "Exportar mis datos"</li>
+            <li><strong>Eliminación de cuenta y datos:</strong> desde Perfil → "Eliminar mi cuenta" (al fondo de la página). El borrado es inmediato y permanente.</li>
+            <li><strong>Portabilidad:</strong> exporta tu historial en CSV o JSON desde Perfil</li>
             <li><strong>Rectificación:</strong> puedes editar o eliminar cualquier entrada desde la app</li>
           </ul>
         </Section>

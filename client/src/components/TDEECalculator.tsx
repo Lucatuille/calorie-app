@@ -109,7 +109,7 @@ function Step1({ data, set }) {
 
   function handleAge(v) {
     set('age', v);
-    if (v < 15 || v > 100) setAgeError('Rango válido: 15-100');
+    if (v < 17 || v > 100) setAgeError('Rango válido: 17-100');
     else setAgeError('');
   }
 
