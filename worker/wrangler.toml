@@ -7,3 +7,10 @@ compatibility_flags = ["nodejs_compat"]
 binding = "DB"
 database_name = "calorie-app-db"
 database_id = "89b25589-4ea7-4f62-b34c-6238d68c6cd4"
+
+[[r2_buckets]]
+binding = "BACKUP_BUCKET"
+bucket_name = "caliro-backups"
+
+[triggers]
+crons = ["0 3 * * *"]  # diario 03:00 UTC (~04:00 hora España invierno, 05:00 verano)

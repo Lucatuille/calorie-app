@@ -13,6 +13,7 @@ import { handleAdmin } from './routes/admin.js';
 import { handleCalibration } from './routes/calibration.js';
 import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
+import { handleScheduled } from './scheduled.js';
 import { handleStripe } from './routes/stripe.js';
 import { handleWeight } from './routes/weight.js';
 import { corsHeaders, getCorsHeaders, jsonResponse, errorResponse, authenticate, setRequestContext } from './utils.js';
@@ -142,5 +143,9 @@ export default {
       }),
       { fetch: handleRequest },
     ).fetch(request, env, ctx);
+  },
+  scheduled: (event, env, ctx) => {
+    // Backups automáticos D1 → R2 (cron diario configurado en wrangler.toml)
+    ctx.waitUntil(handleScheduled(event, env, ctx));
   },
 };

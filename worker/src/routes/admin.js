@@ -4,6 +4,7 @@
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 import { LEVEL_CONFIG } from '../utils/levels.js';
+import { runBackup } from '../scheduled.js';
 
 async function requireAdmin(request, env) {
   const user = await authenticate(request, env);
@@ -520,6 +521,50 @@ export async function handleAdmin(request, env, path) {
     await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
 
     return jsonResponse({ success: true, deleted_user_id: userId, name: target.name });
+  }
+
+  // ── GET /api/admin/backups — listar backups en R2 ──────────
+  if (path === '/api/admin/backups' && request.method === 'GET') {
+    if (!env.BACKUP_BUCKET) {
+      return jsonResponse({ error: 'R2 bucket no configurado', backups: [] }, 200);
+    }
+    try {
+      const list = await env.BACKUP_BUCKET.list({ prefix: 'backup-', limit: 100 });
+      const backups = (list.objects || []).map(obj => ({
+        key:        obj.key,
+        size_bytes: obj.size,
+        uploaded:   obj.uploaded,
+        total_rows: obj.customMetadata?.total_rows || null,
+        tables:     obj.customMetadata?.tables || null,
+      })).sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded));
+
+      const last = backups[0];
+      const lastUploaded = last ? new Date(last.uploaded) : null;
+      const hoursAgo = lastUploaded ? Math.round((Date.now() - lastUploaded.getTime()) / 3600000) : null;
+
+      return jsonResponse({
+        backups,
+        count: backups.length,
+        last_backup: last || null,
+        hours_since_last: hoursAgo,
+        is_healthy: hoursAgo !== null && hoursAgo < 30, // saludable si <30h (margen)
+      });
+    } catch (err) {
+      return errorResponse('Error al listar backups: ' + (err?.message || err), 500);
+    }
+  }
+
+  // ── POST /api/admin/backups/run — disparar backup manual ──
+  if (path === '/api/admin/backups/run' && request.method === 'POST') {
+    if (!env.BACKUP_BUCKET) {
+      return errorResponse('R2 bucket no configurado', 500);
+    }
+    try {
+      const result = await runBackup(env);
+      return jsonResponse(result);
+    } catch (err) {
+      return errorResponse('Error en backup: ' + (err?.message || err), 500);
+    }
   }
 
   return errorResponse('Not found', 404);

@@ -54,6 +54,68 @@ function KPICard({ label, value, sub, valueColor, accent, onClick }) {
 
 // ── Tab 1: Overview ─────────────────────────────────────────
 
+function BackupCard() {
+  const { token } = useAuth();
+  const [data, setData] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    api.getAdminBackups(token).then(setData).catch(() => setErr('error'));
+  }, [token]);
+
+  async function runManual() {
+    setRunning(true); setErr('');
+    try {
+      await api.runAdminBackup(token);
+      const fresh = await api.getAdminBackups(token);
+      setData(fresh);
+    } catch { setErr('error'); }
+    finally { setRunning(false); }
+  }
+
+  if (!data && !err) return null;
+
+  const isHealthy = data?.is_healthy;
+  const last = data?.last_backup;
+  const hours = data?.hours_since_last;
+
+  return (
+    <div style={{
+      padding: '12px 14px', borderRadius: 10, marginBottom: 16,
+      background: isHealthy ? 'rgba(16,185,129,0.06)' : 'rgba(231,111,81,0.06)',
+      border: `1px solid ${isHealthy ? 'rgba(16,185,129,0.25)' : 'rgba(231,111,81,0.25)'}`,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+    }}>
+      <div>
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 4 }}>
+          Backups D1
+        </p>
+        <p style={{ fontSize: 13, color: 'var(--text)' }}>
+          {!last ? 'Sin backups todavía' :
+            isHealthy ? `🟢 Último hace ${hours}h · ${data.count} totales` :
+            `🔴 Último hace ${hours}h · revisar`}
+        </p>
+        {last && (
+          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>
+            {last.key} · {Math.round(last.size_bytes/1024)} KB · {last.total_rows} filas
+          </p>
+        )}
+      </div>
+      <button
+        onClick={runManual}
+        disabled={running}
+        style={{
+          padding: '6px 12px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
+          background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-2)',
+          fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+        }}>
+        {running ? 'Ejecutando…' : 'Backup ahora'}
+      </button>
+    </div>
+  );
+}
+
 function TabOverview({ data, loading, onDrillCalories }) {
   if (loading) return <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}><Skeleton h={80} /><Skeleton h={160} /><Skeleton h={100} /></div>;
   if (!data) return null;
@@ -62,6 +124,7 @@ function TabOverview({ data, loading, onDrillCalories }) {
 
   return (
     <>
+      <BackupCard />
       {/* KPI grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 20 }}>
         <KPICard label="Total usuarios"   value={users.total}        accent />

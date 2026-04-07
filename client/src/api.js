@@ -85,6 +85,8 @@ export const api = {
     request('PUT', `/api/admin/users/${userId}/role`, { access_level: accessLevel }, token),
   deleteUser: (userId, token) =>
     request('DELETE', `/api/admin/users/${userId}`, null, token),
+  getAdminBackups: (token) => request('GET',  '/api/admin/backups', null, token),
+  runAdminBackup:  (token) => request('POST', '/api/admin/backups/run', null, token),
 
   // Calibración
   saveAiCorrection:      (body, token) => request('POST',   '/api/calibration/correction', body, token),
