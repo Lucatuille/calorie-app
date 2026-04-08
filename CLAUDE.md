@@ -3,6 +3,7 @@
 ## Stack
 - **Frontend**: React + Vite → `client/` → Cloudflare Pages (auto-deploy on `git push`)
 - **Backend**: Cloudflare Workers → `worker/` → deploy manually (see below)
+- **Frontend proxy Worker**: `worker-proxy/` → routea `caliro.dev/*` → `calorie-app.pages.dev` y **sobrescribe los headers de seguridad** (CSP, HSTS, X-Frame-Options, Permissions-Policy). Deploy manual con `cd worker-proxy && npx wrangler deploy`. **CRÍTICO**: cualquier cambio de CSP/security headers debe hacerse aquí, NO en `client/public/_headers` (el _headers solo aplica al alias `calorie-app.pages.dev` directo).
 - **Database**: Cloudflare D1 (SQLite) — ID `89b25589-4ea7-4f62-b34c-6238d68c6cd4`
 - **AI**: Claude Haiku Vision via direct fetch from Worker (Anthropic API)
 - **Payments**: Stripe (checkout + webhooks)
