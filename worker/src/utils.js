@@ -7,6 +7,9 @@ const ALLOWED_ORIGINS = [
   'https://calorie-app.pages.dev',
   'https://lucaeats.org',
   'http://localhost:5173',
+  // Capacitor native apps — el WebView sirve desde estos orígenes
+  'capacitor://localhost',  // iOS
+  'https://localhost',      // Android
 ];
 
 export function getCorsHeaders(request) {

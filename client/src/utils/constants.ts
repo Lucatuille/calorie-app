@@ -15,7 +15,7 @@ export const MEAL_HOURS: Record<string, [number, number]> = {
 
 // ── Photo processing ─────────────────────────────────────────
 export const MAX_IMAGE_PX      = 900;   // resize before upload
-export const JPEG_QUALITY      = 0.82;  // compression quality
+export const JPEG_QUALITY      = 0.75;  // compression quality (~25% más pequeño que 0.82, sin pérdida visual perceptible para análisis IA)
 
 // ── Text analysis ────────────────────────────────────────────
 export const MAX_TEXT_LENGTH    = 500;   // characters
