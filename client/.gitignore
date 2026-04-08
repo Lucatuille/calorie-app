@@ -1,2 +1,13 @@
 e2e/.auth-state.json
 test-results/
+
+# Capacitor iOS — ignorar build artifacts pero versionar el proyecto
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/
+ios/App/App/public/
+ios/App/Podfile.lock
+.cap-ios-state.json
+
+# iOS assets generados (los originales icon-1024.png SÍ se versionan)
+ios-assets/AppIcon.appiconset/

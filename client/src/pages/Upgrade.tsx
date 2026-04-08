@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { isFree } from '../utils/levels';
+import { isNative } from '../utils/platform';
 
 const FEATURES = [
   { label: 'Foto IA ilimitada',         free: '3/día',    pro: 'Ilimitada' },
@@ -35,6 +36,35 @@ export default function Upgrade() {
       setError(err.message || 'Error al conectar con el servidor de pagos');
       setUpgrading(null);
     }
+  }
+
+  // TODO(capacitor-mac-sprint): Implementar IAP con RevenueCat aquí.
+  //   - Reemplazar createCheckoutSession por Purchases.purchasePackage()
+  //   - Configurar productos en App Store Connect (mensual + anual)
+  //   - Conectar webhook RevenueCat → worker → actualiza access_level=2 en D1
+  //   - Quitar este bloque condicional cuando IAP esté listo
+  // Por ahora: en iOS NO se vende Pro, mostramos pantalla "Próximamente".
+  if (isNative() && isFree(user?.access_level)) {
+    return (
+      <div className="page" style={{ paddingTop: 24 }}>
+        <button
+          onClick={() => navigate('/profile')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 13, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)',
+            padding: 0, marginBottom: 24 }}
+        >
+          ← Volver
+        </button>
+        <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+          fontSize: 28, color: 'var(--text-primary)', marginBottom: 8 }}>
+          Caliro Pro
+        </p>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', lineHeight: 1.6 }}>
+          Las suscripciones en iOS llegarán muy pronto.<br />
+          Mientras tanto, sigue usando Caliro gratis sin límites de tiempo.
+        </p>
+      </div>
+    );
   }
 
   // Already Pro — redirect away

@@ -476,6 +476,8 @@ export default function PastMealRegistrar({ targetDate, onClose }) {
                       )}
                     </div>
                   )}
+                  {/* TODO(capacitor-mac-sprint): igual que Calculator.tsx, sustituir
+                      por PhotoPicker que usa @capacitor/camera en iOS para mejor UX. */}
                   <input ref={fileRef} type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
                 </div>
               )}

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { buildWelcomeMessage } from '../utils/assistantMessages';
 import { isPro } from '../utils/levels';
+import { openExternal } from '../utils/platform';
 
 // ── ProOnly (dark card) ──────────────────────────────────────
 
@@ -50,7 +51,19 @@ function inlineFormat(text) {
   const parts = text.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*|\*[^*]+\*)/g);
   return parts.map((p, i) => {
     const linkMatch = p.match(/^\[(.*?)\]\((.*?)\)$/);
-    if (linkMatch) return <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>{linkMatch[1]}</a>;
+    if (linkMatch) {
+      const url = linkMatch[2];
+      return (
+        <a
+          key={i}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => { e.preventDefault(); openExternal(url); }}
+          style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+        >{linkMatch[1]}</a>
+      );
+    }
     if (p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>;
     if (p.startsWith('*')  && p.endsWith('*'))  return <em key={i}>{p.slice(1, -1)}</em>;
     return p;

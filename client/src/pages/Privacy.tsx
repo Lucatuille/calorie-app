@@ -1,3 +1,5 @@
+import { openExternal } from '../utils/platform';
+
 export default function Privacy() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '40px 20px' }}>
@@ -86,7 +88,13 @@ export default function Privacy() {
             Puedes ejercer tus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a{' '}
             <a href="mailto:contacto@caliro.dev" style={{ color: 'var(--accent)' }}>contacto@caliro.dev</a>.
             Responderemos a tu solicitud en un plazo máximo de un mes desde su recepción. Si no recibes respuesta o no estás satisfecho con ella, puedes presentar una reclamación ante la Agencia Española de Protección de Datos (AEPD) en{' '}
-            <a href="https://www.aepd.es" target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>aepd.es</a>.
+            <a
+              href="https://www.aepd.es"
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => { e.preventDefault(); openExternal('https://www.aepd.es'); }}
+              style={{ color: 'var(--accent)' }}
+            >aepd.es</a>.
           </p>
           <ul>
             <li><strong>Acceso a tus datos:</strong> descarga todos tus datos en formato JSON desde Perfil → "Exportar mis datos"</li>

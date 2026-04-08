@@ -4,10 +4,67 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { fetchProductByBarcode, calculateNutrition } from '../utils/openfoodfacts';
 import { useAuth } from '../context/AuthContext';
 import FocusTrap from './FocusTrap';
+import { isNative } from '../utils/platform';
+
+// TODO(capacitor-mac-sprint): Sustituir este placeholder por una implementación
+// nativa con @capacitor-mlkit/barcode-scanning.
+// Pasos:
+//   1. cd client && npm install @capacitor-mlkit/barcode-scanning
+//   2. npx cap sync ios
+//   3. Crear nuevo BarcodeScannerNative.tsx que use BarcodeScanner.scan()
+//   4. Sustituir aquí: if (isNative()) return <BarcodeScannerNative {...props} />
+//   5. Añadir NSCameraUsageDescription al Info.plist (ya está en el template)
+// Por ahora: muestra "Próximamente" para no romper el flujo nativo.
+function BarcodeScannerNativePlaceholder({ isOpen, onClose }) {
+  if (!isOpen) return null;
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+    }} onClick={onClose}>
+      <div style={{
+        width: '100%', maxWidth: 500,
+        background: 'var(--bg)',
+        borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        padding: '32px 24px max(32px, env(safe-area-inset-bottom))',
+        textAlign: 'center',
+      }} onClick={e => e.stopPropagation()}>
+        <p style={{ fontFamily: 'var(--font-serif)', fontSize: 24, marginBottom: 8 }}>
+          Próximamente
+        </p>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+          El escáner de códigos de barras llegará en una próxima actualización.
+          Mientras tanto, puedes registrar tus comidas con foto IA o describiéndolas.
+        </p>
+        <button
+          onClick={onClose}
+          style={{
+            padding: '12px 24px', borderRadius: 999,
+            background: 'var(--text-primary)', color: 'var(--bg)',
+            border: 'none', fontSize: 14, cursor: 'pointer',
+            fontFamily: 'var(--font-sans)',
+          }}>
+          Entendido
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 const READER_ID = 'barcode-reader-container';
 
-export default function BarcodeScanner({ isOpen, onClose, onAddProduct }) {
+// TODO(capacitor-mac-sprint): cuando esté listo el barcode nativo,
+// importar BarcodeScannerNative y sustituir la rama isNative() abajo.
+export default function BarcodeScanner(props) {
+  if (isNative()) {
+    return <BarcodeScannerNativePlaceholder isOpen={props.isOpen} onClose={props.onClose} />;
+  }
+  return <BarcodeScannerWeb {...props} />;
+}
+
+function BarcodeScannerWeb({ isOpen, onClose, onAddProduct }) {
   const { token } = useAuth();
   const [status,        setStatus]        = useState('scanning');
   // scanning | loading | found | not_found | error | camera_error

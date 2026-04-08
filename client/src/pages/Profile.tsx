@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { isFree } from '../utils/levels';
+import { isNative, openExternal } from '../utils/platform';
 const TDEECalculator = lazy(() => import('../components/TDEECalculator'));
 
 function exportCSV(entries) {
@@ -165,7 +166,12 @@ export default function Profile() {
     try {
       await api.deleteAccount(token);
       logout();
-      window.location.href = '/';
+      // En web vamos a la landing real (caliro.dev/). En native, a /login.
+      if (isNative()) {
+        navigate('/login');
+      } else {
+        window.location.href = '/';
+      }
     } catch (err) {
       setDeleteError(err.message || 'Error al eliminar la cuenta');
       setDeleteStep(1);
@@ -544,13 +550,24 @@ export default function Profile() {
       </Link>
 
       {/* ── Gestionar suscripción (solo Pro activo) ── */}
-      {user?.access_level === 2 && (
+      {/* TODO(capacitor-mac-sprint): Cuando implementemos IAP, los Pro nativos
+          gestionan su suscripción en Configuración → Apple ID → Suscripciones,
+          NO desde aquí. Para usuarios Pro que pagaron desde web (Stripe), este
+          botón sigue siendo válido. Hay que distinguir el origen del pago en
+          el backend (añadir campo `subscription_source: 'stripe' | 'apple'` en
+          users) y mostrar el botón solo si origin === 'stripe'.
+          Por ahora: en iOS escondemos el botón porque nadie puede ser Pro. */}
+      {user?.access_level === 2 && !isNative() && (
         <button
           onClick={async () => {
             setPortalLoading(true);
             try {
               const { url } = await api.createPortalSession(token);
-              window.location.href = url;
+              if (isNative()) {
+                await openExternal(url);
+              } else {
+                window.location.href = url;
+              }
             } catch { /* silent */ }
             finally { setPortalLoading(false); }
           }}

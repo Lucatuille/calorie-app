@@ -53,8 +53,10 @@
     <script>
       const t = localStorage.getItem('theme');
       if (t) document.documentElement.setAttribute('data-theme', t);
-      // If React app is served outside /app (e.g. old PWA SW cached at /), redirect
-      if (!window.location.pathname.startsWith('/app')) {
+      // En web: si la app se sirve fuera de /app (p.ej. cache antiguo de PWA), redirigir.
+      // En Capacitor nativo: el protocolo es capacitor:// y el path es /, no redirigir.
+      var isCapacitor = window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:';
+      if (!isCapacitor && !window.location.pathname.startsWith('/app')) {
         window.location.replace('/app');
       }
     </script>

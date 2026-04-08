@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { isNative } from '../utils/platform';
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // En Capacitor la app ya está instalada, este prompt no tiene sentido
+    if (isNative()) return;
     // Don't show if already dismissed or installed as PWA
     if (localStorage.getItem('pwa-dismissed')) return;
     if (window.matchMedia('(display-mode: standalone)').matches) return;

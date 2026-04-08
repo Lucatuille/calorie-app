@@ -398,6 +398,12 @@ export default function Calculator() {
             })}
           </div>
 
+          {/* TODO(capacitor-mac-sprint): En iOS este input file funciona pero la UX
+              es subóptima (modal del sistema con "Tomar foto" / "Galería" / "Archivos").
+              Mejor: usar @capacitor/camera plugin con Camera.getPhoto() para que
+              vaya directo a la cámara. El plugin ya está instalado.
+              Crear PhotoPicker.tsx que en isNative() use Camera.getPhoto() y en web
+              use este input. Sustituir aquí. */}
           <input
             ref={fileRef}
             type="file"

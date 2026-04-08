@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/post-build.js",
+    "build:mobile": "npm run build && cap sync ios",
+    "ios:add": "cap add ios",
+    "ios:open": "cap open ios",
+    "ios:icons": "node scripts/generate-ios-icons.js",
     "preview": "vite preview",
     "generate-icons": "node scripts/generate-icons.js",
     "test": "vitest run",
@@ -23,6 +27,15 @@
     "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/camera": "^8.0.2",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@playwright/test": "^1.58.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

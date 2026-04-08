@@ -12,6 +12,7 @@ import WaitlistScreen from './components/WaitlistScreen';
 import { useWhatsNew } from './hooks/useWhatsNew';
 const HelpModal = lazy(() => import('./components/HelpModal'));
 import RouteErrorBoundary from './components/RouteErrorBoundary';
+import { isNative } from './utils/platform';
 
 // Eager: login/register (first screen), dashboard (most visited)
 import Login from './pages/Login';
@@ -210,10 +211,13 @@ function AppFallback() {
 }
 
 export default function App() {
+  // En web la app vive en /app/* (Cloudflare Pages routing).
+  // En Capacitor nativo vive en root (capacitor://localhost/).
+  const basename = isNative() ? '/' : '/app';
   return (
     <Sentry.ErrorBoundary fallback={<AppFallback />}>
       <AuthProvider>
-        <BrowserRouter basename="/app">
+        <BrowserRouter basename={basename}>
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>

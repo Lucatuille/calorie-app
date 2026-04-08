@@ -1,0 +1,54 @@
+<!--
+  ============================================================
+  Info.plist additions para Caliro iOS
+  ============================================================
+
+  Estas claves se deben AÑADIR (no reemplazar) al archivo
+  client/ios/App/App/Info.plist después de ejecutar `npx cap add ios`.
+
+  Pásalas a Xcode editando el plist con click derecho → Open As → Source Code,
+  y pega el contenido entre <dict> ... </dict>.
+
+  Apple REQUIERE estas descripciones para apps que usan cámara,
+  galería o IAP. Sin ellas, la app crashea al pedir permiso o se
+  rechaza en review.
+
+  Tras editarlo: cmd+R en Xcode para recompilar.
+-->
+
+<!-- Cámara — Apple guideline 5.1.1 -->
+<key>NSCameraUsageDescription</key>
+<string>Caliro necesita acceso a la cámara para analizar tus comidas con IA y escanear códigos de barras de productos.</string>
+
+<!-- Galería de fotos (lectura) -->
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Caliro necesita acceso a tu galería para que puedas seleccionar fotos de comidas para analizar.</string>
+
+<!-- Galería de fotos (escritura) — solo si guardamos algo, por si acaso -->
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>Caliro necesita permiso para guardar fotos en tu galería si decides exportarlas.</string>
+
+<!-- Encriptación — Apple pide declarar si usas encriptación no exenta.
+     Caliro solo usa HTTPS estándar, así que es exenta. -->
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+
+<!-- ============================================================
+     OPCIONAL — añadir estas si las necesitas más adelante
+     ============================================================ -->
+
+<!-- Si quieres notificaciones push -->
+<!--
+<key>UIBackgroundModes</key>
+<array>
+  <string>remote-notification</string>
+</array>
+-->
+
+<!-- Si añades health/fitness con HealthKit -->
+<!--
+<key>NSHealthShareUsageDescription</key>
+<string>Caliro lee datos de actividad para personalizar tus recomendaciones nutricionales.</string>
+<key>NSHealthUpdateUsageDescription</key>
+<string>Caliro guarda tus comidas en Salud para que tengas todo en un solo sitio.</string>
+-->
