@@ -1,0 +1,18 @@
+<!--
+  Fuente para favicons y PWA icons (purpose: "any")
+  Padding ~20% en cada lado: la C ocupa el 60% central del canvas.
+  Esto da margen suficiente para iOS rounded mask y para que respire en
+  todas las superficies sin máscara agresiva (favicon, Windows tile, etc).
+  El logo "estricto" sin padding sigue en logo.svg para uso inline en la app.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="#F5F2EE"/>
+  <g transform="translate(50 50) scale(0.817) translate(-50 -50)">
+    <path d="M71 29 A30 30 0 1 0 71 71"
+          stroke="#111111"
+          stroke-width="11"
+          fill="none"
+          stroke-linecap="round"/>
+    <circle cx="81" cy="50" r="6.5" fill="#22c55e"/>
+  </g>
+</svg>
