@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
+  <!-- Background cream -->
+  <rect width="100" height="100" fill="#F5F2EE"/>
+  <!-- Arc C - black, slightly thicker for better presence at small sizes -->
+  <path d="M71 29 A30 30 0 1 0 71 71"
+        stroke="#111111"
+        stroke-width="11"
+        fill="none"
+        stroke-linecap="round"/>
+  <!-- Green dot - bigger and slightly more separated from the C -->
+  <circle cx="81" cy="50" r="6.5" fill="#22c55e"/>
+</svg>
