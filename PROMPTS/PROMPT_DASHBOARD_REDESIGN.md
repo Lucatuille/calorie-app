@@ -600,7 +600,7 @@ git commit -m "redesign: dashboard evolved — hero calórico, barra segmentada,
 git push origin ui-experiments
 ```
 
-Verificar en `ui-experiments.lucaeats.pages.dev`:
+Verificar en `ui-experiments.calorie-app.pages.dev`:
 - El banner naranja de preview aparece arriba
 - El nombre aparece en itálica sin punto final
 - La barra segmentada tiene 10 segmentos

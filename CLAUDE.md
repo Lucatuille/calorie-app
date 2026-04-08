@@ -116,6 +116,8 @@ assistant_messages: id, conversation_id, role, content, created_at
 - `stop_reason === 'max_tokens'` from Anthropic means truncated response — return 422 with specific message, not a generic 502
 
 ## Live URLs
-- Frontend: https://lucaeats.org / https://calorie-app.pages.dev
+- Frontend: **https://caliro.dev** (dominio canónico)
+- Alias auto-generado Cloudflare: https://calorie-app.pages.dev
+- https://lucaeats.org: dominio legacy, **redirige a caliro.dev** (mantener activo)
 - Worker: https://calorie-app-api.lucatuille.workers.dev
 - GitHub: https://github.com/Lucatuille/calorie-app

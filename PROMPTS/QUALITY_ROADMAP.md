@@ -362,7 +362,7 @@ Then decide: tree-shake, lazy-load, or replace.
 in the Worker. Reject requests from unexpected origins.
 ```js
 const origin = request.headers.get('Origin');
-if (!['https://caliro.dev', 'https://calorie-app.pages.dev'].includes(origin)) {
+if (!['https://caliro.dev', 'https://lucaeats.org', 'https://calorie-app.pages.dev'].includes(origin)) {
   return errorResponse('Forbidden', 403);
 }
 ```

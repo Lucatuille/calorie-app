@@ -1,14 +1,14 @@
 # 🧪 Entorno de Preview — Branch de Experimentos
 
 ## Objetivo
-Configurar un sistema de branches de Git que permita experimentar con cambios de UI/features sin afectar NUNCA la app en producción (lucaeats.org). Los usuarios existentes no verán nada hasta que se decida mergear explícitamente.
+Configurar un sistema de branches de Git que permita experimentar con cambios de UI/features sin afectar NUNCA la app en producción (caliro.dev). Los usuarios existentes no verán nada hasta que se decida mergear explícitamente.
 
 ---
 
 ## REGLA ABSOLUTA DE SEGURIDAD
 
 **El branch `main` es sagrado.**
-- `main` = lo que ven los usuarios en lucaeats.org
+- `main` = lo que ven los usuarios en caliro.dev
 - Cualquier experimento va en un branch separado
 - NUNCA hacer cambios experimentales directamente en main
 - Un merge a main es una decisión consciente, nunca accidental
@@ -24,9 +24,9 @@ Configurar un sistema de branches de Git que permita experimentar con cambios de
 
 ### URL resultante:
 ```
-main branch:           lucaeats.org  (PRODUCCIÓN — intocable)
-ui-experiments branch: ui-experiments.lucaeats.pages.dev  (PREVIEW)
-cualquier-branch:      cualquier-branch.lucaeats.pages.dev
+main branch:           caliro.dev  (PRODUCCIÓN — intocable)
+ui-experiments branch: ui-experiments.calorie-app.pages.dev  (PREVIEW)
+cualquier-branch:      cualquier-branch.calorie-app.pages.dev
 ```
 
 ---
@@ -60,12 +60,12 @@ Crear `.github/branch-protection.md` (solo documentación, no código):
 # Reglas de branches — LucaEats
 
 ## main (PRODUCCIÓN)
-- URL: lucaeats.org
+- URL: caliro.dev
 - NUNCA pushear experimentos directamente aquí
 - Solo merges conscientes desde branches probados
 
 ## ui-experiments (PREVIEW)
-- URL: ui-experiments.lucaeats.pages.dev
+- URL: ui-experiments.calorie-app.pages.dev
 - Para experimentos de UI y nuevas features
 - Libre para romper cosas
 
@@ -124,7 +124,7 @@ En `client/src/App.jsx`, añadir al inicio del componente:
     fontFamily: 'DM Sans, sans-serif',
     letterSpacing: '0.5px',
   }}>
-    ⚗️ PREVIEW — Los cambios aquí no afectan a lucaeats.org
+    ⚗️ PREVIEW — Los cambios aquí no afectan a caliro.dev
   </div>
 )}
 ```
@@ -147,9 +147,9 @@ npm run dev
 git add .
 git commit -m "experimento: descripción del cambio"
 git push origin ui-experiments
-# → En 2 minutos disponible en ui-experiments.lucaeats.pages.dev
+# → En 2 minutos disponible en ui-experiments.calorie-app.pages.dev
 
-# 4. Probar en móvil abriendo ui-experiments.lucaeats.pages.dev
+# 4. Probar en móvil abriendo ui-experiments.calorie-app.pages.dev
 ```
 
 ### Para llevar un experimento a producción:
@@ -158,7 +158,7 @@ git push origin ui-experiments
 git checkout main
 git merge ui-experiments
 git push origin main
-# → lucaeats.org se actualiza en 2 minutos
+# → caliro.dev se actualiza en 2 minutos
 ```
 
 ### Para descartar un experimento:
@@ -196,10 +196,10 @@ git push origin ui-experiments
 Si en el futuro quieres tener varios experimentos en paralelo:
 
 ```
-main                    → lucaeats.org
-ui-experiments          → ui-experiments.lucaeats.pages.dev
-stripe-integration      → stripe-integration.lucaeats.pages.dev
-assistant-redesign      → assistant-redesign.lucaeats.pages.dev
+main                    → caliro.dev
+ui-experiments          → ui-experiments.calorie-app.pages.dev
+stripe-integration      → stripe-integration.calorie-app.pages.dev
+assistant-redesign      → assistant-redesign.calorie-app.pages.dev
 ```
 
 Cada uno con su URL de preview. Cloudflare los despliega todos automáticamente.
@@ -227,8 +227,8 @@ Así es imposible hacer push directo a main — siempre hay que crear un PR cons
 1. Verificar que `git branch --show-current` muestra `ui-experiments`
 2. Hacer un cambio pequeño (ej: cambiar un color en global.css)
 3. `git add . && git commit -m "test: verificar preview deployment" && git push origin ui-experiments`
-4. Esperar 2 minutos y abrir `ui-experiments.lucaeats.pages.dev`
+4. Esperar 2 minutos y abrir `ui-experiments.calorie-app.pages.dev`
 5. Verificar que el banner naranja "PREVIEW" aparece arriba
-6. Verificar que `lucaeats.org` NO tiene el cambio de color
+6. Verificar que `caliro.dev` NO tiene el cambio de color
 7. Si todo funciona → el sistema está listo para experimentar
 

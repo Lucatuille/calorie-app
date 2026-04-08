@@ -38,7 +38,8 @@
 
 | Recurso | URL |
 |---------|-----|
-| Frontend (producción) | https://lucaeats.org / https://calorie-app.pages.dev |
+| Frontend (producción) | https://caliro.dev (canónico) — https://lucaeats.org redirige aquí |
+| Alias Cloudflare Pages | https://calorie-app.pages.dev |
 | Worker API | https://calorie-app-api.lucatuille.workers.dev |
 | GitHub | https://github.com/Lucatuille/calorie-app |
 | D1 Database ID | `89b25589-4ea7-4f62-b34c-6238d68c6cd4` |
