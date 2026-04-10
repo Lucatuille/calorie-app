@@ -159,7 +159,7 @@ export default function Calculator() {
           input_text:              pa.input_text,
           input_type:              pa.input_type,
           ai_response_text:        pa.ai_response_text,
-        }, token).catch(() => {});
+        }, token).catch(err => console.warn('[calibration]', err));
         photoAnalysisRef.current = null;
       }
     } catch (err) {
