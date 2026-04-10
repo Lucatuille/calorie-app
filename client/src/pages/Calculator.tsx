@@ -144,6 +144,7 @@ export default function Calculator() {
       setForm(emptyForm());
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+      console.log('[calibration] ref at save:', photoAnalysisRef.current);
       if (photoAnalysisRef.current) {
         const pa = photoAnalysisRef.current;
         api.saveAiCorrection({
@@ -250,6 +251,9 @@ export default function Calculator() {
         input_type:    r._ai.source || 'text',
         ai_response_text: r._ai.ai_response_text || null,
       };
+      console.log('[calibration] ref set from text:', photoAnalysisRef.current);
+    } else {
+      console.log('[calibration] no _ai in text result:', r);
     }
     setScanFeedback(true);
     setTimeout(() => setScanFeedback(false), 3000);
