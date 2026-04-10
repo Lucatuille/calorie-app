@@ -67,14 +67,14 @@ export async function handleCalibration(request, env, path) {
     ).run();
 
     // 2. Recalcular perfil con últimas 50 correcciones + contar total real
-    const [{ results: corrections }, totalRow] = await Promise.all([
-      env.DB.prepare(
-        'SELECT * FROM ai_corrections WHERE user_id = ? ORDER BY created_at DESC LIMIT 50'
-      ).bind(user.userId).all(),
-      env.DB.prepare(
-        'SELECT COUNT(*) as total FROM ai_corrections WHERE user_id = ?'
-      ).bind(user.userId).first(),
-    ]);
+    const corrResult = await env.DB.prepare(
+      'SELECT * FROM ai_corrections WHERE user_id = ? ORDER BY created_at DESC LIMIT 50'
+    ).bind(user.userId).all();
+    const corrections = corrResult.results || [];
+
+    const totalRow = await env.DB.prepare(
+      'SELECT COUNT(*) as total FROM ai_corrections WHERE user_id = ?'
+    ).bind(user.userId).first();
 
     const newProfile = calculateCalibrationProfile(corrections);
     // Usar el total real, no el limitado a 50
