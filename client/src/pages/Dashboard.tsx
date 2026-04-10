@@ -422,20 +422,48 @@ export default function Dashboard() {
           </div>
 
           {entries.length === 0 ? (
-            <button
+            <div
               onClick={() => navigate('/calculator')}
               style={{
-                width: '100%', background: 'none',
-                border: '0.5px dashed var(--border)',
-                borderRadius: 'var(--radius-sm)', padding: '13px 16px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: 'var(--text-tertiary)',
-                fontSize: 13, fontFamily: 'var(--font-sans)',
-                boxSizing: 'border-box',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                padding: '24px 16px 20px', textAlign: 'center',
+                border: '1px dashed var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
               }}
             >
-              Añade tu primera comida
-            </button>
+              <div style={{
+                width: 44, height: 44, borderRadius: '50%',
+                background: 'rgba(22, 163, 74, 0.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 14,
+              }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="2" y="4" width="16" height="12" rx="2.5" stroke="var(--accent)" strokeWidth="1.5"/>
+                  <circle cx="10" cy="10" r="2.5" stroke="var(--accent)" strokeWidth="1.5"/>
+                  <circle cx="14.5" cy="6.5" r="1" fill="var(--accent)"/>
+                </svg>
+              </div>
+              <span style={{
+                fontFamily: 'var(--font-serif)', fontSize: 18,
+                fontWeight: 400, color: 'var(--text-primary)', marginBottom: 4,
+              }}>
+                Hazle una foto a tu plato
+              </span>
+              <span style={{
+                fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 18,
+              }}>
+                La IA calcula calorías y macros por ti
+              </span>
+              <span style={{
+                background: 'var(--accent)', color: '#fff',
+                border: 'none', borderRadius: 99,
+                padding: '10px 28px', fontSize: 13, fontWeight: 500,
+                fontFamily: 'var(--font-sans)',
+              }}>
+                Registrar comida
+              </span>
+            </div>
           ) : (
             <div>
               {entries.map((entry, i) => {
