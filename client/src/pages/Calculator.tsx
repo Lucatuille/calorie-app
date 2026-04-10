@@ -934,7 +934,7 @@ export default function Calculator() {
 
       {/* ── 3. Quick-add: comidas frecuentes ── */}
       {frequentMeals.length >= MIN_FREQUENT_SHOW && (
-        <div style={{ padding: '0 16px', marginBottom: 10 }}>
+        <div style={{ padding: '0 16px', marginTop: 6, marginBottom: 10 }}>
 
           {/* Toast flotante de confirmación */}
           {quickAdded && (
@@ -963,58 +963,67 @@ export default function Calculator() {
             </div>
           )}
 
-          <span className="section-label" style={{ marginBottom: 8, display: 'block', paddingLeft: 2 }}>
+          <span className="section-label" style={{ marginBottom: 6, display: 'block', paddingLeft: 2 }}>
             Repetir
           </span>
+          <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '0 0 10px', paddingLeft: 2 }}>
+            Tus comidas habituales — toca para añadir
+          </p>
 
-          {frequentMeals.map((meal, i) => (
-            <button
-              key={meal.name}
-              type="button"
-              disabled={!!quickAdding}
-              onClick={() => quickAdd(meal)}
-              style={{
-                width: '100%',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '11px 2px',
-                borderBottom: i < frequentMeals.length - 1 ? '0.5px solid var(--border)' : 'none',
-                background: quickAdding === meal.name ? 'var(--surface-2)' : 'none',
-                border: 'none', borderBottomStyle: i < frequentMeals.length - 1 ? 'solid' : 'none',
-                borderBottomWidth: i < frequentMeals.length - 1 ? '0.5px' : 0,
-                borderBottomColor: 'var(--border)',
-                cursor: quickAdding ? 'default' : 'pointer',
-                textAlign: 'left',
-                transition: 'background 0.15s',
-                fontFamily: 'var(--font-sans)',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <span style={{
-                  fontSize: 13, color: 'var(--text-primary)', fontWeight: 400,
-                  display: 'block',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {meal.name}
-                </span>
-                <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
-                  {meal.times}× registrada
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <span style={{
-                  fontSize: 13, fontWeight: 600, color: 'var(--accent)',
+          <div style={{
+            background: 'var(--surface)',
+            borderRadius: 'var(--radius-md)',
+            border: '0.5px solid var(--border)',
+            overflow: 'hidden',
+          }}>
+            {frequentMeals.map((meal, i) => (
+              <button
+                key={meal.name}
+                type="button"
+                disabled={!!quickAdding}
+                onClick={() => quickAdd(meal)}
+                style={{
+                  width: '100%',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '12px 14px',
+                  background: quickAdding === meal.name ? 'var(--surface-2)' : 'transparent',
+                  border: 'none',
+                  borderBottom: i < frequentMeals.length - 1 ? '0.5px solid var(--border)' : 'none',
+                  cursor: quickAdding ? 'default' : 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.12s',
                   fontFamily: 'var(--font-sans)',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{
+                    fontSize: 13, color: 'var(--text-primary)', fontWeight: 400,
+                    display: 'block',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {meal.name}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+                    {meal.times}× registrada
+                  </span>
+                </div>
+                <div style={{
+                  display: 'flex', alignItems: 'baseline', gap: 3,
+                  flexShrink: 0, marginLeft: 12,
                 }}>
-                  {meal.avg_kcal}
-                </span>
-                <span style={{
-                  fontSize: 16, color: 'var(--text-tertiary)', lineHeight: 1,
-                }}>
-                  +
-                </span>
-              </div>
-            </button>
-          ))}
+                  <span style={{
+                    fontSize: 13, fontWeight: 600, color: 'var(--accent)',
+                    fontFamily: 'var(--font-sans)',
+                  }}>
+                    +{meal.avg_kcal}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+                    kcal
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
