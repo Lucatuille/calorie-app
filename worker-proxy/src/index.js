@@ -42,7 +42,7 @@ export default {
     headers.set('X-Frame-Options', 'DENY');
     headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-    headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), interest-cohort=()');
+    headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
 
     return new Response(response.body, {
       status: response.status,
