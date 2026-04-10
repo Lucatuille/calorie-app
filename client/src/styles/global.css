@@ -768,6 +768,7 @@ input, select, textarea { font-family: inherit; }
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
+  animation: chipIn 0.3s ease both;
 }
 .frequent-chip:hover {
   border-color: var(--accent);
@@ -786,6 +787,18 @@ input, select, textarea { font-family: inherit; }
   color: var(--text-tertiary);
   font-size: 10px;
   transition: color 0.12s;
+}
+
+.frequent-chip:nth-child(1) { animation-delay: 0s; }
+.frequent-chip:nth-child(2) { animation-delay: 0.06s; }
+.frequent-chip:nth-child(3) { animation-delay: 0.12s; }
+.frequent-chip:nth-child(4) { animation-delay: 0.18s; }
+.frequent-chip:nth-child(5) { animation-delay: 0.24s; }
+.frequent-chip:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes chipIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (min-width: 768px) {
