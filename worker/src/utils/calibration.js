@@ -249,9 +249,12 @@ function isSameMeal(name1, name2) {
 
 // ── Actualizar lista de comidas frecuentes ─────────────────
 
-export function updateFrequentMeals(meals, mealName, kcal) {
+export function updateFrequentMeals(meals, mealName, kcal, macros = null) {
   if (!mealName) return meals;
   const today = new Date().toISOString().split('T')[0];
+  const prot = macros?.protein || 0;
+  const carbs = macros?.carbs || 0;
+  const fat = macros?.fat || 0;
 
   // Buscar coincidencia exacta primero, luego difusa
   const existing =
@@ -260,15 +263,22 @@ export function updateFrequentMeals(meals, mealName, kcal) {
 
   if (existing) {
     // Media ponderada acumulada
-    existing.avg_kcal = Math.round(
-      (existing.avg_kcal * existing.times + kcal) / (existing.times + 1)
-    );
+    const t = existing.times;
+    existing.avg_kcal = Math.round((existing.avg_kcal * t + kcal) / (t + 1));
+    if (prot || carbs || fat) {
+      existing.avg_protein = Math.round(((existing.avg_protein || 0) * t + prot) / (t + 1));
+      existing.avg_carbs   = Math.round(((existing.avg_carbs   || 0) * t + carbs) / (t + 1));
+      existing.avg_fat     = Math.round(((existing.avg_fat     || 0) * t + fat) / (t + 1));
+    }
     existing.times++;
     existing.last_seen = today;
     // Mantener el nombre más corto/limpio entre los dos
     if (mealName.length < existing.name.length) existing.name = mealName;
   } else {
-    meals.push({ name: mealName, avg_kcal: kcal, times: 1, last_seen: today });
+    meals.push({
+      name: mealName, avg_kcal: kcal, times: 1, last_seen: today,
+      avg_protein: prot || null, avg_carbs: carbs || null, avg_fat: fat || null,
+    });
   }
 
   return meals.sort((a, b) => b.times - a.times).slice(0, 20);

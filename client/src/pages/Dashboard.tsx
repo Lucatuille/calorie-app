@@ -67,28 +67,28 @@ export default function Dashboard() {
   const [weightSaving, setWeightSaving]     = useState(false);
   const weightRef = useRef(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoadError(false);
-        const [e, s, p, w] = await Promise.all([
-          api.getTodayEntries(token),
-          api.getSummary(token),
-          api.getProfile(token),
-          api.getWeightToday(token).catch(() => ({ today: null, yesterday: null, last_recorded: null })),
-        ]);
-        setEntries(e);
-        setSummary(s.summary);
-        setProfile(p);
-        setWeightToday(w.today);
-        setWeightYesterday(w.yesterday);
-        setWeightLast(w.last_recorded);
-        if (w.today) setWeightValue(String(w.today));
-      } catch { setLoadError(true); }
-      finally { setLoading(false); }
-    }
-    load();
-  }, [token]);
+  async function loadDashboard() {
+    try {
+      setLoading(true);
+      setLoadError(false);
+      const [e, s, p, w] = await Promise.all([
+        api.getTodayEntries(token),
+        api.getSummary(token),
+        api.getProfile(token),
+        api.getWeightToday(token).catch(() => ({ today: null, yesterday: null, last_recorded: null })),
+      ]);
+      setEntries(e);
+      setSummary(s.summary);
+      setProfile(p);
+      setWeightToday(w.today);
+      setWeightYesterday(w.yesterday);
+      setWeightLast(w.last_recorded);
+      if (w.today) setWeightValue(String(w.today));
+    } catch { setLoadError(true); }
+    finally { setLoading(false); }
+  }
+
+  useEffect(() => { loadDashboard(); }, [token]);
 
   const [deletingId, setDeletingId] = useState(null);
 
@@ -97,7 +97,7 @@ export default function Dashboard() {
     try {
       await api.deleteEntry(id, token);
       setEntries(prev => prev.filter(e => e.id !== id));
-    } catch { /* Sentry captures */ }
+    } catch { setDeletingId(null); return; }
     setDeletingId(null);
   }
 
@@ -106,7 +106,7 @@ export default function Dashboard() {
   if (loadError) return (
     <section style={{ margin: '0 auto', maxWidth: 640, padding: '0 16px', textAlign: 'center', paddingTop: 80 }}>
       <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 12 }}>No se pudieron cargar los datos</p>
-      <button onClick={() => { setLoading(true); setLoadError(false); location.reload(); }}
+      <button onClick={() => loadDashboard()}
         style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', cursor: 'pointer', fontSize: 13 }}>
         Reintentar
       </button>
@@ -186,7 +186,9 @@ export default function Dashboard() {
       setWeightYesterday(weightToday ?? weightYesterday);
       setWeightToday(kg);
       setWeightEditing(false);
-    } catch {} finally { setWeightSaving(false); }
+    } catch {
+      setWeightEditing(false);
+    } finally { setWeightSaving(false); }
   }
 
   // ── Badge de nivel ─────────────────────────────────────────

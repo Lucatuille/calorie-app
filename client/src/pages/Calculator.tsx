@@ -139,6 +139,7 @@ export default function Calculator() {
 
   async function addMeal(e) {
     e.preventDefault();
+    if (saving) return;
     if (!form.calories) { setError('Las calorías son obligatorias'); return; }
     setError(''); setSaving(true);
     const finalCalories = parseInt(form.calories);
@@ -166,6 +167,9 @@ export default function Calculator() {
           ai_raw:                  pa.ai_raw,
           ai_calibrated:           pa.ai_calibrated,
           user_final:              finalCalories,
+          user_protein:            parseFloat(form.protein) || null,
+          user_carbs:              parseFloat(form.carbs) || null,
+          user_fat:                parseFloat(form.fat) || null,
           food_categories:         pa.categories,
           meal_type:               finalMealType,
           meal_name:               finalName || pa.name,
@@ -764,6 +768,9 @@ export default function Calculator() {
                           ...f,
                           name: meal.name,
                           calories: String(meal.avg_kcal),
+                          protein: meal.avg_protein ? String(meal.avg_protein) : '',
+                          carbs:   meal.avg_carbs   ? String(meal.avg_carbs)   : '',
+                          fat:     meal.avg_fat     ? String(meal.avg_fat)     : '',
                         }));
                       }}
                     >

@@ -17,6 +17,7 @@ export async function handleCalibration(request, env, path) {
       food_categories, meal_type, meal_name,
       has_context, accepted_without_change,
       input_text, input_type, ai_response_text,
+      user_protein, user_carbs, user_fat,
     } = await request.json();
 
     if (ai_calibrated == null || user_final == null) {
@@ -87,7 +88,9 @@ export async function handleCalibration(request, env, path) {
 
     let meals = [];
     try { meals = JSON.parse(calRow?.frequent_meals || '[]'); } catch {}
-    const updatedMeals = updateFrequentMeals(meals, meal_name, user_final);
+    const updatedMeals = updateFrequentMeals(meals, meal_name, user_final, {
+      protein: user_protein, carbs: user_carbs, fat: user_fat,
+    });
 
     // 4. Upsert perfil
     await env.DB.prepare(`

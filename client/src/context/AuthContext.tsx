@@ -52,11 +52,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Siempre refrescar el token desde la BD al cargar.
     // Garantiza que cambios de rol hechos desde el admin se reflejen
     // sin que el usuario tenga que desloguearse.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
     fetch(`${BASE}/api/auth/refresh`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${t}` },
+      signal: controller.signal,
     })
       .then(async r => {
+        clearTimeout(timeout);
         if (r.ok) {
           const data = await r.json();
           if (data?.token) {

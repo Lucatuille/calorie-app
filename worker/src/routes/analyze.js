@@ -260,7 +260,14 @@ export async function handleAnalyze(request, env, path, ctx) {
       ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
       if (ctx?.waitUntil) ctx.waitUntil(logPromise);
 
-      const aiRaw      = Math.round(result.calories || 0);
+      // Validar que Claude devolvió campos mínimos
+      if (!result.calories && result.calories !== 0) {
+        await rollbackAiLimit(env, user.userId);
+        if (usedSonnet) await rollbackSonnetLimit(env, user.userId);
+        return errorResponse('La IA devolvió una respuesta incompleta. Inténtalo de nuevo.', 422);
+      }
+
+      const aiRaw      = Math.round(result.calories);
       const categories = Array.isArray(result.categories) ? result.categories : [];
 
       // Para fotos NO aplicamos el motor de calibración global (entrenado en texto,

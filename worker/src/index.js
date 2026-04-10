@@ -27,12 +27,20 @@ async function handleRequest(request, env, ctx) {
     return new Response(null, { headers: getCorsHeaders(request) });
   }
 
-  // CSRF: reject mutations from unknown origins
+  // CSRF: reject mutations from unknown or missing origins
+  // Exception: Stripe webhooks have no Origin (server-to-server)
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)) {
     const origin = request.headers.get('Origin');
-    const dynamic = getCorsHeaders(request);
-    if (origin && dynamic['Access-Control-Allow-Origin'] !== origin) {
-      return errorResponse('Origin not allowed', 403, request);
+    const path = new URL(request.url).pathname;
+    const isWebhook = path === '/api/stripe-webhook';
+    if (!isWebhook) {
+      if (!origin) {
+        return errorResponse('Origin header required', 403, request);
+      }
+      const dynamic = getCorsHeaders(request);
+      if (dynamic['Access-Control-Allow-Origin'] !== origin) {
+        return errorResponse('Origin not allowed', 403, request);
+      }
     }
   }
 
