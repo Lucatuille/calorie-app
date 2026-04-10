@@ -34,8 +34,6 @@ export default function Register() {
     try {
       const data = await api.register(form);
       login(data.token, data.user);
-      // Flag para que useWhatsNew muestre el onboarding (HelpModal) una sola vez
-      sessionStorage.setItem('caliro_just_registered', '1');
       navigate('/');
     } catch (err) {
       setError(err.message);
