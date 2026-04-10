@@ -98,7 +98,7 @@ async function buildLightContext(userId, env) {
   const today   = new Date().toLocaleDateString('en-CA');
   const weekAgo = new Date(Date.now() - 7 * 86400000).toLocaleDateString('en-CA');
 
-  const [user, todayRows, last7Days] = await Promise.all([
+  const [user, todayRows, last7Days, recentWeight] = await Promise.all([
     env.DB.prepare(
       'SELECT name, age, weight, target_calories, target_protein, target_carbs, target_fat, goal_weight FROM users WHERE id = ?'
     ).bind(userId).first(),
@@ -112,6 +112,10 @@ async function buildLightContext(userId, env) {
       FROM entries WHERE user_id = ? AND date >= ? AND date < ?
       GROUP BY date ORDER BY date DESC
     `).bind(userId, weekAgo, today).all(),
+
+    env.DB.prepare(
+      'SELECT date, weight_kg as weight FROM weight_logs WHERE user_id = ? ORDER BY date DESC LIMIT 3'
+    ).bind(userId).all().catch(() => ({ results: [] })),
   ]);
 
   const todayTotals = (todayRows.results || []).reduce(
@@ -143,7 +147,12 @@ ${(todayRows.results||[]).length > 0
 En objetivo (±250kcal): ${onTarget7}/${total7 || 0} días
 ${(last7Days.results||[]).length > 0
   ? (last7Days.results||[]).map(d => `  ${d.date}: ${Math.round(d.cal)} kcal (${Math.round(d.cal-(user?.target_calories||0)) >= 0 ? '+' : ''}${Math.round(d.cal-(user?.target_calories||0))} vs objetivo)`).join('\n')
-  : '  Sin datos'}`;
+  : '  Sin datos'}
+
+=== PESO ===
+${(recentWeight.results||[]).length > 0
+  ? (recentWeight.results||[]).map(w => `  ${w.date}: ${w.weight}kg`).join('\n')
+  : '  Sin registros de peso'}`;
 }
 
 // ── Contexto micro — conversaciones largas (~100 tokens) ────
@@ -152,15 +161,23 @@ ${(last7Days.results||[]).length > 0
 
 async function buildMicroContext(userId, env) {
   const today = new Date().toLocaleDateString('en-CA');
-  const [user, todayTotals] = await Promise.all([
-    env.DB.prepare('SELECT target_calories FROM users WHERE id = ?').bind(userId).first(),
+  const [user, todayTotals, todayMeals] = await Promise.all([
+    env.DB.prepare('SELECT target_calories, target_protein, target_carbs, target_fat FROM users WHERE id = ?').bind(userId).first(),
     env.DB.prepare(
       'SELECT SUM(calories) as cal, SUM(protein) as prot, SUM(carbs) as carbs, SUM(fat) as fat FROM entries WHERE user_id = ? AND date = ?'
     ).bind(userId, today).first(),
+    env.DB.prepare(
+      'SELECT name, meal_type, calories, protein FROM entries WHERE user_id = ? AND date = ? ORDER BY created_at ASC'
+    ).bind(userId, today).all(),
   ]);
   const cal       = todayTotals?.cal  || 0;
   const remaining = (user?.target_calories || 0) - cal;
-  return `[Datos actualizados ${todayLabel()}: ${Math.round(cal)} kcal consumidas, ${Math.round(remaining)} restantes | Prot: ${Math.round(todayTotals?.prot||0)}g | Carbos: ${Math.round(todayTotals?.carbs||0)}g | Grasa: ${Math.round(todayTotals?.fat||0)}g]`;
+  const meals = (todayMeals.results || []).map(e => `  [${e.meal_type}] ${e.name || 'sin nombre'}: ${e.calories} kcal`).join('\n') || '  Sin registros';
+  return `[Datos actualizados ${todayLabel()}]
+Consumido: ${Math.round(cal)} / ${user?.target_calories || '?'} kcal | Restantes: ${Math.round(remaining)}
+Prot: ${Math.round(todayTotals?.prot||0)}g/${user?.target_protein||'?'}g | Carbos: ${Math.round(todayTotals?.carbs||0)}g/${user?.target_carbs||'?'}g | Grasa: ${Math.round(todayTotals?.fat||0)}g/${user?.target_fat||'?'}g
+Comidas hoy:
+${meals}`;
 }
 
 // ── Contexto completo — Sonnet, primera vez (~2200 tokens) ──
@@ -206,9 +223,9 @@ async function buildUserContext(userId, env) {
       `).bind(userId).all(),
 
       env.DB.prepare(`
-        SELECT date, weight FROM entries
-        WHERE user_id = ? AND weight IS NOT NULL AND date >= ?
-        GROUP BY date ORDER BY date DESC LIMIT 10
+        SELECT date, weight_kg as weight FROM weight_logs
+        WHERE user_id = ? AND date >= ?
+        ORDER BY date DESC LIMIT 10
       `).bind(userId, monthAgo).all(),
 
       // Meal type breakdown — avg per occasion, frequency vs active days

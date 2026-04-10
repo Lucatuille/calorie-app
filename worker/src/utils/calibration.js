@@ -146,26 +146,39 @@ export function calculateCalibrationProfile(corrections) {
     }
   }
 
-  // Factores temporales: fin de semana vs semana
+  // Factores temporales: fin de semana vs semana (con decay temporal)
   const timeFactors = {};
   const weekendItems  = actual.filter(c => c.is_weekend);
   const weekdayItems  = actual.filter(c => !c.is_weekend);
   if (weekendItems.length >= CALIBRATION_MIN_POINTS && weekdayItems.length >= CALIBRATION_MIN_POINTS) {
-    const weekendBias = calculateWeightedMean(weekendItems.map(c => calcMixedBias(c)));
-    const weekdayBias = calculateWeightedMean(weekdayItems.map(c => calcMixedBias(c)));
+    const weekendWeights = weekendItems.map(c => {
+      const ts = Date.parse((c.created_at || '').replace(' ', 'T'));
+      const daysSince = isNaN(ts) ? 0 : Math.max(0, (now - ts) / 86400000);
+      return Math.pow(CALIBRATION_DECAY, daysSince);
+    });
+    const weekdayWeights = weekdayItems.map(c => {
+      const ts = Date.parse((c.created_at || '').replace(' ', 'T'));
+      const daysSince = isNaN(ts) ? 0 : Math.max(0, (now - ts) / 86400000);
+      return Math.pow(CALIBRATION_DECAY, daysSince);
+    });
+    const weekendBias = calculateWeightedMean(weekendItems.map(c => calcMixedBias(c)), weekendWeights);
+    const weekdayBias = calculateWeightedMean(weekdayItems.map(c => calcMixedBias(c)), weekdayWeights);
     if (Math.abs(weekendBias - weekdayBias) > 0.05) {
       timeFactors.weekend_extra = weekendBias - weekdayBias;
     }
   }
 
-  // Señal efectiva: correcciones cambiadas cuentan 1, aceptadas sin cambio cuentan 0.3
-  // (confirmar que la IA acertó también es información útil)
+  // Señal efectiva: correcciones cambiadas cuentan 1, aceptadas sin cambio cuentan 0.1
+  // (confirmar que la IA acertó es información útil pero mucho menos que una corrección real)
   const acceptedCount = corrections.length - actual.length;
-  const effectiveSignal = actual.length + acceptedCount * 0.3;
-  // Mínimo 2 para activar, 12 para máxima confianza
-  const confidence = effectiveSignal < 2 ? 0 : Math.min(effectiveSignal / 12, 1);
+  const effectiveSignal = actual.length + acceptedCount * 0.1;
+  // Mínimo 3 correcciones reales para activar, 20 señal efectiva para máxima confianza
+  const confidence = actual.length < 3 ? 0 : Math.min(effectiveSignal / 20, 1);
 
+  // data_points: total real de correcciones del usuario (no limitado a 50)
+  // corrections.length es siempre <=50 (query LIMIT), así que pasamos el total real aparte
   return { global_bias: globalBias, confidence, data_points: corrections.length,
+           actual_corrections: actual.length,
            meal_factors: mealFactors, food_factors: foodFactors, time_factors: timeFactors };
 }
 
