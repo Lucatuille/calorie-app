@@ -426,7 +426,8 @@ export default function Dashboard() {
               onClick={() => navigate('/calculator')}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
-                padding: '24px 16px 20px', textAlign: 'center',
+                padding: '28px 16px 22px', textAlign: 'center',
+                marginTop: 6,
                 border: '1px dashed var(--border)',
                 borderRadius: 'var(--radius-sm)',
                 cursor: 'pointer',
