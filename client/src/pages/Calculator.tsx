@@ -747,17 +747,15 @@ export default function Calculator() {
               ))}
             </div>
 
-            {/* Frecuentes — slider horizontal */}
+            {/* Frecuentes — chips */}
             {frequentMeals.length >= MIN_FREQUENT_SHOW && !form.calories && !photoPreview && !aiResult && (
-              <div style={{ marginTop: -2 }}>
-                <div style={{
-                  display: 'flex', gap: 7, overflowX: 'auto', overflowY: 'hidden',
-                  paddingBottom: 2,
-                  WebkitOverflowScrolling: 'touch',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                }}>
-                  {frequentMeals.map(meal => (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {frequentMeals.map(meal => {
+                  // Truncar nombres largos: max 20 chars
+                  const shortName = meal.name.length > 20
+                    ? meal.name.slice(0, 18) + '…'
+                    : meal.name;
+                  return (
                     <button
                       key={meal.name}
                       type="button"
@@ -769,11 +767,10 @@ export default function Calculator() {
                         }));
                       }}
                       style={{
-                        flexShrink: 0,
-                        padding: '6px 12px',
+                        padding: '5px 10px',
                         border: '0.5px solid var(--border)',
                         borderRadius: 99,
-                        background: 'var(--surface)',
+                        background: 'var(--surface-2)',
                         color: 'var(--text-primary)',
                         fontSize: 12,
                         fontFamily: 'var(--font-sans)',
@@ -782,10 +779,10 @@ export default function Calculator() {
                         transition: 'background 0.12s, border-color 0.12s',
                       }}
                     >
-                      {meal.name} <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>· {meal.avg_kcal}</span>
+                      {shortName} <span style={{ color: 'var(--text-tertiary)', fontSize: 10 }}>{meal.avg_kcal}</span>
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
 
