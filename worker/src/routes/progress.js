@@ -436,6 +436,131 @@ export async function handleProgress(request, env, path) {
       }
     }
 
+    // ── Food impact analysis (Pro) ──────────────────────────────
+    let foodImpact = [];
+    try {
+      const { results: foods } = await env.DB.prepare(
+        `SELECT LOWER(name) as food, COUNT(*) as times,
+          ROUND(AVG(calories)) as avg_cal,
+          ROUND(AVG(protein),1) as avg_prot,
+          ROUND(AVG(carbs),1) as avg_carbs,
+          ROUND(AVG(fat),1) as avg_fat
+        FROM entries WHERE user_id = ? AND name IS NOT NULL AND name != ''
+          AND date >= date('now', '-${days} days') AND date < date('now')
+        GROUP BY LOWER(name) HAVING COUNT(*) >= 2
+        ORDER BY COUNT(*) DESC LIMIT 8`
+      ).bind(user.userId).all();
+
+      const tgtProt  = profile?.target_protein || 0;
+      const tgtCarbs = profile?.target_carbs   || 0;
+      const tgtFat   = profile?.target_fat     || 0;
+
+      foodImpact = (foods || []).map(f => {
+        // Calcular que macro desequilibra mas este alimento
+        const totalMacro = (f.avg_prot || 0) + (f.avg_carbs || 0) + (f.avg_fat || 0);
+        const protPct = totalMacro > 0 ? (f.avg_prot / totalMacro) * 100 : 0;
+        const carbsPct = totalMacro > 0 ? (f.avg_carbs / totalMacro) * 100 : 0;
+        const fatPct = totalMacro > 0 ? (f.avg_fat / totalMacro) * 100 : 0;
+
+        // Comparar con targets del usuario
+        const tgtTotal = tgtProt + tgtCarbs + tgtFat;
+        const tgtProtPct  = tgtTotal > 0 ? (tgtProt / tgtTotal) * 100 : 33;
+        const tgtCarbsPct = tgtTotal > 0 ? (tgtCarbs / tgtTotal) * 100 : 33;
+        const tgtFatPct   = tgtTotal > 0 ? (tgtFat / tgtTotal) * 100 : 33;
+
+        // Mayor desviacion = macro problematico
+        const deviations = [
+          { macro: 'protein', diff: protPct - tgtProtPct },
+          { macro: 'carbs',   diff: carbsPct - tgtCarbsPct },
+          { macro: 'fat',     diff: fatPct - tgtFatPct },
+        ];
+        const worst = deviations.reduce((a, b) => Math.abs(b.diff) > Math.abs(a.diff) ? b : a);
+
+        return {
+          food: f.food, times: f.times, avg_cal: f.avg_cal,
+          avg_prot: f.avg_prot, avg_carbs: f.avg_carbs, avg_fat: f.avg_fat,
+          impact: Math.abs(worst.diff) > 10 ? (worst.diff > 0 ? 'excess' : 'deficit') : 'balanced',
+          impact_macro: worst.macro,
+          impact_diff: Math.round(worst.diff),
+        };
+      });
+    } catch {}
+
+    // ── Weekday vs Weekend (Pro) ──────────────────────────────
+    let weekdayWeekend = null;
+    try {
+      const wd = [], we = [];
+      for (const d of daily) {
+        if (d.calories <= 0) continue;
+        const dow = new Date(d.date + 'T12:00:00Z').getDay();
+        (dow === 0 || dow === 6 ? we : wd).push(d.calories);
+      }
+      if (wd.length >= 2 && we.length >= 2) {
+        const wdAvg = Math.round(wd.reduce((a,b) => a+b, 0) / wd.length);
+        const weAvg = Math.round(we.reduce((a,b) => a+b, 0) / we.length);
+        const wdOnTarget = target ? wd.filter(c => Math.abs(c - target) <= ADHERENCE_TOLERANCE).length : 0;
+        const weOnTarget = target ? we.filter(c => Math.abs(c - target) <= ADHERENCE_TOLERANCE).length : 0;
+        const extraPerWeekend = Math.max(0, weAvg - wdAvg) * 2; // 2 dias de finde
+        const kgImpactMonthly = +(extraPerWeekend * 4.3 / 7700).toFixed(2); // 7700 kcal = 1 kg
+
+        weekdayWeekend = {
+          weekday: { avg: wdAvg, days: wd.length, on_target: wdOnTarget, adherence_pct: Math.round(wdOnTarget / wd.length * 100) },
+          weekend: { avg: weAvg, days: we.length, on_target: weOnTarget, adherence_pct: Math.round(weOnTarget / we.length * 100) },
+          extra_kcal_weekly: extraPerWeekend,
+          kg_impact_monthly: kgImpactMonthly,
+        };
+      }
+    } catch {}
+
+    // ── Macro gaps by meal type (Pro) ──────────────────────────
+    let macroGaps = null;
+    try {
+      const { results: mealMacros } = await env.DB.prepare(
+        `SELECT meal_type,
+          ROUND(AVG(protein),1) as avg_prot,
+          ROUND(AVG(carbs),1) as avg_carbs,
+          ROUND(AVG(fat),1) as avg_fat,
+          COUNT(DISTINCT date) as days
+        FROM entries WHERE user_id = ?
+          AND date >= date('now', '-${days} days') AND date < date('now')
+          AND meal_type IS NOT NULL
+        GROUP BY meal_type`
+      ).bind(user.userId).all();
+
+      const tgtProt  = profile?.target_protein || 0;
+      const tgtCarbs = profile?.target_carbs   || 0;
+      const tgtFat   = profile?.target_fat     || 0;
+
+      // Calcular avg diario real por macro (sumando todos los meal types)
+      const avgDailyProt  = calDays.length ? Math.round(daily.reduce((s,d) => s + (d.protein || 0), 0) / calDays.length) : 0;
+      const avgDailyCarbs = calDays.length ? Math.round(daily.reduce((s,d) => s + (d.carbs || 0), 0) / calDays.length) : 0;
+      const avgDailyFat   = calDays.length ? Math.round(daily.reduce((s,d) => s + (d.fat || 0), 0) / calDays.length) : 0;
+
+      const MEAL_LABELS = { breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack' };
+
+      function analyzeGap(macroName, avgDaily, target, mealData, macroKey) {
+        if (!target) return { status: 'no_target', macro: macroName };
+        const diff = avgDaily - target;
+        const pct = Math.round((diff / target) * 100);
+        const status = Math.abs(pct) <= 10 ? 'on_target' : diff < 0 ? 'deficit' : 'excess';
+
+        // Encontrar peor y mejor meal type para este macro
+        const sorted = mealData
+          .filter(m => m.days >= 3 && MEAL_LABELS[m.meal_type])
+          .sort((a, b) => a[macroKey] - b[macroKey]);
+        const worst = sorted.length ? { meal_type: sorted[0].meal_type, label: MEAL_LABELS[sorted[0].meal_type], avg: sorted[0][macroKey] } : null;
+        const best  = sorted.length ? { meal_type: sorted[sorted.length-1].meal_type, label: MEAL_LABELS[sorted[sorted.length-1].meal_type], avg: sorted[sorted.length-1][macroKey] } : null;
+
+        return { macro: macroName, avg_daily: avgDaily, target, diff, pct, status, worst_meal: worst, best_meal: best };
+      }
+
+      macroGaps = {
+        protein: analyzeGap('protein', avgDailyProt, tgtProt, mealMacros || [], 'avg_prot'),
+        carbs:   analyzeGap('carbs',   avgDailyCarbs, tgtCarbs, mealMacros || [], 'avg_carbs'),
+        fat:     analyzeGap('fat',     avgDailyFat, tgtFat, mealMacros || [], 'avg_fat'),
+      };
+    } catch {}
+
     return jsonResponse({
       period,
       days_with_data: calDays.length,
@@ -487,6 +612,11 @@ export async function handleProgress(request, env, path) {
 
       top_foods: topFoods || [],
       daily_data: daily,
+
+      // Nuevas secciones Pro
+      food_impact: foodImpact,
+      weekday_weekend: weekdayWeekend,
+      macro_gaps: macroGaps,
     });
   }
 
