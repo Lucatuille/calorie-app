@@ -91,7 +91,6 @@ export default function Calculator() {
   const [error,      setError]      = useState('');
   const [saved,      setSaved]      = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [showExtra,  setShowExtra]  = useState(false);
 
   const [scannerOpen,      setScannerOpen]      = useState(false);
   const [scanFeedback,     setScanFeedback]     = useState(false);
@@ -110,10 +109,8 @@ export default function Calculator() {
   const fileRef = useRef(null);
   const photoAnalysisRef = useRef(null);
 
-  // Quick-add: comidas frecuentes
+  // Comidas frecuentes (chips en el form)
   const [frequentMeals, setFrequentMeals] = useState([]);
-  const [quickAdding,   setQuickAdding]   = useState(null);  // nombre de la comida añadiendose
-  const [quickAdded,    setQuickAdded]    = useState(null);  // {name, entryId} para deshacer
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -183,37 +180,6 @@ export default function Calculator() {
     } catch (err) {
       setError(err.message);
     } finally { setSaving(false); }
-  }
-
-  async function quickAdd(meal) {
-    if (quickAdding) return;
-    setQuickAdding(meal.name);
-    try {
-      const entry = await api.saveEntry({
-        meal_type: getDefaultMealType(),
-        name:      meal.name,
-        calories:  meal.avg_kcal,
-        protein:   null,
-        carbs:     null,
-        fat:       null,
-      }, token);
-      setEntries(prev => [...prev, entry]);
-      setQuickAdded({ name: meal.name, entryId: entry.id });
-      setTimeout(() => setQuickAdded(null), 4000);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setQuickAdding(null);
-    }
-  }
-
-  async function undoQuickAdd() {
-    if (!quickAdded) return;
-    try {
-      await api.deleteEntry(quickAdded.entryId, token);
-      setEntries(prev => prev.filter(e => e.id !== quickAdded.entryId));
-    } catch {}
-    setQuickAdded(null);
   }
 
   async function removeMeal(id) {
@@ -781,41 +747,44 @@ export default function Calculator() {
               ))}
             </div>
 
-            {/* Más detalles */}
-            <button
-              type="button"
-              onClick={() => setShowExtra(v => !v)}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 11, color: 'var(--text-tertiary)',
-                fontFamily: 'var(--font-sans)', padding: 0,
-                textAlign: 'left', alignSelf: 'flex-start',
-              }}
-            >
-              {showExtra ? '− Ocultar' : '+ Peso corporal / Notas'}
-            </button>
-
-            {showExtra && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <label className="form-label" style={{ marginBottom: 4 }}>
-                    Peso corporal (kg)
-                  </label>
-                  <input
-                    type="number" step="0.1" placeholder="74.5"
-                    value={form.weight} onChange={e => set('weight', e.target.value)}
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label className="form-label" style={{ marginBottom: 4 }}>
-                    Notas
-                  </label>
-                  <input
-                    placeholder="Opcional…"
-                    value={form.notes} onChange={e => set('notes', e.target.value)}
-                    style={inputStyle}
-                  />
+            {/* Frecuentes — slider horizontal */}
+            {frequentMeals.length >= MIN_FREQUENT_SHOW && !form.calories && !photoPreview && !aiResult && (
+              <div style={{ marginTop: -2 }}>
+                <div style={{
+                  display: 'flex', gap: 7, overflowX: 'auto', overflowY: 'hidden',
+                  paddingBottom: 2,
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}>
+                  {frequentMeals.map(meal => (
+                    <button
+                      key={meal.name}
+                      type="button"
+                      onClick={() => {
+                        setForm(f => ({
+                          ...f,
+                          name: meal.name,
+                          calories: String(meal.avg_kcal),
+                        }));
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        padding: '6px 12px',
+                        border: '0.5px solid var(--border)',
+                        borderRadius: 99,
+                        background: 'var(--surface)',
+                        color: 'var(--text-primary)',
+                        fontSize: 12,
+                        fontFamily: 'var(--font-sans)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'background 0.12s, border-color 0.12s',
+                      }}
+                    >
+                      {meal.name} <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>· {meal.avg_kcal}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -928,101 +897,6 @@ export default function Calculator() {
                 );
               })}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── 3. Quick-add: comidas frecuentes ── */}
-      {frequentMeals.length >= MIN_FREQUENT_SHOW && (
-        <div style={{ padding: '0 16px', marginTop: 6, marginBottom: 10 }}>
-
-          {/* Toast flotante de confirmación */}
-          {quickAdded && (
-            <div style={{
-              padding: '10px 14px', marginBottom: 8,
-              background: 'var(--accent)',
-              borderRadius: 'var(--radius-sm)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              animation: 'fadeIn 0.2s ease',
-            }}>
-              <span style={{ fontSize: 13, color: '#fff', fontFamily: 'var(--font-sans)' }}>
-                + {quickAdded.name}
-              </span>
-              <button
-                type="button"
-                onClick={undoQuickAdd}
-                style={{
-                  background: 'rgba(255,255,255,0.2)', border: 'none',
-                  borderRadius: 99, padding: '3px 10px',
-                  color: '#fff', fontSize: 11, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                }}
-              >
-                Deshacer
-              </button>
-            </div>
-          )}
-
-          <span className="section-label" style={{ marginBottom: 6, display: 'block', paddingLeft: 2 }}>
-            Repetir
-          </span>
-          <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '0 0 10px', paddingLeft: 2 }}>
-            Tus comidas habituales — toca para añadir
-          </p>
-
-          <div style={{
-            background: 'var(--surface)',
-            borderRadius: 'var(--radius-md)',
-            border: '0.5px solid var(--border)',
-            overflow: 'hidden',
-          }}>
-            {frequentMeals.map((meal, i) => (
-              <button
-                key={meal.name}
-                type="button"
-                disabled={!!quickAdding}
-                onClick={() => quickAdd(meal)}
-                style={{
-                  width: '100%',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 14px',
-                  background: quickAdding === meal.name ? 'var(--surface-2)' : 'transparent',
-                  border: 'none',
-                  borderBottom: i < frequentMeals.length - 1 ? '0.5px solid var(--border)' : 'none',
-                  cursor: quickAdding ? 'default' : 'pointer',
-                  textAlign: 'left',
-                  transition: 'background 0.12s',
-                  fontFamily: 'var(--font-sans)',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{
-                    fontSize: 13, color: 'var(--text-primary)', fontWeight: 400,
-                    display: 'block',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {meal.name}
-                  </span>
-                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
-                    {meal.times}× registrada
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex', alignItems: 'baseline', gap: 3,
-                  flexShrink: 0, marginLeft: 12,
-                }}>
-                  <span style={{
-                    fontSize: 13, fontWeight: 600, color: 'var(--accent)',
-                    fontFamily: 'var(--font-sans)',
-                  }}>
-                    +{meal.avg_kcal}
-                  </span>
-                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
-                    kcal
-                  </span>
-                </div>
-              </button>
-            ))}
           </div>
         </div>
       )}
