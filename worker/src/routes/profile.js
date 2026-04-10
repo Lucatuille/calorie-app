@@ -216,6 +216,15 @@ export async function handleProfile(request, env, path) {
       user.userId
     ).run();
 
+    // Sincronizar peso a weight_logs si se actualizó
+    if (weight) {
+      const today = new Date().toISOString().split('T')[0];
+      await env.DB.prepare(
+        `INSERT INTO weight_logs (user_id, date, weight_kg) VALUES (?, ?, ?)
+         ON CONFLICT(user_id, date) DO UPDATE SET weight_kg = ?`
+      ).bind(user.userId, today, weight, weight).run().catch(() => {});
+    }
+
     return jsonResponse({ message: 'Perfil actualizado' });
   }
 

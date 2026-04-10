@@ -17,13 +17,18 @@ export async function handleWeight(request, env, path) {
     }
     const entryDate = date || new Date().toISOString().split('T')[0];
 
+    const rounded = Math.round(weight_kg * 10) / 10;
     await env.DB.prepare(
       `INSERT INTO weight_logs (user_id, date, weight_kg)
        VALUES (?, ?, ?)
        ON CONFLICT(user_id, date) DO UPDATE SET weight_kg = excluded.weight_kg`
-    ).bind(user.userId, entryDate, Math.round(weight_kg * 10) / 10).run();
+    ).bind(user.userId, entryDate, rounded).run();
 
-    return jsonResponse({ date: entryDate, weight_kg: Math.round(weight_kg * 10) / 10 });
+    // Sincronizar a users.weight para que TDEE y objetivo estén actualizados
+    env.DB.prepare('UPDATE users SET weight = ? WHERE id = ?')
+      .bind(rounded, user.userId).run().catch(() => {});
+
+    return jsonResponse({ date: entryDate, weight_kg: rounded });
   }
 
   // GET /api/weight/recent — last 30 entries
