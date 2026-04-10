@@ -144,16 +144,19 @@ function AppRoutes() {
           <AdminOverlay isOpen={adminOpen} onClose={() => setAdminOpen(false)} forceWhatsNew={whatsNew.forceOpen} />
         </Suspense>
       )}
-      {user && whatsNew.isOpen && whatsNew.releaseToShow && (
+      {user && whatsNew.isOpen && whatsNew.releaseToShow && !whatsNew.showOnboarding && (
         <WhatsNew
           release={whatsNew.releaseToShow}
           onDismiss={whatsNew.dismiss}
           isClosing={whatsNew.isClosing}
         />
       )}
-      {helpOpen && (
+      {(helpOpen || (user && whatsNew.showOnboarding)) && (
         <Suspense fallback={null}>
-          <HelpModal onClose={() => setHelpOpen(false)} />
+          <HelpModal onClose={() => {
+            setHelpOpen(false);
+            if (whatsNew.showOnboarding) whatsNew.dismissOnboarding();
+          }} />
         </Suspense>
       )}
 
