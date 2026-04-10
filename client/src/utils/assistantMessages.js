@@ -35,6 +35,11 @@ export function getEstadoCalorico(todayData, targetCalories, targetProtein) {
     ? Math.round(targetProtein - todayProtein)
     : null;
   const pct = todayCalories / targetCalories;
+  const excess = todayCalories - targetCalories;
+
+  // Tolerancia adaptativa: ±250 kcal o ±12% del objetivo, lo que sea mayor
+  // Ej: target 2100 → tolerancia 252 kcal; target 1400 → tolerancia 250 kcal
+  const tolerance = Math.max(250, targetCalories * 0.12);
 
   const fmt = (n) => Math.round(n).toLocaleString('es');
 
@@ -59,20 +64,21 @@ export function getEstadoCalorico(todayData, targetCalories, targetProtein) {
     return `Llevas ${fmt(todayCalories)} kcal, cerca del objetivo. Quedan ${fmt(remaining)} kcal — ve pensando en la cena.${proteinText}`;
   }
 
-  // ESTADO 4 — Justo en objetivo (95-105%)
-  if (pct <= 1.05) {
-    return `${fmt(todayCalories)} kcal hoy — prácticamente en el objetivo. 🎯`;
+  // ESTADO 4 — En objetivo (dentro de la tolerancia adaptativa)
+  if (excess <= tolerance) {
+    if (pct <= 1.05) {
+      return `${fmt(todayCalories)} kcal hoy — prácticamente en el objetivo. 🎯`;
+    }
+    return `${fmt(todayCalories)} kcal hoy — ${fmt(excess)} por encima pero dentro de rango. Buen día.`;
   }
 
-  // ESTADO 5 — Superado moderadamente (105-120%)
-  if (pct <= 1.20) {
-    const excess = fmt(todayCalories - targetCalories);
-    return `Llevas ${fmt(todayCalories)} kcal, ${excess} por encima del objetivo. No pasa nada — la semana se valora en conjunto.`;
+  // ESTADO 5 — Superado moderadamente (tolerancia < exceso <= tolerancia * 1.8)
+  if (excess <= tolerance * 1.8) {
+    return `Llevas ${fmt(todayCalories)} kcal, ${fmt(excess)} por encima del objetivo. No pasa nada — la semana se valora en conjunto.`;
   }
 
-  // ESTADO 6 — Superado bastante (> 120%)
-  const excess = fmt(todayCalories - targetCalories);
-  return `${fmt(todayCalories)} kcal hoy, ${excess} sobre el objetivo. Días así pasan. ¿Quieres que miremos la semana completa?`;
+  // ESTADO 6 — Superado bastante
+  return `${fmt(todayCalories)} kcal hoy, ${fmt(excess)} sobre el objetivo. Días así pasan. ¿Quieres que miremos la semana completa?`;
 }
 
 function getCierre(day) {
