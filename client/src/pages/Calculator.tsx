@@ -5,8 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import { MEAL_HOURS, MAX_IMAGE_PX, JPEG_QUALITY } from '../utils/constants';
+import { isPro } from '../utils/levels';
 import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
+
+const MIN_FREQUENT_TIMES = 3;    // veces registrada para aparecer
+const MIN_FREQUENT_SHOW  = 2;    // mínimo de comidas frecuentes para mostrar el box
 
 
 
@@ -106,11 +110,25 @@ export default function Calculator() {
   const fileRef = useRef(null);
   const photoAnalysisRef = useRef(null);
 
+  // Quick-add: comidas frecuentes
+  const [frequentMeals, setFrequentMeals] = useState([]);
+  const [quickAdding,   setQuickAdding]   = useState(null);  // nombre de la comida añadiendose
+  const [quickAdded,    setQuickAdded]    = useState(null);  // {name, entryId} para deshacer
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   useEffect(() => {
     api.getTodayEntries(token).then(setEntries).catch(() => {});
     api.getProfile(token).then(setProfile).catch(() => {});
+    // Cargar comidas frecuentes (solo Pro — requiere calibración)
+    if (isPro(user?.access_level)) {
+      api.getCalibrationProfile(token).then(data => {
+        const meals = (data?.frequent_meals || [])
+          .filter(m => m.times >= MIN_FREQUENT_TIMES)
+          .slice(0, 6);
+        setFrequentMeals(meals);
+      }).catch(() => {});
+    }
   }, [token]);
 
   const total = entries.reduce((a, e) => ({
@@ -165,6 +183,37 @@ export default function Calculator() {
     } catch (err) {
       setError(err.message);
     } finally { setSaving(false); }
+  }
+
+  async function quickAdd(meal) {
+    if (quickAdding) return;
+    setQuickAdding(meal.name);
+    try {
+      const entry = await api.saveEntry({
+        meal_type: getDefaultMealType(),
+        name:      meal.name,
+        calories:  meal.avg_kcal,
+        protein:   null,
+        carbs:     null,
+        fat:       null,
+      }, token);
+      setEntries(prev => [...prev, entry]);
+      setQuickAdded({ name: meal.name, entryId: entry.id });
+      setTimeout(() => setQuickAdded(null), 4000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setQuickAdding(null);
+    }
+  }
+
+  async function undoQuickAdd() {
+    if (!quickAdded) return;
+    try {
+      await api.deleteEntry(quickAdded.entryId, token);
+      setEntries(prev => prev.filter(e => e.id !== quickAdded.entryId));
+    } catch {}
+    setQuickAdded(null);
   }
 
   async function removeMeal(id) {
@@ -331,6 +380,76 @@ export default function Calculator() {
         </p>
         <h1 className="page-title">Registrar</h1>
       </header>
+
+      {/* ── Quick-add: comidas frecuentes ── */}
+      {frequentMeals.length >= MIN_FREQUENT_SHOW && (
+        <div style={{ padding: '0 16px', marginBottom: 10 }}>
+          <div className="card card-padded card-bordered card-shadow">
+            <span className="section-label" style={{ marginBottom: 10, display: 'block' }}>
+              Frecuentes
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {frequentMeals.map(meal => (
+                <button
+                  key={meal.name}
+                  type="button"
+                  disabled={quickAdding === meal.name}
+                  onClick={() => quickAdd(meal)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '7px 12px',
+                    border: '0.5px solid var(--border)',
+                    borderRadius: 99,
+                    background: quickAdding === meal.name ? 'var(--accent)' : 'var(--surface)',
+                    color: quickAdding === meal.name ? '#fff' : 'var(--text)',
+                    fontSize: 13,
+                    fontFamily: 'var(--font-sans)',
+                    cursor: quickAdding ? 'default' : 'pointer',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
+                >
+                  <span style={{ fontWeight: 500 }}>{meal.name}</span>
+                  <span style={{
+                    fontSize: 11,
+                    color: quickAdding === meal.name ? 'rgba(255,255,255,0.7)' : 'var(--text-3)',
+                  }}>
+                    {meal.avg_kcal} kcal
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Toast de confirmación con deshacer */}
+            {quickAdded && (
+              <div style={{
+                marginTop: 10,
+                padding: '8px 12px',
+                background: 'var(--accent)',
+                borderRadius: 'var(--radius-sm)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}>
+                <span style={{ fontSize: 13, color: '#fff' }}>
+                  {quickAdded.name} añadida
+                </span>
+                <button
+                  type="button"
+                  onClick={undoQuickAdd}
+                  style={{
+                    background: 'none', border: 'none',
+                    color: 'rgba(255,255,255,0.85)',
+                    fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Deshacer
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── 1. Formulario — primero ── */}
       <div style={{ padding: '0 16px', marginBottom: 10 }}>
