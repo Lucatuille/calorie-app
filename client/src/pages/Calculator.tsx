@@ -747,18 +747,18 @@ export default function Calculator() {
               ))}
             </div>
 
-            {/* Frecuentes — chips */}
+            {/* Frecuentes — scroll horizontal en móvil, wrap en desktop */}
             {frequentMeals.length >= MIN_FREQUENT_SHOW && !form.calories && !photoPreview && !aiResult && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="frequent-chips">
                 {frequentMeals.map(meal => {
-                  // Truncar nombres largos: max 20 chars
-                  const shortName = meal.name.length > 20
-                    ? meal.name.slice(0, 18) + '…'
+                  const shortName = meal.name.length > 22
+                    ? meal.name.slice(0, 20) + '…'
                     : meal.name;
                   return (
                     <button
                       key={meal.name}
                       type="button"
+                      className="frequent-chip"
                       onClick={() => {
                         setForm(f => ({
                           ...f,
@@ -766,20 +766,8 @@ export default function Calculator() {
                           calories: String(meal.avg_kcal),
                         }));
                       }}
-                      style={{
-                        padding: '5px 10px',
-                        border: '0.5px solid var(--border)',
-                        borderRadius: 99,
-                        background: 'var(--surface-2)',
-                        color: 'var(--text-primary)',
-                        fontSize: 12,
-                        fontFamily: 'var(--font-sans)',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                        transition: 'background 0.12s, border-color 0.12s',
-                      }}
                     >
-                      {shortName} <span style={{ color: 'var(--text-tertiary)', fontSize: 10 }}>{meal.avg_kcal}</span>
+                      {shortName} <span className="frequent-chip__kcal">{meal.avg_kcal}</span>
                     </button>
                   );
                 })}

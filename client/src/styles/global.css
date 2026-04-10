@@ -742,3 +742,54 @@ input, select, textarea { font-family: inherit; }
   margin-bottom: 3px;
   font-family: var(--font-sans);
 }
+
+/* ── Frequent meals chips ────────────────────────────────── */
+
+.frequent-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.frequent-chips::-webkit-scrollbar { display: none; }
+
+.frequent-chip {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border: 0.5px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.frequent-chip:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.frequent-chip:hover .frequent-chip__kcal {
+  color: rgba(255, 255, 255, 0.7);
+}
+.frequent-chip:active {
+  transform: scale(0.96);
+}
+
+.frequent-chip__kcal {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  transition: color 0.12s;
+}
+
+@media (min-width: 768px) {
+  .frequent-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
