@@ -172,9 +172,16 @@ export default function Dashboard() {
   let wColor = 'var(--text-secondary)';
   if (weightToday && weightYesterday) {
     const diff = Math.round((weightToday - weightYesterday) * 10) / 10;
-    if (diff < -0.05) { wArrow = '↓'; wDelta = String(Math.abs(diff)); wColor = 'var(--accent)'; }
-    else if (diff > 0.05) { wArrow = '↑'; wDelta = String(diff); wColor = '#ef4444'; }
-    else { wArrow = '—'; }
+    // Color según objetivo: si quiere ganar peso, subir es verde
+    const goalWeight = profile?.goal_weight || user?.goal_weight;
+    const wantsGain = goalWeight && goalWeight > (profile?.weight || user?.weight || 0);
+    if (diff < -0.05) {
+      wArrow = '↓'; wDelta = String(Math.abs(diff));
+      wColor = wantsGain ? '#ef4444' : 'var(--accent)';
+    } else if (diff > 0.05) {
+      wArrow = '↑'; wDelta = String(diff);
+      wColor = wantsGain ? 'var(--accent)' : '#ef4444';
+    } else { wArrow = '—'; }
   }
 
   async function handleWeightSave() {

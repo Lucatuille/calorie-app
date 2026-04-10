@@ -36,32 +36,24 @@ export async function handleWeight(request, env, path) {
     return jsonResponse(rows.results || []);
   }
 
-  // GET /api/weight/today — today's weight + yesterday for trend
+  // GET /api/weight/today — today's weight + previous for trend
   if (path === '/api/weight/today' && request.method === 'GET') {
     const today = new Date().toISOString().split('T')[0];
+    // Últimos 2 registros de peso (hoy + el anterior, sea de ayer o de hace 5 días)
     const rows = await env.DB.prepare(
       `SELECT date, weight_kg FROM weight_logs
-       WHERE user_id = ? AND date >= date(?, '-1 day')
+       WHERE user_id = ? AND date <= ?
        ORDER BY date DESC LIMIT 2`
     ).bind(user.userId, today).all();
 
     const results = rows.results || [];
     const todayEntry = results.find(r => r.date === today);
-    const yesterdayEntry = results.find(r => r.date !== today);
-
-    // If no today entry, get last recorded weight as reference
-    let lastWeight = null;
-    if (!todayEntry) {
-      const last = await env.DB.prepare(
-        `SELECT weight_kg FROM weight_logs WHERE user_id = ? ORDER BY date DESC LIMIT 1`
-      ).bind(user.userId).first();
-      lastWeight = last?.weight_kg || null;
-    }
+    const previousEntry = results.find(r => r.date !== today);
 
     return jsonResponse({
       today: todayEntry?.weight_kg || null,
-      yesterday: yesterdayEntry?.weight_kg || null,
-      last_recorded: lastWeight,
+      yesterday: previousEntry?.weight_kg || null,  // "yesterday" = último registro anterior
+      last_recorded: todayEntry ? null : (previousEntry?.weight_kg || null),
     });
   }
 
