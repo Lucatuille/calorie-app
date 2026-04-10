@@ -1,26 +1,34 @@
 import { useState, useEffect } from 'react';
 import { CURRENT_VERSION, RELEASES } from '../data/whatsNew';
 
-const VERSION_KEY    = 'caliro_whats_new_seen';
-const ONBOARDING_KEY = 'caliro_onboarding_seen';
+const VERSION_KEY = 'caliro_whats_new_seen';
 
 export function useWhatsNew() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [releaseToShow, setReleaseToShow] = useState(null);
-  // Onboarding: mostrar HelpModal la primera vez, en vez de WhatsNew
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const onboardingSeen = localStorage.getItem(ONBOARDING_KEY);
-      const lastVersion    = localStorage.getItem(VERSION_KEY);
-
-      if (!onboardingSeen) {
-        // Primera vez del usuario → abrir HelpModal (onboarding)
+      // Onboarding: solo se activa desde el registro (sessionStorage, no persiste entre sesiones)
+      const justRegistered = sessionStorage.getItem('caliro_just_registered');
+      if (justRegistered) {
+        sessionStorage.removeItem('caliro_just_registered');
+        localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
         setShowOnboarding(true);
-      } else if (lastVersion !== CURRENT_VERSION) {
-        // Ya hizo onboarding pero hay version nueva → WhatsNew
+        return;
+      }
+
+      // WhatsNew: solo si el usuario ya tenía una versión guardada y es distinta
+      // Si no hay versión (login nuevo dispositivo), seedear la actual sin mostrar nada
+      const lastVersion = localStorage.getItem(VERSION_KEY);
+      if (!lastVersion) {
+        // Primer login en este dispositivo — no mostrar nada, solo guardar versión
+        localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+        return;
+      }
+      if (lastVersion !== CURRENT_VERSION) {
         setReleaseToShow(RELEASES[0]);
         setIsOpen(true);
       }
@@ -38,12 +46,9 @@ export function useWhatsNew() {
   };
 
   const dismissOnboarding = () => {
-    localStorage.setItem(ONBOARDING_KEY, '1');
-    localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
     setShowOnboarding(false);
   };
 
-  // Para admins: forzar apertura sin tocar localStorage
   const forceOpen = () => {
     setReleaseToShow(RELEASES[0]);
     setIsOpen(true);

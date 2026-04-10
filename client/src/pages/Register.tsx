@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { CURRENT_VERSION } from '../data/whatsNew';
 
 export default function Register() {
   usePageTitle("Registro");
@@ -35,8 +34,8 @@ export default function Register() {
     try {
       const data = await api.register(form);
       login(data.token, data.user);
-      // Nuevo usuario — ya tiene el onboarding, no mostrar What's New
-      localStorage.setItem('caliro_whats_new_seen', CURRENT_VERSION);
+      // Flag para que useWhatsNew muestre el onboarding (HelpModal) una sola vez
+      sessionStorage.setItem('caliro_just_registered', '1');
       navigate('/');
     } catch (err) {
       setError(err.message);
