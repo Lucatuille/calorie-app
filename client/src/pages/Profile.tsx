@@ -1,5 +1,5 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -78,6 +78,9 @@ export default function Profile() {
   const [deleteStep,   setDeleteStep]   = useState(0); // 0=oculto 1=confirmando 2=ejecutando
   const [deleteText,   setDeleteText]   = useState('');
   const [deleteError,  setDeleteError]  = useState('');
+  // Autosave de preferencias dieteticas
+  const [prefsStatus,  setPrefsStatus]  = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const prefsLoaded = useRef(false);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -103,8 +106,34 @@ export default function Profile() {
         allergies:       Array.isArray(prefs?.allergies) ? prefs.allergies : [],
         dislikes:        prefs?.dislikes || '',
       });
-    }).catch(() => {});
+      // Marcar que el fetch inicial termino — ahora si se pueden disparar autosaves
+      prefsLoaded.current = true;
+    }).catch(() => { prefsLoaded.current = true; });
   }, [token]);
+
+  // Autosave de preferencias dieteticas (dieta, alergias, disgustos).
+  // Debounce 500ms — suficiente para no saturar al escribir en el textarea
+  // y bastante inmediato para clicks en alergias/dieta.
+  useEffect(() => {
+    if (!prefsLoaded.current) return; // no guardar el primer paint (post-fetch)
+    const timer = setTimeout(async () => {
+      setPrefsStatus('saving');
+      try {
+        await api.updatePreferences({
+          diet: form.diet,
+          allergies: form.allergies,
+          dislikes: (form.dislikes || '').trim().slice(0, 200),
+        }, token);
+        setPrefsStatus('saved');
+        setTimeout(() => setPrefsStatus('idle'), 1500);
+      } catch {
+        setPrefsStatus('error');
+        setTimeout(() => setPrefsStatus('idle'), 3000);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.diet, form.allergies, form.dislikes, token]);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -325,7 +354,24 @@ export default function Profile() {
 
         {/* ── Card: Preferencias dieteticas ── */}
         <div style={card}>
-          <p className="section-label" style={{ marginBottom: 12 }}>Preferencias dietéticas</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, minHeight: 18 }}>
+            <p className="section-label" style={{ marginBottom: 0 }}>Preferencias dietéticas</p>
+            {prefsStatus !== 'idle' && (
+              <span style={{
+                fontSize: 10,
+                fontFamily: 'var(--font-sans)',
+                color: prefsStatus === 'error' ? '#ef4444'
+                     : prefsStatus === 'saved' ? 'var(--accent)'
+                     : 'var(--text-secondary)',
+                opacity: 0.9,
+                transition: 'opacity 0.2s',
+              }}>
+                {prefsStatus === 'saving' ? 'Guardando…'
+                 : prefsStatus === 'saved' ? '✓ Guardado'
+                 : 'Error al guardar'}
+              </span>
+            )}
+          </div>
 
           {/* Tipo de dieta — grid 2x2 */}
           <div style={{ marginBottom: 14 }}>

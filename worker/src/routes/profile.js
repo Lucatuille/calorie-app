@@ -173,6 +173,47 @@ export async function handleProfile(request, env, path) {
     });
   }
 
+  // PUT /api/profile/preferences — autosave ligero de solo dietary_preferences.
+  // Independiente del PUT general: el cliente envia solo las preferencias y no
+  // arrastra el resto del perfil, lo que permite guardado inmediato al editar
+  // una casilla o el textarea sin tocar el boton "Guardar cambios".
+  if (path === '/api/profile/preferences' && request.method === 'PUT') {
+    const rl = await rateLimit(env, request, `profile-prefs:${user.userId}`, 30, 60);
+    if (rl) return rl;
+    const body  = await request.json().catch(() => ({}));
+    const prefs = body?.dietary_preferences;
+
+    const DIET_VALUES    = ['omnivore', 'vegetarian', 'vegan', 'pescatarian'];
+    const ALLERGY_VALUES = ['gluten', 'lactose', 'nuts', 'shellfish', 'egg', 'soy'];
+
+    let json;
+    if (prefs === null) {
+      json = null;
+    } else if (prefs && typeof prefs === 'object') {
+      if (prefs.diet !== undefined && prefs.diet !== null && !DIET_VALUES.includes(prefs.diet)) {
+        return errorResponse('Tipo de dieta inválido');
+      }
+      const rawAllergies = Array.isArray(prefs.allergies) ? prefs.allergies : [];
+      const allergies    = rawAllergies.filter(a => ALLERGY_VALUES.includes(a));
+      const dislikes     = typeof prefs.dislikes === 'string'
+        ? prefs.dislikes.trim().slice(0, 200)
+        : '';
+      json = JSON.stringify({ diet: prefs.diet || 'omnivore', allergies, dislikes });
+    } else {
+      return errorResponse('dietary_preferences debe ser objeto o null');
+    }
+
+    try {
+      await env.DB.prepare(
+        'UPDATE users SET dietary_preferences = ? WHERE id = ?'
+      ).bind(json, user.userId).run();
+    } catch {
+      return errorResponse('No se pudieron guardar las preferencias', 500);
+    }
+
+    return jsonResponse({ ok: true });
+  }
+
   // PUT /api/profile
   if (path === '/api/profile' && request.method === 'PUT') {
     const rl = await rateLimit(env, request, `profile-write:${user.userId}`, 10, 60);

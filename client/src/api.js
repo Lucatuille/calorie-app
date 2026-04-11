@@ -44,6 +44,7 @@ export const api = {
   // Profile
   getProfile:    (token)        => request('GET',  '/api/profile', null, token),
   updateProfile: (body, token)  => request('PUT',  '/api/profile', body, token),
+  updatePreferences: (prefs, token) => request('PUT', '/api/profile/preferences', { dietary_preferences: prefs }, token),
   deleteAccount: (token)        => request('DELETE', '/api/profile', { confirm: 'ELIMINAR' }, token),
   exportAllData: (token)        => request('GET',  '/api/profile/export', null, token),
 
