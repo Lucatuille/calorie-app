@@ -102,12 +102,32 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     adherence_rate:   data.projection.adherence_rate || 0,
   } : null;
 
-  // Realista ajustado por el slider — recalcula al instante en el frontend
-  const adjustedRealistic = projBase && data?.projection?.scenarios && projBase.weighted_avg_cal
+  // Los 3 escenarios recalculados por el slider (cada uno con su adherencia)
+  //   Optimista:   adherencia 1.0 (perfecta)
+  //   Realista:    adherencia actual del usuario
+  //   Conservador: adherencia × 0.8 (20% peor)
+  // Todos usan el kcalAdjust del slider, así el rango se mueve junto
+  const baseAdh = projBase?.adherence_rate || 0.5;
+  const mkScenarios = (days: number) => projBase ? {
+    optimistic:   projectWithAdjustment(projBase, kcalAdjust, days, 1.0),
+    realistic:    projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh)),
+    conservative: projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh * 0.8)),
+  } : null;
+
+  const adjustedScenarios = projBase && data?.projection?.scenarios && projBase.weighted_avg_cal
     ? {
-        '30d': projectWithAdjustment(projBase, kcalAdjust, 30),
-        '60d': projectWithAdjustment(projBase, kcalAdjust, 60),
-        '90d': projectWithAdjustment(projBase, kcalAdjust, 90),
+        '30d': mkScenarios(30),
+        '60d': mkScenarios(60),
+        '90d': mkScenarios(90),
+      }
+    : null;
+
+  // Legacy shortcut — realista para compatibilidad con código existente
+  const adjustedRealistic = adjustedScenarios
+    ? {
+        '30d': adjustedScenarios['30d']!.realistic,
+        '60d': adjustedScenarios['60d']!.realistic,
+        '90d': adjustedScenarios['90d']!.realistic,
       }
     : null;
 
@@ -129,38 +149,36 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     if (!weightPts.length || !data.projection?.scenarios) return weightPts;
 
     const { scenarios } = data.projection;
-    // Si el slider está activo, usar la realista recalculada; si no, la del backend
-    const realistic = adjustedRealistic ?? scenarios.realistic;
+    // Cuando el slider está activo (o siempre si tenemos adjustedScenarios),
+    // usar los valores recalculados en el frontend. Si no hay projBase, fallback al backend.
+    const getValue = (scenario, day) => {
+      if (adjustedScenarios?.[day]) return adjustedScenarios[day][scenario];
+      return scenarios[scenario]?.[day];
+    };
     const today = new Date();
     const fmt   = n => new Date(today.getTime() + n * 86400000).toLocaleDateString('es', { day: 'numeric', month: 'short' });
-    // Ancla = peso real del dashboard (lo que el usuario ve en su báscula)
     const cw = data.weight.current;
-    // Rango = [min, max] entre optimista y conservador para Area sombreada
     const mkRange = (a, b) => [Math.min(a, b), Math.max(a, b)];
+
+    const makePoint = (day, days) => {
+      const opt = getValue('optimistic', day);
+      const rea = getValue('realistic', day);
+      const con = getValue('conservative', day);
+      return {
+        date: fmt(days),
+        optimistic: opt,
+        realistic: rea,
+        conservative: con,
+        rangeBand: mkRange(opt, con),
+      };
+    };
+
     return [
       ...weightPts,
-      { date: 'Hoy',   actual: cw, optimistic: cw, realistic: cw, conservative: cw, rangeBand: [cw, cw] },
-      {
-        date: fmt(30),
-        optimistic: scenarios.optimistic['30d'],
-        realistic: realistic['30d'],
-        conservative: scenarios.conservative['30d'],
-        rangeBand: mkRange(scenarios.optimistic['30d'], scenarios.conservative['30d']),
-      },
-      {
-        date: fmt(60),
-        optimistic: scenarios.optimistic['60d'],
-        realistic: realistic['60d'],
-        conservative: scenarios.conservative['60d'],
-        rangeBand: mkRange(scenarios.optimistic['60d'], scenarios.conservative['60d']),
-      },
-      {
-        date: fmt(90),
-        optimistic: scenarios.optimistic['90d'],
-        realistic: realistic['90d'],
-        conservative: scenarios.conservative['90d'],
-        rangeBand: mkRange(scenarios.optimistic['90d'], scenarios.conservative['90d']),
-      },
+      { date: 'Hoy', actual: cw, optimistic: cw, realistic: cw, conservative: cw, rangeBand: [cw, cw] },
+      makePoint('30d', 30),
+      makePoint('60d', 60),
+      makePoint('90d', 90),
     ];
   })();
 
@@ -872,6 +890,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               dot={false}
                               connectNulls={false}
                               legendType="none"
+                              isAnimationActive={true}
+                              animationDuration={200}
+                              animationEasing="ease-out"
                             />
                             {/* Optimista — verde sutil, 1.25px, dash largo */}
                             <Line
@@ -884,8 +905,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               dot={false}
                               connectNulls={false}
                               legendType="none"
+                              isAnimationActive={true}
+                              animationDuration={200}
+                              animationEasing="ease-out"
                             />
-                            {/* Realista — amber, 2.5px sólida, PROTAGONISTA */}
+                            {/* Realista — amber, 2.5px sólida, PROTAGONISTA, anima con slider */}
                             <Line
                               type="monotone"
                               dataKey="realistic"
@@ -894,6 +918,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               dot={{ r: 3.5, fill: '#f59e0b', strokeWidth: 0 }}
                               connectNulls={false}
                               legendType="none"
+                              isAnimationActive={true}
+                              animationDuration={200}
+                              animationEasing="ease-out"
                             />
                             {/* Tendencia (peso ajustado EMA) — línea guía sutil bajo la báscula */}
                             <Line
@@ -944,25 +971,45 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         padding: '14px 16px',
                         marginBottom: 16,
                       }}>
+                        <p style={{
+                          fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
+                          textTransform: 'uppercase', color: 'var(--text-tertiary)',
+                          fontFamily: 'var(--font-sans)', marginBottom: 4,
+                        }}>
+                          ¿Y si...?
+                        </p>
+
                         <div style={{
                           display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-                          marginBottom: 4,
+                          marginBottom: 12, gap: 8,
                         }}>
                           <p style={{
-                            fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
-                            textTransform: 'uppercase', color: 'var(--text-tertiary)',
-                            fontFamily: 'var(--font-sans)',
+                            fontSize: 13, color: 'var(--text-secondary)',
+                            fontFamily: 'var(--font-sans)', margin: 0, flex: 1, minWidth: 0,
                           }}>
-                            ¿Y si...?
+                            Comes{' '}
+                            <strong style={{ color: 'var(--text-primary)' }}>
+                              {projBase.weighted_avg_cal + kcalAdjust} kcal/día
+                            </strong>
+                            {kcalAdjust !== 0 && (
+                              <span style={{
+                                marginLeft: 6,
+                                color: kcalAdjust < 0 ? 'var(--color-success)' : '#f59e0b',
+                                fontWeight: 600,
+                              }}>
+                                ({kcalAdjust > 0 ? '+' : ''}{kcalAdjust})
+                              </span>
+                            )}
                           </p>
                           {kcalAdjust !== 0 && (
                             <button
                               onClick={() => setKcalAdjust(0)}
                               style={{
                                 background: 'none', border: 'none',
-                                fontSize: 10, color: 'var(--text-tertiary)',
+                                fontSize: 11, color: 'var(--text-tertiary)',
                                 cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                                textDecoration: 'underline',
+                                textDecoration: 'underline', padding: 0,
+                                flexShrink: 0,
                               }}
                             >
                               Reiniciar
@@ -970,45 +1017,41 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           )}
                         </div>
 
-                        <p style={{
-                          fontSize: 13, color: 'var(--text-secondary)',
-                          fontFamily: 'var(--font-sans)', marginBottom: 12,
-                        }}>
-                          Comes{' '}
-                          <strong style={{ color: 'var(--text-primary)' }}>
-                            {projBase.weighted_avg_cal + kcalAdjust} kcal/día
-                          </strong>
-                          {kcalAdjust !== 0 && (
-                            <span style={{
-                              marginLeft: 6,
-                              color: kcalAdjust < 0 ? 'var(--color-success)' : '#f59e0b',
-                              fontWeight: 600,
-                            }}>
-                              ({kcalAdjust > 0 ? '+' : ''}{kcalAdjust})
-                            </span>
-                          )}
-                        </p>
-
-                        <input
-                          type="range"
-                          min={-400}
-                          max={400}
-                          step={25}
-                          value={kcalAdjust}
-                          onChange={e => setKcalAdjust(Number(e.target.value))}
-                          style={{
-                            width: '100%',
-                            accentColor: '#f59e0b',
-                            cursor: 'pointer',
-                          }}
-                        />
+                        {/* Slider con marca en el centro (0) */}
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="range"
+                            min={-400}
+                            max={400}
+                            step={25}
+                            value={kcalAdjust}
+                            onChange={e => setKcalAdjust(Number(e.target.value))}
+                            style={{
+                              width: '100%',
+                              accentColor: '#f59e0b',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              zIndex: 1,
+                            }}
+                          />
+                          {/* Marca visual en el centro (0) */}
+                          <div style={{
+                            position: 'absolute',
+                            left: '50%', top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 2, height: 10,
+                            background: 'var(--border)',
+                            pointerEvents: 'none',
+                            zIndex: 0,
+                          }} />
+                        </div>
                         <div style={{
                           display: 'flex', justifyContent: 'space-between',
                           fontSize: 9, color: 'var(--text-tertiary)',
                           marginTop: 4, fontFamily: 'var(--font-sans)',
                         }}>
                           <span>−400 kcal</span>
-                          <span>0</span>
+                          <span style={{ fontWeight: kcalAdjust === 0 ? 600 : 400 }}>0</span>
                           <span>+400 kcal</span>
                         </div>
                       </div>
@@ -1053,8 +1096,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                       {t}
                                     </p>
                                     <p style={{ fontWeight: 700, fontSize: 14, color: s.textColor, fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>
-                                      {(s.key === 'realistic' && adjustedRealistic
-                                        ? adjustedRealistic[t]
+                                      {(adjustedScenarios?.[t]
+                                        ? adjustedScenarios[t][s.key]
                                         : data.projection.scenarios[s.key]?.[t]) ?? '—'} <span style={{ fontSize: 10, fontWeight: 400 }}>kg</span>
                                     </p>
                                   </div>
@@ -1067,7 +1110,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     )}
 
                     {/* Card objetivo — icono 🎯 en badge verde suave */}
-                    {data.projection?.days_to_goal_realistic && data.projection?.goal_weight && (
+                    {adjustedDaysToGoal != null && data.projection?.goal_weight && (
                       <div style={{
                         marginBottom: 12,
                         background: 'var(--surface)',
@@ -1084,9 +1127,13 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         }}>🎯</div>
                         <div>
                           <p style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, fontFamily: 'var(--font-sans)' }}>
-                            A tu objetivo ({data.projection.goal_weight} kg) le quedan ~{data.projection.days_to_goal_realistic} días
+                            {adjustedDaysToGoal >= 730
+                              ? `A tu objetivo (${data.projection.goal_weight} kg) — más de 2 años al ritmo actual`
+                              : `A tu objetivo (${data.projection.goal_weight} kg) le quedan ~${adjustedDaysToGoal} días`}
                           </p>
-                          <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>escenario realista</p>
+                          <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>
+                            {kcalAdjust !== 0 ? `con ${kcalAdjust > 0 ? '+' : ''}${kcalAdjust} kcal/día` : 'escenario realista'}
+                          </p>
                         </div>
                       </div>
                     )}

@@ -23,28 +23,30 @@ interface ProjectionBase {
  * @param days       - Dias a proyectar (30, 60, 90)
  * @returns          - Peso proyectado en kg, redondeado a 1 decimal
  */
+/**
+ * Proyecta el peso futuro con un ajuste calorico aplicado.
+ * Si adherenceOverride se pasa, lo usa en vez de base.adherence_rate
+ * (permite calcular escenarios optimista/conservador desde frontend).
+ */
 export function projectWithAdjustment(
   base: ProjectionBase,
   kcalAdjust: number,
   days: number,
+  adherenceOverride?: number,
 ): number {
   const { current_weight, weighted_avg_cal, tdee_effective, adherence_rate } = base;
   if (!current_weight || current_weight <= 0) return current_weight || 0;
 
-  // Nueva ingesta diaria con el ajuste del slider
+  const adh = adherenceOverride !== undefined ? adherenceOverride : adherence_rate;
   const newIntake = weighted_avg_cal + kcalAdjust;
-  // Deficit (positivo = pierde, negativo = gana)
   const dailyDeficit = tdee_effective - newIntake;
 
-  // Replica el bucle del backend
   let weight = current_weight;
   for (let day = 1; day <= days; day++) {
     const weightDelta = weight - current_weight;
-    // Adaptacion metabolica simetrica (~10 kcal/kg)
     const adaptationKcal = -Math.sign(dailyDeficit) * Math.abs(weightDelta) * 10;
     const adaptedDeficit = dailyDeficit + adaptationKcal;
-    const effectiveDeficit = adaptedDeficit * adherence_rate;
-    // Densidad energetica gradual de 5000 (agua/glucogeno) a 7700 (grasa)
+    const effectiveDeficit = adaptedDeficit * adh;
     const t = Math.min(1, day / 28);
     const tissueEnergyDensity = 5000 + (7700 - 5000) * t;
     weight -= effectiveDeficit / tissueEnergyDensity;
