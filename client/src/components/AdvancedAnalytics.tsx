@@ -1,27 +1,17 @@
 import { useState, useEffect } from 'react';
 import {
-  BarChart, Bar, Cell,
+  BarChart, Bar,
   ComposedChart, Line, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { ADHERENCE_TOLERANCE } from '../utils/constants';
 
 const PERIOD_OPTIONS = [
   { value: 'week',   label: '7 días'  },
   { value: 'month',  label: '30 días' },
   { value: '90days', label: '90 días' },
 ];
-
-const DAY_EMOJIS = {
-  Lunes: '💪', Martes: '✅', Miércoles: '⭐', Jueves: '👍',
-  Viernes: '🎉', Sábado: '😅', Domingo: '😴',
-};
-
-const MEAL_LABELS  = { breakfast: 'Desayuno', lunch: 'Comida', dinner: 'Cena', snack: 'Snack', other: 'Otro' };
-const MEAL_COLORS  = { breakfast: '#f59e0b', lunch: '#2d6a4f', dinner: '#6366f1', snack: '#f97316', other: '#94a3b8' };
-const MEAL_PCT_KEY = { breakfast: 'breakfast_avg_pct', lunch: 'lunch_avg_pct', dinner: 'dinner_avg_pct', snack: 'snacks_avg_pct', other: 'other_avg_pct' };
 
 const CONFIDENCE = {
   high:   { icon: '🟢', label: 'Alta',  text: 'Proyección fiable — tienes suficientes datos' },
@@ -134,12 +124,6 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     if (t === 'worsening') return `Cuidado — tu segunda mitad ha sido un ${p}% peor`;
     return 'Muy consistente — tus hábitos son estables';
   })();
-
-  const mealBreakdown = !data?.meals ? [] :
-    Object.entries(MEAL_LABELS)
-      .map(([key, label]) => ({ key, label, pct: data.meals[MEAL_PCT_KEY[key]] || 0, color: MEAL_COLORS[key] }))
-      .filter(m => m.pct > 0)
-      .sort((a, b) => b.pct - a.pct);
 
   const calorieHistogram = (() => {
     if (!data?.daily_data) return [];
@@ -266,137 +250,200 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
           {!loading && data && data.days_with_data > 0 && (
             <>
 
-              {/* ── Sección 1: Resumen ── */}
-              <Section title="Resumen rápido">
+              {/* ── KPIs rápidos: adherencia + racha ── */}
+              <Section title="Tu constancia">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <StatBox
-                    label="Días registrados"
-                    value={data.days_with_data}
-                    sub={`de ${data.total_days}`}
-                  />
                   <StatBox
                     label="Adherencia"
                     value={data.calories.adherence_pct != null ? `${data.calories.adherence_pct}%` : '—'}
-                    sub="días en objetivo ±250 kcal"
+                    sub={`${data.days_with_data} de ${data.total_days} días`}
                     valueColor={adherenceColor}
                   />
                   <StatBox
-                    label="Mejor día"
-                    value={data.calories.best_day_of_week
-                      ? `${DAY_EMOJIS[data.calories.best_day_of_week] || ''} ${data.calories.best_day_of_week}`
-                      : '—'}
-                    sub={userTarget ? "más en objetivo" : "menos calorías"}
-                  />
-                  <StatBox
                     label="Racha más larga"
-                    value={data.streaks.longest_in_period}
-                    sub={data.streaks.longest_in_period === 1 ? 'día seguido' : 'días seguidos'}
+                    value={`${data.streaks.longest_in_period} ${data.streaks.longest_in_period === 1 ? 'día' : 'días'}`}
+                    sub={data.streaks.current > 0 ? `🔥 ${data.streaks.current} seguidos ahora` : 'sin racha activa'}
+                    valueColor={null}
                   />
                 </div>
-                {data.streaks.current > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-                    <span style={{
-                      fontSize: 11, color: 'var(--color-carbs)',
-                      background: 'rgba(245,158,11,0.1)',
-                      border: '0.5px solid rgba(245,158,11,0.25)',
-                      padding: '3px 10px', borderRadius: 'var(--radius-full)',
-                      fontWeight: 500, fontFamily: 'var(--font-sans)',
-                    }}>
-                      🔥 {data.streaks.current} {data.streaks.current === 1 ? 'día' : 'días'}
-                    </span>
-                  </div>
-                )}
               </Section>
 
-              {/* ── Sección 2: Calorías ── */}
-              <Section title="Calorías">
-                {data.calories.avg != null ? (
-                  <>
-                    <div style={{ display: 'flex', gap: 20, marginBottom: 14, flexWrap: 'wrap' }}>
-                      <div>
-                        <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Media</p>
-                        <p style={{ fontWeight: 700, fontSize: 20 }}>{data.calories.avg.toLocaleString()} kcal</p>
-                      </div>
-                      {data.calories.min != null && (
-                        <div>
-                          <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Mínimo</p>
-                          <p style={{ fontWeight: 600, fontSize: 16 }}>{data.calories.min.toLocaleString()}</p>
-                        </div>
-                      )}
-                      {data.calories.max != null && (
-                        <div>
-                          <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Máximo</p>
-                          <p style={{ fontWeight: 600, fontSize: 16 }}>{data.calories.max.toLocaleString()}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '16px 12px 8px' }}>
-                      <ResponsiveContainer width="100%" height={160}>
-                        <BarChart
-                          data={data.daily_data.map(d => ({
-                            date: new Date(d.date + 'T12:00:00Z').toLocaleDateString('es', { day: 'numeric', month: 'short' }),
-                            calories: d.calories,
-                          }))}
-                          margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
-                        >
-                          <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
-                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
-                          <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} />
-                          <Tooltip
-                            formatter={v => [`${v.toLocaleString()} kcal`, 'Calorías']}
-                            contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                          />
-                          {userTarget && <ReferenceLine y={userTarget} stroke="var(--accent)" strokeDasharray="4 4" />}
-                          <Bar dataKey="calories" radius={[3, 3, 0, 0]}>
-                            {data.daily_data.map((entry, i) => {
-                              const c = entry.calories;
-                              const color = !userTarget ? '#2d6a4f'
-                                : Math.abs(c - userTarget) <= ADHERENCE_TOLERANCE ? '#2d6a4f'
-                                : c > userTarget + 250 ? '#f59e0b'
-                                : 'var(--color-fat)';
-                              return <Cell key={i} fill={color} fillOpacity={0.85} />;
-                            })}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    {data.calories.worst_day_of_week && (
-                      <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 10, fontStyle: 'italic' }}>
-                        {DAY_EMOJIS[data.calories.worst_day_of_week]} Tus {data.calories.worst_day_of_week}s son tus días más difíciles
-                        {data.calories.worst_day_avg ? ` (media ${data.calories.worst_day_avg.toLocaleString()} kcal)` : ''}
-                      </p>
-                    )}
-                  </>
-                ) : <EmptyMsg />}
-              </Section>
-
-              {/* ── Sección 3: Distribución de comidas ── */}
-              {mealBreakdown.length > 0 && (
-                <Section title="Por tipo de comida">
+              {/* ── Impacto por Alimento ── */}
+              {data.food_impact?.length > 0 && (
+                <Section title="Impacto por alimento">
+                  <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10, marginTop: -8 }}>
+                    Cómo cada comida afecta tu balance de macros
+                  </p>
                   <div style={{
                     background: 'var(--surface)', borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-sm)', padding: '16px',
+                    boxShadow: 'var(--shadow-sm)', overflow: 'hidden',
                   }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {mealBreakdown.map(m => (
-                        <div key={m.key}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
-                            <span style={{ color: 'var(--text-2)', fontWeight: 500 }}>{m.label}</span>
-                            <span style={{ fontWeight: 700 }}>{m.pct}%</span>
+                    {data.food_impact.map((f, i) => {
+                      const totalMacro = (f.avg_prot || 0) + (f.avg_carbs || 0) + (f.avg_fat || 0);
+                      const protW = totalMacro > 0 ? (f.avg_prot / totalMacro) * 100 : 0;
+                      const carbsW = totalMacro > 0 ? (f.avg_carbs / totalMacro) * 100 : 0;
+                      const fatW = totalMacro > 0 ? (f.avg_fat / totalMacro) * 100 : 0;
+
+                      const isExcess = f.impact === 'excess';
+                      const isDeficit = f.impact === 'deficit';
+                      const icon = isExcess ? '⚠' : isDeficit ? '↓' : '✓';
+                      const iconColor = isExcess ? '#f59e0b' : isDeficit ? 'var(--color-fat)' : 'var(--color-success)';
+                      const macroLabel = { protein: 'proteína', carbs: 'carbos', fat: 'grasa' }[f.impact_macro] || '';
+
+                      let msg = null;
+                      if (isExcess && Math.abs(f.impact_diff) >= 10) {
+                        msg = `Empuja tus ${macroLabel} un ${f.impact_diff}% sobre objetivo`;
+                      } else if (isDeficit && Math.abs(f.impact_diff) >= 10) {
+                        msg = `Poca ${macroLabel} (${f.impact_diff}% vs objetivo)`;
+                      } else if (f.impact === 'balanced') {
+                        msg = 'Balance equilibrado';
+                      }
+
+                      return (
+                        <div key={i} style={{
+                          padding: '12px 14px',
+                          borderBottom: i < data.food_impact.length - 1 ? '0.5px solid var(--border)' : 'none',
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                            <span style={{
+                              fontSize: 13, color: 'var(--text-primary)', fontWeight: 500,
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              maxWidth: '70%', textTransform: 'capitalize',
+                            }}>
+                              {f.food}
+                            </span>
+                            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', flexShrink: 0 }}>
+                              {f.times}× · {f.avg_cal} kcal
+                            </span>
                           </div>
-                          <div style={{ height: 7, background: 'var(--border)', borderRadius: 99 }}>
-                            <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 99, transition: 'width 0.6s' }} />
+                          {/* Barra stacked de macros */}
+                          <div style={{ display: 'flex', height: 6, borderRadius: 99, overflow: 'hidden', background: 'var(--border)', marginBottom: 6 }}>
+                            {protW > 0 && <div style={{ width: `${protW}%`, background: 'var(--color-protein, #16a34a)' }} />}
+                            {carbsW > 0 && <div style={{ width: `${carbsW}%`, background: 'var(--color-carbs, #f59e0b)' }} />}
+                            {fatW > 0 && <div style={{ width: `${fatW}%`, background: 'var(--color-fat, #4a90d9)' }} />}
                           </div>
+                          {msg && (
+                            <p style={{ fontSize: 10, color: iconColor, fontStyle: 'italic', margin: 0 }}>
+                              {icon} {msg}
+                            </p>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                    {data.meals.most_calories_meal && (
-                      <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 14, fontStyle: 'italic' }}>
-                        Tu {MEAL_LABELS[data.meals.most_calories_meal]?.toLowerCase()} representa la mayor parte de tus calorías
+                      );
+                    })}
+                  </div>
+                </Section>
+              )}
+
+              {/* ── Semana vs Fin de Semana ── */}
+              {data.weekday_weekend && (
+                <Section title="Semana vs fin de semana">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                    <div style={{
+                      background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-sm)', padding: '12px 14px',
+                    }}>
+                      <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 5 }}>Lun—Vie</p>
+                      <p style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>
+                        {data.weekday_weekend.weekday.avg.toLocaleString()}
                       </p>
-                    )}
+                      <p style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>kcal/día</p>
+                      <p style={{ fontSize: 11, color: 'var(--color-success)', marginTop: 6, fontWeight: 500 }}>
+                        {data.weekday_weekend.weekday.adherence_pct}% en objetivo
+                      </p>
+                    </div>
+                    <div style={{
+                      background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-sm)', padding: '12px 14px',
+                    }}>
+                      <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 5 }}>Sáb—Dom</p>
+                      <p style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>
+                        {data.weekday_weekend.weekend.avg.toLocaleString()}
+                      </p>
+                      <p style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>kcal/día</p>
+                      <p style={{
+                        fontSize: 11,
+                        color: data.weekday_weekend.weekend.adherence_pct >= 60 ? 'var(--color-success)' : '#f59e0b',
+                        marginTop: 6, fontWeight: 500,
+                      }}>
+                        {data.weekday_weekend.weekend.adherence_pct}% en objetivo
+                      </p>
+                    </div>
+                  </div>
+                  {data.weekday_weekend.extra_kcal_weekly > 0 && (
+                    <div style={{
+                      background: 'rgba(245,158,11,0.08)',
+                      border: '0.5px solid rgba(245,158,11,0.25)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px',
+                    }}>
+                      <p style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 2 }}>
+                        Tu fin de semana añade <strong>+{data.weekday_weekend.extra_kcal_weekly.toLocaleString()} kcal/semana</strong>
+                      </p>
+                      {data.weekday_weekend.kg_impact_monthly > 0.05 && (
+                        <p style={{ fontSize: 11, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          Equivale a ~{data.weekday_weekend.kg_impact_monthly} kg/mes menos de progreso
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </Section>
+              )}
+
+              {/* ── Macro Gaps ── */}
+              {data.macro_gaps && (
+                <Section title="Tus macros">
+                  <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10, marginTop: -8 }}>
+                    Dónde fallas y cuándo
+                  </p>
+                  <div style={{
+                    background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-sm)', overflow: 'hidden',
+                  }}>
+                    {[
+                      { key: 'protein', label: 'Proteína', unit: 'g', color: '#16a34a' },
+                      { key: 'carbs',   label: 'Carbos',    unit: 'g', color: '#f59e0b' },
+                      { key: 'fat',     label: 'Grasa',     unit: 'g', color: '#4a90d9' },
+                    ].map((m, i, arr) => {
+                      const gap = data.macro_gaps[m.key];
+                      if (!gap || gap.status === 'no_target') return null;
+
+                      const statusIcon = gap.status === 'on_target' ? '✓' : gap.status === 'deficit' ? '↓' : '↑';
+                      const statusColor = gap.status === 'on_target' ? 'var(--color-success)'
+                        : gap.status === 'deficit' ? 'var(--color-fat)' : '#f59e0b';
+                      const statusLabel = gap.status === 'on_target' ? 'En objetivo'
+                        : gap.status === 'deficit' ? `Déficit ${Math.abs(gap.pct)}%`
+                        : `Exceso ${gap.pct}%`;
+
+                      return (
+                        <div key={m.key} style={{
+                          padding: '14px',
+                          borderBottom: i < arr.length - 1 ? '0.5px solid var(--border)' : 'none',
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: m.color }} />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {m.label}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 11, color: statusColor, fontWeight: 500 }}>
+                              {statusIcon} {statusLabel}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                            Media diaria: <strong style={{ color: 'var(--text-secondary)' }}>{gap.avg_daily}{m.unit}</strong> · objetivo: {gap.target}{m.unit}
+                          </p>
+                          {gap.status !== 'on_target' && gap.worst_meal && (
+                            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                              {gap.status === 'deficit' ? 'Peor momento: ' : 'Más concentrado en: '}
+                              <strong style={{ color: 'var(--text-secondary)' }}>
+                                {gap.worst_meal.label} ({gap.worst_meal.avg}{m.unit} avg)
+                              </strong>
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </Section>
               )}
