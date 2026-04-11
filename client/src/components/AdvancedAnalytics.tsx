@@ -567,7 +567,97 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                     </div>
 
-                    {/* Déficit + cambio de peso + TDEE efectivo */}
+                    {/* Pasado real (último mes) — separado de la proyección */}
+                    {data.projection?.projection_real_change_kg != null && (
+                      <div style={{
+                        background: 'var(--surface-2)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '10px 12px',
+                        marginBottom: 10,
+                      }}>
+                        <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+                          Tu último mes
+                        </p>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {(() => {
+                            const realChange = data.projection.projection_real_change_kg;
+                            const goal = data.projection?.goal_weight;
+                            const cur  = data.weight?.current;
+                            const wantsLoss = goal && cur && goal < cur;
+                            // Color: verde si va hacia objetivo, amber si en contra
+                            let changeColor = 'var(--text-secondary)';
+                            if (Math.abs(realChange) >= 0.1) {
+                              if (wantsLoss && realChange < 0) changeColor = 'var(--color-success)';
+                              else if (!wantsLoss && realChange > 0) changeColor = 'var(--color-success)';
+                              else changeColor = '#f59e0b';
+                            }
+                            return (
+                              <span style={{ fontSize: 13, fontWeight: 600, color: changeColor, fontFamily: 'var(--font-sans)' }}>
+                                {realChange > 0 ? '+' : ''}{realChange} kg
+                              </span>
+                            );
+                          })()}
+                          {data.projection?.projection_avg_cal && (
+                            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                              · {data.projection.projection_avg_cal} kcal/día de media
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mensaje contextual cuando hay contradicción pasado vs futuro */}
+                    {(() => {
+                      const realChange = data.projection?.projection_real_change_kg;
+                      const projRate = data.projection?.weekly_rate_realistic;
+                      const goal = data.projection?.goal_weight;
+                      const cur  = data.weight?.current;
+                      if (realChange == null || projRate == null || !goal || !cur) return null;
+                      const wantsLoss = goal < cur;
+                      const wantsGain = goal > cur;
+
+                      // Detectar contradicción: usuario quiere bajar pero subió
+                      if (wantsLoss && realChange > 0.5) {
+                        return (
+                          <div style={{
+                            background: 'rgba(245, 158, 11, 0.08)',
+                            border: '0.5px solid rgba(245, 158, 11, 0.3)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '10px 12px',
+                            marginBottom: 12,
+                          }}>
+                            <p style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 4, fontWeight: 600 }}>
+                              ⚠ Atención
+                            </p>
+                            <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                              Has ganado {Math.abs(realChange).toFixed(1)} kg este mes, pero tu objetivo es perder peso. Tu metabolismo actual quema unas {data.projection?.tdee_effective} kcal/día — para bajar deberías comer ~{Math.round(data.projection.tdee_effective - 400)} kcal/día (~400 kcal de déficit).
+                            </p>
+                          </div>
+                        );
+                      }
+                      // Caso opuesto: quiere ganar pero está bajando
+                      if (wantsGain && realChange < -0.5) {
+                        return (
+                          <div style={{
+                            background: 'rgba(245, 158, 11, 0.08)',
+                            border: '0.5px solid rgba(245, 158, 11, 0.3)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '10px 12px',
+                            marginBottom: 12,
+                          }}>
+                            <p style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 4, fontWeight: 600 }}>
+                              ⚠ Atención
+                            </p>
+                            <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                              Has perdido {Math.abs(realChange).toFixed(1)} kg este mes, pero tu objetivo es ganar peso. Necesitas aumentar tu ingesta calórica diaria.
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Pills: TDEE + Balance diario + Ventana de cálculo */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
                       {data.projection?.tdee_effective != null && (
                         <span
@@ -585,25 +675,33 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           }}
                         >
                           TDEE {data.projection.tdee_calibrated ? 'real' : 'teórico'}: {data.projection.tdee_effective} kcal
-                          {data.projection.tdee_calibrated && data.projection.tdee_theoretical !== data.projection.tdee_effective && (
-                            <span style={{ color: 'var(--text-tertiary)' }}>
-                              {' '}({data.projection.tdee_effective > data.projection.tdee_theoretical ? '+' : ''}
-                              {data.projection.tdee_effective - data.projection.tdee_theoretical})
-                            </span>
-                          )}
                         </span>
                       )}
-                      {data.projection?.daily_deficit_effective != null && (
-                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 'var(--radius-full)' }}>
-                          Déficit: {Math.round(data.projection.daily_deficit_effective)} kcal/día
-                        </span>
-                      )}
-                      {data.weight?.change != null && (
-                        <span style={{ fontSize: 11, color: data.weight.change <= 0 ? 'var(--accent)' : 'var(--color-carbs)', fontFamily: 'var(--font-sans)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 'var(--radius-full)' }}>
-                          {data.weight.change > 0 ? '+' : ''}{data.weight.change} kg en el período
-                        </span>
-                      )}
+                      {data.projection?.daily_deficit_theoretical != null && (() => {
+                        // Balance: positivo = déficit (bajada), negativo = superávit (subida)
+                        const balance = data.projection.daily_deficit_theoretical;
+                        const isDeficit = balance > 50;
+                        const isSurplus = balance < -50;
+                        const label = isDeficit ? 'Déficit' : isSurplus ? 'Superávit' : 'Balance';
+                        const color = isDeficit ? 'var(--color-success)' : isSurplus ? '#f59e0b' : 'var(--text-secondary)';
+                        const value = Math.abs(Math.round(balance));
+                        return (
+                          <span
+                            title="Diferencia diaria entre tu TDEE real y lo que comes en promedio"
+                            style={{
+                              fontSize: 11, color, fontFamily: 'var(--font-sans)',
+                              background: 'var(--surface-2)', padding: '3px 8px',
+                              borderRadius: 'var(--radius-full)', cursor: 'help', fontWeight: 500,
+                            }}
+                          >
+                            {label}: {value} kcal/día
+                          </span>
+                        );
+                      })()}
                     </div>
+                    <p style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 12, fontStyle: 'italic' }}>
+                      Proyección basada en tus últimos {data.projection?.projection_window_days || 30} días
+                    </p>
 
                     {/* Gráfico de proyección */}
                     {projChartData.length > 1 && (

@@ -239,6 +239,36 @@ export async function handleProgress(request, env, path) {
       return jsonResponse({ period, days_with_data: 0, total_days: days });
     }
 
+    // ── Datos para PROYECCIÓN — siempre últimos 30 días, independiente del filtro ──
+    // El selector 7/30/90 solo afecta el chart histórico. La proyección usa
+    // siempre la misma ventana para que sea estable y predecible.
+    const PROJECTION_DAYS = 30;
+    let projectionDaily = daily;
+    if (days !== PROJECTION_DAYS) {
+      const { results: pDaily } = await env.DB.prepare(
+        `SELECT date,
+           SUM(calories) AS calories, SUM(protein) AS protein,
+           SUM(carbs) AS carbs, SUM(fat) AS fat, MAX(weight) AS weight
+         FROM entries WHERE user_id = ?
+         AND date >= date('now', '-${PROJECTION_DAYS} days') AND date < date('now')
+         GROUP BY date ORDER BY date ASC`
+      ).bind(user.userId).all();
+      try {
+        const { results: pwRows } = await env.DB.prepare(
+          `SELECT date, weight_kg FROM weight_logs WHERE user_id = ? AND date >= date('now', '-${PROJECTION_DAYS} days') AND date < date('now')`
+        ).bind(user.userId).all();
+        const pwMap = Object.fromEntries(pwRows.map(r => [r.date, r.weight_kg]));
+        for (const e of pDaily) if (!e.weight && pwMap[e.date]) e.weight = pwMap[e.date];
+        for (const [date, wkg] of Object.entries(pwMap)) {
+          if (!pDaily.find(e => e.date === date)) {
+            pDaily.push({ date, calories: 0, protein: 0, carbs: 0, fat: 0, weight: wkg });
+          }
+        }
+        pDaily.sort((a, b) => a.date.localeCompare(b.date));
+      } catch {}
+      projectionDaily = pDaily;
+    }
+
     // Meal type breakdown
     const { results: mealRows } = await env.DB.prepare(
       `SELECT meal_type, SUM(calories) AS total_cal
@@ -337,9 +367,8 @@ export async function handleProgress(request, env, path) {
       ? (new Date(weightEntries[weightEntries.length-1].date + 'T12:00:00Z') - new Date(weightEntries[0].date + 'T12:00:00Z')) / 86400000
       : 0;
 
-    // ── Peso ajustado (Hacker's Diet EMA) + media movil 7d ─────
-    // Suaviza el ruido diario de agua/sal/comida para mostrar tendencia real
-    // Formula: EMA_i = alpha * raw_i + (1 - alpha) * EMA_{i-1}, alpha=0.1
+    // ── Peso ajustado (Hacker's Diet EMA) — sobre el periodo seleccionado ─────
+    // Para la grafica historica del periodo (que sí depende del filtro)
     const ALPHA = 0.1;
     let emaPrev = weightVals.length ? weightVals[0] : null;
     const smoothedSeries = weightEntries.map((d, i) => {
@@ -357,6 +386,32 @@ export async function handleProgress(request, env, path) {
     const smoothedChange  = (smoothedCurrent != null && smoothedStart != null)
       ? +((smoothedCurrent - smoothedStart).toFixed(2)) : null;
 
+    // ── Variables PARA PROYECCION — siempre últimos 30 días, independiente del filtro ──
+    // Estas son las que alimentan TDEE calibrado, deficit, escenarios futuros
+    const projWeightEntries = projectionDaily.filter(d => d.weight != null);
+    const projWeightVals    = projWeightEntries.map(d => d.weight);
+    const projCurrentWeight = projWeightVals.length ? projWeightVals[projWeightVals.length - 1] : currentWeight;
+    const projStartWeight   = projWeightVals.length ? projWeightVals[0] : null;
+    const projWeightSpanDays = projWeightEntries.length >= 2
+      ? (new Date(projWeightEntries[projWeightEntries.length-1].date + 'T12:00:00Z') - new Date(projWeightEntries[0].date + 'T12:00:00Z')) / 86400000
+      : 0;
+    // Smoothed para proyeccion (sobre proj data)
+    let projEma = projWeightVals.length ? projWeightVals[0] : null;
+    let projSmoothedCurrent = projEma;
+    let projSmoothedStart   = projEma;
+    for (let i = 0; i < projWeightEntries.length; i++) {
+      if (i === 0) projSmoothedCurrent = projWeightVals[0];
+      else {
+        projEma = ALPHA * projWeightVals[i] + (1 - ALPHA) * projEma;
+        projSmoothedCurrent = projEma;
+      }
+    }
+    const projSmoothedChange = (projSmoothedCurrent != null && projSmoothedStart != null)
+      ? +((projSmoothedCurrent - projSmoothedStart).toFixed(2)) : null;
+    // Calorías de la ventana de proyección
+    const projCalDays = projectionDaily.map(d => d.calories).filter(Boolean);
+    const projAvgCal  = projCalDays.length ? Math.round(projCalDays.reduce((a,b)=>a+b,0)/projCalDays.length) : null;
+
     // Trend per week basado en peso ajustado (mas fiable que crudo)
     // Minimo 7 dias para evitar extrapolacion volatil con pocos datos
     const trendPerWeek = (smoothedChange != null && weightSpanDays >= 7)
@@ -365,15 +420,18 @@ export async function handleProgress(request, env, path) {
         ? +((weightChange / (weightSpanDays / 7)).toFixed(2)) : null);
 
     // ── Scientific projection (dynamic adaptive model) ─────────
-    // Calorie variability (coefficient of variation)
-    const calorieStdDev       = calcStdDev(calDays);
-    const calorieVariabilityCV = (avg && avg > 0) ? calorieStdDev / avg : 0;
+    // IMPORTANTE: la proyección usa SIEMPRE los datos de los últimos 30 días,
+    // independiente del filtro 7/30/90. Esto da estabilidad y predictibilidad.
+    // Variabilidad calórica calculada sobre la ventana de proyección
+    const projCalorieStdDev    = calcStdDev(projCalDays);
+    const projCalAvg           = projAvgCal;
+    const calorieVariabilityCV = (projCalAvg && projCalAvg > 0) ? projCalorieStdDev / projCalAvg : 0;
 
-    // Weighted avg calories: 70% last 14 days, 30% older
-    let weightedAvgCal = avg;
-    if (calDays.length > 14) {
-      const last14 = calDays.slice(-14);
-      const older  = calDays.slice(0, -14);
+    // Weighted avg calories: 70% últimos 14d, 30% más antiguos (dentro de la ventana de proyección)
+    let weightedAvgCal = projCalAvg;
+    if (projCalDays.length > 14) {
+      const last14 = projCalDays.slice(-14);
+      const older  = projCalDays.slice(0, -14);
       weightedAvgCal = (last14.reduce((a,b)=>a+b,0)/last14.length) * 0.7
                      + (older.reduce((a,b)=>a+b,0)/older.length)   * 0.3;
     }
@@ -393,35 +451,22 @@ export async function handleProgress(request, env, path) {
     }
     if (!tdee && target) { tdee = target; tdeeSource = 'target'; }
 
-    // ── TDEE efectivo: calibrar con la realidad del peso ────────
-    // Si tenemos >=14 días con peso registrado, calculamos el TDEE real que
-    // explicaría el cambio de peso observado. Esto corrige sobreestimaciones
-    // del TDEE teórico (que puede ignorar adaptación metabólica, subregistro
-    // calórico, errores de báscula, etc.)
-    //
-    // Fórmula: TDEE_efectivo = avg_cal - (kg_change × 7700 / span_days)
-    //   Si el peso sube con "déficit teórico", el TDEE real era menor.
-    //   Si el peso baja más de lo esperado, el TDEE real era mayor.
-    //
-    // Usamos el cambio smoothed (no el raw) porque elimina ruido de agua/sal.
+    // ── TDEE efectivo: calibrar con la realidad del peso (últimos 30 días) ────
+    // Usa SIEMPRE projSmoothedChange y projWeightSpanDays — independientes del filtro.
     let tdeeEffective = tdee;
     let tdeeCalibrated = false;
-    if (smoothedChange != null && weightSpanDays >= 14 && weightedAvgCal && tdee) {
-      // Conservación de energía: balance = comido - quemado(TDEE)
-      //   smoothedChange < 0 (perdió peso) → balance < 0 → realDailyDelta < 0 → TDEE > comido
-      //   smoothedChange > 0 (ganó peso)   → balance > 0 → realDailyDelta > 0 → TDEE < comido
-      // Ejemplo: come 1800, gana 1.6kg/30d → delta=+410 → TDEE=1800-410=1390 (metabolismo bajo)
-      const realDailyDelta = (smoothedChange * 7700) / weightSpanDays;
+    if (projSmoothedChange != null && projWeightSpanDays >= 14 && weightedAvgCal && tdee) {
+      // Conservación: balance = comido - TDEE → si gana peso (delta>0), TDEE < comido
+      const realDailyDelta = (projSmoothedChange * 7700) / projWeightSpanDays;
       const inferredTdee = weightedAvgCal - realDailyDelta;
-
-      // Blend: 70% inferido (real) + 30% teórico (estabilidad), cap ±30% para outliers
       const blended = inferredTdee * 0.7 + tdee * 0.3;
       tdeeEffective = Math.max(tdee * 0.7, Math.min(tdee * 1.3, blended));
       tdeeCalibrated = true;
     }
 
     // Adherence rate: registered days / total period days
-    const adherenceRate    = calDays.length / days;
+    // Adherence: dias registrados en la ventana de proyeccion (siempre 30d) / 30
+    const adherenceRate    = projCalDays.length / PROJECTION_DAYS;
     const dailyDeficitTheo = (tdeeEffective && weightedAvgCal) ? tdeeEffective - weightedAvgCal : null;
     const dailyDeficitEff  = dailyDeficitTheo ? dailyDeficitTheo * adherenceRate : null;
 
@@ -436,11 +481,9 @@ export async function handleProgress(request, env, path) {
     let goalWeight = null;
     try { goalWeight = profile?.goal_weight || null; } catch {}
 
+    // Anchor: usa el peso actual del Dashboard (mismo que el filtro), pero los datos
+    // de calibración salen de los últimos 30 días
     if (currentWeight !== null && dailyDeficitTheo !== null) {
-      // Cada escenario usa una ADHERENCIA distinta — ahora coincide con lo que dice la UI
-      //   Optimista:   adherencia 1.0 (perfecta — el usuario lo borda los 90 días)
-      //   Realista:    adherencia actual del usuario (su comportamiento real)
-      //   Conservador: adherencia × 0.8 (20% peor — fines de semana, viajes, etc)
       const adherenceOpt   = 1.0;
       const adherenceReal  = Math.max(0.1, adherenceRate);  // floor para evitar 0
       const adherenceCons  = Math.max(0.1, adherenceRate * 0.8);
@@ -642,6 +685,11 @@ export async function handleProgress(request, env, path) {
         goal_weight: goalWeight,
         confidence,
         data_quality_score: dataQualityScore,
+        // Datos de la ventana de proyeccion (siempre últimos 30d)
+        projection_window_days: PROJECTION_DAYS,
+        projection_avg_cal: weightedAvgCal ? Math.round(weightedAvgCal) : null,
+        projection_real_change_kg: projSmoothedChange,
+        projection_real_span_days: Math.round(projWeightSpanDays),
       },
 
       streaks: {
