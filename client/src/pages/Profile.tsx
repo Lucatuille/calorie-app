@@ -62,6 +62,9 @@ export default function Profile() {
     name: '', age: '', weight: '', height: '', gender: 'male',
     target_calories: '', target_protein: '', target_carbs: '', target_fat: '',
     goal_weight: '',
+    diet: 'omnivore' as 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian',
+    allergies: [] as string[],
+    dislikes: '',
   });
   const [saved,        setSaved]        = useState(false);
   const [error,        setError]        = useState('');
@@ -84,6 +87,7 @@ export default function Profile() {
 
   useEffect(() => {
     api.getProfile(token).then(p => {
+      const prefs = p.dietary_preferences || null;
       setForm({
         name:            p.name            || '',
         age:             p.age             || '',
@@ -95,6 +99,9 @@ export default function Profile() {
         target_carbs:    p.target_carbs    || '',
         target_fat:      p.target_fat      || '',
         goal_weight:     p.goal_weight     || '',
+        diet:            prefs?.diet || 'omnivore',
+        allergies:       Array.isArray(prefs?.allergies) ? prefs.allergies : [],
+        dislikes:        prefs?.dislikes || '',
       });
     }).catch(() => {});
   }, [token]);
@@ -103,12 +110,29 @@ export default function Profile() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      await api.updateProfile(form, token);
+      // Empaquetar preferencias dieteticas en el objeto esperado por el backend
+      const { diet, allergies, dislikes, ...rest } = form;
+      const payload = {
+        ...rest,
+        dietary_preferences: {
+          diet,
+          allergies,
+          dislikes: (dislikes || '').trim().slice(0, 200),
+        },
+      };
+      await api.updateProfile(payload, token);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       setError(err.message);
     } finally { setLoading(false); }
+  }
+
+  function toggleAllergy(key: string) {
+    setForm(f => {
+      const has = f.allergies.includes(key);
+      return { ...f, allergies: has ? f.allergies.filter(a => a !== key) : [...f.allergies, key] };
+    });
   }
 
   async function handleTDEESave(tdeeData) {
@@ -296,6 +320,120 @@ export default function Profile() {
                 />
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ── Card: Preferencias dieteticas ── */}
+        <div style={card}>
+          <p className="section-label" style={{ marginBottom: 12 }}>Preferencias dietéticas</p>
+
+          {/* Tipo de dieta — grid 2x2 */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={microLabel}>Tipo de dieta</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                ['omnivore',    'Omnívoro'],
+                ['vegetarian',  'Vegetariano'],
+                ['vegan',       'Vegano'],
+                ['pescatarian', 'Pescetariano'],
+              ].map(([val, label]) => {
+                const active = form.diet === val;
+                return (
+                  <button key={val} type="button"
+                    onClick={() => set('diet', val)}
+                    style={{
+                      padding: '8px 0',
+                      fontSize: 13,
+                      fontFamily: 'var(--font-sans)',
+                      fontWeight: active ? 600 : 400,
+                      color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                      background: active ? 'rgba(45,106,79,0.08)' : 'transparent',
+                      border: `0.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                      borderRadius: 'var(--radius-md)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Alergias — 6 checkboxes en 2 columnas */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={microLabel}>Alergias e intolerancias</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                ['gluten',    'Gluten'],
+                ['lactose',   'Lactosa'],
+                ['nuts',      'Frutos secos'],
+                ['shellfish', 'Mariscos'],
+                ['egg',       'Huevo'],
+                ['soy',       'Soja'],
+              ].map(([val, label]) => {
+                const active = form.allergies.includes(val);
+                return (
+                  <button key={val} type="button"
+                    onClick={() => toggleAllergy(val)}
+                    style={{
+                      padding: '8px 10px',
+                      fontSize: 12,
+                      fontFamily: 'var(--font-sans)',
+                      fontWeight: active ? 600 : 400,
+                      color: active ? 'var(--accent-2)' : 'var(--text-secondary)',
+                      background: active ? 'rgba(231,111,81,0.08)' : 'transparent',
+                      border: `0.5px solid ${active ? 'var(--accent-2)' : 'var(--border)'}`,
+                      borderRadius: 'var(--radius-md)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: 12, height: 12,
+                      borderRadius: 3,
+                      border: `1px solid ${active ? 'var(--accent-2)' : 'var(--border)'}`,
+                      background: active ? 'var(--accent-2)' : 'transparent',
+                      color: 'white',
+                      fontSize: 9,
+                      lineHeight: '12px',
+                      textAlign: 'center',
+                      flexShrink: 0,
+                    }}>{active ? '✓' : ''}</span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Disgustos — textarea con contador */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+              <span style={microLabel}>Disgustos (opcional)</span>
+              <span style={{ fontSize: 10, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
+                {form.dislikes.length}/200
+              </span>
+            </div>
+            <textarea
+              value={form.dislikes}
+              onChange={e => set('dislikes', e.target.value.slice(0, 200))}
+              placeholder="Ej: cilantro, brócoli, hígado…"
+              rows={2}
+              style={{
+                ...inputStyle,
+                fontFamily: 'var(--font-sans)',
+                resize: 'vertical',
+                minHeight: 50,
+              }}
+            />
+            <p style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 6, fontFamily: 'var(--font-sans)', lineHeight: 1.4 }}>
+              El Chef evitará estos ingredientes al sugerir comida.
+            </p>
           </div>
         </div>
 
