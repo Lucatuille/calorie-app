@@ -137,6 +137,54 @@ Indica en las notas si hay ambigüedad.`;
 }
 
 /**
+ * Busca platos por rango calórico para Chef Caliro (sugerencias/plannings).
+ * Con la tabla actual (~12 platos) sirve como ancla opcional — devuelve lo
+ * que encaja y ya; si está vacía no bloquea nada (Chef se apoyará en
+ * frequent_meals del usuario + conocimiento general de Claude).
+ *
+ * @param {object} env        — binding Cloudflare
+ * @param {number} minKcal    — kcal mínimas del plato
+ * @param {number} maxKcal    — kcal máximas del plato
+ * @param {number} limit      — máximo de platos a devolver (default 10)
+ * @param {string[]} excludeTerms — términos a excluir (alérgenos, disgustos) en nombre/notas
+ * @returns {Promise<Array>} platos (posiblemente array vacío)
+ */
+export async function findDishesByCalorieRange(env, minKcal, maxKcal, limit = 10, excludeTerms = []) {
+  if (!env?.DB) return [];
+  const lo = Math.max(0, Math.floor(minKcal));
+  const hi = Math.max(lo, Math.ceil(maxKcal));
+  const lim = Math.max(1, Math.min(50, Math.floor(limit)));
+
+  let dishes;
+  try {
+    const { results } = await env.DB.prepare(
+      `SELECT nombre, categoria, kcal_ref, proteina_g, carbos_g, grasa_g,
+              porcion_g, porcion_desc, notas_claude, confianza
+         FROM spanish_dishes
+        WHERE kcal_ref >= ? AND kcal_ref <= ?
+        ORDER BY ABS(kcal_ref - ?) ASC
+        LIMIT ?`
+    ).bind(lo, hi, Math.round((lo + hi) / 2), lim).all();
+    dishes = results || [];
+  } catch {
+    return [];
+  }
+
+  if (!dishes.length || !excludeTerms?.length) return dishes;
+
+  // Filtro client-side de alérgenos/disgustos contra nombre + notas.
+  // Normalizamos ambos lados (lowercase, sin tildes) para matching robusto.
+  const exclNorm = excludeTerms
+    .filter(Boolean)
+    .map(t => normalize(String(t)));
+
+  return dishes.filter(d => {
+    const hay = `${normalize(d.nombre || '')} ${normalize(d.notas_claude || '')}`;
+    return !exclNorm.some(term => term && hay.includes(term));
+  });
+}
+
+/**
  * Format matched dish data for photo analysis validation.
  * Used AFTER Claude returns its estimate, to validate/correct.
  */
