@@ -22,7 +22,7 @@ Lo que se elimino por redundante o por bugs conceptuales:
 
 ---
 
-## Sprint 1 — Fiabilidad del modelo (EN CURSO)
+## Sprint 1 — Fiabilidad del modelo ✅ COMPLETADO
 
 ### Completado
 
@@ -32,52 +32,32 @@ Lo que se elimino por redundante o por bugs conceptuales:
 - [x] **Jerarquia visual correcta** — Bascula protagonista, tendencia como contexto
 - [x] **Anchor de proyeccion desde peso real** — No desde smoothed (rompia correlacion con Dashboard)
 - [x] **TDEE calibrado con realidad** — Formula que infiere TDEE real desde cambio de peso observado
+- [x] **Proyeccion independiente del filtro** — Siempre usa últimos 30 días, el selector 7/30/90 solo afecta histórico
+- [x] **Mensaje contextual honesto** — Sin prescribir kcal absurdas, lista posibles causas
+- [x] **Modelo matematico refactorizado** — Doble penalización eliminada, simétrico loss/bulking, densidad gradual
+- [x] **Escenarios coherentes con UI** — Optimista=adh 1.0, Realista=actual, Conservador=actual×0.8 (no bandas arbitrarias)
 
-### Bugs detectados en audit
+### Bugs del audit (todos arreglados)
 
-**Backend (`worker/src/routes/progress.js`):**
+- [x] ~~**BUG 1: Signo invertido en TDEE calibration**~~ → **FALSO POSITIVO** (verificado matemáticamente)
+- [x] **BUG 2: `daysToGoalRealistic` no soportaba bulking** — Añadida rama para `currentWeight < goalWeight`
+- [x] **BUG 3: `trendPerWeek` inestable con pocos dias** — Mínimo subido de 3 a 7 días
+- [x] **BUG 4: Legend del chart hardcoded** — `background: var(--surface)` + border, dark mode safe
+- [x] **BUG 5: Margin left negativo en chart** — `left: 0` (Y-axis visible en mobile)
+- [x] **BUG 6: Scenario cards textColor hardcoded** — Usando CSS vars, dark mode safe
+- [x] **BUG 7: KPI "Tasa semanal" color fijo** — Condicional según objetivo del usuario
+- [x] **Leyenda horizontal sobre chart** — No tapa líneas (antes era absolute en esquina)
+- [x] **Rango sombreado entre optimista/conservador** — Area sutil opacity 0.07, simétrico loss/bulking
+- [x] **Líneas más diferenciadas** — Realista 2.5px sólida protagonista, extremos 1.25px dashed
+- [x] **Animación sincronizada** — 200ms ease-out en las 3 líneas + area band
 
-- [x] ~~**BUG 1: Signo invertido en TDEE calibration**~~ → **FALSO POSITIVO**
-  - El audit decia que `inferredTdee = avg_cal - delta` estaba al reves
-  - Verificado matematicamente: la formula es CORRECTA
-  - Conservacion energia: `balance = comido - quemado` → si gana peso (delta>0) entonces TDEE < comido, formula `1800 - 410 = 1390` ✓
-  - Solo se simplificaron los comentarios para evitar confusion futura
+### Audit final de las 3 secciones consolidadas (todos arreglados)
 
-- [ ] **BUG 2: `daysToGoalRealistic` no soporta bulking** — Linea ~443-447
-  - Solo calcula si `currentWeight > goalWeight` (perder peso)
-  - Si `goalWeight > currentWeight` (ganar) devuelve null silenciosamente
-  - Fix: añadir rama para caso bulking
-
-- [ ] **BUG 3: `trendPerWeek` inestable con pocos dias** — Linea ~350
-  - Minimo actual: 3 dias → con 3 dias extrapola a 1 kg/semana por un punto raro
-  - Fix: subir minimo a 7 dias
-
-**Frontend UI (`client/src/components/AdvancedAnalytics.tsx`):**
-
-- [ ] **BUG 4: Legend del chart hardcoded** — Linea ~603
-  - Actual: `background: 'rgba(255,255,255,0.92)'` → invisible en dark mode
-  - Fix: `background: 'var(--surface)'`
-
-- [ ] **BUG 5: Margin left negativo en chart** — Linea ~628
-  - Actual: `margin={{ ..., left: -6 }}` → Y-axis cortado en mobile 375px
-  - Fix: `left: 40` para dar espacio a los labels
-
-- [ ] **BUG 6: Scenario cards textColor hardcoded** — Lineas ~788-789
-  - `'#92400e'` y `'#475569'` → invisibles en dark mode
-  - Fix: usar `var(--text-primary)` o `var(--text-secondary)`
-
-- [ ] **BUG 7: KPI "Tasa semanal" color fijo** — Linea ~528
-  - Siempre amber aunque sea bajada real
-  - Fix: condicional — verde si bajada (objetivo cumpliendose), amber si va al reves del objetivo
-
-### Mejoras UI medias (incluidas en Sprint 1 si da tiempo)
-
-- [ ] **Empty state weekday/weekend** — actualmente desaparece silenciosamente con <2 dias
-- [ ] **Empty state macros sin target** — actualmente seccion vacia
-- [ ] **"Dias al objetivo: —"** sin explicacion cuando no hay goal_weight → tooltip
-- [ ] **Confianza "baja" muy sutil** — texto gris 12px, deberia destacar mas
-- [ ] **Plateau banner colores** — borderLeft `#f59e0b` + text `var(--color-carbs)` inconsistente → unificar a `var(--color-warning)`
-- [ ] **Pill "+1.6 kg en periodo"** usa `var(--color-carbs)` (semantica de carbohidratos) → cambiar a `var(--color-warning)`
+- [x] **Streak contaba días con 0 calorias** — `daily.filter(d => d.calories > 0)` antes de calcular rachas
+- [x] **Empty state macros sin target** — Detección `allNoTarget` + mensaje amigable
+- [x] **Color weekday adherence siempre verde** — Condicional con umbral 60% igual que weekend
+- [x] **"Racha más larga" sin contexto periodo** — Sub-text "en este período" / "días en racha actual"
+- [x] **"Pechuga = +30g" ambiguo sin porción** — Contexto "(150g) ≈ +32g", atún en vez de aguacate
 
 ---
 
@@ -240,18 +220,281 @@ Si toca el componente Analytics, aprovechar para arreglar:
 
 ---
 
-## Chef Caliro (pendiente plan propio)
+## Chef Caliro — pendiente sesion dedicada
 
-**Idea:** Planificador de comidas inteligente que usa historial real + BD de platos espanoles + IA.
+> **NOTA AL CLAUDE QUE LEA ESTO TRAS COMPACT:** Este es el feature mas importante pendiente. El usuario quiere hacer una sesion dedicada de planning + diseño + implementacion. NO empieces a codificar sin antes tener el plan claro y aprobado. Lee primero todas las ideas, decisiones tomadas, y preguntas abiertas. Despues haz preguntas al usuario, no asumas.
 
-**Posibles versiones:**
-- V1: "Que como?" — 3 sugerencias basadas en presupuesto restante + frequent_meals + spanish_dishes
-- V2: Plan semanal generado desde comidas reales del usuario
-- V3: "Tengo estos ingredientes"
-- V4: Lista de compra automatica
-- V5: Modo restaurante
+### Vision general
 
-**Pendiente:** Sesion dedicada para diseñar a fondo. No mezclar con analytics.
+**Idea central:** Caliro deja de ser un "tracker que registra lo que comiste" y se convierte en un "asistente de cocina personal que te dice que comer". Es un cambio de categoria de producto, no solo una feature.
+
+Comparacion con competidores:
+- **MyFitnessPal / Yazio / Lose It**: registras lo que comiste (pasado)
+- **Caliro con Chef**: registras + recibes sugerencias inteligentes (futuro)
+
+**Por que Caliro puede hacerlo bien (ventaja competitiva):**
+1. Tiene un **motor de calibracion** que ya conoce las comidas reales del usuario (top 20 frequent_meals con macros aprendidos)
+2. Tiene una **BD de platos espanoles** (tabla `spanish_dishes`, ~500 platos con macros verificados, porciones, categorias)
+3. Tiene **Claude IA** ya integrado para analisis de texto/foto
+4. Es **especifico para cocina mediterranea/espanola** — los competidores son anglosajones genericos
+
+### Conversaciones previas con el usuario (decisiones tomadas)
+
+**Sesion 1 — Brainstorming inicial:**
+- Usuario propuso "menu-maker teniendo en cuenta los ingredientes del usuario, platos inteligentes"
+- Llegamos a la conclusion de que Chef Caliro tiene "potencial infinito" como producto entero, no solo feature
+- Decision: NO mezclarlo con el refactor de analytics, merecia plan propio
+- Usuario dijo "tengo que sleep on it"
+
+**Sesion 2 — Confirmacion:**
+- Usuario confirmo que quiere hacer Chef Caliro antes de Capacitor / App Store launch
+- Razon: prefiere lanzar con producto completo que ir parcheando con updates de App Store
+- Tiempo estimado: ~1 mes de sprint dedicado
+- Usuario tiene 9 usuarios reales (5 amigos + 4 randoms) — momento de validar antes de añadir mas complejidad
+
+**Sesion 3 — Sobre el alcance V1:**
+- Usuario propuso V1 mas simple ("Que como?") y construir incrementalmente
+- Yo (Claude) propuse V1 ambicioso (plan semanal completo)
+- **Decision pendiente** — esperar a la sesion dedicada
+
+### Posibles versiones (a discutir el alcance)
+
+**V1 Minima — "Que como?"**
+- Usuario en cualquier momento del dia toca un boton "¿Que como?"
+- Recibe 3 sugerencias concretas adaptadas a su presupuesto restante (kcal y macros que le quedan hoy)
+- Cada sugerencia: nombre del plato, calorias, macros, porcion estimada en gramos, breve razon ("cubre tu deficit de proteina")
+- Tap en una sugerencia → pre-rellena el form de Calculator → usuario revisa y guarda
+- Opcional: input de texto para contexto ("algo rapido", "tengo pollo", "estoy en restaurante")
+
+**V2 — Plan semanal**
+- Usuario solicita plan para la semana
+- Claude genera un menu para 7 dias (desayuno + comida + cena + snacks) que cumple sus targets
+- Basado en sus comidas frecuentes (lo que ya come) + variedad de spanish_dishes
+- Editable: usuario puede cambiar comidas individuales o regenerar dias
+- Opcional: generar lista de compra agregando ingredientes
+
+**V3 — "Tengo estos ingredientes"**
+- Usuario escribe o fotografia los ingredientes que tiene en casa
+- Claude sugiere recetas que puede hacer con eso + cuanto le aporta a su dia
+- Util para evitar desperdicio y reducir trips al super
+
+**V4 — Lista de compra inteligente**
+- Genera lista de la compra a partir del plan semanal o de los frecuentes
+- Opcional: integrar con supermercados (futuro lejano, bloqueado por APIs)
+
+**V5 — Modo restaurante**
+- Usuario indica "estoy en italiano / japones / mcdonalds"
+- Sugerencias tipicas de ese tipo de restaurante ajustadas a su presupuesto
+- "En un italiano: pasta al pomodoro 80g (450 kcal) cubre tu deficit de carbs"
+
+**V6 — Comparador de platos** (idea de sesion anterior)
+- Usuario duda entre 2 platos en un menu
+- Escribe los dos, ve comparacion lado a lado con macros y "fit score" (cual encaja mejor con su presupuesto)
+- Esto se planteo originalmente como feature separada, podria absorberse en Chef Caliro
+
+### Datos disponibles para alimentar el sistema
+
+**Del usuario (calculados en tiempo real):**
+- `entries` de hoy → `consumed_kcal`, `consumed_protein`, `consumed_carbs`, `consumed_fat`
+- `target_calories`, `target_protein`, `target_carbs`, `target_fat` del perfil
+- `remaining = target - consumed` por cada macro
+- `meal_type` actual segun la hora del dia (breakfast/lunch/dinner/snack)
+
+**Del historial del usuario:**
+- `user_calibration.frequent_meals` (JSON) — top 20 comidas con `name, avg_kcal, times, last_seen, avg_protein, avg_carbs, avg_fat`
+- `entries` ultimos 90 dias agrupadas por nombre — top foods
+- `meal_type` patterns — que tipo de comida hace en cada hora
+- `weekday_weekend` patterns — que come entre semana vs finde
+
+**Tabla spanish_dishes (~500 platos):**
+- `nombre, categoria, kcal_ref, kcal_min, kcal_max`
+- `proteina_g, carbos_g, grasa_g` por porcion
+- `kcal_per_100g, proteina_per_100g, carbos_per_100g, grasa_per_100g`
+- `porcion_g, porcion_desc` (porcion estandar)
+- `aliases, token_principal, tokens_secundarios` (para fuzzy match)
+- `referencias_visuales` (descripcion visual del plato)
+- `notas_claude` (notas para el modelo)
+- `confianza` (alta/media/baja)
+
+**Ya implementadas en `worker/src/utils/spanishDishes.js`:**
+- `matchDish(userInput, env)` — busqueda fuzzy por aliases/tokens
+- `formatDishContext(match)` — formatea el dish para inyectar en prompt de Claude
+- **NO existe aun:** `findDishesByCalorieRange(env, minKcal, maxKcal, limit)` — necesario para Chef Caliro V1
+
+### Arquitectura tecnica propuesta (V1)
+
+**Backend nuevo: `worker/src/routes/planner.js`**
+
+```
+POST /api/planner/suggest
+  Body: {
+    context?: string,           // texto libre opcional ("algo rapido", "tengo pollo", "estoy en italiano")
+    meal_type?: string,         // override del meal_type auto
+    constraint?: string,        // opcional: "vegetariano", "sin gluten" (V2)
+  }
+
+  Logica:
+  1. requireProAccess (posible: o disponible para todos? decision pendiente)
+  2. rateLimit: ej 10/dia
+  3. Calcular presupuesto restante de hoy
+  4. Determinar meal_type por hora si no viene en body
+  5. Query frequent_meals del usuario filtrados por rango calorico (~30% ±)
+  6. Query spanish_dishes por rango calorico
+  7. Construir prompt para Claude Haiku con:
+     - Presupuesto restante (kcal + macros)
+     - 3-5 platos frecuentes del usuario que encajan
+     - 3-5 platos de spanish_dishes que encajan
+     - Contexto del usuario si lo dio
+     - Meal type
+  8. Claude devuelve JSON con 3 sugerencias
+  9. Return: { budget: {...}, suggestions: [{name, calories, protein, carbs, fat, portion_g, reason}] }
+```
+
+**System prompt (borrador):**
+```
+Eres el chef personal de Caliro. El usuario tiene un presupuesto nutricional
+restante para hoy. Debes sugerir EXACTAMENTE 3 opciones de comida que:
+1. Encajen en su presupuesto sin pasarse
+2. Prioricen platos que ya come (lista de frecuentes proporcionada)
+3. Cubran macros donde tiene deficit
+4. Sean realistas en cocina espanola/mediterranea
+
+Reglas:
+- Cada sugerencia: nombre corto y claro, calorias enteras, proteina/carbs/grasa en gramos, porcion en gramos
+- "reason": una frase corta explicando por que esta opcion es buena ahora
+- Responde en espanol
+- Si presupuesto < 200 kcal: snacks ligeros
+- Si presupuesto > 800 kcal: comida completa
+- Si el usuario da contexto, respetalo (ingredientes, tipo de cocina, restaurante)
+- NO inventes datos nutricionales — usa los frecuentes o spanish_dishes como referencia
+```
+
+**Frontend nuevo: `client/src/components/ChefCaliro.tsx`**
+- Bottom sheet (reutilizar patron de TextAnalyzer / AdvancedAnalytics)
+- Header: presupuesto restante con barras de macros
+- Input opcional de contexto
+- Boton "Sugerir"
+- Estado: idle → loading → results
+- 3 cards de sugerencia con animacion cascada (estilo chips frecuentes)
+- Cada card: nombre serif, macros pills, porcion, razon italic, boton "Registrar"
+- Tap "Registrar" → navigate a Calculator con state pre-rellenado
+
+**Modificaciones a archivos existentes:**
+- `worker/src/utils/spanishDishes.js` → añadir `findDishesByCalorieRange()`
+- `worker/src/index.js` → registrar ruta `/api/planner/*`
+- `client/src/api.js` → añadir `suggestMeal(body, token)`
+- `client/src/pages/Dashboard.tsx` → boton "¿Que como?" visible para Pro (o todos)
+- `client/src/pages/Calculator.tsx` → leer `location.state` para pre-rellenar form
+
+### Decisiones pendientes (preguntar al usuario en sesion dedicada)
+
+**1. ¿Free o Pro?**
+- Si Pro: justifica la suscripcion, valor diferenciador claro
+- Si Free: mas usuarios lo descubren, viralidad
+- Si Pro pero "limitado en Free": ej 3 sugerencias/dia gratis, ilimitado en Pro
+- Mi voto: Pro completo o Free limitado, no Free completo
+
+**2. ¿V1 minimo o V1 ambicioso?**
+- V1 minimo = solo "Que como?" (1 sesion para construir, validable rapido)
+- V1 ambicioso = "Que como?" + Plan semanal + Lista compra (~1 mes)
+- Mi voto: empezar minimo, validar uso, despues expandir
+
+**3. ¿Donde vive el boton de entrada?**
+- Dashboard (boton grande prominente)
+- Calculator (boton al lado de los metodos)
+- Bottom nav (nuevo tab "Chef")
+- Mi voto: Dashboard, mas visibilidad
+
+**4. ¿Sustituye al Asistente de chat o complementa?**
+- Sustituye: el chat actual de IA queda obsoleto
+- Complementa: el chat sigue para preguntas abiertas, Chef es estructurado
+- Mi voto: complementa, son casos de uso distintos
+
+**5. ¿Fotos de los platos?**
+- Sin fotos: simple, rapido
+- Con fotos generadas por DALL-E o Midjourney: caro
+- Con fotos pre-cargadas de spanish_dishes: requiere construir un dataset visual
+- Mi voto: sin fotos en V1, podria añadirse despues
+
+**6. ¿Cuantas sugerencias por peticion?**
+- 3 (mi propuesta inicial) — manejable, da opciones
+- 5 — mas variedad, mas overwhelm
+- 1 — demasiado restrictivo
+- Mi voto: 3
+
+**7. ¿Limite de uso?**
+- Free: ej 3/dia
+- Pro: ilimitado (o 30/dia)
+- Coste por llamada: ~$0.001 con Haiku, asequible
+- Mi voto: 5/dia Free, 30/dia Pro
+
+**8. ¿Personalizacion por preferencias?**
+- Setup inicial: usuario marca alergias, preferencias (vegetariano, sin gluten, etc.)
+- Cada sugerencia respeta esas preferencias
+- Implica nuevo schema en `users` table o nueva tabla `user_preferences`
+- Mi voto: V2, no V1
+
+### Inspiracion de competidores (lo que han hecho mal o bien)
+
+**Fitia (lider en meal planning):**
+- Bueno: genera plan semanal con lista de compra
+- Malo: planes muy genericos, no adaptados al usuario real
+- Aprender: lista de compra es valiosa, planes genericos no diferencian
+
+**Cal AI:**
+- Bueno: foto de comida con IA (rapido)
+- Malo: no sugiere nada, solo registra
+- Aprender: la velocidad es clave, no overcomplicar
+
+**Strongr Fastr:**
+- Bueno: genera planes basados en macros target
+- Malo: catalogo generico, sin contexto cultural
+- Aprender: el contexto cultural (mediterraneo/espanol) es nuestra ventaja
+
+**MyFitnessPal:**
+- Bueno: enorme base de datos de comidas
+- Malo: nunca te dice que comer, solo te deja registrar
+- Aprender: la pregunta "¿que como?" es un hueco gigante en el mercado
+
+### Riesgos y mitigaciones
+
+**Riesgo 1: Sugerencias mediocres porque la BD de spanish_dishes es limitada**
+- Mitigacion: combinar siempre con frequent_meals del usuario (lo que ya come). Si la BD esta limitada, los frecuentes la complementan.
+
+**Riesgo 2: Coste de Claude por usuario activo**
+- Mitigacion: rate limit estricto (5/dia Free, 30/dia Pro). Con Haiku, ~$0.001 por sugerencia × 30 = $0.03/usuario/dia maximo. Asumible.
+
+**Riesgo 3: Sugerencias no factibles ("hazte un risotto en 5 min")**
+- Mitigacion: prompt explicito sobre tiempo de preparacion + categoria del plato (rapido/elaborado)
+
+**Riesgo 4: El usuario no entiende como usar la feature**
+- Mitigacion: empty state claro, ejemplo en el primer uso, micro-onboarding
+
+**Riesgo 5: Las sugerencias se sienten genericas a pesar del esfuerzo**
+- Mitigacion: priorizar fuerte los frequent_meals del usuario en el prompt, no solo spanish_dishes
+
+### Metricas de exito (V1)
+
+- **Adopcion**: % de usuarios Pro que usan el boton "¿Que como?" al menos 1 vez en su primera semana
+- **Retencion del feature**: % de usuarios que vuelven a usarlo en la 2da semana
+- **Conversion**: % de sugerencias que el usuario tappea para registrar
+- **Satisfaccion**: feedback cualitativo via mensaje en la app despues de N usos
+
+### Trabajo previo necesario antes de empezar
+
+1. **Auditar `spanish_dishes` actual** — ¿realmente tiene ~500 platos? ¿que campos? ¿cobertura de categorias?
+2. **Diseñar el system prompt completo** con varias iteraciones
+3. **Mockup visual** del bottom sheet (puede ser un HTML preview como hicimos con tooltip onboarding)
+4. **Decidir las preguntas pendientes** (puntos 1-8 arriba)
+
+### Estimacion de tiempo
+
+- **Planning + diseño UI**: 2-3 sesiones (incluye preview en HTML y validacion del prompt)
+- **Implementacion V1 minima**: 1-2 sesiones
+- **Iteracion sobre feedback de los 5 amigos**: 1-2 semanas
+- **V1 → V2 plan semanal**: otro sprint dedicado de 1-2 semanas
+
+**Total realista para V1 estable: 3-4 semanas calendar.**
 
 ---
 
