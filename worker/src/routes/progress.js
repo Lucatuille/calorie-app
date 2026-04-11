@@ -347,9 +347,10 @@ export async function handleProgress(request, env, path) {
       ? +((smoothedCurrent - smoothedStart).toFixed(2)) : null;
 
     // Trend per week basado en peso ajustado (mas fiable que crudo)
-    const trendPerWeek = (smoothedChange != null && weightSpanDays >= 3)
+    // Minimo 7 dias para evitar extrapolacion volatil con pocos datos
+    const trendPerWeek = (smoothedChange != null && weightSpanDays >= 7)
       ? +((smoothedChange / (weightSpanDays / 7)).toFixed(2))
-      : (weightChange != null && weightSpanDays >= 3
+      : (weightChange != null && weightSpanDays >= 7
         ? +((weightChange / (weightSpanDays / 7)).toFixed(2)) : null);
 
     // ── Scientific projection (dynamic adaptive model) ─────────
@@ -395,13 +396,15 @@ export async function handleProgress(request, env, path) {
     let tdeeEffective = tdee;
     let tdeeCalibrated = false;
     if (smoothedChange != null && weightSpanDays >= 14 && weightedAvgCal && tdee) {
+      // Conservación de energía: balance = comido - quemado(TDEE)
+      //   smoothedChange < 0 (perdió peso) → balance < 0 → realDailyDelta < 0 → TDEE > comido
+      //   smoothedChange > 0 (ganó peso)   → balance > 0 → realDailyDelta > 0 → TDEE < comido
+      // Ejemplo: come 1800, gana 1.6kg/30d → delta=+410 → TDEE=1800-410=1390 (metabolismo bajo)
       const realDailyDelta = (smoothedChange * 7700) / weightSpanDays;
-      // TDEE que explicaría el cambio observado (comiendo weightedAvgCal)
       const inferredTdee = weightedAvgCal - realDailyDelta;
-      // Blend: 70% inferido (más real), 30% teórico (estabilidad con pocos datos)
-      // Pero capped para no dar valores absurdos si hay datos raros
+
+      // Blend: 70% inferido (real) + 30% teórico (estabilidad), cap ±30% para outliers
       const blended = inferredTdee * 0.7 + tdee * 0.3;
-      // Cap: no más de ±30% del teórico para evitar outliers
       tdeeEffective = Math.max(tdee * 0.7, Math.min(tdee * 1.3, blended));
       tdeeCalibrated = true;
     }
@@ -439,11 +442,26 @@ export async function handleProgress(request, env, path) {
       plateauPrediction   = calcPlateauPrediction(adherenceRate);
       weeklyRateRealistic = +((r30 - currentWeight) / (30 / 7)).toFixed(2);
 
-      const lossIn30 = currentWeight - r30;
-      if (goalWeight && lossIn30 > 0 && currentWeight > goalWeight) {
-        daysToGoalRealistic = Math.min(730, Math.round((currentWeight - goalWeight) * (30 / lossIn30)));
-      } else if (goalWeight && lossIn30 <= 0 && currentWeight > goalWeight) {
-        daysToGoalRealistic = 730; // surplus or no progress — cap at 2 years
+      // Días al objetivo — soporta tanto perder como ganar peso
+      if (goalWeight) {
+        const weightChange30 = r30 - currentWeight; // negativo si pierde, positivo si gana
+        if (currentWeight > goalWeight) {
+          // Quiere perder peso
+          if (weightChange30 < 0) {
+            daysToGoalRealistic = Math.min(730, Math.round((currentWeight - goalWeight) * (30 / -weightChange30)));
+          } else {
+            daysToGoalRealistic = 730; // No baja o sube — cap 2 años
+          }
+        } else if (currentWeight < goalWeight) {
+          // Quiere ganar peso (bulking)
+          if (weightChange30 > 0) {
+            daysToGoalRealistic = Math.min(730, Math.round((goalWeight - currentWeight) * (30 / weightChange30)));
+          } else {
+            daysToGoalRealistic = 730; // No sube o baja — cap 2 años
+          }
+        } else {
+          daysToGoalRealistic = 0; // Ya está en el objetivo
+        }
       }
     }
 

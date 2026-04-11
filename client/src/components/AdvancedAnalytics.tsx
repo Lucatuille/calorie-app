@@ -523,19 +523,35 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           </p>
                         </div>
                       </div>
-                      {/* Tasa semanal — amber */}
-                      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
-                        <div style={{ height: 2, background: '#f59e0b' }} />
-                        <div style={{ padding: '10px 10px 12px' }}>
-                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Tasa semanal</p>
-                          <p style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
-                            {data.projection?.weekly_rate_realistic != null
-                              ? `${data.projection.weekly_rate_realistic > 0 ? '+' : ''}${data.projection.weekly_rate_realistic}`
-                              : '—'}
-                          </p>
-                          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>kg/sem</p>
-                        </div>
-                      </div>
+                      {/* Tasa semanal — color condicional segun objetivo */}
+                      {(() => {
+                        const rate = data.projection?.weekly_rate_realistic;
+                        const goal = data.projection?.goal_weight;
+                        const cur  = data.weight?.current;
+                        // Verde si va hacia el objetivo, amber si va al reves
+                        const wantsLoss = goal && cur && goal < cur;
+                        const wantsGain = goal && cur && goal > cur;
+                        let rateColor = 'var(--text-secondary)';
+                        if (rate != null && Math.abs(rate) >= 0.05) {
+                          if (wantsLoss && rate < 0) rateColor = 'var(--color-success)';
+                          else if (wantsGain && rate > 0) rateColor = 'var(--color-success)';
+                          else rateColor = '#f59e0b';
+                        }
+                        return (
+                          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
+                            <div style={{ height: 2, background: rateColor }} />
+                            <div style={{ padding: '10px 10px 12px' }}>
+                              <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Tasa semanal</p>
+                              <p style={{ fontSize: 22, fontWeight: 700, color: rateColor, lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
+                                {rate != null
+                                  ? `${rate > 0 ? '+' : ''}${rate}`
+                                  : '—'}
+                              </p>
+                              <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>kg/sem</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {/* Días al objetivo — dark */}
                       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
                         <div style={{ height: 2, background: 'var(--text-primary)' }} />
@@ -596,13 +612,13 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         boxShadow: 'var(--shadow-md)', padding: '14px 10px 10px',
                         position: 'relative', marginBottom: 16,
                       }}>
-                        {/* Leyenda vertical — esquina superior derecha */}
+                        {/* Leyenda vertical — esquina superior derecha, dark mode safe */}
                         <div style={{
                           position: 'absolute', top: 10, right: 8, zIndex: 1,
                           display: 'flex', flexDirection: 'column', gap: 4,
-                          background: 'rgba(255,255,255,0.92)',
-                          backdropFilter: 'blur(4px)',
-                          borderRadius: 6, padding: '5px 7px',
+                          background: 'var(--surface)',
+                          border: '0.5px solid var(--border)',
+                          borderRadius: 6, padding: '6px 8px',
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           {[
@@ -619,13 +635,13 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                   : <line x1="0" y1="3" x2="14" y2="3" stroke={item.color} strokeWidth="2" />
                                 }
                               </svg>
-                              <span style={{ fontSize: 8, color: 'var(--text-3)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
+                              <span style={{ fontSize: 9, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
                             </div>
                           ))}
                         </div>
 
                         <ResponsiveContainer width="100%" height={240}>
-                          <ComposedChart data={projChartData} margin={{ top: 12, right: 16, bottom: 5, left: -6 }}>
+                          <ComposedChart data={projChartData} margin={{ top: 12, right: 16, bottom: 5, left: 0 }}>
                             <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
                             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
                             <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
@@ -785,8 +801,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         </p>
                         {[
                           { key: 'optimistic',   label: 'Optimista',   sub: 'adherencia perfecta',   accentColor: 'var(--color-success)', textColor: 'var(--color-success)' },
-                          { key: 'realistic',    label: 'Realista',    sub: 'basado en tus hábitos', accentColor: '#f59e0b', textColor: '#92400e' },
-                          { key: 'conservative', label: 'Conservador', sub: 'adherencia 20% menor',  accentColor: '#94a3b8', textColor: '#475569' },
+                          { key: 'realistic',    label: 'Realista',    sub: 'basado en tus hábitos', accentColor: '#f59e0b',              textColor: 'var(--text-primary)' },
+                          { key: 'conservative', label: 'Conservador', sub: 'adherencia 20% menor',  accentColor: '#94a3b8',              textColor: 'var(--text-secondary)' },
                         ].map(s => (
                           <div key={s.key} style={{
                             marginBottom: 8,
