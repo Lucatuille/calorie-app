@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { projectWithAdjustment, daysToGoalWithAdjustment } from '../utils/projection';
 
 const PERIOD_OPTIONS = [
   { value: 'week',   label: '7 días'  },
@@ -76,6 +77,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
   const [loading,         setLoading]         = useState(false);
   const [loadError,       setLoadError]       = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  // Simulador "¿Y si...?" — ajuste de kcal/día
+  const [kcalAdjust, setKcalAdjust] = useState(0);
+
+  // Reset slider al cambiar de período o cerrar/abrir el modal
+  useEffect(() => { setKcalAdjust(0); }, [period, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -87,6 +93,28 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [isOpen, period, token]);
+
+  // Base de proyección para el simulador (parámetros que vienen del backend)
+  const projBase = data?.projection ? {
+    current_weight:  data.weight?.current || 0,
+    weighted_avg_cal: data.projection.projection_avg_cal || 0,
+    tdee_effective:   data.projection.tdee_effective || 0,
+    adherence_rate:   data.projection.adherence_rate || 0,
+  } : null;
+
+  // Realista ajustado por el slider — recalcula al instante en el frontend
+  const adjustedRealistic = projBase && data?.projection?.scenarios && projBase.weighted_avg_cal
+    ? {
+        '30d': projectWithAdjustment(projBase, kcalAdjust, 30),
+        '60d': projectWithAdjustment(projBase, kcalAdjust, 60),
+        '90d': projectWithAdjustment(projBase, kcalAdjust, 90),
+      }
+    : null;
+
+  // Días al objetivo recalculado con el ajuste actual
+  const adjustedDaysToGoal = projBase && data?.projection?.goal_weight && projBase.weighted_avg_cal
+    ? daysToGoalWithAdjustment(projBase, kcalAdjust, data.projection.goal_weight)
+    : data?.projection?.days_to_goal_realistic;
 
   // Projection chart data: historical weight (actual + trend) + 3 projected scenarios
   const projChartData = (() => {
@@ -101,12 +129,13 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     if (!weightPts.length || !data.projection?.scenarios) return weightPts;
 
     const { scenarios } = data.projection;
+    // Si el slider está activo, usar la realista recalculada; si no, la del backend
+    const realistic = adjustedRealistic ?? scenarios.realistic;
     const today = new Date();
     const fmt   = n => new Date(today.getTime() + n * 86400000).toLocaleDateString('es', { day: 'numeric', month: 'short' });
     // Ancla = peso real del dashboard (lo que el usuario ve en su báscula)
     const cw = data.weight.current;
     // Rango = [min, max] entre optimista y conservador para Area sombreada
-    // Math.min/max porque optimista puede ser mayor o menor dependiendo de objetivo
     const mkRange = (a, b) => [Math.min(a, b), Math.max(a, b)];
     return [
       ...weightPts,
@@ -114,21 +143,21 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
       {
         date: fmt(30),
         optimistic: scenarios.optimistic['30d'],
-        realistic: scenarios.realistic['30d'],
+        realistic: realistic['30d'],
         conservative: scenarios.conservative['30d'],
         rangeBand: mkRange(scenarios.optimistic['30d'], scenarios.conservative['30d']),
       },
       {
         date: fmt(60),
         optimistic: scenarios.optimistic['60d'],
-        realistic: scenarios.realistic['60d'],
+        realistic: realistic['60d'],
         conservative: scenarios.conservative['60d'],
         rangeBand: mkRange(scenarios.optimistic['60d'], scenarios.conservative['60d']),
       },
       {
         date: fmt(90),
         optimistic: scenarios.optimistic['90d'],
-        realistic: scenarios.realistic['90d'],
+        realistic: realistic['90d'],
         conservative: scenarios.conservative['90d'],
         rangeBand: mkRange(scenarios.optimistic['90d'], scenarios.conservative['90d']),
       },
@@ -544,11 +573,14 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           </p>
                         </div>
                       </div>
-                      {/* Tasa semanal — color condicional segun objetivo */}
+                      {/* Tasa semanal — color condicional segun objetivo, recalculada con slider */}
                       {(() => {
-                        const rate = data.projection?.weekly_rate_realistic;
+                        const cur = data.weight?.current;
+                        // Si hay slider activo, calcular tasa desde adjustedRealistic
+                        const rate = (adjustedRealistic && cur)
+                          ? +(((adjustedRealistic['30d'] - cur) / (30 / 7)).toFixed(2))
+                          : data.projection?.weekly_rate_realistic;
                         const goal = data.projection?.goal_weight;
-                        const cur  = data.weight?.current;
                         // Verde si va hacia el objetivo, amber si va al reves
                         const wantsLoss = goal && cur && goal < cur;
                         const wantsGain = goal && cur && goal > cur;
@@ -579,8 +611,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         <div style={{ padding: '10px 10px 12px' }}>
                           <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Días al objetivo</p>
                           <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
-                            {data.projection?.days_to_goal_realistic
-                              ? data.projection.days_to_goal_realistic >= 730 ? '>2 años' : `~${data.projection.days_to_goal_realistic}`
+                            {adjustedDaysToGoal != null
+                              ? adjustedDaysToGoal >= 730 ? '>2 años' : `~${adjustedDaysToGoal}`
                               : '—'}
                           </p>
                           <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>días</p>
@@ -903,6 +935,85 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                     )}
 
+                    {/* Simulador "¿Y si...?" — slider de kcal/día */}
+                    {projBase && projBase.weighted_avg_cal > 0 && (
+                      <div style={{
+                        background: 'var(--surface)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-sm)',
+                        padding: '14px 16px',
+                        marginBottom: 16,
+                      }}>
+                        <div style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                          marginBottom: 4,
+                        }}>
+                          <p style={{
+                            fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
+                            textTransform: 'uppercase', color: 'var(--text-tertiary)',
+                            fontFamily: 'var(--font-sans)',
+                          }}>
+                            ¿Y si...?
+                          </p>
+                          {kcalAdjust !== 0 && (
+                            <button
+                              onClick={() => setKcalAdjust(0)}
+                              style={{
+                                background: 'none', border: 'none',
+                                fontSize: 10, color: 'var(--text-tertiary)',
+                                cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                                textDecoration: 'underline',
+                              }}
+                            >
+                              Reiniciar
+                            </button>
+                          )}
+                        </div>
+
+                        <p style={{
+                          fontSize: 13, color: 'var(--text-secondary)',
+                          fontFamily: 'var(--font-sans)', marginBottom: 12,
+                        }}>
+                          Comes{' '}
+                          <strong style={{ color: 'var(--text-primary)' }}>
+                            {projBase.weighted_avg_cal + kcalAdjust} kcal/día
+                          </strong>
+                          {kcalAdjust !== 0 && (
+                            <span style={{
+                              marginLeft: 6,
+                              color: kcalAdjust < 0 ? 'var(--color-success)' : '#f59e0b',
+                              fontWeight: 600,
+                            }}>
+                              ({kcalAdjust > 0 ? '+' : ''}{kcalAdjust})
+                            </span>
+                          )}
+                        </p>
+
+                        <input
+                          type="range"
+                          min={-400}
+                          max={400}
+                          step={25}
+                          value={kcalAdjust}
+                          onChange={e => setKcalAdjust(Number(e.target.value))}
+                          style={{
+                            width: '100%',
+                            accentColor: '#f59e0b',
+                            cursor: 'pointer',
+                          }}
+                        />
+                        <div style={{
+                          display: 'flex', justifyContent: 'space-between',
+                          fontSize: 9, color: 'var(--text-tertiary)',
+                          marginTop: 4, fontFamily: 'var(--font-sans)',
+                        }}>
+                          <span>−400 kcal</span>
+                          <span>0</span>
+                          <span>+400 kcal</span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Escenarios — 3 cards con accent bar izquierdo 3px */}
                     {data.projection?.scenarios && (
                       <div style={{ marginBottom: 16 }}>
@@ -942,7 +1053,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                       {t}
                                     </p>
                                     <p style={{ fontWeight: 700, fontSize: 14, color: s.textColor, fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>
-                                      {data.projection.scenarios[s.key]?.[t] ?? '—'} <span style={{ fontSize: 10, fontWeight: 400 }}>kg</span>
+                                      {(s.key === 'realistic' && adjustedRealistic
+                                        ? adjustedRealistic[t]
+                                        : data.projection.scenarios[s.key]?.[t]) ?? '—'} <span style={{ fontSize: 10, fontWeight: 400 }}>kg</span>
                                     </p>
                                   </div>
                                 ))}
