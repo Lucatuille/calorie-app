@@ -544,7 +544,10 @@ export async function handleProgress(request, env, path) {
     ).toFixed(2);
 
     // ── Streak in period ───────────────────────────────────────
-    const dates = daily.map(d => d.date);
+    // Solo cuentan los días con comida registrada (calories > 0).
+    // Los días con solo peso registrado (añadidos desde weight_logs con
+    // calories=0) no cuentan como racha de registro de comida.
+    const dates = daily.filter(d => d.calories > 0).map(d => d.date);
     let longestStreak = 0, curStreak = 0;
     for (let i = 0; i < dates.length; i++) {
       if (i === 0) { curStreak = 1; }

@@ -332,7 +332,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                   <StatBox
                     label="Racha más larga"
                     value={`${data.streaks.longest_in_period} ${data.streaks.longest_in_period === 1 ? 'día' : 'días'}`}
-                    sub={data.streaks.current > 0 ? `🔥 ${data.streaks.current} seguidos ahora` : 'sin racha activa'}
+                    sub={data.streaks.current > 0
+                      ? `🔥 ${data.streaks.current} días en racha actual`
+                      : 'en este período'}
                     valueColor={null}
                   />
                 </div>
@@ -351,7 +353,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         {data.weekday_weekend.weekday.avg.toLocaleString()}
                       </p>
                       <p style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 2 }}>kcal/día</p>
-                      <p style={{ fontSize: 11, color: 'var(--color-success)', marginTop: 6, fontWeight: 500 }}>
+                      <p style={{
+                        fontSize: 11,
+                        color: data.weekday_weekend.weekday.adherence_pct >= 60 ? 'var(--color-success)' : '#f59e0b',
+                        marginTop: 6, fontWeight: 500,
+                      }}>
                         {data.weekday_weekend.weekday.adherence_pct}% en objetivo
                       </p>
                     </div>
@@ -394,7 +400,30 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
               )}
 
               {/* ── Macro Gaps ── */}
-              {data.macro_gaps && (
+              {data.macro_gaps && (() => {
+                // Detectar si el usuario no tiene ningun target configurado
+                const allNoTarget = ['protein', 'carbs', 'fat'].every(
+                  k => !data.macro_gaps[k] || data.macro_gaps[k].status === 'no_target'
+                );
+                if (allNoTarget) {
+                  return (
+                    <Section title="Tus macros">
+                      <div style={{
+                        background: 'var(--surface)', borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-sm)', padding: '20px 16px',
+                        textAlign: 'center',
+                      }}>
+                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4, fontFamily: 'var(--font-sans)' }}>
+                          Aún no tienes objetivos de macros
+                        </p>
+                        <p style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+                          Configúralos en tu perfil para ver este análisis
+                        </p>
+                      </div>
+                    </Section>
+                  );
+                }
+                return (
                 <Section title="Tus macros">
                   <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10, marginTop: -8 }}>
                     Diferencia entre tu media diaria y tus objetivos
@@ -406,17 +435,17 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     {[
                       {
                         key: 'protein', label: 'Proteína', color: '#16a34a',
-                        deficitTips: ['Una pechuga de pollo = +30g', '3 huevos = +18g', 'Un yogur griego = +15g'],
+                        deficitTips: ['Pechuga de pollo (150g) ≈ +32g', '3 huevos ≈ +18g', 'Un yogur griego ≈ +15g'],
                         excessTips: ['Reduce porciones de carne', 'Cambia parte por verduras'],
                       },
                       {
                         key: 'carbs', label: 'Carbos', color: '#f59e0b',
-                        deficitTips: ['Una fruta = +20g', 'Una rebanada de pan integral = +15g', 'Un puñado de arroz = +25g'],
+                        deficitTips: ['Una fruta ≈ +20g', 'Una rebanada de pan integral ≈ +15g', 'Un puñado de arroz ≈ +25g'],
                         excessTips: ['Reduce pasta/arroz a media ración', 'Cambia pan blanco por integral'],
                       },
                       {
                         key: 'fat', label: 'Grasa', color: '#4a90d9',
-                        deficitTips: ['Un aguacate = +20g', 'Un puñado de nueces = +15g', 'Una cucharada de aceite = +12g'],
+                        deficitTips: ['Una lata de atún en aceite ≈ +15g', 'Un puñado de nueces ≈ +15g', 'Una cucharada de aceite ≈ +12g'],
                         excessTips: ['Reduce aceite en cocción', 'Cambia quesos curados por frescos'],
                       },
                     ].map((m, i, arr) => {
@@ -489,7 +518,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                     })}
                   </div>
                 </Section>
-              )}
+                );
+              })()}
 
               {/* ── Sección 3.5: Patrón calórico ── */}
               {data.projection?.calorie_variability_cv != null && (
