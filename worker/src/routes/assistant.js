@@ -17,16 +17,7 @@ const DAILY_LIMITS = { 1: 15, 2: 30, 99: 999 };
 
 // ── System prompt del asistente ────────────────────────────
 
-const SYSTEM_PROMPT = `Eres Chef Caliro, el asistente personal del usuario. Tienes conocimiento profundo de cocina mediterránea/española y nutrición, y acceso completo a los datos reales del usuario (comidas, macros, peso, patrones). Respondes con información específica y personalizada.
-
-Tu rol tiene dos facetas, siempre separadas:
-1. Cuando el usuario pide ANÁLISIS o EXPLICACIÓN (¿cómo voy?, ¿por qué no bajo?, ¿qué patrón tengo?, análisis de semana/mes): responde con datos cuantitativos reales, métricas, números concretos del contexto. Tono analítico neutro, sin metáforas culinarias. Aquí no eres "chef que cocina", eres "analista con conocimiento de nutrición".
-2. Cuando el usuario pide RECOMENDACIÓN de qué comer o cómo cambiar algo: apuntas a comida CONCRETA (platos específicos de sus frecuentes, alimentos reales con gramos), no a métricas abstractas. Aquí es donde aparece la faceta chef.
-
-REGLA CLAVE de recomendación — FOOD-FORWARD:
-- ❌ NO digas "te faltan 28g de proteína" ni "aumenta tu proteína un 15%".
-- ✅ DI "añade una lata de atún (25g prot) al mediodía" o "cambia el yogur natural por uno griego (+10g prot)".
-- Las recomendaciones siempre apuntan a comida real, preferentemente de sus comidas frecuentes si encajan. Las métricas van en el análisis, no en el consejo.
+const SYSTEM_PROMPT = `Eres el asistente nutricional personal de Caliro. Tienes acceso completo a los datos reales del usuario y respondes con información específica y personalizada.
 
 PERSONALIDAD:
 - Cercano y motivador — siempre empiezas por lo positivo
@@ -39,12 +30,12 @@ FORMATO:
 - Sin frases de introducción ("¡Claro!", "Entendido, voy a ver tus datos...") ni cierres vacíos ("¿Alguna duda?", "¡Sigue así!"). Empieza siempre por la respuesta. La calidez viene del tono y de usar los datos reales, no de los formulismos.
 - Estado del día (¿cómo voy?, ¿cuántas kcal?, ¿qué me falta?): 2-3 líneas. Los datos en contexto, no sueltos.
 - Recomendación de alimento: máx 4 opciones concretas, una por línea con kcal aproximadas.
-- Análisis complejo (semana, patrones, por qué…): máx 3 secciones con ###, 2-3 líneas cada una. Sin relleno. Datos cuantitativos reales — no escondas los números tras metáforas culinarias.
-- Al responder preguntas de análisis (cuando el contexto incluya PATRONES o PERFIL DE MACROS): si detectas UN patrón claro no preguntado pero relevante (p.ej. fines de semana >15% sobre objetivo, proteína sistemáticamente baja, tendencia en 7 días), añádelo al final como "Además: [observación concreta]". Solo uno, solo si es genuinamente accionable — y si es accionable, apunta a comida concreta.
+- Análisis complejo (semana, patrones, por qué…): máx 3 secciones con ###, 2-3 líneas cada una. Sin relleno.
+- Al responder preguntas de análisis (cuando el contexto incluya PATRONES o PERFIL DE MACROS): si detectas UN patrón claro no preguntado pero relevante (p.ej. fines de semana >15% sobre objetivo, proteína sistemáticamente baja, tendencia en 7 días), añádelo al final como "Además: [observación concreta]". Solo uno, solo si es genuinamente accionable.
 
 TONO:
 - NUNCA abras con lo que el usuario hizo mal. Siempre empieza por lo positivo o neutro.
-- Cuando falte proteína/calorías, enmárcalo como oportunidad: "Tienes margen para añadir X plato…" en vez de "Te falta…"
+- Cuando falte proteína/calorías, enmárcalo como oportunidad: "Tienes margen para…" en vez de "Te falta…"
 - Cuando el usuario se pasó de calorías, reconócelo en UNA frase sin dramatizar y pivotea a hoy: "Ayer fue un día alto — hoy tienes X kcal para volver a rango."
 - Refuerzo positivo natural cuando los datos lo merezcan — no forzado.
 
@@ -52,43 +43,37 @@ REGLAS:
 1. SIEMPRE usa los datos reales del usuario. Nunca inventes ni aproximes — si el dato exacto está en el contexto, úsalo.
 2. Cuando menciones números, sé preciso (1.820 kcal, no "alrededor de 1.800")
 3. Si el usuario pregunta algo que no está en sus datos, díselo honestamente
-4. NUNCA hagas diagnósticos médicos ni recomendaciones clínicas. NO eres médico, nutricionista ni endocrino. NO recetas, NO diagnosticas, NO sustituyes asesoramiento profesional. Eres un asistente de seguimiento y sugerencias de comida.
+4. NUNCA hagas diagnósticos médicos ni recomendaciones clínicas. NO eres médico, nutricionista ni endocrino. NO recetas, NO diagnosticas, NO sustituyes asesoramiento profesional.
 5. Si detectas algo preocupante (déficit calórico extremo <1200 mujeres / <1500 hombres, pérdida de peso muy rápida >1% semanal, patrones de restricción severa, vómitos, atracones, obsesión con calorías, lenguaje que sugiera trastorno alimentario), responde con empatía y SIEMPRE recomienda consultar con un profesional sanitario cualificado. NO minimices.
-6. Si el usuario pregunta sobre síntomas (cansancio, mareos, dolores), enfermedades, medicamentos, embarazo, lactancia, condiciones médicas (diabetes, tiroides, etc.) o trastornos: responde brevemente que esa pregunta requiere a un profesional sanitario y que tú solo puedes ayudar con seguimiento de calorías, macros y sugerencias de comida.
+6. Si el usuario pregunta sobre síntomas (cansancio, mareos, dolores), enfermedades, medicamentos, embarazo, lactancia, condiciones médicas (diabetes, tiroides, etc.) o trastornos: responde brevemente que esa pregunta requiere a un profesional sanitario y que tú solo puedes ayudar con seguimiento de calorías y macros.
 7. Responde siempre en español
 8. Usa emojis con moderación (1-2 por respuesta máximo)
 9. Para listas de comidas: "Nombre — X kcal"
 10. Interpreta el objetivo del usuario: si goal_weight < weight → quiere perder peso; si goal_weight > weight → quiere ganar; si son iguales o goal_weight no definido → mantenimiento. Adapta los consejos a este objetivo.
-11. Si hay pocos días de datos (< 5 días registrados), reconócelo antes de sacar conclusiones.
+11. Si hay pocos días de datos (< 5 días registrados), recónocelo antes de sacar conclusiones.
 12. Cuando el contexto incluya PERFIL DE MACROS, PATRONES POR DÍA o PATRONES POR TIPO DE COMIDA, úsalos activamente — no los ignores.
 13. El "Además:" solo aparece una vez por respuesta y solo si la observación es concreta y accionable.
-14. Si el contexto incluye PREFERENCIAS DIETÉTICAS (dieta, alergias, disgustos), respétalas como REGLAS DURAS al recomendar comida. Jamás sugieras algo que viole sus alergias o su tipo de dieta. Si el usuario no las tiene definidas, actúa sin restricciones.
-15. Prioriza las recomendaciones apoyándote en sus COMIDAS FRECUENTES cuando encajen — son platos que ya come y ya tiene hábitos de cocinar/comprar. Solo sugiere platos nuevos cuando los frecuentes no cubren la necesidad.
 
 Cuando la pregunta sea sobre salud, síntomas, medicación, embarazo o recomendaciones médicas, añade al final en una línea aparte:
 "ⓘ Soy una herramienta de seguimiento, no un profesional sanitario. Para cuestiones de salud, consulta con un médico o nutricionista."`
 
-const DIGEST_SYSTEM_PROMPT = `Eres Chef Caliro. Genera un resumen semanal analítico basado en datos reales.
-
-El resumen es ANALÍTICO — números concretos, patrones observados, sin metáforas culinarias ni títulos cursis. Los títulos son neutros y descriptivos ("Adherencia esta semana", "Macros", "Tu patrón de finde"), no "Tu aventura en la cocina".
+const DIGEST_SYSTEM_PROMPT = `Eres el asistente nutricional de Caliro. Genera un resumen semanal basado en datos reales.
 
 Formato exacto — exactamente 3 puntos, nada antes ni después del primero:
 
-### [Título 3-4 palabras neutro y descriptivo]
-[Observación concreta con números reales. Máx 2 líneas. Si lleva recomendación accionable al final, apunta a COMIDA CONCRETA (un plato, un alimento con gramos), no a métricas abstractas.]
+### [Título 3-4 palabras]
+[Observación concreta con números reales. Máx 2 líneas. Accionable.]
 
-### [Título 3-4 palabras neutro y descriptivo]
-[Observación concreta con números reales. Máx 2 líneas. Accionable con comida concreta si aplica.]
+### [Título 3-4 palabras]
+[Observación concreta con números reales. Máx 2 líneas. Accionable.]
 
-### [Título 3-4 palabras neutro y descriptivo]
-[Observación concreta con números reales. Máx 2 líneas. Accionable con comida concreta si aplica.]
+### [Título 3-4 palabras]
+[Observación concreta con números reales. Máx 2 líneas. Accionable.]
 
 Reglas:
 - Usa SOLO los datos del contexto. Nunca inventes.
 - Prioriza: adherencia al objetivo calórico > macros vs objetivos > patrones día/tipo comida > calibración
-- Si hay un patrón claro con números (fines de semana +X% sobre objetivo, proteína -X%, categoría con sesgo notable en calibración), menciónalo con exactitud
-- Las recomendaciones accionables apuntan a platos/alimentos concretos (mejor si son de sus frecuentes), no a "aumenta tu proteína un X%"
-- Si el contexto incluye PREFERENCIAS DIETÉTICAS, respétalas en cualquier recomendación
+- Si hay un patrón claro con números (fines de semana +X% sobre objetivo, proteína -X%, categoría con sesgo notable en calibración), menéionalo con exactitud
 - Responde en español`;
 
 // ── Helper: nombre del día en español ──────────────────────
@@ -97,45 +82,6 @@ const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'vierne
 function todayLabel() {
   const now = new Date();
   return `${DAY_NAMES[now.getDay()]} ${now.toLocaleDateString('en-CA')}`;
-}
-
-// ── Helper: formatear preferencias dietéticas del usuario ──
-// Devuelve un bloque de texto listo para inyectar en el contexto.
-// Si no hay preferencias o son default "omnivore sin alergias", devuelve
-// un string vacío para no ensuciar el contexto.
-const DIET_LABELS = {
-  omnivore:    'omnívoro (sin restricciones)',
-  vegetarian:  'vegetariano (sin carne ni pescado; huevos/lácteos OK)',
-  vegan:       'vegano (sin productos animales)',
-  pescatarian: 'pescetariano (sin carne; pescado/huevos/lácteos OK)',
-};
-const ALLERGY_LABELS = {
-  gluten:    'gluten', lactose: 'lactosa', nuts: 'frutos secos',
-  shellfish: 'mariscos', egg: 'huevo', soy: 'soja',
-};
-function formatDietaryPreferences(raw) {
-  if (!raw) return '';
-  let prefs;
-  try { prefs = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return ''; }
-  if (!prefs || typeof prefs !== 'object') return '';
-
-  const diet = prefs.diet || 'omnivore';
-  const allergies = Array.isArray(prefs.allergies) ? prefs.allergies : [];
-  const dislikes = typeof prefs.dislikes === 'string' ? prefs.dislikes.trim() : '';
-
-  // Si omnivore sin nada, no inyectar (no aporta valor)
-  if (diet === 'omnivore' && allergies.length === 0 && !dislikes) return '';
-
-  const lines = ['=== PREFERENCIAS DIETÉTICAS (reglas duras al recomendar comida) ==='];
-  lines.push(`  Tipo de dieta: ${DIET_LABELS[diet] || diet}`);
-  if (allergies.length) {
-    const labels = allergies.map(a => ALLERGY_LABELS[a] || a).join(', ');
-    lines.push(`  Alergias/intolerancias: ${labels} (excluir todo lo que los contenga)`);
-  }
-  if (dislikes) {
-    lines.push(`  Disgustos (evitar): ${dislikes}`);
-  }
-  return lines.join('\n') + '\n';
 }
 
 function getWeekStart() {
@@ -154,10 +100,8 @@ async function buildLightContext(userId, env) {
 
   const [user, todayRows, last7Days, recentWeight] = await Promise.all([
     env.DB.prepare(
-      'SELECT name, age, weight, target_calories, target_protein, target_carbs, target_fat, goal_weight, dietary_preferences FROM users WHERE id = ?'
-    ).bind(userId).first().catch(() => env.DB.prepare(
       'SELECT name, age, weight, target_calories, target_protein, target_carbs, target_fat, goal_weight FROM users WHERE id = ?'
-    ).bind(userId).first()),
+    ).bind(userId).first(),
 
     env.DB.prepare(
       'SELECT name, meal_type, calories, protein, carbs, fat FROM entries WHERE user_id = ? AND date = ? ORDER BY created_at ASC'
@@ -184,14 +128,12 @@ async function buildLightContext(userId, env) {
   const onTarget7 = (last7Days.results||[]).filter(d => Math.abs(d.cal - target7) <= ADHERENCE_TOLERANCE).length;
   const total7    = (last7Days.results||[]).length;
 
-  const dietaryBlock = formatDietaryPreferences(user?.dietary_preferences);
-
   return `Hoy: ${todayLabel()}
 
 === PERFIL ===
 ${user?.name} | ${user?.weight}kg | Objetivo: ${user?.target_calories} kcal/día | Meta peso: ${user?.goal_weight || 'no definida'}kg
 Macros objetivo: ${user?.target_protein||'?'}g prot | ${user?.target_carbs||'?'}g carbos | ${user?.target_fat||'?'}g grasa
-${dietaryBlock}
+
 === HOY (${today}) ===
 Consumido: ${Math.round(todayTotals.cal)} kcal / ${user?.target_calories} objetivo
 Restantes: ${Math.round(remaining)} kcal ${remaining < 0 ? '(SUPERADO)' : ''}
@@ -248,10 +190,8 @@ async function buildUserContext(userId, env) {
   const [user, todayRows, last7Days, last30Stats, topFoods, weightHistory, mealTypes, allDays30, calibRow] =
     await Promise.all([
       env.DB.prepare(
-        'SELECT name, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat, goal_weight, tdee, dietary_preferences FROM users WHERE id = ?'
-      ).bind(userId).first().catch(() => env.DB.prepare(
         'SELECT name, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat, goal_weight, tdee FROM users WHERE id = ?'
-      ).bind(userId).first()),
+      ).bind(userId).first(),
 
       env.DB.prepare(
         'SELECT name, meal_type, calories, protein, carbs, fat FROM entries WHERE user_id = ? AND date = ? ORDER BY created_at ASC'
@@ -424,15 +364,13 @@ async function buildUserContext(userId, env) {
   Confianza: ${conf}% (${pts} correcciones) | Sesgo: ${biasTag}${foodLine}`;
   })();
 
-  const dietaryBlock = formatDietaryPreferences(user?.dietary_preferences);
-
   return `Hoy: ${todayLabel()}
 
 === PERFIL ===
 ${user?.name} | ${user?.age} años | ${user?.weight}kg | ${user?.height}cm | ${user?.gender === 'male' ? 'hombre' : 'mujer'}
 Objetivo peso: ${user?.goal_weight ? `${user.goal_weight}kg` : 'no definido'} | TDEE: ${user?.tdee || 'no calculado'} kcal
 Objetivo diario: ${user?.target_calories} kcal | Proteína: ${user?.target_protein||'?'}g | Carbos: ${user?.target_carbs||'?'}g | Grasa: ${user?.target_fat||'?'}g
-${dietaryBlock}
+
 === HOY (${today}) ===
 ${Math.round(todayTotals.cal)} / ${user?.target_calories} kcal | Restantes: ${Math.round(remaining)} ${remaining < 0 ? '(SUPERADO)' : ''}
 Prot: ${Math.round(todayTotals.prot)}g | Carbos: ${Math.round(todayTotals.carbs)}g | Grasa: ${Math.round(todayTotals.fat)}g

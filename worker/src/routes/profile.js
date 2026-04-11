@@ -16,7 +16,6 @@ export async function handleProfile(request, env, path) {
         `SELECT id, name, email, age, weight, height, gender,
                 target_calories, target_protein, target_carbs, target_fat,
                 goal_weight, tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
-                dietary_preferences,
                 created_at
          FROM users WHERE id = ?`
       ).bind(user.userId).first();
@@ -44,17 +43,6 @@ export async function handleProfile(request, env, path) {
       }
     }
     if (!profile) return errorResponse('Usuario no encontrado', 404);
-
-    // Parse dietary_preferences JSON → object (null si vacío o inválido)
-    if (profile.dietary_preferences) {
-      try {
-        profile.dietary_preferences = JSON.parse(profile.dietary_preferences);
-      } catch {
-        profile.dietary_preferences = null;
-      }
-    } else {
-      profile.dietary_preferences = null;
-    }
 
     // Silent macro backfill for users who completed onboarding before macros were saved
     if (!profile.target_protein && profile.target_calories && profile.tdee) {
@@ -184,38 +172,7 @@ export async function handleProfile(request, env, path) {
       goal_weight,
       tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
       onboarding_completed,
-      dietary_preferences,
     } = body;
-
-    // Validar y normalizar dietary_preferences (si viene). Devuelve JSON string o null.
-    // Formato esperado:
-    //   { diet: 'omnivore'|'vegetarian'|'vegan'|'pescatarian',
-    //     allergies: string[], dislikes: string }
-    const DIET_VALUES    = ['omnivore', 'vegetarian', 'vegan', 'pescatarian'];
-    const ALLERGY_VALUES = ['gluten', 'lactose', 'nuts', 'shellfish', 'egg', 'soy'];
-    let dietaryPrefsJson = undefined; // undefined = no enviar → COALESCE conserva valor existente
-    if (dietary_preferences !== undefined) {
-      if (dietary_preferences === null) {
-        dietaryPrefsJson = null; // borrar
-      } else if (typeof dietary_preferences === 'object') {
-        const diet = dietary_preferences.diet;
-        if (diet !== undefined && diet !== null && !DIET_VALUES.includes(diet)) {
-          return errorResponse('Tipo de dieta inválido');
-        }
-        const rawAllergies = Array.isArray(dietary_preferences.allergies) ? dietary_preferences.allergies : [];
-        const allergies = rawAllergies.filter(a => ALLERGY_VALUES.includes(a));
-        const dislikes = typeof dietary_preferences.dislikes === 'string'
-          ? dietary_preferences.dislikes.trim().slice(0, 200)
-          : '';
-        dietaryPrefsJson = JSON.stringify({
-          diet: diet || 'omnivore',
-          allergies,
-          dislikes,
-        });
-      } else {
-        return errorResponse('dietary_preferences debe ser objeto o null');
-      }
-    }
 
     // Input validation
     if (name !== undefined && name !== null && String(name).length > 100)
@@ -241,59 +198,23 @@ export async function handleProfile(request, env, path) {
 
     // TDEE fields use COALESCE so that sending null (e.g. from the profile
     // edit form that doesn't include wizard fields) never overwrites existing values.
-    // dietary_preferences: si no viene en body (undefined), conservar existente.
-    //                      si viene como null, borrar.
-    //                      si viene como objeto válido, guardar JSON.
-    const dietaryParam = dietaryPrefsJson === undefined ? '__KEEP__' : dietaryPrefsJson;
-    const dietarySqlExpr = dietaryParam === '__KEEP__'
-      ? 'dietary_preferences'
-      : '?';
-
-    try {
-      await env.DB.prepare(
-        `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
-                          target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
-                          goal_weight=?,
-                          tdee=COALESCE(?,tdee), bmr=COALESCE(?,bmr),
-                          pal_factor=COALESCE(?,pal_factor), formula_used=COALESCE(?,formula_used),
-                          tdee_calculated_at=COALESCE(?,tdee_calculated_at),
-                          onboarding_completed=COALESCE(?,onboarding_completed),
-                          dietary_preferences=${dietarySqlExpr}
-         WHERE id=?`
-      ).bind(
-        name||null, age||null, weight||null, height||null, gender||null,
-        target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
-        goal_weight||null,
-        tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
-        onboarding_completed ?? null,
-        ...(dietaryParam === '__KEEP__' ? [] : [dietaryParam]),
-        user.userId
-      ).run();
-    } catch (err) {
-      // Fallback para entornos donde la columna dietary_preferences aún no existe
-      // (ej. tests con schema legacy). Reintento sin esa columna.
-      if (String(err?.message || '').includes('dietary_preferences')) {
-        await env.DB.prepare(
-          `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
-                            target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
-                            goal_weight=?,
-                            tdee=COALESCE(?,tdee), bmr=COALESCE(?,bmr),
-                            pal_factor=COALESCE(?,pal_factor), formula_used=COALESCE(?,formula_used),
-                            tdee_calculated_at=COALESCE(?,tdee_calculated_at),
-                            onboarding_completed=COALESCE(?,onboarding_completed)
-           WHERE id=?`
-        ).bind(
-          name||null, age||null, weight||null, height||null, gender||null,
-          target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
-          goal_weight||null,
-          tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
-          onboarding_completed ?? null,
-          user.userId
-        ).run();
-      } else {
-        throw err;
-      }
-    }
+    await env.DB.prepare(
+      `UPDATE users SET name=?, age=?, weight=?, height=?, gender=?,
+                        target_calories=?, target_protein=?, target_carbs=?, target_fat=?,
+                        goal_weight=?,
+                        tdee=COALESCE(?,tdee), bmr=COALESCE(?,bmr),
+                        pal_factor=COALESCE(?,pal_factor), formula_used=COALESCE(?,formula_used),
+                        tdee_calculated_at=COALESCE(?,tdee_calculated_at),
+                        onboarding_completed=COALESCE(?,onboarding_completed)
+       WHERE id=?`
+    ).bind(
+      name||null, age||null, weight||null, height||null, gender||null,
+      target_calories||null, target_protein||null, target_carbs||null, target_fat||null,
+      goal_weight||null,
+      tdee||null, bmr||null, pal_factor||null, formula_used||null, tdee_calculated_at||null,
+      onboarding_completed ?? null,
+      user.userId
+    ).run();
 
     // Sincronizar peso a weight_logs si se actualizó
     if (weight) {
