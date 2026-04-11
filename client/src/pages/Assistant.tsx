@@ -25,11 +25,11 @@ function ProOnlyCard({ onNavigate }) {
             borderRadius: 4, padding: '2px 6px',
           }}>Pro</span>
           <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'rgba(255,255,255,0.85)' }}>
-            Asistente personal
+            Chef Caliro
           </span>
         </div>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: '0 0 14px', fontFamily: 'var(--font-sans)' }}>
-          Chatea con tu nutricionista personal. Conoce tus datos reales — calorías, macros, tendencias — y te orienta con contexto.
+          Tu chef personal con acceso a tus datos reales — calorías, macros, tendencias — y memoria de tus comidas frecuentes. Te orienta con contexto, no con consejos genéricos.
         </p>
         <button onClick={onNavigate} style={{
           background: 'var(--accent)', color: '#fff', border: 'none',
@@ -373,7 +373,7 @@ function DigestSheet({ digest, onClose }) {
 // ── Página principal ─────────────────────────────────────────
 
 export default function Assistant() {
-  usePageTitle('Asistente');
+  usePageTitle('Chef Caliro');
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages]             = useState([]);
@@ -572,7 +572,7 @@ export default function Assistant() {
               margin: 0,
               lineHeight: 1,
             }}>
-              Asistente
+              Chef Caliro
             </h1>
             {usageLabel && (
               <span style={{
@@ -587,6 +587,26 @@ export default function Assistant() {
           </div>
 
           <div style={{ display: 'flex', gap: 6 }}>
+            {/* Boton Plan — disabled hasta Fase 2 (Planificador) */}
+            <button
+              type="button"
+              disabled
+              title="Próximamente — el Planificador llegará muy pronto"
+              style={{
+                background: 'transparent',
+                border: '0.5px dashed var(--border)',
+                borderRadius: 'var(--radius-full)',
+                padding: '5px 12px',
+                fontSize: 12,
+                color: 'var(--text-tertiary)',
+                cursor: 'not-allowed',
+                opacity: 0.55,
+                fontFamily: 'var(--font-sans)',
+                letterSpacing: '0.02em',
+              }}
+            >
+              Plan
+            </button>
             {conversationId && (
               <button onClick={startNewConversation} style={{
                 background: 'transparent',

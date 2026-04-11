@@ -170,7 +170,9 @@ function AppRoutes() {
           <Route path="/progress"   element={<ProtectedRoute><RouteErrorBoundary><Progress /></RouteErrorBoundary></ProtectedRoute>} />
           <Route path="/history"    element={<ProtectedRoute><RouteErrorBoundary><History /></RouteErrorBoundary></ProtectedRoute>} />
           <Route path="/profile"    element={<ProtectedRoute><RouteErrorBoundary><Profile /></RouteErrorBoundary></ProtectedRoute>} />
-          <Route path="/asistente"  element={<ProtectedRoute><RouteErrorBoundary><Assistant /></RouteErrorBoundary></ProtectedRoute>} />
+          {/* Chef Caliro — antes era "Asistente". Ruta nueva /chef, alias /asistente conserva bookmarks antiguos */}
+          <Route path="/chef"       element={<ProtectedRoute><RouteErrorBoundary><Assistant /></RouteErrorBoundary></ProtectedRoute>} />
+          <Route path="/asistente"  element={<Navigate to="/chef" replace />} />
           <Route path="/upgrade"    element={<ProtectedRoute><RouteErrorBoundary><Upgrade /></RouteErrorBoundary></ProtectedRoute>} />
           <Route path="*"           element={<NotFound />} />
         </Routes>

@@ -76,8 +76,8 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
             </NavLink>
           ))}
           {isPro(user?.access_level) && (
-            <NavLink to="/asistente" style={linkStyle}>
-              Asistente
+            <NavLink to="/chef" style={linkStyle}>
+              Chef
             </NavLink>
           )}
         </div>

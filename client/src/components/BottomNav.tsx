@@ -29,6 +29,16 @@ const IconSparkles = () => (
   </svg>
 );
 
+// Chef hat — icon para la tab "Chef"
+const IconChef = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 14.5a3.5 3.5 0 0 1-1.5-6.6 3.5 3.5 0 0 1 3.5-3.4 3.5 3.5 0 0 1 8 0 3.5 3.5 0 0 1 3.5 3.4 3.5 3.5 0 0 1-1.5 6.6V19a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-4.5z" />
+    <line x1="9.5" y1="15" x2="9.5" y2="18" />
+    <line x1="12" y1="15" x2="12" y2="18" />
+    <line x1="14.5" y1="15" x2="14.5" y2="18" />
+  </svg>
+);
+
 const IconChart = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
@@ -46,7 +56,7 @@ const IconUser = () => (
 const BASE_ITEMS = [
   { to: '/',           label: 'Inicio',     end: true,  Icon: IconHome,     proOnly: false },
   { to: '/calculator', label: 'Registrar',  end: false, Icon: IconPlus,     proOnly: false },
-  { to: '/asistente',  label: 'Asistente',  end: false, Icon: IconSparkles, proOnly: true  },
+  { to: '/chef',       label: 'Chef',       end: false, Icon: IconChef,     proOnly: true  },
   { to: '/progress',   label: 'Progreso',   end: false, Icon: IconChart,    proOnly: false },
   { to: '/profile',    label: 'Perfil',     end: false, Icon: IconUser,     proOnly: false },
 ];

@@ -533,11 +533,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── 5. Card del asistente ── */}
+      {/* ── 5. Card de Chef Caliro ── */}
       <div style={{ padding: '0 16px 32px' }}>
         {isPro(user?.access_level) ? (
           <button
-            onClick={() => navigate('/asistente')}
+            onClick={() => navigate('/chef')}
             style={{
               width: '100%',
               background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',
@@ -563,7 +563,7 @@ export default function Dashboard() {
                 fontSize: 15, fontWeight: 500, color: '#ffffff',
                 fontFamily: 'var(--font-sans)', marginTop: 2,
               }}>
-                Asistente personal
+                Chef Caliro
               </span>
               <span style={{
                 fontSize: 11, color: 'rgba(255,255,255,0.4)',
@@ -610,7 +610,7 @@ export default function Dashboard() {
                 fontSize: 15, fontWeight: 500, color: '#ffffff',
                 fontFamily: 'var(--font-sans)', marginTop: 2,
               }}>
-                Asistente personal
+                Chef Caliro
               </span>
               <span style={{
                 fontSize: 11, color: 'rgba(255,255,255,0.35)',
@@ -618,8 +618,8 @@ export default function Dashboard() {
                 maxWidth: 280,
               }}>
                 {targetCalories > 0
-                  ? `Tienes ${remaining.toLocaleString('es')} kcal libres hoy. El asistente te diría qué cenar para llegar a tu objetivo.`
-                  : 'Tu nutricionista con IA — analiza tus patrones y responde con tus datos reales.'}
+                  ? `Tienes ${remaining.toLocaleString('es')} kcal libres hoy. El Chef te diría qué cenar para llegar a tu objetivo.`
+                  : 'Tu chef personal con IA — conoce tus comidas frecuentes y te sugiere qué cocinar con tus datos reales.'}
               </span>
             </div>
             <div style={{
