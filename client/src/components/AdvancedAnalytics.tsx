@@ -606,55 +606,51 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                     )}
 
-                    {/* Mensaje contextual cuando hay contradicción pasado vs futuro */}
+                    {/* Mensaje contextual cuando hay contradicción pasado vs objetivo */}
                     {(() => {
                       const realChange = data.projection?.projection_real_change_kg;
-                      const projRate = data.projection?.weekly_rate_realistic;
                       const goal = data.projection?.goal_weight;
                       const cur  = data.weight?.current;
-                      if (realChange == null || projRate == null || !goal || !cur) return null;
+                      if (realChange == null || !goal || !cur) return null;
                       const wantsLoss = goal < cur;
                       const wantsGain = goal > cur;
+                      const absChange = Math.abs(realChange);
 
-                      // Detectar contradicción: usuario quiere bajar pero subió
-                      if (wantsLoss && realChange > 0.5) {
-                        return (
-                          <div style={{
-                            background: 'rgba(245, 158, 11, 0.08)',
-                            border: '0.5px solid rgba(245, 158, 11, 0.3)',
-                            borderRadius: 'var(--radius-sm)',
-                            padding: '10px 12px',
-                            marginBottom: 12,
+                      // Solo mostrar si hay contradicción clara (>0.5 kg en la dirección equivocada)
+                      const contradiction = (wantsLoss && realChange > 0.5) || (wantsGain && realChange < -0.5);
+                      if (!contradiction) return null;
+
+                      const headline = wantsLoss
+                        ? `Has ganado ${absChange.toFixed(1)} kg este mes, pero tu objetivo es perder peso.`
+                        : `Has perdido ${absChange.toFixed(1)} kg este mes, pero tu objetivo es ganar peso.`;
+
+                      return (
+                        <div style={{
+                          background: 'rgba(245, 158, 11, 0.08)',
+                          border: '0.5px solid rgba(245, 158, 11, 0.3)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '12px 14px',
+                          marginBottom: 12,
+                        }}>
+                          <p style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 6, fontWeight: 600 }}>
+                            Tu progreso no refleja tu objetivo
+                          </p>
+                          <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.55, marginBottom: 8 }}>
+                            {headline} Esto puede deberse a:
+                          </p>
+                          <ul style={{
+                            fontSize: 11, color: 'var(--text-secondary)',
+                            lineHeight: 1.5, margin: '0 0 8px 16px', padding: 0,
                           }}>
-                            <p style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 4, fontWeight: 600 }}>
-                              ⚠ Atención
-                            </p>
-                            <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                              Has ganado {Math.abs(realChange).toFixed(1)} kg este mes, pero tu objetivo es perder peso. Tu metabolismo actual quema unas {data.projection?.tdee_effective} kcal/día — para bajar deberías comer ~{Math.round(data.projection.tdee_effective - 400)} kcal/día (~400 kcal de déficit).
-                            </p>
-                          </div>
-                        );
-                      }
-                      // Caso opuesto: quiere ganar pero está bajando
-                      if (wantsGain && realChange < -0.5) {
-                        return (
-                          <div style={{
-                            background: 'rgba(245, 158, 11, 0.08)',
-                            border: '0.5px solid rgba(245, 158, 11, 0.3)',
-                            borderRadius: 'var(--radius-sm)',
-                            padding: '10px 12px',
-                            marginBottom: 12,
-                          }}>
-                            <p style={{ fontSize: 12, color: 'var(--text-primary)', marginBottom: 4, fontWeight: 600 }}>
-                              ⚠ Atención
-                            </p>
-                            <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                              Has perdido {Math.abs(realChange).toFixed(1)} kg este mes, pero tu objetivo es ganar peso. Necesitas aumentar tu ingesta calórica diaria.
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
+                            <li>Subregistro calórico (aceite, salsas, bebidas, snacks no contados)</li>
+                            <li>Días sin registrar o con registros incompletos</li>
+                            <li>Fluctuaciones normales de agua, sal o ciclo</li>
+                          </ul>
+                          <p style={{ fontSize: 11, color: 'var(--text-tertiary)', fontStyle: 'italic', lineHeight: 1.5 }}>
+                            Revisa tus registros recientes e intenta ser lo más preciso posible las próximas 2-3 semanas para ver una tendencia real.
+                          </p>
+                        </div>
+                      );
                     })()}
 
                     {/* Pills: TDEE + Balance diario + Ventana de cálculo */}
