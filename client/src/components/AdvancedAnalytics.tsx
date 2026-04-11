@@ -268,72 +268,6 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                 </div>
               </Section>
 
-              {/* ── Impacto por Alimento ── */}
-              {data.food_impact?.length > 0 && (
-                <Section title="Impacto por alimento">
-                  <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10, marginTop: -8 }}>
-                    Cómo cada comida afecta tu balance de macros
-                  </p>
-                  <div style={{
-                    background: 'var(--surface)', borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-sm)', overflow: 'hidden',
-                  }}>
-                    {data.food_impact.map((f, i) => {
-                      const totalMacro = (f.avg_prot || 0) + (f.avg_carbs || 0) + (f.avg_fat || 0);
-                      const protW = totalMacro > 0 ? (f.avg_prot / totalMacro) * 100 : 0;
-                      const carbsW = totalMacro > 0 ? (f.avg_carbs / totalMacro) * 100 : 0;
-                      const fatW = totalMacro > 0 ? (f.avg_fat / totalMacro) * 100 : 0;
-
-                      const isExcess = f.impact === 'excess';
-                      const isDeficit = f.impact === 'deficit';
-                      const icon = isExcess ? '⚠' : isDeficit ? '↓' : '✓';
-                      const iconColor = isExcess ? '#f59e0b' : isDeficit ? 'var(--color-fat)' : 'var(--color-success)';
-                      const macroLabel = { protein: 'proteína', carbs: 'carbos', fat: 'grasa' }[f.impact_macro] || '';
-
-                      let msg = null;
-                      if (isExcess && Math.abs(f.impact_diff) >= 10) {
-                        msg = `Empuja tus ${macroLabel} un ${f.impact_diff}% sobre objetivo`;
-                      } else if (isDeficit && Math.abs(f.impact_diff) >= 10) {
-                        msg = `Poca ${macroLabel} (${f.impact_diff}% vs objetivo)`;
-                      } else if (f.impact === 'balanced') {
-                        msg = 'Balance equilibrado';
-                      }
-
-                      return (
-                        <div key={i} style={{
-                          padding: '12px 14px',
-                          borderBottom: i < data.food_impact.length - 1 ? '0.5px solid var(--border)' : 'none',
-                        }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                            <span style={{
-                              fontSize: 13, color: 'var(--text-primary)', fontWeight: 500,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                              maxWidth: '70%', textTransform: 'capitalize',
-                            }}>
-                              {f.food}
-                            </span>
-                            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', flexShrink: 0 }}>
-                              {f.times}× · {f.avg_cal} kcal
-                            </span>
-                          </div>
-                          {/* Barra stacked de macros */}
-                          <div style={{ display: 'flex', height: 6, borderRadius: 99, overflow: 'hidden', background: 'var(--border)', marginBottom: 6 }}>
-                            {protW > 0 && <div style={{ width: `${protW}%`, background: 'var(--color-protein, #16a34a)' }} />}
-                            {carbsW > 0 && <div style={{ width: `${carbsW}%`, background: 'var(--color-carbs, #f59e0b)' }} />}
-                            {fatW > 0 && <div style={{ width: `${fatW}%`, background: 'var(--color-fat, #4a90d9)' }} />}
-                          </div>
-                          {msg && (
-                            <p style={{ fontSize: 10, color: iconColor, fontStyle: 'italic', margin: 0 }}>
-                              {icon} {msg}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Section>
-              )}
-
               {/* ── Semana vs Fin de Semana ── */}
               {data.weekday_weekend && (
                 <Section title="Semana vs fin de semana">
@@ -393,32 +327,44 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
               {data.macro_gaps && (
                 <Section title="Tus macros">
                   <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10, marginTop: -8 }}>
-                    Dónde fallas y cuándo
+                    Diferencia entre tu media diaria y tus objetivos
                   </p>
                   <div style={{
                     background: 'var(--surface)', borderRadius: 'var(--radius-md)',
                     boxShadow: 'var(--shadow-sm)', overflow: 'hidden',
                   }}>
                     {[
-                      { key: 'protein', label: 'Proteína', unit: 'g', color: '#16a34a' },
-                      { key: 'carbs',   label: 'Carbos',    unit: 'g', color: '#f59e0b' },
-                      { key: 'fat',     label: 'Grasa',     unit: 'g', color: '#4a90d9' },
+                      {
+                        key: 'protein', label: 'Proteína', color: '#16a34a',
+                        deficitTips: ['Una pechuga de pollo = +30g', '3 huevos = +18g', 'Un yogur griego = +15g'],
+                        excessTips: ['Reduce porciones de carne', 'Cambia parte por verduras'],
+                      },
+                      {
+                        key: 'carbs', label: 'Carbos', color: '#f59e0b',
+                        deficitTips: ['Una fruta = +20g', 'Una rebanada de pan integral = +15g', 'Un puñado de arroz = +25g'],
+                        excessTips: ['Reduce pasta/arroz a media ración', 'Cambia pan blanco por integral'],
+                      },
+                      {
+                        key: 'fat', label: 'Grasa', color: '#4a90d9',
+                        deficitTips: ['Un aguacate = +20g', 'Un puñado de nueces = +15g', 'Una cucharada de aceite = +12g'],
+                        excessTips: ['Reduce aceite en cocción', 'Cambia quesos curados por frescos'],
+                      },
                     ].map((m, i, arr) => {
                       const gap = data.macro_gaps[m.key];
                       if (!gap || gap.status === 'no_target') return null;
 
-                      const statusIcon = gap.status === 'on_target' ? '✓' : gap.status === 'deficit' ? '↓' : '↑';
-                      const statusColor = gap.status === 'on_target' ? 'var(--color-success)'
-                        : gap.status === 'deficit' ? 'var(--color-fat)' : '#f59e0b';
-                      const statusLabel = gap.status === 'on_target' ? 'En objetivo'
-                        : gap.status === 'deficit' ? `Déficit ${Math.abs(gap.pct)}%`
-                        : `Exceso ${gap.pct}%`;
+                      const isOnTarget = gap.status === 'on_target';
+                      const isDeficit  = gap.status === 'deficit';
+
+                      const statusColor = isOnTarget ? 'var(--color-success)'
+                        : isDeficit ? 'var(--color-fat)' : '#f59e0b';
 
                       return (
                         <div key={m.key} style={{
                           padding: '14px',
                           borderBottom: i < arr.length - 1 ? '0.5px solid var(--border)' : 'none',
                         }}>
+                          {/* Header: nombre + status */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <div style={{ width: 8, height: 8, borderRadius: '50%', background: m.color }} />
@@ -427,18 +373,45 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               </span>
                             </div>
                             <span style={{ fontSize: 11, color: statusColor, fontWeight: 500 }}>
-                              {statusIcon} {statusLabel}
+                              {isOnTarget ? '✓ En objetivo'
+                                : isDeficit ? `−${gap.diff_g}g`
+                                : `+${gap.diff_g}g`}
                             </span>
                           </div>
-                          <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }}>
-                            Media diaria: <strong style={{ color: 'var(--text-secondary)' }}>{gap.avg_daily}{m.unit}</strong> · objetivo: {gap.target}{m.unit}
-                          </p>
-                          {gap.status !== 'on_target' && gap.worst_meal && (
-                            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
-                              {gap.status === 'deficit' ? 'Peor momento: ' : 'Más concentrado en: '}
-                              <strong style={{ color: 'var(--text-secondary)' }}>
-                                {gap.worst_meal.label} ({gap.worst_meal.avg}{m.unit} avg)
-                              </strong>
+
+                          {/* Barra visual: progreso vs objetivo */}
+                          <div style={{ marginBottom: 8 }}>
+                            <div style={{
+                              height: 6, borderRadius: 99,
+                              background: 'var(--border)', overflow: 'hidden',
+                              position: 'relative',
+                            }}>
+                              <div style={{
+                                height: '100%',
+                                width: `${Math.min(100, (gap.avg_daily / gap.target) * 100)}%`,
+                                background: m.color,
+                                opacity: isOnTarget ? 1 : 0.7,
+                                borderRadius: 99,
+                                transition: 'width 0.6s',
+                              }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                              <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+                                {gap.avg_daily}g / día
+                              </span>
+                              <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
+                                objetivo {gap.target}g
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Sugerencia accionable */}
+                          {!isOnTarget && (
+                            <p style={{ fontSize: 11, color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: 6, lineHeight: 1.4 }}>
+                              {isDeficit ? 'Para cubrir el déficit:' : 'Para ajustar:'}{' '}
+                              <span style={{ color: 'var(--text-tertiary)', fontStyle: 'normal' }}>
+                                {(isDeficit ? m.deficitTips : m.excessTips).join(' · ')}
+                              </span>
                             </p>
                           )}
                         </div>
