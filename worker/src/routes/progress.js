@@ -12,27 +12,38 @@ function calcStdDev(arr) {
   return Math.sqrt(arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length);
 }
 
+// Proyección día a día con modelo cientifico:
+//   - Adaptación metabólica gradual (~10 kcal/día por kg perdido, sin doble penalización)
+//   - Densidad energética del tejido gradual (agua/glucógeno → grasa real)
+//   - Soporta bulking (dailyDeficit negativo = surplus)
+//   - Funciona simétrico para perder y ganar peso
 function projectWeightScenario(startWeight, dailyDeficit, adherenceRate, days) {
   if (startWeight <= 0) return startWeight;
   let weight = startWeight;
   for (let day = 1; day <= days; day++) {
-    const weightLost = startWeight - weight;
-    const adaptationFactor = Math.max(0.75, 1 - (weightLost / startWeight) * 0.15);
-    const tdeeReduction = weightLost * 22;
-    const adjustedDeficit = (dailyDeficit - tdeeReduction) * adaptationFactor * adherenceRate;
-    const tissueEnergyDensity = day < 14 ? 5000 : 7200;
-    weight -= adjustedDeficit / tissueEnergyDensity;
+    const weightDelta = weight - startWeight;            // negativo si pierde, positivo si gana
+    // Adaptación metabólica: ~10 kcal/día por kg de cambio (Hall 2011, Müller 2015)
+    // Para weight loss: el cuerpo quema menos → reduce déficit
+    // Para weight gain: el cuerpo quema más → reduce surplus
+    // Aplicado simétricamente: déficit absoluto se reduce con magnitud del cambio
+    const adaptationKcal = -Math.sign(dailyDeficit) * Math.abs(weightDelta) * 10;
+    const adaptedDeficit = dailyDeficit + adaptationKcal;
+    // Solo aplica adherencia (días que el usuario realmente registra/mantiene)
+    const effectiveDeficit = adaptedDeficit * adherenceRate;
+    // Densidad energética del tejido — gradual de 5000 (agua/glucógeno) a 7700 (grasa real)
+    // Curva suave: lerp lineal de día 1 al día 28
+    const t = Math.min(1, day / 28);
+    const tissueEnergyDensity = 5000 + (7700 - 5000) * t;
+    weight -= effectiveDeficit / tissueEnergyDensity;
   }
   return Math.round(weight * 10) / 10;
 }
 
-function calcUncertaintyBands(proj, day, cv, adherenceRate) {
-  const total = Math.sqrt(day) * 0.08 + (1 - adherenceRate) * 2 + cv * 1.5;
-  return {
-    optimistic:   Math.round((proj - total * 0.5) * 10) / 10,
-    realistic:    proj,
-    conservative: Math.round((proj + total) * 10) / 10,
-  };
+// Bandas de incertidumbre — usadas SOLO para mostrar margen de error en realista
+// (los escenarios optimista/conservador ya se calculan con sus propias adherencias)
+function calcUncertaintyBand(days, cv, adherenceRate) {
+  // Crece con: tiempo (raíz cuadrada), variabilidad calorica (CV), inversamente con adherencia
+  return Math.sqrt(days) * 0.08 + (1 - adherenceRate) * 1.5 + cv * 1.0;
 }
 
 function calcPlateauPrediction(adherenceRate) {
@@ -426,17 +437,32 @@ export async function handleProgress(request, env, path) {
     try { goalWeight = profile?.goal_weight || null; } catch {}
 
     if (currentWeight !== null && dailyDeficitTheo !== null) {
-      const r30 = projectWeightScenario(currentWeight, dailyDeficitTheo, adherenceRate, 30);
-      const r60 = projectWeightScenario(currentWeight, dailyDeficitTheo, adherenceRate, 60);
-      const r90 = projectWeightScenario(currentWeight, dailyDeficitTheo, adherenceRate, 90);
-      const b30 = calcUncertaintyBands(r30, 30, calorieVariabilityCV, adherenceRate);
-      const b60 = calcUncertaintyBands(r60, 60, calorieVariabilityCV, adherenceRate);
-      const b90 = calcUncertaintyBands(r90, 90, calorieVariabilityCV, adherenceRate);
+      // Cada escenario usa una ADHERENCIA distinta — ahora coincide con lo que dice la UI
+      //   Optimista:   adherencia 1.0 (perfecta — el usuario lo borda los 90 días)
+      //   Realista:    adherencia actual del usuario (su comportamiento real)
+      //   Conservador: adherencia × 0.8 (20% peor — fines de semana, viajes, etc)
+      const adherenceOpt   = 1.0;
+      const adherenceReal  = Math.max(0.1, adherenceRate);  // floor para evitar 0
+      const adherenceCons  = Math.max(0.1, adherenceRate * 0.8);
+
+      const proj = (days, adh) => projectWeightScenario(currentWeight, dailyDeficitTheo, adh, days);
+
+      const r30 = proj(30, adherenceReal);
+      const r60 = proj(60, adherenceReal);
+      const r90 = proj(90, adherenceReal);
 
       scenarios = {
-        optimistic:   { '30d': b30.optimistic,   '60d': b60.optimistic,   '90d': b90.optimistic   },
-        realistic:    { '30d': b30.realistic,     '60d': b60.realistic,     '90d': b90.realistic     },
-        conservative: { '30d': b30.conservative, '60d': b60.conservative, '90d': b90.conservative },
+        optimistic: {
+          '30d': proj(30, adherenceOpt),
+          '60d': proj(60, adherenceOpt),
+          '90d': proj(90, adherenceOpt),
+        },
+        realistic: { '30d': r30, '60d': r60, '90d': r90 },
+        conservative: {
+          '30d': proj(30, adherenceCons),
+          '60d': proj(60, adherenceCons),
+          '90d': proj(90, adherenceCons),
+        },
       };
 
       plateauPrediction   = calcPlateauPrediction(adherenceRate);

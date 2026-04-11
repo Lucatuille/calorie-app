@@ -612,14 +612,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                         boxShadow: 'var(--shadow-md)', padding: '14px 10px 10px',
                         position: 'relative', marginBottom: 16,
                       }}>
-                        {/* Leyenda vertical — esquina superior derecha, dark mode safe */}
+                        {/* Leyenda horizontal arriba del chart — no tapa lineas */}
                         <div style={{
-                          position: 'absolute', top: 10, right: 8, zIndex: 1,
-                          display: 'flex', flexDirection: 'column', gap: 4,
-                          background: 'var(--surface)',
-                          border: '0.5px solid var(--border)',
-                          borderRadius: 6, padding: '6px 8px',
-                          boxShadow: 'var(--shadow-sm)',
+                          display: 'flex', flexWrap: 'wrap', gap: 12,
+                          padding: '0 4px 10px',
+                          justifyContent: 'center',
                         }}>
                           {[
                             { color: 'var(--text-primary)', label: 'Báscula', dash: false },
@@ -628,14 +625,14 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             { color: 'var(--color-success)', label: 'Optimista',   dash: true  },
                             { color: '#94a3b8', label: 'Conservador', dash: true  },
                           ].map(item => (
-                            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <svg width="14" height="6" viewBox="0 0 14 6" style={{ flexShrink: 0 }}>
+                            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <svg width="16" height="6" viewBox="0 0 16 6" style={{ flexShrink: 0 }}>
                                 {item.dash
-                                  ? <line x1="0" y1="3" x2="14" y2="3" stroke={item.color} strokeWidth="1.5" strokeDasharray="3 2" />
-                                  : <line x1="0" y1="3" x2="14" y2="3" stroke={item.color} strokeWidth="2" />
+                                  ? <line x1="0" y1="3" x2="16" y2="3" stroke={item.color} strokeWidth="1.5" strokeDasharray="3 2" />
+                                  : <line x1="0" y1="3" x2="16" y2="3" stroke={item.color} strokeWidth="2" />
                                 }
                               </svg>
-                              <span style={{ fontSize: 9, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
+                              <span style={{ fontSize: 10, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{item.label}</span>
                             </div>
                           ))}
                         </div>
