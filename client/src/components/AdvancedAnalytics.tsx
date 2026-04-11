@@ -88,26 +88,26 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
       .finally(() => setLoading(false));
   }, [isOpen, period, token]);
 
-  // Projection chart data: historical weight (raw + smoothed) + 3 projected scenarios
+  // Projection chart data: historical weight (actual + trend) + 3 projected scenarios
   const projChartData = (() => {
     if (!data?.daily_data) return [];
     const weightPts = data.daily_data
       .filter(d => d.weight != null)
       .map(d => ({
         date: new Date(d.date + 'T12:00:00Z').toLocaleDateString('es', { day: 'numeric', month: 'short' }),
-        raw: d.weight,
-        smoothed: d.weight_smoothed ?? d.weight,
+        actual: d.weight,                           // báscula real (protagonista)
+        trend:  d.weight_smoothed ?? d.weight,      // tendencia suavizada (contexto)
       }));
     if (!weightPts.length || !data.projection?.scenarios) return weightPts;
 
     const { scenarios } = data.projection;
     const today = new Date();
     const fmt   = n => new Date(today.getTime() + n * 86400000).toLocaleDateString('es', { day: 'numeric', month: 'short' });
-    // La proyeccion parte del peso ajustado (mas fiable que el crudo)
-    const anchor = data.weight?.smoothed_current ?? data.weight?.current;
+    // Ancla = peso real del dashboard (lo que el usuario ve en su báscula)
+    const cw = data.weight.current;
     return [
       ...weightPts,
-      { date: 'Hoy',   smoothed: anchor, optimistic: anchor, realistic: anchor, conservative: anchor },
+      { date: 'Hoy',   actual: cw, optimistic: cw, realistic: cw, conservative: cw },
       { date: fmt(30), optimistic: scenarios.optimistic['30d'], realistic: scenarios.realistic['30d'], conservative: scenarios.conservative['30d'] },
       { date: fmt(60), optimistic: scenarios.optimistic['60d'], realistic: scenarios.realistic['60d'], conservative: scenarios.conservative['60d'] },
       { date: fmt(90), optimistic: scenarios.optimistic['90d'], realistic: scenarios.realistic['90d'], conservative: scenarios.conservative['90d'] },
@@ -508,16 +508,18 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                   <>
                     {/* KPI Row — 3 cards con accent bar superior 2px */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
-                      {/* Peso actual — ajustado (EMA) con crudo como sub */}
+                      {/* Peso actual — báscula real del dashboard */}
                       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
                         <div style={{ height: 2, background: 'var(--color-success)' }} />
                         <div style={{ padding: '10px 10px 12px' }}>
-                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Tendencia</p>
+                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Peso actual</p>
                           <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-success)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
-                            {data.weight.smoothed_current ?? data.weight.current}
+                            {data.weight.current}
                           </p>
                           <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>
-                            kg · báscula: {data.weight.current}
+                            kg{data.weight.smoothed_current != null && data.weight.smoothed_current !== data.weight.current
+                              ? ` · tendencia ${data.weight.smoothed_current}`
+                              : ''}
                           </p>
                         </div>
                       </div>
@@ -549,11 +551,35 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                       </div>
                     </div>
 
-                    {/* Déficit + cambio de peso */}
+                    {/* Déficit + cambio de peso + TDEE efectivo */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      {data.projection?.tdee_effective != null && (
+                        <span
+                          title={data.projection.tdee_calibrated
+                            ? `TDEE calibrado con tu cambio de peso real (teórico: ${data.projection.tdee_theoretical} kcal)`
+                            : 'TDEE teórico (aún sin datos suficientes para calibrar)'}
+                          style={{
+                            fontSize: 11,
+                            color: 'var(--text-secondary)',
+                            fontFamily: 'var(--font-sans)',
+                            background: 'var(--surface-2)',
+                            padding: '3px 8px',
+                            borderRadius: 'var(--radius-full)',
+                            cursor: 'help',
+                          }}
+                        >
+                          TDEE {data.projection.tdee_calibrated ? 'real' : 'teórico'}: {data.projection.tdee_effective} kcal
+                          {data.projection.tdee_calibrated && data.projection.tdee_theoretical !== data.projection.tdee_effective && (
+                            <span style={{ color: 'var(--text-tertiary)' }}>
+                              {' '}({data.projection.tdee_effective > data.projection.tdee_theoretical ? '+' : ''}
+                              {data.projection.tdee_effective - data.projection.tdee_theoretical})
+                            </span>
+                          )}
+                        </span>
+                      )}
                       {data.projection?.daily_deficit_effective != null && (
                         <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)', background: 'var(--surface-2)', padding: '3px 8px', borderRadius: 'var(--radius-full)' }}>
-                          Déficit real: {Math.round(data.projection.daily_deficit_effective)} kcal/día
+                          Déficit: {Math.round(data.projection.daily_deficit_effective)} kcal/día
                         </span>
                       )}
                       {data.weight?.change != null && (
@@ -580,8 +606,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           {[
-                            { color: 'var(--text-primary)', label: 'Tendencia', dash: false },
-                            { color: 'var(--text-tertiary)', label: 'Báscula', dash: false, dim: true },
+                            { color: 'var(--text-primary)', label: 'Báscula', dash: false },
+                            { color: 'var(--color-success)', label: 'Tendencia', dash: false },
                             { color: '#f59e0b', label: 'Realista',    dash: true  },
                             { color: 'var(--color-success)', label: 'Optimista',   dash: true  },
                             { color: '#94a3b8', label: 'Conservador', dash: true  },
@@ -607,8 +633,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               cursor={{ stroke: 'var(--accent)', strokeWidth: 1, strokeDasharray: '3 3' }}
                               formatter={(v, name) => {
                                 const labels = {
-                                  smoothed: 'Tendencia',
-                                  raw: 'Báscula',
+                                  actual: 'Báscula',
+                                  trend: 'Tendencia',
                                   optimistic: 'Optimista',
                                   realistic: 'Realista',
                                   conservative: 'Conservador',
@@ -707,22 +733,22 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               connectNulls={false}
                               legendType="none"
                             />
-                            {/* Báscula cruda — gris sutil, puntos pequeños para contexto */}
+                            {/* Tendencia (peso ajustado EMA) — línea guía sutil bajo la báscula */}
                             <Line
                               type="monotone"
-                              dataKey="raw"
-                              stroke="var(--text-tertiary, #a0a0a0)"
-                              strokeWidth={1}
-                              strokeOpacity={0.5}
+                              dataKey="trend"
+                              stroke="var(--color-success, #16a34a)"
+                              strokeWidth={1.5}
+                              strokeOpacity={0.55}
                               connectNulls={false}
                               legendType="none"
-                              dot={{ r: 2, fill: 'var(--text-tertiary, #a0a0a0)', strokeWidth: 0 }}
-                              activeDot={{ r: 4, fill: 'var(--text-tertiary, #a0a0a0)' }}
+                              dot={false}
+                              activeDot={{ r: 4, fill: 'var(--color-success, #16a34a)' }}
                             />
-                            {/* Tendencia (peso ajustado EMA) — protagonista, negra, punto actual con halo */}
+                            {/* Báscula real — protagonista, negra gruesa, punto actual con halo */}
                             <Line
                               type="monotone"
-                              dataKey="smoothed"
+                              dataKey="actual"
                               stroke="var(--text-primary, #111111)"
                               strokeWidth={2}
                               connectNulls={false}
@@ -738,7 +764,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                     </g>
                                   );
                                 }
-                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={0} fill="none" />;
+                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill="var(--text-primary, #111111)" />;
                               }}
                               activeDot={{ r: 5, fill: '#111111' }}
                             />

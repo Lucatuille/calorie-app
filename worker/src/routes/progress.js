@@ -368,19 +368,47 @@ export async function handleProgress(request, env, path) {
 
     // Dynamic TDEE: prefer wizard-calculated value, then Mifflin-St Jeor, then target_calories
     let tdee = null;
+    let tdeeSource = 'wizard';
     if (profile?.tdee) {
       tdee = profile.tdee;
+      tdeeSource = 'wizard';
     } else if (profile?.weight && profile?.height && profile?.age) {
       const bmr = profile.gender === 'female'
         ? 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 161
         : 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5;
       tdee = bmr * 1.55;
+      tdeeSource = 'estimated';
     }
-    if (!tdee && target) tdee = target;
+    if (!tdee && target) { tdee = target; tdeeSource = 'target'; }
+
+    // ── TDEE efectivo: calibrar con la realidad del peso ────────
+    // Si tenemos >=14 días con peso registrado, calculamos el TDEE real que
+    // explicaría el cambio de peso observado. Esto corrige sobreestimaciones
+    // del TDEE teórico (que puede ignorar adaptación metabólica, subregistro
+    // calórico, errores de báscula, etc.)
+    //
+    // Fórmula: TDEE_efectivo = avg_cal - (kg_change × 7700 / span_days)
+    //   Si el peso sube con "déficit teórico", el TDEE real era menor.
+    //   Si el peso baja más de lo esperado, el TDEE real era mayor.
+    //
+    // Usamos el cambio smoothed (no el raw) porque elimina ruido de agua/sal.
+    let tdeeEffective = tdee;
+    let tdeeCalibrated = false;
+    if (smoothedChange != null && weightSpanDays >= 14 && weightedAvgCal && tdee) {
+      const realDailyDelta = (smoothedChange * 7700) / weightSpanDays;
+      // TDEE que explicaría el cambio observado (comiendo weightedAvgCal)
+      const inferredTdee = weightedAvgCal - realDailyDelta;
+      // Blend: 70% inferido (más real), 30% teórico (estabilidad con pocos datos)
+      // Pero capped para no dar valores absurdos si hay datos raros
+      const blended = inferredTdee * 0.7 + tdee * 0.3;
+      // Cap: no más de ±30% del teórico para evitar outliers
+      tdeeEffective = Math.max(tdee * 0.7, Math.min(tdee * 1.3, blended));
+      tdeeCalibrated = true;
+    }
 
     // Adherence rate: registered days / total period days
     const adherenceRate    = calDays.length / days;
-    const dailyDeficitTheo = (tdee && weightedAvgCal) ? tdee - weightedAvgCal : null;
+    const dailyDeficitTheo = (tdeeEffective && weightedAvgCal) ? tdeeEffective - weightedAvgCal : null;
     const dailyDeficitEff  = dailyDeficitTheo ? dailyDeficitTheo * adherenceRate : null;
 
     // Metabolic adaptation factor based on weight lost so far
@@ -558,6 +586,11 @@ export async function handleProgress(request, env, path) {
         adherence_rate:            +adherenceRate.toFixed(2),
         calorie_variability_cv:    +calorieVariabilityCV.toFixed(2),
         metabolic_adaptation_factor: +metabolicAdaptFactor.toFixed(2),
+        // TDEE: teórico (wizard/Mifflin) vs efectivo (calibrado con realidad)
+        tdee_theoretical:   tdee ? Math.round(tdee) : null,
+        tdee_effective:     tdeeEffective ? Math.round(tdeeEffective) : null,
+        tdee_calibrated:    tdeeCalibrated,
+        tdee_source:        tdeeSource,
         scenarios,
         plateau_prediction: plateauPrediction,
         weekly_rate_realistic: weeklyRateRealistic,
