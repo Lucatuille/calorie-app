@@ -325,8 +325,32 @@ export async function handleProgress(request, env, path) {
     const weightSpanDays = weightEntries.length >= 2
       ? (new Date(weightEntries[weightEntries.length-1].date + 'T12:00:00Z') - new Date(weightEntries[0].date + 'T12:00:00Z')) / 86400000
       : 0;
-    const trendPerWeek = (weightChange != null && weightSpanDays >= 3)
-      ? +((weightChange / (weightSpanDays / 7)).toFixed(2)) : null;
+
+    // ── Peso ajustado (Hacker's Diet EMA) + media movil 7d ─────
+    // Suaviza el ruido diario de agua/sal/comida para mostrar tendencia real
+    // Formula: EMA_i = alpha * raw_i + (1 - alpha) * EMA_{i-1}, alpha=0.1
+    const ALPHA = 0.1;
+    let emaPrev = weightVals.length ? weightVals[0] : null;
+    const smoothedSeries = weightEntries.map((d, i) => {
+      if (i === 0) return { date: d.date, smoothed: +d.weight.toFixed(2) };
+      emaPrev = ALPHA * d.weight + (1 - ALPHA) * emaPrev;
+      return { date: d.date, smoothed: +emaPrev.toFixed(2) };
+    });
+    // Inyectar peso ajustado en daily para que el frontend pueda dibujarlo
+    const smoothedMap = Object.fromEntries(smoothedSeries.map(s => [s.date, s.smoothed]));
+    for (const d of daily) {
+      d.weight_smoothed = smoothedMap[d.date] || null;
+    }
+    const smoothedCurrent = smoothedSeries.length ? smoothedSeries[smoothedSeries.length - 1].smoothed : null;
+    const smoothedStart   = smoothedSeries.length ? smoothedSeries[0].smoothed : null;
+    const smoothedChange  = (smoothedCurrent != null && smoothedStart != null)
+      ? +((smoothedCurrent - smoothedStart).toFixed(2)) : null;
+
+    // Trend per week basado en peso ajustado (mas fiable que crudo)
+    const trendPerWeek = (smoothedChange != null && weightSpanDays >= 3)
+      ? +((smoothedChange / (weightSpanDays / 7)).toFixed(2))
+      : (weightChange != null && weightSpanDays >= 3
+        ? +((weightChange / (weightSpanDays / 7)).toFixed(2)) : null);
 
     // ── Scientific projection (dynamic adaptive model) ─────────
     // Calorie variability (coefficient of variation)
@@ -521,6 +545,10 @@ export async function handleProgress(request, env, path) {
       weight: {
         start: startWeight, current: currentWeight, change: weightChange,
         trend_per_week: trendPerWeek, data_points: wPoints,
+        // Peso ajustado (Hacker's Diet EMA) — elimina ruido de agua/sal
+        smoothed_start: smoothedStart,
+        smoothed_current: smoothedCurrent,
+        smoothed_change: smoothedChange,
       },
 
       projection: {

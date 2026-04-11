@@ -88,24 +88,26 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
       .finally(() => setLoading(false));
   }, [isOpen, period, token]);
 
-  // Projection chart data: historical weight + 3 projected scenarios
+  // Projection chart data: historical weight (raw + smoothed) + 3 projected scenarios
   const projChartData = (() => {
     if (!data?.daily_data) return [];
     const weightPts = data.daily_data
       .filter(d => d.weight != null)
       .map(d => ({
         date: new Date(d.date + 'T12:00:00Z').toLocaleDateString('es', { day: 'numeric', month: 'short' }),
-        actual: d.weight,
+        raw: d.weight,
+        smoothed: d.weight_smoothed ?? d.weight,
       }));
     if (!weightPts.length || !data.projection?.scenarios) return weightPts;
 
     const { scenarios } = data.projection;
     const today = new Date();
     const fmt   = n => new Date(today.getTime() + n * 86400000).toLocaleDateString('es', { day: 'numeric', month: 'short' });
-    const cw = data.weight.current;
+    // La proyeccion parte del peso ajustado (mas fiable que el crudo)
+    const anchor = data.weight?.smoothed_current ?? data.weight?.current;
     return [
       ...weightPts,
-      { date: 'Hoy',   actual: cw, optimistic: cw, realistic: cw, conservative: cw },
+      { date: 'Hoy',   smoothed: anchor, optimistic: anchor, realistic: anchor, conservative: anchor },
       { date: fmt(30), optimistic: scenarios.optimistic['30d'], realistic: scenarios.realistic['30d'], conservative: scenarios.conservative['30d'] },
       { date: fmt(60), optimistic: scenarios.optimistic['60d'], realistic: scenarios.realistic['60d'], conservative: scenarios.conservative['60d'] },
       { date: fmt(90), optimistic: scenarios.optimistic['90d'], realistic: scenarios.realistic['90d'], conservative: scenarios.conservative['90d'] },
@@ -506,13 +508,17 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                   <>
                     {/* KPI Row — 3 cards con accent bar superior 2px */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 20 }}>
-                      {/* Peso actual — green */}
+                      {/* Peso actual — ajustado (EMA) con crudo como sub */}
                       <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
                         <div style={{ height: 2, background: 'var(--color-success)' }} />
                         <div style={{ padding: '10px 10px 12px' }}>
-                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Peso actual</p>
-                          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-success)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>{data.weight.current}</p>
-                          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>kg</p>
+                          <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 5, fontFamily: 'var(--font-sans)' }}>Tendencia</p>
+                          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-success)', lineHeight: 1, fontFamily: 'var(--font-sans)' }}>
+                            {data.weight.smoothed_current ?? data.weight.current}
+                          </p>
+                          <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2, fontFamily: 'var(--font-sans)' }}>
+                            kg · báscula: {data.weight.current}
+                          </p>
                         </div>
                       </div>
                       {/* Tasa semanal — amber */}
@@ -574,7 +580,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           {[
-                            { color: 'var(--text-primary)', label: 'Real', dash: false },
+                            { color: 'var(--text-primary)', label: 'Tendencia', dash: false },
+                            { color: 'var(--text-tertiary)', label: 'Báscula', dash: false, dim: true },
                             { color: '#f59e0b', label: 'Realista',    dash: true  },
                             { color: 'var(--color-success)', label: 'Optimista',   dash: true  },
                             { color: '#94a3b8', label: 'Conservador', dash: true  },
@@ -597,11 +604,20 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} interval="preserveStartEnd" />
                             <YAxis tick={{ fontSize: 10, fill: 'var(--text-3)' }} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
                             <Tooltip
+                              cursor={{ stroke: 'var(--accent)', strokeWidth: 1, strokeDasharray: '3 3' }}
                               formatter={(v, name) => {
-                                const labels = { actual: 'Real', optimistic: 'Optimista', realistic: 'Realista', conservative: 'Conservador' };
-                                return [`${v} kg`, labels[name] || name];
+                                const labels = {
+                                  smoothed: 'Tendencia',
+                                  raw: 'Báscula',
+                                  optimistic: 'Optimista',
+                                  realistic: 'Realista',
+                                  conservative: 'Conservador',
+                                };
+                                const num = typeof v === 'number' ? v.toFixed(1) : v;
+                                return [`${num} kg`, labels[name] || name];
                               }}
-                              contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                              contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, padding: '8px 10px' }}
+                              labelStyle={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 4 }}
                             />
 
                             {/* Banda de confianza — amber opacity 0.12, area bajo la línea optimista */}
@@ -691,10 +707,22 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               connectNulls={false}
                               legendType="none"
                             />
-                            {/* Línea histórica — dark, sólida, punto actual con halo */}
+                            {/* Báscula cruda — gris sutil, puntos pequeños para contexto */}
                             <Line
                               type="monotone"
-                              dataKey="actual"
+                              dataKey="raw"
+                              stroke="var(--text-tertiary, #a0a0a0)"
+                              strokeWidth={1}
+                              strokeOpacity={0.5}
+                              connectNulls={false}
+                              legendType="none"
+                              dot={{ r: 2, fill: 'var(--text-tertiary, #a0a0a0)', strokeWidth: 0 }}
+                              activeDot={{ r: 4, fill: 'var(--text-tertiary, #a0a0a0)' }}
+                            />
+                            {/* Tendencia (peso ajustado EMA) — protagonista, negra, punto actual con halo */}
+                            <Line
+                              type="monotone"
+                              dataKey="smoothed"
                               stroke="var(--text-primary, #111111)"
                               strokeWidth={2}
                               connectNulls={false}
@@ -710,7 +738,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                                     </g>
                                   );
                                 }
-                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={3} fill="var(--text-primary, #111111)" />;
+                                return <circle key={`dot-${cx}-${cy}`} cx={cx} cy={cy} r={0} fill="none" />;
                               }}
                               activeDot={{ r: 5, fill: '#111111' }}
                             />
