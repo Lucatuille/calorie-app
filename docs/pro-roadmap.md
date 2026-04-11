@@ -120,14 +120,49 @@ function projectWithAdjustment(base, kcalAdjustment, days) {
 - Permite ver "¿Y si fuera mas consistente?"
 - Dos parametros independientes: kcal × adherencia
 
-**Tareas:**
-- [ ] Backend: exponer `weighted_avg_cal` en projection response (ya calculado internamente, solo añadir al JSON)
-- [ ] Frontend: funcion `projectWithAdjustment()` pura en `utils/projection.ts`
-- [ ] Frontend: componente `<KcalSimulator>` con slider y debounce 16ms
-- [ ] Frontend: actualizar linea "Realista" del chart con el resultado en tiempo real
-- [ ] Frontend: actualizar los 3 scenario cards (30/60/90) con el nuevo calculo
-- [ ] Frontend: estado del slider en React, no en URL/localStorage (efímero por sesion)
-- [ ] Optional: toggle de adherencia como segundo eje
+**Tareas completadas (V1):**
+- [x] Backend: exponer `projection_avg_cal` en projection response
+- [x] Frontend: funcion `projectWithAdjustment()` pura en `utils/projection.ts`
+- [x] Frontend: slider integrado en la seccion de proyeccion
+- [x] Frontend: linea "Realista" del chart anima con el slider
+- [x] Frontend: los 3 scenario cards (30/60/90) se actualizan
+- [x] Frontend: estado del slider en React, efímero por sesion
+- [x] Fix: los 3 escenarios se mueven juntos (no solo realista)
+- [x] Fix: card "A tu objetivo" usa adjustedDaysToGoal
+- [x] Fix: animacion sincronizada en las 3 lineas + area sombreada
+
+### B1.5 (V2 del simulador) — Mejoras pendientes
+
+Ideas para iterar sobre el simulador en una siguiente fase:
+
+**Adoptar simulacion como objetivo** (prioritario)
+- [ ] Boton "Adoptar este plan" que aparece cuando hay ajuste activo
+- [ ] Al pulsar, PUT /api/profile con `target_calories = weighted_avg_cal + kcalAdjust`
+- [ ] Toast de confirmacion
+- [ ] Cambia el target del Dashboard y del asistente sin tener que ir a Perfil
+
+**Comparaciones comestibles**
+- [ ] "−175 kcal ≈ un yogur griego + una manzana menos al dia"
+- [ ] "+200 kcal ≈ un aguacate + un puñado de nueces mas"
+- [ ] Reutilizar logica de las sugerencias de macros (ya existen en Macros)
+- [ ] Anclar el numero abstracto a comida real tangible
+
+**Botones preset**
+- [ ] Chips rapidos: "Deficit suave (−200)", "Deficit moderado (−400)", "Mantener (0)"
+- [ ] Uso rapido sin arrastrar el slider
+
+**Toggle de adherencia como segundo eje**
+- [ ] Selector 70% / 85% / 100% junto al slider
+- [ ] "¿Y si fuera mas consistente?"
+- [ ] Recalcular con override de adherencia
+
+**Mensaje de cambio minimo**
+- [ ] Si el cambio proyectado a 90d es <0.3 kg, texto tipo:
+      "Este ajuste no cambiara mucho. Prueba mover mas el slider."
+
+**Highlight del plan apuntado**
+- [ ] Cuando hay ajuste activo, la linea realista destaca (scale 1.1, glow)
+- [ ] Los extremos pasan a 40% opacity para que el foco quede claro
 
 ### B2. Editar objetivo arrastrando
 

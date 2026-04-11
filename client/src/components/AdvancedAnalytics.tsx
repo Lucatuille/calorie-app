@@ -833,7 +833,9 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               stroke="none"
                               connectNulls={false}
                               legendType="none"
-                              isAnimationActive={false}
+                              isAnimationActive={true}
+                              animationDuration={200}
+                              animationEasing="ease-out"
                             />
 
                             {/* Separador "Hoy" — histórico / proyección */}
