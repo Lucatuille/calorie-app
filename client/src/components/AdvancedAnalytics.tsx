@@ -810,6 +810,8 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             <Tooltip
                               cursor={{ stroke: 'var(--accent)', strokeWidth: 1, strokeDasharray: '3 3' }}
                               formatter={(v, name) => {
+                                // Ocultar rangeBand del tooltip — es solo el fondo sombreado
+                                if (name === 'rangeBand') return [null, null];
                                 const labels = {
                                   actual: 'Báscula',
                                   trend: 'Tendencia',
@@ -822,6 +824,11 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               }}
                               contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, padding: '8px 10px' }}
                               labelStyle={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 4 }}
+                              itemSorter={(item) => {
+                                // Orden: Bascula, Tendencia, Optimista, Realista, Conservador
+                                const order = { actual: 1, trend: 2, optimistic: 3, realistic: 4, conservative: 5 };
+                                return order[item.dataKey] || 99;
+                              }}
                             />
 
                             {/* Rango entre optimista y conservador — area muy sutil */}
