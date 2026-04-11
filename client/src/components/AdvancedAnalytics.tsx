@@ -105,12 +105,33 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     const fmt   = n => new Date(today.getTime() + n * 86400000).toLocaleDateString('es', { day: 'numeric', month: 'short' });
     // Ancla = peso real del dashboard (lo que el usuario ve en su báscula)
     const cw = data.weight.current;
+    // Rango = [min, max] entre optimista y conservador para Area sombreada
+    // Math.min/max porque optimista puede ser mayor o menor dependiendo de objetivo
+    const mkRange = (a, b) => [Math.min(a, b), Math.max(a, b)];
     return [
       ...weightPts,
-      { date: 'Hoy',   actual: cw, optimistic: cw, realistic: cw, conservative: cw },
-      { date: fmt(30), optimistic: scenarios.optimistic['30d'], realistic: scenarios.realistic['30d'], conservative: scenarios.conservative['30d'] },
-      { date: fmt(60), optimistic: scenarios.optimistic['60d'], realistic: scenarios.realistic['60d'], conservative: scenarios.conservative['60d'] },
-      { date: fmt(90), optimistic: scenarios.optimistic['90d'], realistic: scenarios.realistic['90d'], conservative: scenarios.conservative['90d'] },
+      { date: 'Hoy',   actual: cw, optimistic: cw, realistic: cw, conservative: cw, rangeBand: [cw, cw] },
+      {
+        date: fmt(30),
+        optimistic: scenarios.optimistic['30d'],
+        realistic: scenarios.realistic['30d'],
+        conservative: scenarios.conservative['30d'],
+        rangeBand: mkRange(scenarios.optimistic['30d'], scenarios.conservative['30d']),
+      },
+      {
+        date: fmt(60),
+        optimistic: scenarios.optimistic['60d'],
+        realistic: scenarios.realistic['60d'],
+        conservative: scenarios.conservative['60d'],
+        rangeBand: mkRange(scenarios.optimistic['60d'], scenarios.conservative['60d']),
+      },
+      {
+        date: fmt(90),
+        optimistic: scenarios.optimistic['90d'],
+        realistic: scenarios.realistic['90d'],
+        conservative: scenarios.conservative['90d'],
+        rangeBand: mkRange(scenarios.optimistic['90d'], scenarios.conservative['90d']),
+      },
     ];
   })();
 
@@ -715,7 +736,7 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           {[
                             { color: 'var(--text-primary)', label: 'Báscula', dash: false },
                             { color: 'var(--color-success)', label: 'Tendencia', dash: false },
-                            { color: '#f59e0b', label: 'Realista',    dash: true  },
+                            { color: '#f59e0b', label: 'Realista',    dash: false },
                             { color: 'var(--color-success)', label: 'Optimista',   dash: true  },
                             { color: '#94a3b8', label: 'Conservador', dash: true  },
                           ].map(item => (
@@ -753,15 +774,16 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               labelStyle={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 4 }}
                             />
 
-                            {/* Banda de confianza — amber opacity 0.12, area bajo la línea optimista */}
+                            {/* Rango entre optimista y conservador — area muy sutil */}
                             <Area
                               type="monotone"
-                              dataKey="optimistic"
+                              dataKey="rangeBand"
                               fill="#f59e0b"
-                              fillOpacity={0.12}
+                              fillOpacity={0.07}
                               stroke="none"
                               connectNulls={false}
                               legendType="none"
+                              isAnimationActive={false}
                             />
 
                             {/* Separador "Hoy" — histórico / proyección */}
@@ -807,36 +829,37 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                               />
                             )}
 
-                            {/* Proyección conservadora — slate, 1.5px */}
+                            {/* Conservador — gris sutil, 1.25px, dash corto */}
                             <Line
                               type="monotone"
                               dataKey="conservative"
                               stroke="#94a3b8"
-                              strokeWidth={1.5}
-                              strokeDasharray="4 4"
+                              strokeWidth={1.25}
+                              strokeDasharray="2 3"
+                              strokeOpacity={0.75}
                               dot={false}
                               connectNulls={false}
                               legendType="none"
                             />
-                            {/* Proyección optimista — green, 1.5px */}
+                            {/* Optimista — verde sutil, 1.25px, dash largo */}
                             <Line
                               type="monotone"
                               dataKey="optimistic"
                               stroke="var(--color-success)"
-                              strokeWidth={1.5}
-                              strokeDasharray="6 4"
+                              strokeWidth={1.25}
+                              strokeDasharray="6 3"
+                              strokeOpacity={0.75}
                               dot={false}
                               connectNulls={false}
                               legendType="none"
                             />
-                            {/* Proyección realista — amber, 2px, protagonista */}
+                            {/* Realista — amber, 2.5px sólida, PROTAGONISTA */}
                             <Line
                               type="monotone"
                               dataKey="realistic"
                               stroke="#f59e0b"
-                              strokeWidth={2}
-                              strokeDasharray="6 4"
-                              dot={{ r: 3, fill: '#f59e0b' }}
+                              strokeWidth={2.5}
+                              dot={{ r: 3.5, fill: '#f59e0b', strokeWidth: 0 }}
                               connectNulls={false}
                               legendType="none"
                             />
