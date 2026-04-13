@@ -48,6 +48,10 @@ export const api = {
   deleteAccount: (token)        => request('DELETE', '/api/profile', { confirm: 'ELIMINAR' }, token),
   exportAllData: (token)        => request('GET',  '/api/profile/export', null, token),
 
+  // Planner (Chef Caliro)
+  chefPlanDay:   (body, token) => request('POST', '/api/planner/day', body, token),
+  chefGetUsage:  (token)       => request('GET',  '/api/planner/usage', null, token),
+
   // Entries
   getAllEntries:    (limit, token, offset = 0) => request('GET', `/api/entries?limit=${limit}&offset=${offset}`, null, token),
   getTodayEntries: (token)           => request('GET',    '/api/entries/today', null, token),

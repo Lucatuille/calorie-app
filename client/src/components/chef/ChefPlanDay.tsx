@@ -7,8 +7,10 @@
 //  Fase 2d: se conectará al backend real.
 // ============================================================
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 type Meal = {
   type: string;
@@ -39,7 +41,7 @@ const MOCK_PLAN: PlanData = {
   totals: { kcal: 1770, protein: 137, carbs: 180, fat: 34 },
 };
 
-const TARGET_KCAL = 1812; // TODO: leer del perfil del usuario en Fase 2d
+let TARGET_KCAL = 1812; // Se actualiza con el valor real del backend
 
 // Colores Chef
 const CHEF_BG = 'var(--bg)';
@@ -75,6 +77,7 @@ function clearPlanCache() {
 
 export default function ChefPlanDay() {
   const navigate = useNavigate();
+  const { token, user: authUser } = useAuth();
   const cached = loadCachedPlan();
   const [status, setStatus] = useState<Status>(cached?.status || 'idle');
   const [plan, setPlan] = useState<PlanData | null>(cached?.plan || null);
@@ -90,12 +93,15 @@ export default function ChefPlanDay() {
     setStatus('loading');
     setError('');
     try {
-      // MOCK: simula 2s de delay como haría Sonnet
-      // En Fase 2d: const res = await api.chefPlanDay({}, token);
-      await new Promise(r => setTimeout(r, 2000));
-      setPlan(MOCK_PLAN);
-      savePlanToCache(MOCK_PLAN);
-      setStatus('ready');
+      const res = await api.chefPlanDay({ context: context || undefined }, token);
+      if (res.plan) {
+        setPlan(res.plan);
+        savePlanToCache(res.plan);
+        if (res.target_kcal) TARGET_KCAL = res.target_kcal;
+        setStatus('ready');
+      } else {
+        throw new Error(res.error || 'No se recibió un plan válido');
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al generar el plan');
       setStatus('error');

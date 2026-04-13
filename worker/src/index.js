@@ -13,6 +13,7 @@ import { handleAdmin } from './routes/admin.js';
 import { handleCalibration } from './routes/calibration.js';
 import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
+import { handlePlanner } from './routes/planner.js';
 import { handleScheduled } from './scheduled.js';
 import { handleStripe } from './routes/stripe.js';
 import { handleWeight } from './routes/weight.js';
@@ -92,6 +93,10 @@ async function handleRequest(request, env, ctx) {
 
     if (path.startsWith('/api/weight')) {
       return await handleWeight(request, env, path);
+    }
+
+    if (path.startsWith('/api/planner')) {
+      return await handlePlanner(request, env, path, ctx);
     }
 
     if (path.startsWith('/api/assistant')) {
