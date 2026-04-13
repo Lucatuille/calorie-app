@@ -46,10 +46,38 @@ const CHEF_BG = 'var(--bg)';
 const CHEF_INK = '#1f1a12';
 const OLIVE = '#556b2f';
 
+const STORAGE_KEY = 'caliro_day_plan';
+
+function loadCachedPlan(): { plan: PlanData; status: Status } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    // Solo válido si es de hoy
+    const today = new Date().toLocaleDateString('en-CA');
+    if (cached.date !== today || !cached.plan) return null;
+    return { plan: cached.plan, status: 'ready' };
+  } catch {
+    return null;
+  }
+}
+
+function savePlanToCache(plan: PlanData) {
+  try {
+    const today = new Date().toLocaleDateString('en-CA');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, plan }));
+  } catch { /* silent — localStorage full or unavailable */ }
+}
+
+function clearPlanCache() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
 export default function ChefPlanDay() {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<Status>('idle');
-  const [plan, setPlan] = useState<PlanData | null>(null);
+  const cached = loadCachedPlan();
+  const [status, setStatus] = useState<Status>(cached?.status || 'idle');
+  const [plan, setPlan] = useState<PlanData | null>(cached?.plan || null);
   const [error, setError] = useState('');
 
   const today = new Date();
@@ -65,6 +93,7 @@ export default function ChefPlanDay() {
       // En Fase 2d: const res = await api.chefPlanDay({}, token);
       await new Promise(r => setTimeout(r, 2000));
       setPlan(MOCK_PLAN);
+      savePlanToCache(MOCK_PLAN);
       setStatus('ready');
     } catch (err: any) {
       setError(err?.message || 'Error al generar el plan');
@@ -86,19 +115,33 @@ export default function ChefPlanDay() {
     });
   }
 
+  // Shared wrapper for non-plan states (card container)
+  const stateWrapper = (children: React.ReactNode) => (
+    <div style={{
+      flex: 1,
+      background: CHEF_BG,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px 20px',
+    }}>
+      <div style={{
+        background: 'var(--surface)',
+        border: '0.5px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '40px 28px',
+        textAlign: 'center',
+        width: '100%',
+        maxWidth: 360,
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+
   // ── IDLE: Empty state (patrón Dashboard) ──
   if (status === 'idle') {
-    return (
-      <div style={{
-        flex: 1,
-        background: CHEF_BG,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 32px',
-        textAlign: 'center',
-      }}>
+    return stateWrapper(<>
         {/* Icon — documento de plan (4 líneas = 4 comidas) */}
         <div style={{
           width: 56,
@@ -170,24 +213,13 @@ export default function ChefPlanDay() {
         >
           Generar plan
         </button>
-      </div>
-    );
+    </>);
   }
 
   // ── LOADING ──
   if (status === 'loading') {
-    return (
-      <div style={{
-        flex: 1,
-        background: CHEF_BG,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 32px',
-        textAlign: 'center',
-      }}>
-        <div className="spinner" style={{ width: 28, height: 28, marginBottom: 16 }} />
+    return stateWrapper(<>
+        <div className="spinner" style={{ width: 28, height: 28, marginBottom: 16, marginLeft: 'auto', marginRight: 'auto' }} />
         <p style={{
           fontFamily: 'var(--font-serif)',
           fontStyle: 'italic',
@@ -204,23 +236,12 @@ export default function ChefPlanDay() {
         }}>
           Analizando tu objetivo, macros y comidas frecuentes
         </p>
-      </div>
-    );
+    </>);
   }
 
   // ── ERROR ──
   if (status === 'error') {
-    return (
-      <div style={{
-        flex: 1,
-        background: CHEF_BG,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 32px',
-        textAlign: 'center',
-      }}>
+    return stateWrapper(<>
         <p style={{
           fontSize: 13,
           color: 'var(--accent-2)',
@@ -246,8 +267,7 @@ export default function ChefPlanDay() {
         >
           Reintentar
         </button>
-      </div>
-    );
+    </>);
   }
 
   // ── READY: Plan generado (layout P13 clean) ──
@@ -316,7 +336,7 @@ export default function ChefPlanDay() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',
