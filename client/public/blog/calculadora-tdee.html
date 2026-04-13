@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora TDEE — Calcula tus calorías diarias gratis | Caliro</title>
+<title>Calculadora TDEE en español — Calcula tus calorías diarias gratis</title>
 <script defer src="https://cloud.umami.is/script.js" data-website-id="0ea8f133-f719-429d-8876-b1d4a901c556"></script>
-<meta name="description" content="Calcula tu TDEE (gasto calórico diario) con la calculadora más completa en español. Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados y plan según tu objetivo.">
+<meta name="description" content="Calcula tu gasto calórico diario real con las fórmulas Mifflin-St Jeor y Katch-McArdle. Introduce tu actividad real y obtén tus macros personalizados. Gratis, sin registro.">
 <link rel="canonical" href="https://caliro.dev/blog/calculadora-tdee">
 <link rel="alternate" hreflang="es" href="https://caliro.dev/blog/calculadora-tdee">
 <meta property="og:type" content="website">
@@ -35,26 +35,42 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "¿Qué es el TDEE?",
+      "name": "¿Qué diferencia hay entre BMR y TDEE?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "TDEE (Total Daily Energy Expenditure) es la cantidad total de calorías que tu cuerpo quema en un día, incluyendo metabolismo basal, actividad diaria y ejercicio."
+        "text": "El BMR es el gasto calórico en reposo absoluto — las calorías que quema tu cuerpo sin hacer nada. El TDEE multiplica ese número por tu nivel de actividad real para darte el gasto total del día. Es el TDEE el que usas para calcular cuánto comer."
       }
     },
     {
       "@type": "Question",
-      "name": "¿Qué fórmula es más precisa para calcular el TDEE?",
+      "name": "¿Cada cuánto debería recalcular mi TDEE?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Mifflin-St Jeor es la más precisa para la mayoría. Si conoces tu porcentaje de grasa corporal, Katch-McArdle puede ser más exacta porque usa tu masa magra real."
+        "text": "Cada 5–7 kg de cambio de peso, o si tu nivel de actividad cambia de forma significativa. Para la mayoría de personas, cada 2–3 meses es suficiente."
       }
     },
     {
       "@type": "Question",
-      "name": "¿Cuántas calorías debo comer para perder peso?",
+      "name": "¿Por qué mi TDEE calculado no coincide con la realidad?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Para perder peso de forma sostenible, se recomienda un déficit de 275-550 kcal diarias respecto a tu TDEE, lo que equivale a perder 0.25-0.5 kg por semana."
+        "text": "Las fórmulas son estimaciones basadas en promedios poblacionales. Tu metabolismo puede ser un 10–15% más alto o más bajo que la media. Si llevas semanas sin ver cambios siguiendo el número calculado, ajústalo en ±150 kcal y observa durante 2–3 semanas."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuántas calorías debería comer para perder 1 kg a la semana?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "1 kg de grasa equivale a aproximadamente 7.700 kcal. Para perderlo en una semana necesitarías un déficit de 1.100 kcal diarias, lo que es agresivo y difícil de sostener. Un déficit de 500 kcal al día — más realista — produce unos 0,5 kg por semana de forma consistente."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿La calculadora funciona para comida española?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "La calculadora calcula tu gasto calórico independientemente de lo que comas. Lo que sí varía según la dieta es la precisión del seguimiento: la comida española tiene ingredientes difíciles de estimar visualmente — aceite de oliva, sofrito, raciones de bar — que la mayoría de apps no manejan bien."
       }
     }
   ]
@@ -245,7 +261,12 @@ footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 4
   <div class="hero">
     <div class="hero-label">Herramienta gratuita</div>
     <h1>Calcula tu <em>TDEE</em></h1>
-    <p>Tu gasto calórico diario real. Fórmulas científicas, macros personalizados y un plan según tu objetivo.</p>
+    <p>Tu gasto calórico real, calculado desde tus hábitos. No una estimación genérica — el número que necesitas para que los datos tengan sentido.</p>
+  </div>
+
+  <div style="max-width: 600px; margin: -24px auto 40px; text-align: left; line-height: 1.7;">
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;">El TDEE es la cantidad de calorías que quemas al día teniendo en cuenta tu cuerpo, tu trabajo y tu actividad real. Es el número de partida para cualquier objetivo — perder peso, mantenerlo o ganar músculo. Sin él, contar calorías es adivinar.</p>
+    <p style="font-size: 15px; color: var(--mid);">Esta calculadora usa las fórmulas Mifflin-St Jeor y Katch-McArdle y cruza tu nivel de actividad real — no solo "sedentario o activo" — para darte un resultado útil de verdad.</p>
   </div>
 
   <!-- ═══ CALCULATOR ═══ -->
@@ -432,12 +453,39 @@ footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 4
 
     <div class="warning" id="warning"></div>
 
-    <div class="result-cta">
-      <h3>Ahora registra lo que comes</h3>
-      <p>Caliro usa IA para registrar tus comidas con una foto o describiendo lo que comiste. La IA aprende de tus correcciones y se vuelve más precisa con el tiempo.</p>
-      <a href="/app/register">Empezar con Caliro &rarr;</a>
-    </div>
+  </div>
 
+  <!-- ═══ POST-CALCULATOR CONTENT ═══ -->
+
+  <!-- Sección 1: Cómo interpretar -->
+  <div style="max-width: 600px; margin: 48px auto 0; line-height: 1.7;">
+    <h2 style="font-family: var(--serif); font-size: 28px; margin-bottom: 16px;">Cómo interpretar los números</h2>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;">Tu TDEE es tu punto de equilibrio: si comes exactamente esas calorías, tu peso se mantiene estable. A partir de ahí, el objetivo marca la dirección.</p>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;"><strong style="color: var(--dark);">Para perder peso</strong>, un déficit de 300–500 kcal diarias es el rango que da resultados sin sacrificar músculo ni energía. Déficits mayores funcionan a corto plazo pero son difíciles de sostener.</p>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;"><strong style="color: var(--dark);">Para ganar músculo</strong>, un superávit de 200–300 kcal es suficiente si el entrenamiento es consistente. Más no es mejor — el exceso se convierte en grasa, no en músculo.</p>
+    <p style="font-size: 15px; color: var(--mid);">Para mantener, el margen real es ±100–150 kcal del TDEE. Los días que te pases y los días que te quedes corto se promedian solos a lo largo de la semana.</p>
+  </div>
+
+  <!-- Sección 2: TDEE no es fijo -->
+  <div style="max-width: 600px; margin: 48px auto 0; line-height: 1.7;">
+    <h2 style="font-family: var(--serif); font-size: 28px; margin-bottom: 16px;">El TDEE no es fijo</h2>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;">La mayoría de calculadoras te dan un número y asumen que es permanente. No lo es.</p>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;">Cuando pierdes peso, tu TDEE baja — porque hay menos cuerpo que mantener. Cuando aumentas el músculo, sube. Cuando cambias de trabajo o de rutina, cambia. Una calculadora te da el punto de partida; los datos reales te dicen cuándo recalibrarlo.</p>
+    <p style="font-size: 15px; color: var(--mid);">La señal más fiable es simple: si llevas 3 semanas comiendo por debajo de tu TDEE calculado y el peso no se mueve, el número real es más bajo de lo que calculaste. Baja 100–150 kcal y observa.</p>
+  </div>
+
+  <!-- Sección 3: CTA a Caliro -->
+  <div style="max-width: 600px; margin: 48px auto 0; line-height: 1.7;">
+    <h2 style="font-family: var(--serif); font-size: 28px; margin-bottom: 16px;">Del TDEE al seguimiento diario</h2>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 12px;">Saber tu TDEE es el primer paso. El segundo es registrar lo que comes de forma que tenga sentido con ese número — sin buscar entre 47 versiones distintas del mismo plato, sin estimaciones que no reflejan cómo comes tú.</p>
+    <p style="font-size: 15px; color: var(--mid); margin-bottom: 24px;">Caliro usa tu TDEE como base y ajusta las estimaciones según tus hábitos reales. Si siempre comes la misma tortilla y la corriges, el sistema aprende. Con el tiempo, los números cuadran.</p>
+    <div style="text-align: center;">
+      <a href="/app/register" style="
+        display: inline-block; background: var(--green); color: white; padding: 14px 32px;
+        border-radius: 100px; font-size: 15px; font-weight: 600; text-decoration: none;
+        font-family: var(--sans); transition: background 0.2s; box-shadow: 0 2px 8px rgba(34,197,94,0.2);
+      ">Probar Caliro gratis &rarr;</a>
+    </div>
   </div>
 
   <!-- ═══ FAQ ═══ -->
@@ -445,28 +493,28 @@ footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 4
     <h2>Preguntas frecuentes</h2>
 
     <div class="faq-item">
-      <div class="faq-q">¿Qué es el TDEE?<span class="faq-plus">+</span></div>
-      <div class="faq-a">TDEE (Total Daily Energy Expenditure) es la cantidad total de calorías que tu cuerpo quema en un día. Incluye tu metabolismo basal (BMR), la actividad de tu día a día, y el ejercicio. Si comes exactamente tu TDEE, mantienes tu peso.</div>
+      <div class="faq-q">¿Qué diferencia hay entre BMR y TDEE?<span class="faq-plus">+</span></div>
+      <div class="faq-a">El BMR es el gasto calórico en reposo absoluto — las calorías que quema tu cuerpo sin hacer nada. El TDEE multiplica ese número por tu nivel de actividad real para darte el gasto total del día. Es el TDEE el que usas para calcular cuánto comer.</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Qué fórmula es más precisa?<span class="faq-plus">+</span></div>
-      <div class="faq-a">Mifflin-St Jeor (1990) es la más validada para la mayoría de personas. Si conoces tu porcentaje de grasa corporal, Katch-McArdle puede ser más exacta porque usa tu masa magra real en vez de estimarla.</div>
+      <div class="faq-q">¿Cada cuánto debería recalcular mi TDEE?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Cada 5–7 kg de cambio de peso, o si tu nivel de actividad cambia de forma significativa. Para la mayoría de personas, cada 2–3 meses es suficiente.</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Cuántas calorías para perder peso?<span class="faq-plus">+</span></div>
-      <div class="faq-a">Un déficit moderado de 550 kcal/día (~0.5 kg/semana) es lo más sostenible. Déficits más agresivos pueden funcionar a corto plazo pero aumentan el riesgo de efecto rebote y pérdida de masa muscular.</div>
+      <div class="faq-q">¿Por qué mi TDEE calculado no coincide con la realidad?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Las fórmulas son estimaciones basadas en promedios poblacionales. Tu metabolismo puede ser un 10–15% más alto o más bajo que la media. Si llevas semanas sin ver cambios siguiendo el número calculado, ajústalo en ±150 kcal y observa durante 2–3 semanas.</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Por qué mi TDEE es diferente al de otras calculadoras?<span class="faq-plus">+</span></div>
-      <div class="faq-a">La mayoría de calculadoras usan niveles de actividad genéricos ("moderadamente activo"). Esta calculadora separa tu actividad diaria (trabajo + pasos) de tu ejercicio estructurado, y aplica un factor conservador de 0.85 al ejercicio para no sobreestimar.</div>
+      <div class="faq-q">¿Cuántas calorías debería comer para perder 1 kg a la semana?<span class="faq-plus">+</span></div>
+      <div class="faq-a">1 kg de grasa equivale a aproximadamente 7.700 kcal. Para perderlo en una semana necesitarías un déficit de 1.100 kcal diarias, lo que es agresivo y difícil de sostener. Un déficit de 500 kcal al día — más realista — produce unos 0,5 kg por semana de forma consistente.</div>
     </div>
 
     <div class="faq-item">
-      <div class="faq-q">¿Cuánta proteína necesito?<span class="faq-plus">+</span></div>
-      <div class="faq-a">Para perder grasa conservando músculo, 30% de tus calorías en proteína (~2g por kg de peso corporal). Para mantener, 25% es suficiente. Para ganar músculo, 25% con más calorías totales.</div>
+      <div class="faq-q">¿La calculadora funciona para comida española?<span class="faq-plus">+</span></div>
+      <div class="faq-a">La calculadora calcula tu gasto calórico independientemente de lo que comas. Lo que sí varía según la dieta es la precisión del seguimiento: la comida española tiene ingredientes difíciles de estimar visualmente — aceite de oliva, sofrito, raciones de bar — que la mayoría de apps no manejan bien.</div>
     </div>
   </div>
 
