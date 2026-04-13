@@ -679,7 +679,7 @@ export default function Assistant() {
         </div>
 
         {/* ══ MODE: Chat ══ */}
-        {mode === 'chat' && <>
+        <div style={{ display: mode === 'chat' ? 'contents' : 'none' }}>
 
         {/* ── Context strip ── */}
         {todayData && (
@@ -803,20 +803,20 @@ export default function Assistant() {
           </p>
         </div>
 
-        </>}
+        </div>
 
         {/* ══ MODE: Plan del día ══ */}
-        {mode === 'day' && (
+        <div style={{ display: mode === 'day' ? 'contents' : 'none' }}>
           <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" style={{ width: 24, height: 24 }} /></div>}>
             <ChefPlanDay />
           </Suspense>
-        )}
+        </div>
 
         {/* ══ MODE: Plan semanal ══ */}
-        {mode === 'week' && (
+        <div style={{ display: mode === 'week' ? 'contents' : 'none' }}>
           <div style={{
             flex: 1,
-            background: '#faf4e6',
+            background: 'var(--bg)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -861,7 +861,7 @@ export default function Assistant() {
               Generar plan · próximamente
             </button>
           </div>
-        )}
+        </div>
 
       </div>
 

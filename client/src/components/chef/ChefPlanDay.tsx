@@ -42,7 +42,7 @@ const MOCK_PLAN: PlanData = {
 const TARGET_KCAL = 1812; // TODO: leer del perfil del usuario en Fase 2d
 
 // Colores Chef
-const CHEF_BG = '#faf4e6';
+const CHEF_BG = 'var(--bg)';
 const CHEF_INK = '#1f1a12';
 const OLIVE = '#556b2f';
 
