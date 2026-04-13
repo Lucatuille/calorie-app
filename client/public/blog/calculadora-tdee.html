@@ -145,8 +145,8 @@ nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 40
 .bf-toggle input[type="checkbox"] { accent-color: var(--green); }
 
 /* Results */
-.results { opacity: 0; transform: translateY(16px); transition: all 0.4s ease; pointer-events: none; }
-.results.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+.results { display: none; opacity: 0; transform: translateY(16px); transition: all 0.4s ease; pointer-events: none; }
+.results.visible { display: block; opacity: 1; transform: translateY(0); pointer-events: all; }
 
 .result-hero {
   background: var(--dark); border-radius: 20px; padding: 36px; text-align: center;
