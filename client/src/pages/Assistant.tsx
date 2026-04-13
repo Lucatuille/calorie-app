@@ -1,11 +1,12 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { buildWelcomeMessage } from '../utils/assistantMessages';
 import { isPro } from '../utils/levels';
 import { openExternal } from '../utils/platform';
+const ChefPlanDay = lazy(() => import('../components/chef/ChefPlanDay'));
 
 // ── ProOnly (dark card) ──────────────────────────────────────
 
@@ -806,53 +807,9 @@ export default function Assistant() {
 
         {/* ══ MODE: Plan del día ══ */}
         {mode === 'day' && (
-          <div style={{
-            flex: 1,
-            background: '#faf4e6',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '40px 24px',
-            textAlign: 'center',
-          }}>
-            <div style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 24,
-              color: '#1f1a12',
-              marginBottom: 8,
-            }}>
-              Plan del día
-            </div>
-            <p style={{
-              fontSize: 13,
-              color: 'var(--text-secondary)',
-              lineHeight: 1.5,
-              maxWidth: 280,
-              margin: '0 0 20px',
-            }}>
-              Genera 4 comidas para hoy ajustadas a tu objetivo y tus comidas frecuentes.
-            </p>
-            <button
-              type="button"
-              disabled
-              style={{
-                background: 'var(--accent)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 'var(--radius-full)',
-                padding: '11px 24px',
-                fontSize: 13,
-                fontWeight: 600,
-                fontFamily: 'var(--font-sans)',
-                opacity: 0.5,
-                cursor: 'not-allowed',
-              }}
-            >
-              Generar plan · próximamente
-            </button>
-          </div>
+          <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" style={{ width: 24, height: 24 }} /></div>}>
+            <ChefPlanDay />
+          </Suspense>
         )}
 
         {/* ══ MODE: Plan semanal ══ */}
