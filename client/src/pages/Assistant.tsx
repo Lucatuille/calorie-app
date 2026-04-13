@@ -372,10 +372,13 @@ function DigestSheet({ digest, onClose }) {
 
 // ── Página principal ─────────────────────────────────────────
 
+type ChefMode = 'chat' | 'day' | 'week';
+
 export default function Assistant() {
   usePageTitle('Chef Caliro');
   const { user, token } = useAuth();
   const navigate = useNavigate();
+  const [mode, setMode] = useState<ChefMode>('chat');
   const [messages, setMessages]             = useState([]);
   const [input, setInput]                   = useState('');
   const [loading, setLoading]               = useState(false);
@@ -586,29 +589,24 @@ export default function Assistant() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: 6 }}>
-            {/* Boton Plan — disabled hasta Fase 2 (Planificador) */}
-            <button
-              type="button"
-              disabled
-              title="Próximamente — el Planificador llegará muy pronto"
-              style={{
-                background: 'transparent',
-                border: '0.5px dashed var(--border)',
-                borderRadius: 'var(--radius-full)',
-                padding: '5px 12px',
-                fontSize: 12,
-                color: 'var(--text-tertiary)',
-                cursor: 'not-allowed',
-                opacity: 0.55,
-                fontFamily: 'var(--font-sans)',
-                letterSpacing: '0.02em',
-              }}
-            >
-              Plan
-            </button>
-            {conversationId && (
-              <button onClick={startNewConversation} style={{
+          {/* Header actions — solo visibles en modo chat */}
+          {mode === 'chat' && (
+            <div style={{ display: 'flex', gap: 6 }}>
+              {conversationId && (
+                <button onClick={startNewConversation} style={{
+                  background: 'transparent',
+                  border: '0.5px solid var(--border)',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                  + Nueva
+                </button>
+              )}
+              <button onClick={loadHistory} style={{
                 background: 'transparent',
                 border: '0.5px solid var(--border)',
                 borderRadius: 'var(--radius-full)',
@@ -618,23 +616,69 @@ export default function Assistant() {
                 cursor: 'pointer',
                 fontFamily: 'var(--font-sans)',
               }}>
-                + Nueva
+                Historial
               </button>
-            )}
-            <button onClick={loadHistory} style={{
-              background: 'transparent',
-              border: '0.5px solid var(--border)',
-              borderRadius: 'var(--radius-full)',
-              padding: '5px 12px',
-              fontSize: 12,
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-sans)',
-            }}>
-              Historial
-            </button>
-          </div>
+            </div>
+          )}
         </header>
+
+        {/* ── Card Stack Mode Selector ── */}
+        <div style={{
+          display: 'flex',
+          gap: 6,
+          padding: '10px 16px',
+          background: 'var(--bg)',
+          borderBottom: '0.5px solid var(--border)',
+          flexShrink: 0,
+        }}>
+          {([
+            { key: 'chat',  label: 'Chat',    meta: 'Ahora' },
+            { key: 'day',   label: 'Día',     meta: 'Plan del día' },
+            { key: 'week',  label: 'Semana',  meta: 'Plan semanal' },
+          ] as { key: ChefMode; label: string; meta: string }[]).map(({ key, label, meta }) => {
+            const active = mode === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setMode(key)}
+                style={{
+                  flex: 1,
+                  background: active ? '#1a1a1a' : '#faf6ef',
+                  border: `0.5px solid ${active ? '#1a1a1a' : 'var(--border)'}`,
+                  borderRadius: 10,
+                  padding: '10px 10px 9px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.15s ease',
+                  transform: active ? 'translateY(-1px)' : 'none',
+                  boxShadow: active ? '0 4px 12px rgba(26,26,26,0.15)' : 'none',
+                }}
+              >
+                <div style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontStyle: 'italic',
+                  fontSize: 14,
+                  color: active ? '#fff' : 'var(--text-primary)',
+                  lineHeight: 1.1,
+                  marginBottom: 2,
+                }}>
+                  {label}
+                </div>
+                <div style={{
+                  fontSize: 9,
+                  color: active ? 'rgba(255,255,255,0.5)' : 'var(--text-tertiary)',
+                  letterSpacing: '0.03em',
+                }}>
+                  {meta}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ══ MODE: Chat ══ */}
+        {mode === 'chat' && <>
 
         {/* ── Context strip ── */}
         {todayData && (
@@ -757,6 +801,111 @@ export default function Assistant() {
             No es un profesional sanitario · Respuestas orientativas
           </p>
         </div>
+
+        </>}
+
+        {/* ══ MODE: Plan del día ══ */}
+        {mode === 'day' && (
+          <div style={{
+            flex: 1,
+            background: '#faf4e6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 24px',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: 24,
+              color: '#1f1a12',
+              marginBottom: 8,
+            }}>
+              Plan del día
+            </div>
+            <p style={{
+              fontSize: 13,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5,
+              maxWidth: 280,
+              margin: '0 0 20px',
+            }}>
+              Genera 4 comidas para hoy ajustadas a tu objetivo y tus comidas frecuentes.
+            </p>
+            <button
+              type="button"
+              disabled
+              style={{
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius-full)',
+                padding: '11px 24px',
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: 'var(--font-sans)',
+                opacity: 0.5,
+                cursor: 'not-allowed',
+              }}
+            >
+              Generar plan · próximamente
+            </button>
+          </div>
+        )}
+
+        {/* ══ MODE: Plan semanal ══ */}
+        {mode === 'week' && (
+          <div style={{
+            flex: 1,
+            background: '#faf4e6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 24px',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: 24,
+              color: '#1f1a12',
+              marginBottom: 8,
+            }}>
+              Plan semanal
+            </div>
+            <p style={{
+              fontSize: 13,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5,
+              maxWidth: 280,
+              margin: '0 0 20px',
+            }}>
+              7 días × 4 comidas que respetan tus patrones reales y tu objetivo semanal.
+            </p>
+            <button
+              type="button"
+              disabled
+              style={{
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius-full)',
+                padding: '11px 24px',
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: 'var(--font-sans)',
+                opacity: 0.5,
+                cursor: 'not-allowed',
+              }}
+            >
+              Generar plan · próximamente
+            </button>
+          </div>
+        )}
+
       </div>
 
       {showHistory && (
