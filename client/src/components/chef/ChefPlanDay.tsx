@@ -7,7 +7,7 @@
 //  Fase 2d: se conectará al backend real.
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type Meal = {
@@ -79,6 +79,7 @@ export default function ChefPlanDay() {
   const [status, setStatus] = useState<Status>(cached?.status || 'idle');
   const [plan, setPlan] = useState<PlanData | null>(cached?.plan || null);
   const [error, setError] = useState('');
+  const [context, setContext] = useState(''); // input de contexto opcional
 
   const today = new Date();
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -139,81 +140,158 @@ export default function ChefPlanDay() {
     </div>
   );
 
-  // ── IDLE: Empty state (patrón Dashboard) ──
+  // ── IDLE: Action page para generar plan ──
   if (status === 'idle') {
-    return stateWrapper(<>
-        {/* Icon — documento de plan (4 líneas = 4 comidas) */}
+    return (
+      <div style={{
+        flex: 1,
+        background: CHEF_BG,
+        overflowY: 'auto',
+        padding: '24px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {/* Card contenedora */}
         <div style={{
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
-          background: 'rgba(45,106,79,0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 16,
+          background: 'var(--surface)',
+          border: '0.5px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '24px 22px 28px',
+          maxWidth: 420,
+          width: '100%',
+          margin: '0 auto',
         }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-               stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="4" y="3" width="16" height="18" rx="2" />
-            <line x1="8" y1="8" x2="16" y2="8" />
-            <line x1="8" y1="11.5" x2="16" y2="11.5" />
-            <line x1="8" y1="15" x2="16" y2="15" />
-            <line x1="8" y1="18.5" x2="13" y2="18.5" />
-          </svg>
+          {/* Header: icon + title + date */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(45,106,79,0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="3" width="16" height="18" rx="2" />
+                <line x1="8" y1="8" x2="16" y2="8" />
+                <line x1="8" y1="11.5" x2="16" y2="11.5" />
+                <line x1="8" y1="15" x2="16" y2="15" />
+                <line x1="8" y1="18.5" x2="13" y2="18.5" />
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{
+                fontFamily: 'var(--font-serif)',
+                fontStyle: 'italic',
+                fontSize: 22,
+                color: CHEF_INK,
+                margin: 0,
+                lineHeight: 1.1,
+                fontWeight: 400,
+              }}>
+                Plan del día
+              </h2>
+              <div style={{
+                fontSize: 10,
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                marginTop: 4,
+              }}>
+                {dateStr}
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p style={{
+            fontSize: 13,
+            color: 'var(--text-secondary)',
+            lineHeight: 1.5,
+            margin: '0 0 20px',
+          }}>
+            Genera 4 comidas personalizadas basadas en tu objetivo calórico y tus comidas frecuentes.
+          </p>
+
+          {/* Separator */}
+          <div style={{ height: '0.5px', background: 'var(--border)', marginBottom: 18 }} />
+
+          {/* Context input (optional) */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              fontSize: 10,
+              color: 'var(--text-tertiary)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              display: 'block',
+              marginBottom: 6,
+            }}>
+              Contexto
+              <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 4, color: 'var(--text-tertiary)' }}>
+                opcional
+              </span>
+            </label>
+            <textarea
+              value={context}
+              onChange={e => setContext(e.target.value)}
+              placeholder="Algo rápido, tengo pollo, solo cena, estoy en restaurante…"
+              rows={2}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                background: 'var(--bg)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: 13,
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-sans)',
+                resize: 'none',
+                outline: 'none',
+                lineHeight: 1.5,
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          {/* Generate button */}
+          <button
+            type="button"
+            onClick={handleGenerate}
+            style={{
+              width: '100%',
+              background: 'var(--accent)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--radius-full)',
+              padding: '13px 24px',
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: 'var(--font-sans)',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(45,106,79,0.2)',
+            }}
+          >
+            Generar plan
+          </button>
         </div>
 
-        <h2 style={{
-          fontFamily: 'var(--font-serif)',
-          fontStyle: 'italic',
-          fontSize: 22,
-          color: CHEF_INK,
-          margin: '0 0 6px',
-          lineHeight: 1.1,
-          fontWeight: 400,
-        }}>
-          Plan del día
-        </h2>
-
-        <p style={{
-          fontSize: 13,
-          color: 'var(--text-secondary)',
-          lineHeight: 1.5,
-          maxWidth: 260,
-          margin: '0 0 6px',
-        }}>
-          4 comidas ajustadas a tu objetivo y tus comidas frecuentes.
-        </p>
-
+        {/* Footer context info */}
         <p style={{
           fontSize: 10,
           color: 'var(--text-tertiary)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          margin: '0 0 24px',
+          textAlign: 'center',
+          marginTop: 16,
+          lineHeight: 1.5,
+          fontStyle: 'italic',
         }}>
-          {dateStr}
+          Basado en tu objetivo de {TARGET_KCAL} kcal y tus preferencias dietéticas
         </p>
-
-        <button
-          type="button"
-          onClick={handleGenerate}
-          style={{
-            background: 'var(--accent)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 'var(--radius-full)',
-            padding: '12px 28px',
-            fontSize: 14,
-            fontWeight: 600,
-            fontFamily: 'var(--font-sans)',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(45,106,79,0.2)',
-          }}
-        >
-          Generar plan
-        </button>
-    </>);
+      </div>
+    );
   }
 
   // ── LOADING ──
