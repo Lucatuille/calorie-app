@@ -7,7 +7,7 @@
 //  Fase 2d: se conectará al backend real.
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -87,6 +87,29 @@ export default function ChefPlanDay() {
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const dateStr = `${dayNames[today.getDay()]} ${today.getDate()} de ${monthNames[today.getMonth()]}`;
+
+  // Cross-device sync: en mount, pide el último plan guardado al servidor.
+  // Si existe, lo muestra (sobrescribe cualquier cache local). Si no, idle.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.chefGetCurrentDay(token);
+        if (cancelled) return;
+        if (res?.plan) {
+          setPlan(res.plan);
+          if (res.target_kcal) TARGET_KCAL = res.target_kcal;
+          savePlanToCache(res.plan);
+          setStatus('ready');
+        } else if (!cached) {
+          setStatus('idle');
+        }
+      } catch { /* silent: dejamos el cache local si el fetch falla */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   async function handleGenerate() {
     setStatus('loading');

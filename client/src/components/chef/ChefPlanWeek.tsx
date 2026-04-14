@@ -8,7 +8,7 @@
 //  Cache localStorage con expiración al cambio de lunes.
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -162,6 +162,29 @@ export default function ChefPlanWeek() {
   const [modalMeal, setModalMeal] = useState<{ meal: Meal; day: Day } | null>(null);
 
   const todayISO = new Date().toLocaleDateString('en-CA');
+
+  // Cross-device sync: fetch el plan semanal guardado al montar.
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.chefGetCurrentWeek(token);
+        if (cancelled) return;
+        if (res?.plan) {
+          setPlan(res.plan);
+          const tk = res.target_kcal || 0;
+          setTargetKcal(tk);
+          savePlanToCache(res.plan, tk);
+          setStatus('ready');
+        } else if (!cached) {
+          setStatus('idle');
+        }
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   async function handleGenerate() {
     setStatus('loading');
@@ -584,11 +607,9 @@ export default function ChefPlanWeek() {
         desliza →
       </div>
 
-      {/* Grid wrap — scroll horizontal */}
+      {/* Grid wrap — scroll horizontal en mobile, nunca vertical */}
       <div style={{
-        flex: 1,
         overflowX: 'auto',
-        overflowY: 'auto',
         padding: '0 14px 20px',
         opacity: 0,
         animation: 'chefFadeInUp 0.3s ease forwards',

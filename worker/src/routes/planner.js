@@ -6,6 +6,7 @@
 import { jsonResponse, errorResponse, authenticate, rateLimit } from '../utils.js';
 import { checkAndIncrementPlannerLimit, rollbackPlannerLimit, getPlannerUsage } from '../utils/plannerLimits.js';
 import { savePlannerHistory, getRecentPlannerHistory, extractRecentDishNames } from '../utils/plannerHistory.js';
+import { resolveMealTypesRegistered } from '../utils/mealTypeInfer.js';
 import { SYSTEM_PROMPT, buildDayPlanMessage, parseDayPlanResponse } from '../prompts/chef-day.js';
 import {
   SYSTEM_PROMPT_WEEK,
@@ -65,7 +66,7 @@ export async function handlePlanner(request, env, path, ctx) {
       // Fetch data in parallel
       const [todayEntries, calibRow, recentEntriesRes, recentHistoryDay] = await Promise.all([
         env.DB.prepare(
-          `SELECT meal_type, name, calories, protein, carbs, fat
+          `SELECT meal_type, name, calories, protein, carbs, fat, created_at
            FROM entries WHERE user_id = ? AND date = ?
            ORDER BY created_at ASC`
         ).bind(auth.userId, today).all(),
@@ -121,20 +122,8 @@ export async function handlePlanner(request, env, path, ctx) {
         }
       } catch {}
 
-      // Meal types already registered today
-      const mealTypesRegistered = [...new Set(
-        meals
-          .map(m => (m.meal_type || '').toLowerCase())
-          .filter(t => ['desayuno', 'breakfast', 'comida', 'lunch', 'merienda', 'snack', 'cena', 'dinner'].includes(t))
-          .map(t => {
-            // Normalize to Spanish
-            if (t === 'breakfast') return 'desayuno';
-            if (t === 'lunch') return 'comida';
-            if (t === 'snack') return 'merienda';
-            if (t === 'dinner') return 'cena';
-            return t;
-          })
-      )];
+      // Meal types already registered today — infiere por hora si meal_type = 'other'
+      const mealTypesRegistered = resolveMealTypesRegistered(meals);
 
       // Build prompt
       const userMessage = buildDayPlanMessage({
@@ -264,7 +253,7 @@ export async function handlePlanner(request, env, path, ctx) {
 
       const [todayEntries, calibRow, recentEntriesRes, recentHistory] = await Promise.all([
         env.DB.prepare(
-          `SELECT meal_type, name, calories, protein, carbs, fat
+          `SELECT meal_type, name, calories, protein, carbs, fat, created_at
            FROM entries WHERE user_id = ? AND date = ?
            ORDER BY created_at ASC`
         ).bind(auth.userId, todayISO).all(),
@@ -288,19 +277,8 @@ export async function handlePlanner(request, env, path, ctx) {
       const recentEntries = recentEntriesRes.results || [];
       const recentPlannedDishes = extractRecentDishNames(recentHistory, 30);
 
-      // Normalizar meal_types registrados hoy (inglés/español → español)
-      const mealTypesRegistered = [...new Set(
-        todayMeals
-          .map(m => (m.meal_type || '').toLowerCase())
-          .filter(t => ['desayuno', 'breakfast', 'comida', 'lunch', 'merienda', 'snack', 'cena', 'dinner'].includes(t))
-          .map(t => {
-            if (t === 'breakfast') return 'desayuno';
-            if (t === 'lunch') return 'comida';
-            if (t === 'snack') return 'merienda';
-            if (t === 'dinner') return 'cena';
-            return t;
-          })
-      )];
+      // Normalizar meal_types registrados hoy (inglés/español + inferencia por hora para 'other')
+      const mealTypesRegistered = resolveMealTypesRegistered(todayMeals);
 
       const daysToPlan = computeDaysToPlan(today, mealTypesRegistered);
 
@@ -400,6 +378,72 @@ export async function handlePlanner(request, env, path, ctx) {
       console.error('[planner/week] Unexpected error:', err.message);
       return errorResponse('Error inesperado al generar el plan semanal.', 500);
     }
+  }
+
+  // ── GET /api/planner/day/current — Último plan del día guardado ──
+  if (path === '/api/planner/day/current' && request.method === 'GET') {
+    const auth = await authenticate(request, env);
+    if (!auth) return errorResponse('No autorizado', 401);
+
+    const user = await env.DB.prepare(
+      'SELECT target_calories FROM users WHERE id = ?'
+    ).bind(auth.userId).first();
+
+    const today = new Date().toLocaleDateString('en-CA');
+    const row = await env.DB.prepare(
+      `SELECT plan_json, created_at FROM planner_history
+       WHERE user_id = ? AND feature = 'day' AND date = ?
+       ORDER BY created_at DESC LIMIT 1`
+    ).bind(auth.userId, today).first();
+
+    if (!row) return jsonResponse({ plan: null });
+
+    let plan;
+    try { plan = JSON.parse(row.plan_json); }
+    catch { return jsonResponse({ plan: null }); }
+
+    return jsonResponse({
+      plan,
+      target_kcal: user?.target_calories || 0,
+      generated_at: row.created_at,
+    });
+  }
+
+  // ── GET /api/planner/week/current — Último plan semanal de la semana en curso ──
+  if (path === '/api/planner/week/current' && request.method === 'GET') {
+    const auth = await authenticate(request, env);
+    if (!auth) return errorResponse('No autorizado', 401);
+
+    const user = await env.DB.prepare(
+      'SELECT target_calories FROM users WHERE id = ?'
+    ).bind(auth.userId).first();
+
+    // Lunes de la semana en curso (YYYY-MM-DD local)
+    const now = new Date();
+    const dow = now.getDay(); // 0=dom
+    const offset = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(now);
+    monday.setDate(monday.getDate() + offset);
+    const weekStart = monday.toLocaleDateString('en-CA');
+
+    const row = await env.DB.prepare(
+      `SELECT plan_json, created_at, date FROM planner_history
+       WHERE user_id = ? AND feature = 'week' AND date >= ?
+       ORDER BY created_at DESC LIMIT 1`
+    ).bind(auth.userId, weekStart).first();
+
+    if (!row) return jsonResponse({ plan: null });
+
+    let plan;
+    try { plan = JSON.parse(row.plan_json); }
+    catch { return jsonResponse({ plan: null }); }
+
+    return jsonResponse({
+      plan,
+      target_kcal: user?.target_calories || 0,
+      generated_at: row.created_at,
+      generated_date: row.date,
+    });
   }
 
   // ── GET /api/planner/usage — Remaining counts ──
