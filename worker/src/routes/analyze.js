@@ -256,8 +256,8 @@ export async function handleAnalyze(request, env, path, ctx) {
       const inputTokens  = claude.usage?.input_tokens  || 0;
       const outputTokens = claude.usage?.output_tokens || 0;
       const logPromise = env.DB.prepare(
-        "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime('now'))"
-      ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
+        "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+      ).bind(user.userId, inputTokens, outputTokens, photoModel, 'photo').run().catch(() => {});
       if (ctx?.waitUntil) ctx.waitUntil(logPromise);
 
       // Validar que Claude devolvió campos mínimos
@@ -432,8 +432,8 @@ export async function handleAnalyzeText(request, env, ctx) {
   const inputTokens  = aiData.usage?.input_tokens  || 0;
   const outputTokens = aiData.usage?.output_tokens || 0;
   const logPromise = env.DB.prepare(
-    "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime('now'))"
-  ).bind(user.userId, inputTokens, outputTokens).run().catch(() => {});
+    "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+  ).bind(user.userId, inputTokens, outputTokens, 'claude-haiku-4-5-20251001', 'text_analyze').run().catch(() => {});
   if (ctx?.waitUntil) ctx.waitUntil(logPromise);
 
   const calibrationApplied = calibrationProfile != null && calibrationProfile.confidence >= 0.05;

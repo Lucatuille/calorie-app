@@ -207,11 +207,13 @@ export async function handlePlanner(request, env, path, ctx) {
 
       // Log token usage
       await env.DB.prepare(
-        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
+        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\'))'
       ).bind(
         auth.userId,
         claudeData.usage?.input_tokens || 0,
-        claudeData.usage?.output_tokens || 0
+        claudeData.usage?.output_tokens || 0,
+        'claude-sonnet-4-6',
+        'chef_day'
       ).run().catch(() => {});
 
       // Guardar en history para variedad futura
@@ -404,11 +406,13 @@ export async function handlePlanner(request, env, path, ctx) {
       }
 
       await env.DB.prepare(
-        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
+        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\'))'
       ).bind(
         auth.userId,
         claudeData.usage?.input_tokens || 0,
-        claudeData.usage?.output_tokens || 0
+        claudeData.usage?.output_tokens || 0,
+        'claude-sonnet-4-6',
+        'chef_week'
       ).run().catch(() => {});
 
       await savePlannerHistory(auth.userId, 'week', planData, env);

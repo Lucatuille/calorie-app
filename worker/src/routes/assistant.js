@@ -507,11 +507,16 @@ async function generateConversationTitle(convId, userMessage, apiKey, db, userId
     if (title) {
       await db.prepare('UPDATE assistant_conversations SET title = ? WHERE id = ?').bind(title, convId).run();
     }
-    // Registrar tokens consumidos
-    const tokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    // Registrar tokens consumidos (columnas correctas: input/output separados)
     await db.prepare(
-      'INSERT INTO ai_usage_logs (user_id, model, tokens_used, feature) VALUES (?,?,?,?) ON CONFLICT DO NOTHING'
-    ).bind(userId, 'claude-haiku-4-5-20251001', tokens, 'assistant_title').run().catch(() => {});
+      "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+    ).bind(
+      userId,
+      data.usage?.input_tokens || 0,
+      data.usage?.output_tokens || 0,
+      'claude-haiku-4-5-20251001',
+      'assistant_title'
+    ).run().catch(() => {});
   } catch { /* fire-and-forget: los errores no bloquean */ }
 }
 
@@ -680,6 +685,17 @@ export async function handleAssistant(request, env, path, ctx) {
       }
       assistantText = claudeData.content?.[0]?.text || '';
       tokensUsed    = (claudeData.usage?.input_tokens || 0) + (claudeData.usage?.output_tokens || 0);
+
+      // Visibilidad de coste — log en ai_usage_logs (haiku vs sonnet según complexity)
+      await env.DB.prepare(
+        "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+      ).bind(
+        user.id,
+        claudeData.usage?.input_tokens || 0,
+        claudeData.usage?.output_tokens || 0,
+        modelId,
+        'assistant_chat'
+      ).run().catch(() => {});
     } catch {
       // FIX #3: Revertir incremento si hay error de red
       if (!is_intro) {
@@ -845,6 +861,17 @@ export async function handleAssistant(request, env, path, ctx) {
       if (claudeData.stop_reason === 'max_tokens') return jsonResponse({ digest: null, reason: 'too_long' });
       const digestText = claudeData.content?.[0]?.text?.trim() || '';
       if (!digestText) return jsonResponse({ digest: null, reason: 'empty' });
+
+      // Visibilidad de coste — el digest es Sonnet, llamada gorda (1/semana por user)
+      await env.DB.prepare(
+        "INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, model, feature, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+      ).bind(
+        user.id,
+        claudeData.usage?.input_tokens || 0,
+        claudeData.usage?.output_tokens || 0,
+        'claude-sonnet-4-6',
+        'assistant_digest'
+      ).run().catch(() => {});
 
       // Persistir — ON CONFLICT evita duplicados en condiciones de carrera
       const generatedAt = new Date().toISOString();
