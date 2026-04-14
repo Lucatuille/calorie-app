@@ -466,13 +466,12 @@ export default function ChefPlanWeek() {
     : `${firstD.getDate()} ${MONTHS[firstD.getMonth()]} — ${lastD.getDate()} ${MONTHS[lastD.getMonth()]}`;
 
   const N = plan.days.length;
-  // 75px mínimo por celda + 34 label + ~5 gap cada uno → cabe en .assistant-chat
-  // (maxWidth 640, padding 14px lado = ~612px útiles).
-  // Para 7 días: 34 + 7×75 + 40 = 599. Para 6: 529. Para 2: 199.
-  const gridTemplateColumns = `34px repeat(${N}, minmax(75px, 1fr))`;
+  // minmax(75, 110): mobile puede comprimir a 75 (con scroll), desktop/zoom
+  // nunca hincha las celdas por encima de 110px. Grid con maxWidth + margin
+  // auto → se centra cuando sobra espacio (zoom alto, monitor ancho).
+  const gridTemplateColumns = `34px repeat(${N}, minmax(75px, 110px))`;
   const gridMinWidth = 34 + N * 75 + (N + 1) * 5;
-  // 610 es el ancho útil aproximado dentro de .assistant-chat — si gridMinWidth
-  // cabe, no hay scroll y el hint "desliza →" sobra.
+  const gridMaxWidth = 34 + N * 110 + (N + 1) * 5;
   const needsHorizontalScroll = gridMinWidth > 610;
 
   // Meal type normalization (Claude puede devolver inglés o español)
@@ -628,6 +627,8 @@ export default function ChefPlanWeek() {
           gridTemplateColumns,
           gap: 5,
           minWidth: gridMinWidth,
+          maxWidth: gridMaxWidth,
+          margin: '0 auto',
         }}>
           {/* Row 1: empty top-left + col heads */}
           <div />

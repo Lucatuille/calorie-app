@@ -183,6 +183,28 @@ export async function handlePlanner(request, env, path, ctx) {
         return errorResponse('Error al procesar el plan generado. Inténtalo de nuevo.', 502);
       }
 
+      // Enforce server-side: filtrar meals de tipos ya registrados (Sonnet
+      // a veces ignora la instrucción "solo genera los que faltan").
+      if (mealTypesRegistered.length > 0 && Array.isArray(planData.meals)) {
+        const TYPE_MAP = {
+          desayuno: 'desayuno', breakfast: 'desayuno',
+          comida:   'comida',   lunch:     'comida',
+          merienda: 'merienda', snack:     'merienda',
+          cena:     'cena',     dinner:    'cena',
+        };
+        planData.meals = planData.meals.filter(m => {
+          const t = (m.type || '').toLowerCase();
+          const normalized = TYPE_MAP[t] || t;
+          return !mealTypesRegistered.includes(normalized);
+        });
+        planData.totals = {
+          kcal:    planData.meals.reduce((s, m) => s + (m.kcal    || 0), 0),
+          protein: planData.meals.reduce((s, m) => s + (m.protein || 0), 0),
+          carbs:   planData.meals.reduce((s, m) => s + (m.carbs   || 0), 0),
+          fat:     planData.meals.reduce((s, m) => s + (m.fat     || 0), 0),
+        };
+      }
+
       // Log token usage
       await env.DB.prepare(
         'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
@@ -347,6 +369,38 @@ export async function handlePlanner(request, env, path, ctx) {
         await rollbackPlannerLimit(auth.userId, 'week', env);
         console.error('[planner/week] JSON parse error:', parseErr.message, 'Raw:', rawText.slice(0, 500));
         return errorResponse('Error al procesar el plan generado. Inténtalo de nuevo.', 502);
+      }
+
+      // Enforce server-side: si hoy es parcial, filtrar meals de tipos ya
+      // registrados. Sonnet a veces ignora la instrucción "solo lo que falta".
+      if (planData.days?.length > 0 && mealTypesRegistered.length > 0) {
+        const firstDay = planData.days[0];
+        if (firstDay.date === todayISO) {
+          const TYPE_MAP = {
+            desayuno: 'desayuno', breakfast: 'desayuno',
+            comida:   'comida',   lunch:     'comida',
+            merienda: 'merienda', snack:     'merienda',
+            cena:     'cena',     dinner:    'cena',
+          };
+          firstDay.meals = (firstDay.meals || []).filter(m => {
+            const t = (m.type || '').toLowerCase();
+            const normalized = TYPE_MAP[t] || t;
+            return !mealTypesRegistered.includes(normalized);
+          });
+          // Recalcular totals del día y de la semana
+          firstDay.totals = {
+            kcal:    firstDay.meals.reduce((s, m) => s + (m.kcal    || 0), 0),
+            protein: firstDay.meals.reduce((s, m) => s + (m.protein || 0), 0),
+            carbs:   firstDay.meals.reduce((s, m) => s + (m.carbs   || 0), 0),
+            fat:     firstDay.meals.reduce((s, m) => s + (m.fat     || 0), 0),
+          };
+          planData.week_totals = {
+            kcal:    planData.days.reduce((s, d) => s + (d.totals?.kcal    || 0), 0),
+            protein: planData.days.reduce((s, d) => s + (d.totals?.protein || 0), 0),
+            carbs:   planData.days.reduce((s, d) => s + (d.totals?.carbs   || 0), 0),
+            fat:     planData.days.reduce((s, d) => s + (d.totals?.fat     || 0), 0),
+          };
+        }
       }
 
       await env.DB.prepare(
