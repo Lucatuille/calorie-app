@@ -466,7 +466,14 @@ export default function ChefPlanWeek() {
     : `${firstD.getDate()} ${MONTHS[firstD.getMonth()]} — ${lastD.getDate()} ${MONTHS[lastD.getMonth()]}`;
 
   const N = plan.days.length;
-  const gridTemplateColumns = `34px repeat(${N}, minmax(90px, 1fr))`;
+  // 75px mínimo por celda + 34 label + ~5 gap cada uno → cabe en .assistant-chat
+  // (maxWidth 640, padding 14px lado = ~612px útiles).
+  // Para 7 días: 34 + 7×75 + 40 = 599. Para 6: 529. Para 2: 199.
+  const gridTemplateColumns = `34px repeat(${N}, minmax(75px, 1fr))`;
+  const gridMinWidth = 34 + N * 75 + (N + 1) * 5;
+  // 610 es el ancho útil aproximado dentro de .assistant-chat — si gridMinWidth
+  // cabe, no hay scroll y el hint "desliza →" sobra.
+  const needsHorizontalScroll = gridMinWidth > 610;
 
   // Meal type normalization (Claude puede devolver inglés o español)
   const normalizeType = (t: string): string => {
@@ -595,19 +602,21 @@ export default function ChefPlanWeek() {
         </button>
       </div>
 
-      {/* Scroll hint */}
-      <div style={{
-        fontSize: 9,
-        color: 'var(--text-tertiary)',
-        textAlign: 'right',
-        padding: '0 22px 4px',
-        fontStyle: 'italic',
-        flexShrink: 0,
-      }}>
-        desliza →
-      </div>
+      {/* Scroll hint — solo si el grid excede el contenedor (típico móvil) */}
+      {needsHorizontalScroll && (
+        <div style={{
+          fontSize: 9,
+          color: 'var(--text-tertiary)',
+          textAlign: 'right',
+          padding: '0 22px 4px',
+          fontStyle: 'italic',
+          flexShrink: 0,
+        }}>
+          desliza →
+        </div>
+      )}
 
-      {/* Grid wrap — scroll horizontal en mobile, nunca vertical */}
+      {/* Grid wrap — scroll horizontal solo cuando hace falta */}
       <div style={{
         overflowX: 'auto',
         padding: '0 14px 20px',
@@ -618,7 +627,7 @@ export default function ChefPlanWeek() {
           display: 'grid',
           gridTemplateColumns,
           gap: 5,
-          minWidth: 34 + N * 95 + (N + 1) * 5,
+          minWidth: gridMinWidth,
         }}>
           {/* Row 1: empty top-left + col heads */}
           <div />
