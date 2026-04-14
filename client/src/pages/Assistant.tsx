@@ -549,12 +549,13 @@ export default function Assistant() {
       `}</style>
 
       <div className="assistant-chat" style={{
-        maxWidth: 640,
+        maxWidth: mode === 'week' ? 920 : 640,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
         height: 'calc(100dvh - 52px)',
         overflow: 'hidden',
+        transition: 'max-width 0.25s ease',
       }}>
 
         {/* ── Header ── */}
