@@ -44,7 +44,8 @@ REGLAS:
     - "estoy en restaurante" → sugiere opciones típicas de restaurante
     - Si el contexto contradice lo que normalmente generarías, el CONTEXTO gana.
 11. Si al usuario le faltan POCAS kcal (< 200), genera solo un snack ligero, no una comida completa.
-12. Los totals deben ser la SUMA real de los meals generados — no inventes un total diferente.`;
+12. Los totals deben ser la SUMA real de los meals generados — no inventes un total diferente.
+13. VARIEDAD: si se te da una lista de PLATOS RECIENTES (comidos o planificados en últimos días), NO los repitas hoy. Busca alternativas equivalentes en macros. Si no tienes alternativa en los frecuentes del usuario, usa conocimiento general de cocina mediterránea/española. La proteína principal de hoy debe variar respecto a lo comido o planificado ayer y antesdeayer (alterna entre pollo, pescado, legumbre, huevo, ternera, tofu, etc.).`;
 
 /**
  * Construye el user message con datos reales del usuario.
@@ -59,6 +60,8 @@ REGLAS:
  * @param {string} params.dayOfWeek  — "lunes", "martes", etc.
  * @param {number} params.hourNow    — hora actual (0-23)
  * @param {Array}  params.mealTypesRegistered — tipos ya registrados hoy ["desayuno", "comida"]
+ * @param {Array}  params.recentEntries — entries reales de los últimos N días [{date, meal_type, name, calories}]
+ * @param {string[]} params.recentPlannedDishes — nombres de platos ya planificados en los N planes anteriores
  */
 export function buildDayPlanMessage({
   user,
@@ -70,6 +73,8 @@ export function buildDayPlanMessage({
   dayOfWeek,
   hourNow,
   mealTypesRegistered,
+  recentEntries = [],
+  recentPlannedDishes = [],
 }) {
   // Perfil
   const profileBlock = `=== PERFIL ===
@@ -135,6 +140,32 @@ Grasa por cubrir: ${Math.round(remaining.fat)}g`;
     freqBlock = '=== COMIDAS FRECUENTES (priorizar estos platos — el usuario ya los cocina) ===\n' + lines.join('\n');
   }
 
+  // Variedad — platos recientes (comidos + planificados)
+  let varietyBlock = '';
+  const recentEatenLines = [];
+  if (recentEntries?.length > 0) {
+    // Agrupar por fecha
+    const byDate = {};
+    for (const e of recentEntries) {
+      const d = e.date || 'sin fecha';
+      if (!byDate[d]) byDate[d] = [];
+      if (e.name) byDate[d].push(e.name);
+    }
+    for (const [d, names] of Object.entries(byDate)) {
+      if (names.length > 0) recentEatenLines.push(`  ${d}: ${names.join(', ')}`);
+    }
+  }
+  const varietyParts = [];
+  if (recentEatenLines.length > 0) {
+    varietyParts.push('Platos reales comidos los últimos días:\n' + recentEatenLines.join('\n'));
+  }
+  if (recentPlannedDishes?.length > 0) {
+    varietyParts.push('Platos ya sugeridos en planes recientes (NO repetir):\n  ' + recentPlannedDishes.join(', '));
+  }
+  if (varietyParts.length > 0) {
+    varietyBlock = '=== VARIEDAD — EVITAR REPETICIÓN ===\n' + varietyParts.join('\n\n');
+  }
+
   // Contexto libre del usuario
   const contextBlock = context?.trim()
     ? `=== CONTEXTO DEL USUARIO (respetar estrictamente) ===\n  "${context.trim()}"`
@@ -152,6 +183,7 @@ Grasa por cubrir: ${Math.round(remaining.fat)}g`;
     timeHint ? `Nota: ${timeHint}` : '',
     prefsBlock,
     freqBlock,
+    varietyBlock,
     contextBlock,
     instruction,
   ].filter(Boolean);

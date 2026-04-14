@@ -46,7 +46,6 @@ let TARGET_KCAL = 1812; // Se actualiza con el valor real del backend
 // Colores Chef
 const CHEF_BG = 'var(--bg)';
 const CHEF_INK = '#1f1a12';
-const OLIVE = '#556b2f';
 
 const STORAGE_KEY = 'caliro_day_plan';
 
@@ -451,7 +450,7 @@ export default function ChefPlanDay() {
                 fontSize: 9,
                 letterSpacing: '0.22em',
                 textTransform: 'uppercase',
-                color: OLIVE,
+                color: CHEF_INK,
                 fontWeight: 700,
               }}>
                 {meal.type}
@@ -481,7 +480,7 @@ export default function ChefPlanDay() {
                 </h3>
                 <div style={{
                   fontSize: 12,
-                  color: OLIVE,
+                  color: CHEF_INK,
                   fontWeight: 600,
                   fontVariantNumeric: 'tabular-nums',
                   marginBottom: 6,

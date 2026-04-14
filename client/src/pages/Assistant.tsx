@@ -7,6 +7,7 @@ import { buildWelcomeMessage } from '../utils/assistantMessages';
 import { isPro } from '../utils/levels';
 import { openExternal } from '../utils/platform';
 const ChefPlanDay = lazy(() => import('../components/chef/ChefPlanDay'));
+const ChefPlanWeek = lazy(() => import('../components/chef/ChefPlanWeek'));
 
 // ── ProOnly (dark card) ──────────────────────────────────────
 
@@ -814,53 +815,9 @@ export default function Assistant() {
 
         {/* ══ MODE: Plan semanal ══ */}
         <div style={{ display: mode === 'week' ? 'contents' : 'none' }}>
-          <div style={{
-            flex: 1,
-            background: 'var(--bg)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '40px 24px',
-            textAlign: 'center',
-          }}>
-            <div style={{
-              fontFamily: 'var(--font-serif)',
-              fontStyle: 'italic',
-              fontSize: 24,
-              color: '#1f1a12',
-              marginBottom: 8,
-            }}>
-              Plan semanal
-            </div>
-            <p style={{
-              fontSize: 13,
-              color: 'var(--text-secondary)',
-              lineHeight: 1.5,
-              maxWidth: 280,
-              margin: '0 0 20px',
-            }}>
-              7 días × 4 comidas que respetan tus patrones reales y tu objetivo semanal.
-            </p>
-            <button
-              type="button"
-              disabled
-              style={{
-                background: 'var(--accent)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 'var(--radius-full)',
-                padding: '11px 24px',
-                fontSize: 13,
-                fontWeight: 600,
-                fontFamily: 'var(--font-sans)',
-                opacity: 0.5,
-                cursor: 'not-allowed',
-              }}
-            >
-              Generar plan · próximamente
-            </button>
-          </div>
+          <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" style={{ width: 24, height: 24 }} /></div>}>
+            <ChefPlanWeek />
+          </Suspense>
         </div>
 
       </div>

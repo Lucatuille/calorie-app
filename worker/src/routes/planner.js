@@ -5,7 +5,14 @@
 
 import { jsonResponse, errorResponse, authenticate, rateLimit } from '../utils.js';
 import { checkAndIncrementPlannerLimit, rollbackPlannerLimit, getPlannerUsage } from '../utils/plannerLimits.js';
+import { savePlannerHistory, getRecentPlannerHistory, extractRecentDishNames } from '../utils/plannerHistory.js';
 import { SYSTEM_PROMPT, buildDayPlanMessage, parseDayPlanResponse } from '../prompts/chef-day.js';
+import {
+  SYSTEM_PROMPT_WEEK,
+  buildWeekPlanMessage,
+  parseWeekPlanResponse,
+  computeDaysToPlan,
+} from '../prompts/chef-week.js';
 
 const DAY_NAMES_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
@@ -50,8 +57,13 @@ export async function handlePlanner(request, env, path, ctx) {
       const hourNow = now.getHours();
       const dayOfWeek = DAY_NAMES_ES[now.getDay()];
 
+      // Variedad — ventana de 3 días atrás (sin incluir hoy)
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const threeDaysAgoISO = threeDaysAgo.toLocaleDateString('en-CA');
+
       // Fetch data in parallel
-      const [todayEntries, calibRow] = await Promise.all([
+      const [todayEntries, calibRow, recentEntriesRes, recentHistoryDay] = await Promise.all([
         env.DB.prepare(
           `SELECT meal_type, name, calories, protein, carbs, fat
            FROM entries WHERE user_id = ? AND date = ?
@@ -61,9 +73,20 @@ export async function handlePlanner(request, env, path, ctx) {
         env.DB.prepare(
           'SELECT frequent_meals FROM user_calibration WHERE user_id = ?'
         ).bind(auth.userId).first().catch(() => null),
+
+        env.DB.prepare(
+          `SELECT date, meal_type, name, calories
+           FROM entries
+           WHERE user_id = ? AND date >= ? AND date < ?
+           ORDER BY date DESC, created_at ASC`
+        ).bind(auth.userId, threeDaysAgoISO, today).all().catch(() => ({ results: [] })),
+
+        getRecentPlannerHistory(auth.userId, 'day', 3, env),
       ]);
 
       const meals = todayEntries.results || [];
+      const recentEntries = recentEntriesRes.results || [];
+      const recentPlannedDishes = extractRecentDishNames(recentHistoryDay, 20);
 
       // Calculate remaining budget
       const consumed = meals.reduce((acc, e) => ({
@@ -124,6 +147,8 @@ export async function handlePlanner(request, env, path, ctx) {
         dayOfWeek,
         hourNow,
         mealTypesRegistered,
+        recentEntries,
+        recentPlannedDishes,
       });
 
       // Call Claude Sonnet
@@ -170,7 +195,6 @@ export async function handlePlanner(request, env, path, ctx) {
       }
 
       // Log token usage
-      const tokensUsed = (claudeData.usage?.input_tokens || 0) + (claudeData.usage?.output_tokens || 0);
       await env.DB.prepare(
         'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
       ).bind(
@@ -178,6 +202,9 @@ export async function handlePlanner(request, env, path, ctx) {
         claudeData.usage?.input_tokens || 0,
         claudeData.usage?.output_tokens || 0
       ).run().catch(() => {});
+
+      // Guardar en history para variedad futura
+      await savePlannerHistory(auth.userId, 'day', planData, env);
 
       return jsonResponse({
         plan: planData,
@@ -193,6 +220,185 @@ export async function handlePlanner(request, env, path, ctx) {
       await rollbackPlannerLimit(auth.userId, 'day', env);
       console.error('[planner/day] Unexpected error:', err.message);
       return errorResponse('Error inesperado al generar el plan.', 500);
+    }
+  }
+
+  // ── POST /api/planner/week — Plan semanal (Sonnet) ──
+  if (path === '/api/planner/week' && request.method === 'POST') {
+    const auth = await authenticate(request, env);
+    if (!auth) return errorResponse('No autorizado', 401);
+
+    const rl = await rateLimit(env, request, `planner-week:${auth.userId}`, 2, 120);
+    if (rl) return rl;
+
+    const user = await env.DB.prepare(
+      `SELECT id, name, weight, goal_weight, target_calories, target_protein,
+              target_carbs, target_fat, access_level, dietary_preferences
+       FROM users WHERE id = ?`
+    ).bind(auth.userId).first();
+
+    if (!user) return errorResponse('Usuario no encontrado', 404);
+    if (!user.target_calories) return errorResponse('Configura tu objetivo calórico en el perfil primero', 400);
+
+    const limitCheck = await checkAndIncrementPlannerLimit(auth.userId, 'week', user.access_level, env);
+    if (!limitCheck.allowed) {
+      const msg = limitCheck.reason === 'blocked'
+        ? 'El plan semanal es una función Pro.'
+        : limitCheck.reason === 'day_limit'
+          ? 'Has alcanzado el límite de planes semanales por hoy.'
+          : 'Has alcanzado el límite semanal.';
+      return jsonResponse({ error: msg, reason: limitCheck.reason, limits: limitCheck.limits }, 429);
+    }
+
+    try {
+      const body = await request.json().catch(() => ({}));
+      const userContext = (body.context || '').trim().slice(0, 500);
+
+      const today = new Date();
+      const todayISO = today.toLocaleDateString('en-CA');
+
+      // Ventana de 14 días atrás (sin incluir hoy) para contexto
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      const fourteenDaysAgoISO = fourteenDaysAgo.toLocaleDateString('en-CA');
+
+      const [todayEntries, calibRow, recentEntriesRes, recentHistory] = await Promise.all([
+        env.DB.prepare(
+          `SELECT meal_type, name, calories, protein, carbs, fat
+           FROM entries WHERE user_id = ? AND date = ?
+           ORDER BY created_at ASC`
+        ).bind(auth.userId, todayISO).all(),
+
+        env.DB.prepare(
+          'SELECT frequent_meals FROM user_calibration WHERE user_id = ?'
+        ).bind(auth.userId).first().catch(() => null),
+
+        env.DB.prepare(
+          `SELECT date, meal_type, name, calories
+           FROM entries
+           WHERE user_id = ? AND date >= ? AND date < ?
+           ORDER BY date DESC, created_at ASC`
+        ).bind(auth.userId, fourteenDaysAgoISO, todayISO).all().catch(() => ({ results: [] })),
+
+        // history: 14 días de planes day + week
+        getRecentPlannerHistory(auth.userId, 'day', 14, env),
+      ]);
+
+      const todayMeals = todayEntries.results || [];
+      const recentEntries = recentEntriesRes.results || [];
+      const recentPlannedDishes = extractRecentDishNames(recentHistory, 30);
+
+      // Normalizar meal_types registrados hoy (inglés/español → español)
+      const mealTypesRegistered = [...new Set(
+        todayMeals
+          .map(m => (m.meal_type || '').toLowerCase())
+          .filter(t => ['desayuno', 'breakfast', 'comida', 'lunch', 'merienda', 'snack', 'cena', 'dinner'].includes(t))
+          .map(t => {
+            if (t === 'breakfast') return 'desayuno';
+            if (t === 'lunch') return 'comida';
+            if (t === 'snack') return 'merienda';
+            if (t === 'dinner') return 'cena';
+            return t;
+          })
+      )];
+
+      const daysToPlan = computeDaysToPlan(today, mealTypesRegistered);
+
+      let frequentMeals = [];
+      try {
+        if (calibRow?.frequent_meals) {
+          frequentMeals = JSON.parse(calibRow.frequent_meals);
+        }
+      } catch {}
+
+      let preferences = null;
+      try {
+        if (user.dietary_preferences) {
+          preferences = typeof user.dietary_preferences === 'string'
+            ? JSON.parse(user.dietary_preferences)
+            : user.dietary_preferences;
+        }
+      } catch {}
+
+      const userMessage = buildWeekPlanMessage({
+        user,
+        daysToPlan,
+        todayMeals,
+        frequentMeals,
+        preferences,
+        context: userContext,
+        recentEntries,
+        recentPlannedDishes,
+      });
+
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 4500,
+          system: SYSTEM_PROMPT_WEEK,
+          messages: [{ role: 'user', content: userMessage }],
+        }),
+      });
+
+      if (!claudeRes.ok) {
+        await rollbackPlannerLimit(auth.userId, 'week', env);
+        const errText = await claudeRes.text().catch(() => 'Unknown error');
+        console.error('[planner/week] Anthropic error:', claudeRes.status, errText);
+        return errorResponse('Error al conectar con la IA. Inténtalo de nuevo.', 502);
+      }
+
+      const claudeData = await claudeRes.json();
+
+      if (claudeData.stop_reason === 'max_tokens') {
+        await rollbackPlannerLimit(auth.userId, 'week', env);
+        return errorResponse('El plan semanal generado fue demasiado largo. Intenta añadir menos contexto.', 422);
+      }
+
+      const rawText = claudeData.content?.[0]?.text || '';
+
+      let planData;
+      try {
+        planData = parseWeekPlanResponse(rawText);
+      } catch (parseErr) {
+        await rollbackPlannerLimit(auth.userId, 'week', env);
+        console.error('[planner/week] JSON parse error:', parseErr.message, 'Raw:', rawText.slice(0, 500));
+        return errorResponse('Error al procesar el plan generado. Inténtalo de nuevo.', 502);
+      }
+
+      await env.DB.prepare(
+        'INSERT INTO ai_usage_logs (user_id, input_tokens, output_tokens, created_at) VALUES (?, ?, ?, datetime(\'now\'))'
+      ).bind(
+        auth.userId,
+        claudeData.usage?.input_tokens || 0,
+        claudeData.usage?.output_tokens || 0
+      ).run().catch(() => {});
+
+      await savePlannerHistory(auth.userId, 'week', planData, env);
+
+      return jsonResponse({
+        plan: planData,
+        target_kcal: user.target_calories,
+        target_macros: {
+          protein: user.target_protein,
+          carbs: user.target_carbs,
+          fat: user.target_fat,
+        },
+        usage: {
+          remaining_day: limitCheck.remainingDay,
+          remaining_week: limitCheck.remainingWeek,
+        },
+      });
+
+    } catch (err) {
+      await rollbackPlannerLimit(auth.userId, 'week', env);
+      console.error('[planner/week] Unexpected error:', err.message);
+      return errorResponse('Error inesperado al generar el plan semanal.', 500);
     }
   }
 
