@@ -50,6 +50,69 @@ const MEAL_LABELS: Record<string, string> = {
   merienda: 'MERIENDA',
   cena: 'CENA',
 };
+const MEAL_LABELS_CAP: Record<string, string> = {
+  desayuno: 'Desayuno',
+  comida: 'Comida',
+  merienda: 'Merienda',
+  cena: 'Cena',
+};
+
+// Fila del grid: row-label vertical + N celdas (una por día).
+function FragmentRow({
+  mealType,
+  days,
+  todayISO,
+  findMeal,
+  onCellTap,
+}: {
+  mealType: string;
+  days: Day[];
+  todayISO: string;
+  findMeal: (day: Day, type: string) => Meal | null;
+  onCellTap: (meal: Meal, day: Day) => void;
+}) {
+  return (
+    <>
+      <div style={{
+        fontSize: 8,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        color: '#1f1a12',
+        fontWeight: 700,
+        writingMode: 'vertical-rl',
+        transform: 'rotate(180deg)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '4px 0',
+      }}>
+        {MEAL_LABELS_CAP[mealType]}
+      </div>
+      {days.map(day => {
+        const meal = findMeal(day, mealType);
+        const isToday = day.date === todayISO;
+        if (!meal) {
+          return (
+            <div key={`${mealType}-${day.date}`} className="chef-week-cell-empty">
+              {isToday ? 'ya reg.' : '—'}
+            </div>
+          );
+        }
+        return (
+          <button
+            type="button"
+            key={`${mealType}-${day.date}`}
+            className={`chef-week-cell${isToday ? ' today' : ''}`}
+            onClick={() => onCellTap(meal, day)}
+          >
+            <div className="name">{meal.name}</div>
+            <div className="kcal">{meal.kcal}</div>
+          </button>
+        );
+      })}
+    </>
+  );
+}
 
 // Devuelve el lunes de la semana en curso (YYYY-MM-DD).
 function currentWeekStart(): string {
@@ -84,12 +147,6 @@ function savePlanToCache(plan: WeekPlanData, targetKcal: number) {
 
 function clearPlanCache() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
-}
-
-// Busca un meal por tipo en un día, normalizando variantes.
-function findMealByType(day: Day, type: string): Meal | null {
-  const target = type.toLowerCase();
-  return day.meals.find(m => (m.type || '').toLowerCase() === target) || null;
 }
 
 export default function ChefPlanWeek() {
@@ -369,46 +426,117 @@ export default function ChefPlanWeek() {
   if (!plan || !plan.days?.length) return null;
 
   const wt = plan.week_totals || { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-  const totalG = wt.protein + wt.carbs + wt.fat;
-  const pPct = totalG > 0 ? (wt.protein / totalG) * 100 : 33;
-  const cPct = totalG > 0 ? (wt.carbs / totalG) * 100 : 34;
-  const fPct = 100 - pPct - cPct;
-
   const avgKcal = plan.days.length > 0 ? Math.round(wt.kcal / plan.days.length) : 0;
 
-  // Mobile-friendly: una "columna" por día, rows de meal_type visibles en cada una.
-  // El usuario scrollea vertical (lista de días) en lugar de grid horizontal —
-  // mejor UX para nombres de plato que pueden ser largos.
-  // Cada día = card con 4 meals compactos.
+  // Col head: abreviatura del día
+  const DOW_SHORT: Record<string, string> = {
+    lunes: 'Lun', martes: 'Mar', 'miércoles': 'Mié', jueves: 'Jue',
+    viernes: 'Vie', 'sábado': 'Sáb', domingo: 'Dom',
+  };
+
+  // Rango de fechas para el subtítulo ("14 — 20 de abril")
+  const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const firstD = new Date(plan.days[0].date + 'T00:00:00');
+  const lastD  = new Date(plan.days[plan.days.length - 1].date + 'T00:00:00');
+  const dateRange = firstD.getMonth() === lastD.getMonth()
+    ? `${firstD.getDate()} — ${lastD.getDate()} de ${MONTHS[lastD.getMonth()]}`
+    : `${firstD.getDate()} ${MONTHS[firstD.getMonth()]} — ${lastD.getDate()} ${MONTHS[lastD.getMonth()]}`;
+
+  const N = plan.days.length;
+  const gridTemplateColumns = `34px repeat(${N}, minmax(90px, 1fr))`;
+
+  // Meal type normalization (Claude puede devolver inglés o español)
+  const normalizeType = (t: string): string => {
+    const k = (t || '').toLowerCase();
+    if (k === 'breakfast') return 'desayuno';
+    if (k === 'lunch') return 'comida';
+    if (k === 'snack') return 'merienda';
+    if (k === 'dinner') return 'cena';
+    return k;
+  };
+  const findMealByNormalizedType = (day: Day, type: string): Meal | null => {
+    for (const m of day.meals || []) {
+      if (normalizeType(m.type) === type) return m;
+    }
+    return null;
+  };
 
   return (
     <div style={{
       flex: 1,
       background: CHEF_BG,
+      display: 'flex',
+      flexDirection: 'column',
       overflowY: 'auto',
-      padding: '20px 22px 24px',
     }}>
       <style>{`
         @keyframes chefFadeInUp {
           from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        .chef-week-cell {
+          background: #fdf9ed;
+          border: 0.5px solid rgba(31,26,18,0.08);
+          border-radius: 8px;
+          padding: 8px 9px;
+          min-height: 64px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+          font-family: inherit;
+          text-align: left;
+        }
+        .chef-week-cell:hover { border-color: rgba(31,26,18,0.25); }
+        .chef-week-cell.today { border-color: var(--accent); background: #fdfaf0; }
+        .chef-week-cell .name {
+          font-family: var(--font-serif);
+          font-style: italic;
+          font-size: 12px;
+          line-height: 1.2;
+          color: ${CHEF_INK};
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .chef-week-cell .kcal {
+          font-size: 9px;
+          color: ${CHEF_INK};
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+          margin-top: 4px;
+        }
+        .chef-week-cell-empty {
+          background: rgba(0,0,0,0.015);
+          border: 0.5px dashed rgba(31,26,18,0.12);
+          border-radius: 8px;
+          min-height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 9px;
+          font-style: italic;
+          color: rgba(31,26,18,0.3);
+          padding: 4px;
+          text-align: center;
+        }
       `}</style>
 
       {/* Header */}
       <div style={{
+        padding: '20px 22px 12px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-end',
-        paddingBottom: 16,
-        marginBottom: 20,
-        borderBottom: '0.5px solid rgba(31,26,18,0.12)',
+        flexShrink: 0,
       }}>
         <div>
           <h2 style={{
             fontFamily: 'var(--font-serif)',
             fontStyle: 'italic',
-            fontSize: 26,
+            fontSize: 28,
             color: CHEF_INK,
             margin: 0,
             lineHeight: 1,
@@ -423,7 +551,7 @@ export default function ChefPlanWeek() {
             marginTop: 4,
             fontWeight: 500,
           }}>
-            {plan.days.length} días · hasta domingo
+            {dateRange}
           </div>
         </div>
         <button
@@ -444,220 +572,119 @@ export default function ChefPlanWeek() {
         </button>
       </div>
 
-      {/* Days */}
-      {plan.days.map((day, dayIdx) => {
-        const isToday = day.date === todayISO;
-        const d = new Date(day.date + 'T00:00:00');
-        const dayNum = d.getDate();
-
-        return (
-          <div key={day.date} style={{
-            opacity: 0,
-            animation: 'chefFadeInUp 0.35s ease forwards',
-            animationDelay: `${dayIdx * 0.08}s`,
-            marginBottom: 20,
-          }}>
-            {/* Day heading */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 10,
-              paddingBottom: 8,
-              marginBottom: 12,
-              borderBottom: '0.5px solid rgba(31,26,18,0.08)',
-            }}>
-              <span style={{
-                fontSize: 10,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: isToday ? 'var(--accent)' : CHEF_INK,
-                fontWeight: 700,
-              }}>
-                {day.day_name}
-              </span>
-              <span style={{
-                fontFamily: 'var(--font-serif)',
-                fontStyle: 'italic',
-                fontSize: 20,
-                color: isToday ? 'var(--accent)' : CHEF_INK,
-              }}>
-                {dayNum}
-              </span>
-              {isToday && (
-                <span style={{
-                  fontSize: 9,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  color: 'var(--accent)',
-                  fontWeight: 700,
-                  marginLeft: 'auto',
-                }}>
-                  Hoy
-                </span>
-              )}
-              <span style={{
-                marginLeft: isToday ? 8 : 'auto',
-                fontSize: 10,
-                color: 'var(--text-tertiary)',
-                fontVariantNumeric: 'tabular-nums',
-                fontWeight: 500,
-              }}>
-                {day.totals?.kcal || 0} kcal
-              </span>
-            </div>
-
-            {/* Meals list */}
-            {MEAL_ORDER.map((mealType) => {
-              const meal = findMealByType(day, mealType);
-              if (!meal) {
-                return (
-                  <div key={mealType} style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    justifyContent: 'space-between',
-                    padding: '7px 0',
-                    fontSize: 11,
-                    color: 'var(--text-tertiary)',
-                  }}>
-                    <span style={{
-                      fontSize: 9,
-                      letterSpacing: '0.22em',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      color: 'rgba(31,26,18,0.35)',
-                    }}>
-                      {MEAL_LABELS[mealType]}
-                    </span>
-                    <span style={{ fontStyle: 'italic' }}>ya registrado</span>
-                  </div>
-                );
-              }
-
-              return (
-                <button
-                  type="button"
-                  key={mealType}
-                  onClick={() => setModalMeal({ meal, day })}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '8px 0',
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: '0.5px dashed rgba(31,26,18,0.06)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1, paddingRight: 10 }}>
-                    <span style={{
-                      fontSize: 9,
-                      letterSpacing: '0.22em',
-                      textTransform: 'uppercase',
-                      color: CHEF_INK,
-                      fontWeight: 700,
-                      marginBottom: 2,
-                    }}>
-                      {MEAL_LABELS[mealType]}
-                    </span>
-                    <span style={{
-                      fontFamily: 'var(--font-serif)',
-                      fontStyle: 'italic',
-                      fontSize: 16,
-                      color: CHEF_INK,
-                      lineHeight: 1.2,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {meal.name}
-                    </span>
-                  </div>
-                  <span style={{
-                    fontSize: 12,
-                    color: CHEF_INK,
-                    fontWeight: 600,
-                    fontVariantNumeric: 'tabular-nums',
-                    flexShrink: 0,
-                  }}>
-                    {meal.kcal} kcal
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      })}
-
-      {/* Footer — week totals */}
+      {/* Scroll hint */}
       <div style={{
+        fontSize: 9,
+        color: 'var(--text-tertiary)',
+        textAlign: 'right',
+        padding: '0 22px 4px',
+        fontStyle: 'italic',
+        flexShrink: 0,
+      }}>
+        desliza →
+      </div>
+
+      {/* Grid wrap — scroll horizontal */}
+      <div style={{
+        flex: 1,
+        overflowX: 'auto',
+        overflowY: 'auto',
+        padding: '0 14px 20px',
         opacity: 0,
-        animation: 'chefFadeInUp 0.35s ease forwards',
-        animationDelay: `${plan.days.length * 0.08}s`,
-        marginTop: 16,
-        padding: '16px 18px',
-        background: '#1a1a1a',
-        color: '#fff',
-        borderRadius: 14,
+        animation: 'chefFadeInUp 0.3s ease forwards',
       }}>
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          marginBottom: 10,
+          display: 'grid',
+          gridTemplateColumns,
+          gap: 5,
+          minWidth: 34 + N * 95 + (N + 1) * 5,
         }}>
-          <span style={{
-            fontSize: 9,
+          {/* Row 1: empty top-left + col heads */}
+          <div />
+          {plan.days.map(day => {
+            const isToday = day.date === todayISO;
+            const d = new Date(day.date + 'T00:00:00');
+            return (
+              <div key={`head-${day.date}`} style={{
+                textAlign: 'center',
+                padding: '6px 4px 10px',
+              }}>
+                <div style={{
+                  fontSize: 8,
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  color: isToday ? 'var(--accent)' : 'var(--text-tertiary)',
+                  fontWeight: 600,
+                }}>
+                  {DOW_SHORT[day.day_name.toLowerCase()] || day.day_name.slice(0, 3)}
+                </div>
+                <span style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontStyle: 'italic',
+                  fontSize: 20,
+                  color: isToday ? 'var(--accent)' : CHEF_INK,
+                  display: 'block',
+                  lineHeight: 1,
+                  marginTop: 2,
+                }}>
+                  {d.getDate()}
+                </span>
+              </div>
+            );
+          })}
+
+          {/* Rows: row-label + N cells */}
+          {MEAL_ORDER.map(mealType => (
+            <FragmentRow
+              key={mealType}
+              mealType={mealType}
+              days={plan.days}
+              todayISO={todayISO}
+              findMeal={findMealByNormalizedType}
+              onCellTap={(meal, day) => setModalMeal({ meal, day })}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Footer — chef-ink, compact */}
+      <div style={{
+        padding: '14px 22px',
+        background: CHEF_INK,
+        color: '#fff',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexShrink: 0,
+      }}>
+        <div>
+          <div style={{
+            fontSize: 8,
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
             color: 'rgba(255,255,255,0.45)',
             fontWeight: 600,
+            marginBottom: 2,
           }}>
             Total semana
-          </span>
-          <span style={{
+          </div>
+          <div style={{
             fontFamily: 'var(--font-serif)',
             fontStyle: 'italic',
-            fontSize: 24,
+            fontSize: 18,
           }}>
-            {wt.kcal} kcal
-          </span>
+            {wt.kcal.toLocaleString('es-ES')} kcal
+          </div>
         </div>
         <div style={{
-          display: 'flex',
-          height: 4,
-          borderRadius: 2,
-          overflow: 'hidden',
-          background: 'rgba(255,255,255,0.1)',
-          marginBottom: 8,
-        }}>
-          <div style={{ width: `${pPct}%`, height: '100%', background: '#2d6a4f' }} />
-          <div style={{ width: `${cPct}%`, height: '100%', background: '#d4a017' }} />
-          <div style={{ width: `${fPct}%`, height: '100%', background: '#5b8dd9' }} />
-        </div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
           fontSize: 10,
-          color: 'rgba(255,255,255,0.6)',
-        }}>
-          <span><strong style={{ color: '#fff', fontWeight: 600 }}>{wt.protein}g</strong> prot</span>
-          <span><strong style={{ color: '#fff', fontWeight: 600 }}>{wt.carbs}g</strong> carb</span>
-          <span><strong style={{ color: '#fff', fontWeight: 600 }}>{wt.fat}g</strong> grasa</span>
-        </div>
-        <div style={{
-          marginTop: 10,
-          paddingTop: 10,
-          borderTop: '0.5px dashed rgba(255,255,255,0.15)',
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.5)',
-          textAlign: 'center',
+          color: 'rgba(255,255,255,0.55)',
+          textAlign: 'right',
           fontStyle: 'italic',
+          lineHeight: 1.4,
         }}>
-          Media {avgKcal} kcal/día {targetKcal ? `· objetivo ${targetKcal}` : ''}
+          {avgKcal} kcal/día<br />
+          {targetKcal > 0 && <span style={{ opacity: 0.75 }}>obj. {targetKcal}</span>}
         </div>
       </div>
 
