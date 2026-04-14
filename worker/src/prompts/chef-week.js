@@ -40,6 +40,7 @@ FORMATO DE RESPUESTA:
 }
 
 REGLAS:
+0. IDIOMA: todo el JSON (nombres de platos, ingredientes, day_name, type) debe estar en ESPAÑOL. Nunca uses inglés ("Turkey and Spinach Salad", "Chicken Bowl", "Pasta Primavera"). Usa "Ensalada de pavo y espinacas", "Bowl de pollo", "Pasta con verduras". Esto es una regla no negociable y aplica a TODAS las comidas de TODOS los días.
 1. SOLO genera entradas en "days" para las fechas indicadas en "=== DÍAS A PLANIFICAR ===". Respeta el orden y las fechas exactas.
 2. Para el día parcial (si existe — normalmente HOY), solo genera los tipos de comida que FALTAN por registrar, NO los ya registrados.
 3. Para los días completos (días futuros), genera siempre las 4 comidas: desayuno, comida, merienda, cena.

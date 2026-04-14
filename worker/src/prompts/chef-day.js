@@ -28,6 +28,7 @@ FORMATO DE RESPUESTA:
 }
 
 REGLAS:
+0. IDIOMA: todo el JSON (nombres de platos, ingredientes, tipos de comida) debe estar en ESPAÑOL. Nunca uses inglés ("Turkey", "Chicken", "Spinach Salad", "Quinoa Bowl"). Usa "pavo", "pollo", "ensalada de espinacas", "bowl de quinoa". Esto es una regla no negociable.
 1. Solo genera comidas para los tipos que el usuario AÚN NO ha registrado hoy.
 2. El total del plan debe acercarse al presupuesto RESTANTE (±10% de las kcal restantes).
 3. Distribuye proteínas de forma equilibrada entre las comidas generadas.

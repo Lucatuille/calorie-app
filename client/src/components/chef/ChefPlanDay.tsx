@@ -2,9 +2,7 @@
 //  ChefPlanDay — Plan del día
 //
 //  Pipeline: empty state → loading → plan generado → error
-//  Layout P13 clean para el plan generado.
-//  Fase 2b: mock data con simulación de delay.
-//  Fase 2d: se conectará al backend real.
+//  Layout P13 clean. Sonnet genera via POST /api/planner/day.
 // ============================================================
 
 import { useState, useEffect } from 'react';
@@ -33,20 +31,6 @@ type PlanData = {
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
-// Mock — se reemplazará por POST /api/planner/day en Fase 2d
-const MOCK_PLAN: PlanData = {
-  meals: [
-    { type: 'Desayuno', time: '~ 7:30', name: 'Avena con plátano y yogur griego', kcal: 420, ingredients: '60g avena · 1 plátano · 150g yogur · 1 cdta miel', protein: 22, carbs: 58, fat: 6 },
-    { type: 'Comida', time: '~ 14:00', name: 'Pechuga con arroz y brócoli', kcal: 580, ingredients: '180g pollo · 90g arroz · 200g brócoli · aceite oliva', protein: 48, carbs: 62, fat: 12 },
-    { type: 'Merienda', time: '~ 18:00', name: 'Tostada integral con atún', kcal: 280, ingredients: '60g pan integral · 1 lata atún · tomate · orégano', protein: 22, carbs: 28, fat: 8 },
-    { type: 'Cena', time: '~ 21:00', name: 'Merluza al horno con patata', kcal: 490, ingredients: '250g merluza · 150g patata · limón · perejil', protein: 45, carbs: 32, fat: 8 },
-  ],
-  totals: { kcal: 1770, protein: 137, carbs: 180, fat: 34 },
-};
-
-let TARGET_KCAL = 1812; // Se actualiza con el valor real del backend
-
-// Colores Chef
 const CHEF_BG = 'var(--bg)';
 const CHEF_INK = '#1f1a12';
 
@@ -86,6 +70,7 @@ export default function ChefPlanDay() {
   const [error, setError] = useState<ChefError | null>(null);
   const [context, setContext] = useState(''); // input de contexto opcional
   const [remainingDay, setRemainingDay] = useState<number | null>(null);
+  const [targetKcal, setTargetKcal] = useState<number>(0);
 
   const today = new Date();
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -107,7 +92,7 @@ export default function ChefPlanDay() {
         if (cancelled) return;
         if (planRes?.plan) {
           setPlan(planRes.plan);
-          if (planRes.target_kcal) TARGET_KCAL = planRes.target_kcal;
+          if (planRes.target_kcal) setTargetKcal(planRes.target_kcal);
           savePlanToCache(planRes.plan);
           setStatus('ready');
         } else if (!cached) {
@@ -130,7 +115,7 @@ export default function ChefPlanDay() {
       if (res.plan) {
         setPlan(res.plan);
         savePlanToCache(res.plan);
-        if (res.target_kcal) TARGET_KCAL = res.target_kcal;
+        if (res.target_kcal) setTargetKcal(res.target_kcal);
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
         }
@@ -350,7 +335,9 @@ export default function ChefPlanDay() {
           lineHeight: 1.5,
           fontStyle: 'italic',
         }}>
-          Basado en tu objetivo de {TARGET_KCAL} kcal y tus preferencias dietéticas
+          {targetKcal > 0
+            ? `Basado en tu objetivo de ${targetKcal} kcal y tus preferencias dietéticas`
+            : 'Basado en tu objetivo calórico y tus preferencias dietéticas'}
         </p>
       </div>
     );
@@ -455,7 +442,7 @@ export default function ChefPlanDay() {
 
   if (!plan) return null;
 
-  const diff = plan.totals.kcal - TARGET_KCAL;
+  const diff = plan.totals.kcal - (targetKcal || plan.totals.kcal);
   const diffLabel = diff <= 0
     ? `−${Math.abs(diff)} kcal (dentro del rango)`
     : `+${diff} kcal sobre objetivo`;
@@ -713,7 +700,7 @@ export default function ChefPlanDay() {
           textAlign: 'center',
           fontStyle: 'italic',
         }}>
-          Objetivo {TARGET_KCAL} kcal · {diffLabel}
+          {targetKcal > 0 ? `Objetivo ${targetKcal} kcal · ${diffLabel}` : diffLabel}
         </div>
       </div>
     </div>
