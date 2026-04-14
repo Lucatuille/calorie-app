@@ -6,11 +6,17 @@
 //  desayuno cuando ya hay una entry de desayuno sin tipo, inferimos
 //  por la hora de created_at.
 //
-//  Ventanas (heurística pragmática, es suficientemente buena):
-//    <  11:00  → desayuno
-//    11 - 16   → comida
+//  Ventanas (heurística pragmática ajustada al horario español):
+//    <  12:00  → desayuno  (incluye desayunos tardíos típicos en ES)
+//    12 - 16   → comida
 //    16 - 19   → merienda
 //    >= 19     → cena
+//
+//  Decisión 2026-04-14: prioridad invertida — la HORA manda sobre el
+//  meal_type explícito. Motivo: en la práctica el meal_type explícito
+//  suele ser un default del form o una selección incorrecta. La hora
+//  de created_at es factual y refleja mejor qué comida real hizo el
+//  usuario. El explícito queda como fallback cuando no hay created_at.
 // ============================================================
 
 const EXPLICIT = {
@@ -21,52 +27,58 @@ const EXPLICIT = {
 };
 
 function inferFromHour(hour) {
-  if (hour < 11) return 'desayuno';
+  if (hour < 12) return 'desayuno';
   if (hour < 16) return 'comida';
   if (hour < 19) return 'merienda';
   return 'cena';
 }
 
+function inferFromCreatedAt(at) {
+  if (at === undefined || at === null || at === '') return null;
+  let d;
+  if (typeof at === 'number') {
+    d = new Date(at);
+  } else {
+    // SQLite datetime() devuelve 'YYYY-MM-DD HH:MM:SS' en UTC.
+    const iso = String(at).includes('T') ? at : String(at).replace(' ', 'T') + 'Z';
+    d = new Date(iso);
+  }
+  if (isNaN(d.getTime())) return null;
+  try {
+    const hourStr = d.toLocaleString('en-US', {
+      timeZone: 'Europe/Madrid',
+      hour: 'numeric',
+      hour12: false,
+    });
+    const hour = parseInt(hourStr, 10);
+    if (!Number.isNaN(hour)) return inferFromHour(hour);
+  } catch {
+    return inferFromHour(d.getUTCHours() + 2); // fallback aproximado CEST
+  }
+  return null;
+}
+
 /**
  * Devuelve el meal_type normalizado (en español) para una entry.
- * Si `meal_type` es explícito (desayuno/breakfast/comida/...), se usa.
- * Si no, se infiere por la hora local de `created_at` (ISO string).
- * Si no hay hora, devuelve null.
+ *
+ * Prioridad:
+ *  1. Hora de created_at (zona Europa/Madrid, cubre DST).
+ *  2. meal_type explícito si no hay hora utilizable.
+ *  3. null si nada aplica.
+ *
+ * Razón de preferir la hora: el explícito suele ser default del form.
+ * Una entry "2 Tostadas con pavo" registrada a las 11:56 Madrid debe
+ * contar como desayuno aunque meal_type diga 'lunch'.
  *
  * @param {{ meal_type?: string, created_at?: string|number }} entry
  * @returns {'desayuno'|'comida'|'merienda'|'cena'|null}
  */
 export function resolveMealType(entry) {
+  const byHour = inferFromCreatedAt(entry.created_at);
+  if (byHour) return byHour;
+
   const raw = (entry.meal_type || '').toLowerCase().trim();
   if (EXPLICIT[raw]) return EXPLICIT[raw];
-
-  // 'other' o null → inferir por hora (zona Europa/Madrid, cubre DST)
-  const at = entry.created_at;
-  if (at !== undefined && at !== null && at !== '') {
-    let d;
-    if (typeof at === 'number') {
-      d = new Date(at);
-    } else {
-      // SQLite datetime() devuelve 'YYYY-MM-DD HH:MM:SS' en UTC.
-      const iso = String(at).includes('T') ? at : String(at).replace(' ', 'T') + 'Z';
-      d = new Date(iso);
-    }
-    if (!isNaN(d.getTime())) {
-      // Hora en zona local del usuario (España, mercado principal).
-      // Futuro: aceptar tz como parámetro si se internacionaliza.
-      try {
-        const hourStr = d.toLocaleString('en-US', {
-          timeZone: 'Europe/Madrid',
-          hour: 'numeric',
-          hour12: false,
-        });
-        const hour = parseInt(hourStr, 10);
-        if (!Number.isNaN(hour)) return inferFromHour(hour);
-      } catch {
-        return inferFromHour(d.getUTCHours() + 2); // fallback aproximado CEST
-      }
-    }
-  }
 
   return null;
 }

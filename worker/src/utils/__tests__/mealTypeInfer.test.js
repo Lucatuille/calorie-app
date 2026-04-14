@@ -137,6 +137,48 @@ describe('resolveMealType — inferencia por hora (Europe/Madrid)', () => {
   });
 });
 
+describe('resolveMealType — hora MANDA sobre meal_type explícito', () => {
+  // Decisión 2026-04-14: el explícito suele ser default del form.
+  // La hora factual (created_at) manda cuando ambos existen.
+
+  it('meal_type=lunch a las 11:56 Madrid → desayuno (no comida)', () => {
+    // Caso reportado: "2 Tostadas con pavo" creada a las 09:56 UTC
+    // (= 11:56 Madrid verano) con meal_type='lunch' por default del form.
+    // DEBE detectarse como desayuno para filtrar bien el slot.
+    expect(resolveMealType({
+      meal_type: 'lunch',
+      created_at: '2026-04-14 09:56:03',
+    })).toBe('desayuno');
+  });
+
+  it('meal_type=breakfast a las 14h Madrid → comida (la hora manda)', () => {
+    expect(resolveMealType({
+      meal_type: 'breakfast',
+      created_at: '2026-04-14 12:00:00',
+    })).toBe('comida');
+  });
+
+  it('meal_type=dinner a las 10h Madrid → desayuno', () => {
+    expect(resolveMealType({
+      meal_type: 'dinner',
+      created_at: '2026-04-14 08:00:00',
+    })).toBe('desayuno');
+  });
+
+  it('meal_type explícito solo se usa si NO hay created_at válido', () => {
+    expect(resolveMealType({ meal_type: 'breakfast' })).toBe('desayuno');
+    expect(resolveMealType({ meal_type: 'breakfast', created_at: 'invalid' })).toBe('desayuno');
+    expect(resolveMealType({ meal_type: 'lunch',     created_at: null })).toBe('comida');
+  });
+
+  it('ventana desayuno ampliada a <12h (patrón español)', () => {
+    // UTC 10:00 = 12:00 Madrid → comida (>=12h)
+    expect(resolveMealType({ meal_type: 'other', created_at: '2026-04-14 10:00:00' })).toBe('comida');
+    // UTC 09:59 = 11:59 Madrid → desayuno (<12h)
+    expect(resolveMealType({ meal_type: 'other', created_at: '2026-04-14 09:59:00' })).toBe('desayuno');
+  });
+});
+
 describe('resolveMealTypesRegistered', () => {
   it('devuelve array vacío para entradas vacías', () => {
     expect(resolveMealTypesRegistered([])).toEqual([]);
@@ -174,8 +216,8 @@ describe('resolveMealTypesRegistered', () => {
   });
 
   it('ejemplo real — usuario registró desayuno sin tipo explícito', () => {
-    // Caso reportado: usuario registra "tostadas con pavo" sin seleccionar
-    // meal_type, sistema usa 'other', hora 9am local (7am UTC verano).
+    // Usuario registra "tostadas con pavo" sin seleccionar meal_type,
+    // sistema usa 'other', hora 9am local (7am UTC verano).
     const entries = [
       {
         meal_type: 'other',
@@ -186,6 +228,20 @@ describe('resolveMealTypesRegistered', () => {
         meal_type: 'comida',
         name: 'Lentejas',
       },
+    ];
+    const result = resolveMealTypesRegistered(entries);
+    expect(result.sort()).toEqual(['comida', 'desayuno']);
+  });
+
+  it('ejemplo real (bug 2026-04-14) — desayuno con meal_type=lunch por default', () => {
+    // Caso encontrado en D1: ambas entries tienen meal_type='lunch'.
+    // La primera es desayuno (tostadas a las 11:56 Madrid), la segunda
+    // es comida real (arroz a las 14:46). Antes se deduplicaba a solo
+    // 'comida' y Sonnet rellenaba desayuno. Ahora la hora manda:
+    // 11:56 → desayuno, 14:46 → comida.
+    const entries = [
+      { meal_type: 'lunch', name: '2 Tostadas con pavo',           created_at: '2026-04-14 09:56:03' },
+      { meal_type: 'lunch', name: 'Arroz salteado con zanahoria…', created_at: '2026-04-14 12:46:39' },
     ];
     const result = resolveMealTypesRegistered(entries);
     expect(result.sort()).toEqual(['comida', 'desayuno']);
