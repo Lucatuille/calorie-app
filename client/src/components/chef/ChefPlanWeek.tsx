@@ -12,6 +12,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { isPro } from '../../utils/levels';
+import { describeChefError, formatUsageBadge, type ChefError } from './chefErrors';
+import ChefFreeLock from './ChefFreeLock';
 
 type Meal = {
   type: string;
@@ -151,34 +154,42 @@ function clearPlanCache() {
 
 export default function ChefPlanWeek() {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user: authUser } = useAuth();
 
   const cached = loadCachedPlan();
   const [status, setStatus] = useState<Status>(cached ? 'ready' : 'idle');
   const [plan, setPlan] = useState<WeekPlanData | null>(cached?.plan || null);
   const [targetKcal, setTargetKcal] = useState<number>(cached?.targetKcal || 0);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<ChefError | null>(null);
   const [context, setContext] = useState('');
   const [modalMeal, setModalMeal] = useState<{ meal: Meal; day: Day } | null>(null);
+  const [remainingDay, setRemainingDay] = useState<number | null>(null);
 
   const todayISO = new Date().toLocaleDateString('en-CA');
+  const userIsPro = isPro(authUser?.access_level);
 
-  // Cross-device sync: fetch el plan semanal guardado al montar.
+  // Cross-device sync + usage en mount.
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.chefGetCurrentWeek(token);
+        const [planRes, usageRes] = await Promise.all([
+          api.chefGetCurrentWeek(token),
+          api.chefGetUsage(token),
+        ]);
         if (cancelled) return;
-        if (res?.plan) {
-          setPlan(res.plan);
-          const tk = res.target_kcal || 0;
+        if (planRes?.plan) {
+          setPlan(planRes.plan);
+          const tk = planRes.target_kcal || 0;
           setTargetKcal(tk);
-          savePlanToCache(res.plan, tk);
+          savePlanToCache(planRes.plan, tk);
           setStatus('ready');
         } else if (!cached) {
           setStatus('idle');
+        }
+        if (usageRes?.week) {
+          setRemainingDay(usageRes.week.remaining_day);
         }
       } catch { /* silent */ }
     })();
@@ -188,7 +199,7 @@ export default function ChefPlanWeek() {
 
   async function handleGenerate() {
     setStatus('loading');
-    setError('');
+    setError(null);
     try {
       const res = await api.chefPlanWeek({ context: context || undefined }, token);
       if (res?.plan) {
@@ -196,12 +207,17 @@ export default function ChefPlanWeek() {
         const tk = res.target_kcal || 0;
         setTargetKcal(tk);
         savePlanToCache(res.plan, tk);
+        if (typeof res?.usage?.remaining_day === 'number') {
+          setRemainingDay(res.usage.remaining_day);
+        }
         setStatus('ready');
       } else {
-        throw new Error(res?.error || 'No se recibió un plan válido');
+        throw Object.assign(new Error(res?.error || 'No se recibió un plan válido'), {
+          data: res,
+        });
       }
     } catch (err: any) {
-      setError(err?.message || 'Error al generar el plan semanal');
+      setError(describeChefError(err, 'week'));
       setStatus('error');
     }
   }
@@ -242,6 +258,11 @@ export default function ChefPlanWeek() {
       }}>{children}</div>
     </div>
   );
+
+  // ── FREE/WAITLIST: empty state Pro en idle o en error blocked ──
+  if (!userIsPro && (status === 'idle' || (status === 'error' && error?.title === 'Función Pro'))) {
+    return <ChefFreeLock feature="week" />;
+  }
 
   // ── IDLE ──
   if (status === 'idle') {
@@ -303,6 +324,17 @@ export default function ChefPlanWeek() {
                 marginTop: 4,
               }}>
                 Hasta el domingo
+                {formatUsageBadge(remainingDay, 'hoy') && (
+                  <>
+                    {' · '}
+                    <span style={{
+                      color: remainingDay === 0 ? 'var(--accent-2)' : 'var(--text-tertiary)',
+                      fontWeight: 600,
+                    }}>
+                      {formatUsageBadge(remainingDay, 'hoy')}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -359,9 +391,10 @@ export default function ChefPlanWeek() {
           <button
             type="button"
             onClick={handleGenerate}
+            disabled={remainingDay === 0}
             style={{
               width: '100%',
-              background: 'var(--accent)',
+              background: remainingDay === 0 ? 'var(--text-tertiary)' : 'var(--accent)',
               color: '#fff',
               border: 'none',
               borderRadius: 'var(--radius-full)',
@@ -369,11 +402,12 @@ export default function ChefPlanWeek() {
               fontSize: 14,
               fontWeight: 600,
               fontFamily: 'var(--font-sans)',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(45,106,79,0.2)',
+              cursor: remainingDay === 0 ? 'not-allowed' : 'pointer',
+              boxShadow: remainingDay === 0 ? 'none' : '0 2px 8px rgba(45,106,79,0.2)',
+              opacity: remainingDay === 0 ? 0.6 : 1,
             }}
           >
-            Generar plan semanal
+            {remainingDay === 0 ? 'Límite diario alcanzado' : 'Generar plan semanal'}
           </button>
         </div>
 
@@ -416,32 +450,67 @@ export default function ChefPlanWeek() {
 
   // ── ERROR ──
   if (status === 'error') {
+    const toneColor =
+      error?.tone === 'info' ? 'var(--text-secondary)' :
+      error?.tone === 'warn' ? '#c89424' :
+      'var(--accent-2)';
     return stateWrapper(<>
+      <div style={{
+        fontFamily: 'var(--font-serif)',
+        fontStyle: 'italic',
+        fontSize: 17,
+        color: toneColor,
+        marginBottom: 8,
+        lineHeight: 1.2,
+      }}>
+        {error?.title || 'No se pudo generar el plan'}
+      </div>
       <p style={{
-        fontSize: 13,
-        color: 'var(--accent-2)',
-        margin: '0 0 16px',
+        fontSize: 12,
+        color: 'var(--text-secondary)',
+        margin: '0 0 18px',
         lineHeight: 1.5,
       }}>
-        {error || 'No se pudo generar el plan semanal. Inténtalo de nuevo.'}
+        {error?.detail || 'Inténtalo de nuevo en un momento.'}
       </p>
-      <button
-        type="button"
-        onClick={handleGenerate}
-        style={{
-          background: 'var(--accent)',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 'var(--radius-full)',
-          padding: '10px 24px',
-          fontSize: 13,
-          fontWeight: 600,
-          fontFamily: 'var(--font-sans)',
-          cursor: 'pointer',
-        }}
-      >
-        Reintentar
-      </button>
+      {error?.retryLabel && (
+        <button
+          type="button"
+          onClick={handleGenerate}
+          style={{
+            background: 'var(--accent)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 'var(--radius-full)',
+            padding: '10px 24px',
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: 'var(--font-sans)',
+            cursor: 'pointer',
+          }}
+        >
+          {error.retryLabel}
+        </button>
+      )}
+      {!error?.retryLabel && (
+        <button
+          type="button"
+          onClick={() => { setError(null); setStatus(plan ? 'ready' : 'idle'); }}
+          style={{
+            background: 'transparent',
+            color: 'var(--text-secondary)',
+            border: '0.5px solid var(--border)',
+            borderRadius: 'var(--radius-full)',
+            padding: '9px 22px',
+            fontSize: 12,
+            fontWeight: 500,
+            fontFamily: 'var(--font-sans)',
+            cursor: 'pointer',
+          }}
+        >
+          Entendido
+        </button>
+      )}
     </>);
   }
 
@@ -581,6 +650,17 @@ export default function ChefPlanWeek() {
             fontWeight: 500,
           }}>
             {dateRange}
+            {formatUsageBadge(remainingDay, 'hoy') && (
+              <>
+                {' · '}
+                <span style={{
+                  color: remainingDay === 0 ? 'var(--accent-2)' : 'var(--text-tertiary)',
+                  fontWeight: 600,
+                }}>
+                  {formatUsageBadge(remainingDay, 'hoy')}
+                </span>
+              </>
+            )}
           </div>
         </div>
         <button

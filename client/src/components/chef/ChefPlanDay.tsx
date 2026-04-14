@@ -11,6 +11,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import { isPro } from '../../utils/levels';
+import { describeChefError, formatUsageBadge, type ChefError } from './chefErrors';
+import ChefFreeLock from './ChefFreeLock';
 
 type Meal = {
   type: string;
@@ -80,30 +83,38 @@ export default function ChefPlanDay() {
   const cached = loadCachedPlan();
   const [status, setStatus] = useState<Status>(cached?.status || 'idle');
   const [plan, setPlan] = useState<PlanData | null>(cached?.plan || null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<ChefError | null>(null);
   const [context, setContext] = useState(''); // input de contexto opcional
+  const [remainingDay, setRemainingDay] = useState<number | null>(null);
 
   const today = new Date();
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const dateStr = `${dayNames[today.getDay()]} ${today.getDate()} de ${monthNames[today.getMonth()]}`;
 
-  // Cross-device sync: en mount, pide el último plan guardado al servidor.
-  // Si existe, lo muestra (sobrescribe cualquier cache local). Si no, idle.
+  const userIsPro = isPro(authUser?.access_level);
+
+  // Cross-device sync + usage: en mount pide último plan guardado + remaining.
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.chefGetCurrentDay(token);
+        const [planRes, usageRes] = await Promise.all([
+          api.chefGetCurrentDay(token),
+          api.chefGetUsage(token),
+        ]);
         if (cancelled) return;
-        if (res?.plan) {
-          setPlan(res.plan);
-          if (res.target_kcal) TARGET_KCAL = res.target_kcal;
-          savePlanToCache(res.plan);
+        if (planRes?.plan) {
+          setPlan(planRes.plan);
+          if (planRes.target_kcal) TARGET_KCAL = planRes.target_kcal;
+          savePlanToCache(planRes.plan);
           setStatus('ready');
         } else if (!cached) {
           setStatus('idle');
+        }
+        if (usageRes?.day) {
+          setRemainingDay(usageRes.day.remaining_day);
         }
       } catch { /* silent: dejamos el cache local si el fetch falla */ }
     })();
@@ -113,19 +124,24 @@ export default function ChefPlanDay() {
 
   async function handleGenerate() {
     setStatus('loading');
-    setError('');
+    setError(null);
     try {
       const res = await api.chefPlanDay({ context: context || undefined }, token);
       if (res.plan) {
         setPlan(res.plan);
         savePlanToCache(res.plan);
         if (res.target_kcal) TARGET_KCAL = res.target_kcal;
+        if (typeof res?.usage?.remaining_day === 'number') {
+          setRemainingDay(res.usage.remaining_day);
+        }
         setStatus('ready');
       } else {
-        throw new Error(res.error || 'No se recibió un plan válido');
+        throw Object.assign(new Error(res.error || 'No se recibió un plan válido'), {
+          data: res,
+        });
       }
     } catch (err: any) {
-      setError(err?.message || 'Error al generar el plan');
+      setError(describeChefError(err, 'day'));
       setStatus('error');
     }
   }
@@ -167,6 +183,11 @@ export default function ChefPlanDay() {
       </div>
     </div>
   );
+
+  // ── FREE/WAITLIST: empty state de upgrade en idle + error 429 blocked ──
+  if (!userIsPro && (status === 'idle' || (status === 'error' && error?.title === 'Función Pro'))) {
+    return <ChefFreeLock feature="day" />;
+  }
 
   // ── IDLE: Action page para generar plan ──
   if (status === 'idle') {
@@ -230,6 +251,17 @@ export default function ChefPlanDay() {
                 marginTop: 4,
               }}>
                 {dateStr}
+                {formatUsageBadge(remainingDay, 'hoy') && (
+                  <>
+                    {' · '}
+                    <span style={{
+                      color: remainingDay === 0 ? 'var(--accent-2)' : 'var(--text-tertiary)',
+                      fontWeight: 600,
+                    }}>
+                      {formatUsageBadge(remainingDay, 'hoy')}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -289,9 +321,10 @@ export default function ChefPlanDay() {
           <button
             type="button"
             onClick={handleGenerate}
+            disabled={remainingDay === 0}
             style={{
               width: '100%',
-              background: 'var(--accent)',
+              background: remainingDay === 0 ? 'var(--text-tertiary)' : 'var(--accent)',
               color: '#fff',
               border: 'none',
               borderRadius: 'var(--radius-full)',
@@ -299,11 +332,12 @@ export default function ChefPlanDay() {
               fontSize: 14,
               fontWeight: 600,
               fontFamily: 'var(--font-sans)',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(45,106,79,0.2)',
+              cursor: remainingDay === 0 ? 'not-allowed' : 'pointer',
+              boxShadow: remainingDay === 0 ? 'none' : '0 2px 8px rgba(45,106,79,0.2)',
+              opacity: remainingDay === 0 ? 0.6 : 1,
             }}
           >
-            Generar plan
+            {remainingDay === 0 ? 'Límite diario alcanzado' : 'Generar plan'}
           </button>
         </div>
 
@@ -347,32 +381,67 @@ export default function ChefPlanDay() {
 
   // ── ERROR ──
   if (status === 'error') {
+    const toneColor =
+      error?.tone === 'info'  ? 'var(--text-secondary)' :
+      error?.tone === 'warn'  ? '#c89424' :  /* saffron */
+      'var(--accent-2)';
     return stateWrapper(<>
+        <div style={{
+          fontFamily: 'var(--font-serif)',
+          fontStyle: 'italic',
+          fontSize: 17,
+          color: toneColor,
+          marginBottom: 8,
+          lineHeight: 1.2,
+        }}>
+          {error?.title || 'No se pudo generar el plan'}
+        </div>
         <p style={{
-          fontSize: 13,
-          color: 'var(--accent-2)',
-          margin: '0 0 16px',
+          fontSize: 12,
+          color: 'var(--text-secondary)',
+          margin: '0 0 18px',
           lineHeight: 1.5,
         }}>
-          {error || 'No se pudo generar el plan. Inténtalo de nuevo.'}
+          {error?.detail || 'Inténtalo de nuevo en un momento.'}
         </p>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          style={{
-            background: 'var(--accent)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 'var(--radius-full)',
-            padding: '10px 24px',
-            fontSize: 13,
-            fontWeight: 600,
-            fontFamily: 'var(--font-sans)',
-            cursor: 'pointer',
-          }}
-        >
-          Reintentar
-        </button>
+        {error?.retryLabel && (
+          <button
+            type="button"
+            onClick={handleGenerate}
+            style={{
+              background: 'var(--accent)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--radius-full)',
+              padding: '10px 24px',
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: 'var(--font-sans)',
+              cursor: 'pointer',
+            }}
+          >
+            {error.retryLabel}
+          </button>
+        )}
+        {!error?.retryLabel && (
+          <button
+            type="button"
+            onClick={() => { setError(null); setStatus(plan ? 'ready' : 'idle'); }}
+            style={{
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              border: '0.5px solid var(--border)',
+              borderRadius: 'var(--radius-full)',
+              padding: '9px 22px',
+              fontSize: 12,
+              fontWeight: 500,
+              fontFamily: 'var(--font-sans)',
+              cursor: 'pointer',
+            }}
+          >
+            Entendido
+          </button>
+        )}
     </>);
   }
 
@@ -438,6 +507,17 @@ export default function ChefPlanDay() {
             fontWeight: 500,
           }}>
             {dateStr}
+            {formatUsageBadge(remainingDay, 'hoy') && (
+              <>
+                {' · '}
+                <span style={{
+                  color: remainingDay === 0 ? 'var(--accent-2)' : 'var(--text-tertiary)',
+                  fontWeight: 600,
+                }}>
+                  {formatUsageBadge(remainingDay, 'hoy')}
+                </span>
+              </>
+            )}
           </div>
         </div>
         <button
