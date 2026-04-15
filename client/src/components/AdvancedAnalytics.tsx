@@ -102,16 +102,19 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     adherence_rate:   data.projection.adherence_rate || 0,
   } : null;
 
-  // Los 3 escenarios recalculados por el slider (cada uno con su adherencia)
-  //   Optimista:   adherencia 1.0 (perfecta)
-  //   Realista:    adherencia actual del usuario
-  //   Conservador: adherencia × 0.8 (20% peor)
-  // Todos usan el kcalAdjust del slider, así el rango se mueve junto
+  // Los 3 escenarios combinan 3 fuentes de incertidumbre (literatura):
+  //   Optimista:   adherencia 1.0  · TDEE ×1.06  · adaptación estándar
+  //   Realista:    adherencia actual · TDEE actual · adaptación estándar
+  //   Conservador: adherencia ×0.75 · TDEE ×0.94  · adaptación ×1.5 (agresiva)
+  //
+  // Rango ±6% TDEE = CV típico Mifflin-St Jeor (Frankenfield 2005, Jagim 2018).
+  // Adherencia ×0.75 = caída típica en findes/vacaciones (Livingstone 1992).
+  // Adaptación ×1.5 = escenario Hall 2011 de drop metabólico sostenido.
   const baseAdh = projBase?.adherence_rate || 0.5;
   const mkScenarios = (days: number) => projBase ? {
-    optimistic:   projectWithAdjustment(projBase, kcalAdjust, days, 1.0),
-    realistic:    projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh)),
-    conservative: projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh * 0.8)),
+    optimistic:   projectWithAdjustment(projBase, kcalAdjust, days, 1.0,                              1.06, 1.0),
+    realistic:    projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh),           1.0,  1.0),
+    conservative: projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh * 0.75),    0.94, 1.5),
   } : null;
 
   const adjustedScenarios = projBase && data?.projection?.scenarios && projBase.weighted_avg_cal
@@ -998,6 +1001,14 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                             />
                           </ComposedChart>
                         </ResponsiveContainer>
+                        <p style={{
+                          fontSize: 9, color: 'var(--text-tertiary)',
+                          marginTop: 10, marginBottom: 0,
+                          fontStyle: 'italic', lineHeight: 1.5,
+                          textAlign: 'center',
+                        }}>
+                          Rango basado en ±6% TDEE y ±25% adherencia · Mifflin 1990, Hall 2011
+                        </p>
                       </div>
                     )}
 

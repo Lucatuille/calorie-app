@@ -18,33 +18,42 @@ interface ProjectionBase {
 /**
  * Proyecta el peso futuro con un ajuste calorico aplicado a la ingesta diaria.
  *
- * @param base       - Parametros base del usuario (del backend)
- * @param kcalAdjust - Ajuste a la ingesta: -400 a +400 kcal
- * @param days       - Dias a proyectar (30, 60, 90)
- * @returns          - Peso proyectado en kg, redondeado a 1 decimal
- */
-/**
- * Proyecta el peso futuro con un ajuste calorico aplicado.
- * Si adherenceOverride se pasa, lo usa en vez de base.adherence_rate
- * (permite calcular escenarios optimista/conservador desde frontend).
+ * Params opcionales para modelar escenarios de incertidumbre (Mifflin 1990,
+ * Hall 2011, Müller 2015):
+ *  - adherenceOverride: reemplaza la adherencia base (0-1).
+ *  - tdeeMultiplier: factor aplicado al TDEE. Rango cientifico ±6% refleja
+ *    la CV poblacional tipica del metodo Mifflin-St Jeor + PAL.
+ *  - adaptationFactor: multiplicador del coeficiente de adaptacion metabolica
+ *    (base 10 kcal/dia/kg). Usar 1.5 para escenario adverso (Hall 2011
+ *    describe drops de 10-15% de TDEE en deficit prolongado).
+ *
+ * IMPORTANTE: mantener paridad con backend projectWeightScenario en
+ *   worker/src/routes/progress.js (se usa en 1ª pintada antes del slider).
+ *
+ * @returns Peso proyectado en kg, redondeado a 1 decimal.
  */
 export function projectWithAdjustment(
   base: ProjectionBase,
   kcalAdjust: number,
   days: number,
   adherenceOverride?: number,
+  tdeeMultiplier: number = 1.0,
+  adaptationFactor: number = 1.0,
 ): number {
   const { current_weight, weighted_avg_cal, tdee_effective, adherence_rate } = base;
   if (!current_weight || current_weight <= 0) return current_weight || 0;
 
   const adh = adherenceOverride !== undefined ? adherenceOverride : adherence_rate;
+  const effectiveTdee = tdee_effective * tdeeMultiplier;
   const newIntake = weighted_avg_cal + kcalAdjust;
-  const dailyDeficit = tdee_effective - newIntake;
+  const dailyDeficit = effectiveTdee - newIntake;
 
   let weight = current_weight;
   for (let day = 1; day <= days; day++) {
     const weightDelta = weight - current_weight;
-    const adaptationKcal = -Math.sign(dailyDeficit) * Math.abs(weightDelta) * 10;
+    // Adaptación metabólica (Hall 2011): 10 kcal/día/kg de cambio.
+    // adaptationFactor × 1.5 simula adaptación agresiva en escenario adverso.
+    const adaptationKcal = -Math.sign(dailyDeficit) * Math.abs(weightDelta) * 10 * adaptationFactor;
     const adaptedDeficit = dailyDeficit + adaptationKcal;
     const effectiveDeficit = adaptedDeficit * adh;
     const t = Math.min(1, day / 28);

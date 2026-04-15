@@ -17,16 +17,26 @@ function calcStdDev(arr) {
 //   - Densidad energética del tejido gradual (agua/glucógeno → grasa real)
 //   - Soporta bulking (dailyDeficit negativo = surplus)
 //   - Funciona simétrico para perder y ganar peso
-function projectWeightScenario(startWeight, dailyDeficit, adherenceRate, days) {
+// Paridad con frontend: client/src/utils/projection.ts projectWithAdjustment.
+// Si cambias la fórmula aquí, refleja allí también.
+//
+// Param opcional adaptationFactor: ×1.5 simula adaptación metabólica agresiva
+// (Hall 2011 describe drops 10-15% en déficit prolongado).
+// El tdeeMultiplier del frontend se aplica en el CALLER aquí: al calcular el
+// dailyDeficit del escenario (tdee × mult - intake), no dentro del bucle.
+function projectWeightScenario(
+  startWeight,
+  dailyDeficit,          // kcal/día positivo = pierde, negativo = gana
+  adherenceRate,
+  days,
+  adaptationFactor = 1.0,
+) {
   if (startWeight <= 0) return startWeight;
   let weight = startWeight;
   for (let day = 1; day <= days; day++) {
     const weightDelta = weight - startWeight;            // negativo si pierde, positivo si gana
     // Adaptación metabólica: ~10 kcal/día por kg de cambio (Hall 2011, Müller 2015)
-    // Para weight loss: el cuerpo quema menos → reduce déficit
-    // Para weight gain: el cuerpo quema más → reduce surplus
-    // Aplicado simétricamente: déficit absoluto se reduce con magnitud del cambio
-    const adaptationKcal = -Math.sign(dailyDeficit) * Math.abs(weightDelta) * 10;
+    const adaptationKcal = -Math.sign(dailyDeficit) * Math.abs(weightDelta) * 10 * adaptationFactor;
     const adaptedDeficit = dailyDeficit + adaptationKcal;
     // Solo aplica adherencia (días que el usuario realmente registra/mantiene)
     const effectiveDeficit = adaptedDeficit * adherenceRate;
@@ -482,29 +492,44 @@ export async function handleProgress(request, env, path) {
     try { goalWeight = profile?.goal_weight || null; } catch {}
 
     // Anchor: usa el peso actual del Dashboard (mismo que el filtro), pero los datos
-    // de calibración salen de los últimos 30 días
+    // de calibración salen de los últimos 30 días.
+    //
+    // 3 escenarios combinando 3 fuentes de incertidumbre (literatura):
+    //   Optimista:   adh 1.0    · TDEE ×1.06 · adaptación estándar
+    //   Realista:    adh actual · TDEE actual · adaptación estándar
+    //   Conservador: adh ×0.75  · TDEE ×0.94 · adaptación ×1.5 (agresiva)
+    //
+    // Rango ±6% TDEE = CV típico Mifflin-St Jeor (Frankenfield 2005, Jagim 2018).
+    // Adherencia ×0.75 = caída típica findes/vacaciones (Livingstone 1992).
+    // Adaptación ×1.5 = escenario Hall 2011 de drop metabólico sostenido.
     if (currentWeight !== null && dailyDeficitTheo !== null) {
       const adherenceOpt   = 1.0;
-      const adherenceReal  = Math.max(0.1, adherenceRate);  // floor para evitar 0
-      const adherenceCons  = Math.max(0.1, adherenceRate * 0.8);
+      const adherenceReal  = Math.max(0.1, adherenceRate);
+      const adherenceCons  = Math.max(0.1, adherenceRate * 0.75);
 
-      const proj = (days, adh) => projectWeightScenario(currentWeight, dailyDeficitTheo, adh, days);
+      // Déficits por escenario — TDEE escalado y restado al intake del user
+      const deficitOpt  = (tdeeEffective * 1.06) - weightedAvgCal;
+      const deficitReal = dailyDeficitTheo;
+      const deficitCons = (tdeeEffective * 0.94) - weightedAvgCal;
 
-      const r30 = proj(30, adherenceReal);
-      const r60 = proj(60, adherenceReal);
-      const r90 = proj(90, adherenceReal);
+      const proj = (startDeficit, adh, days, adaptFactor = 1.0) =>
+        projectWeightScenario(currentWeight, startDeficit, adh, days, adaptFactor);
+
+      const r30 = proj(deficitReal, adherenceReal, 30);
+      const r60 = proj(deficitReal, adherenceReal, 60);
+      const r90 = proj(deficitReal, adherenceReal, 90);
 
       scenarios = {
         optimistic: {
-          '30d': proj(30, adherenceOpt),
-          '60d': proj(60, adherenceOpt),
-          '90d': proj(90, adherenceOpt),
+          '30d': proj(deficitOpt, adherenceOpt, 30),
+          '60d': proj(deficitOpt, adherenceOpt, 60),
+          '90d': proj(deficitOpt, adherenceOpt, 90),
         },
         realistic: { '30d': r30, '60d': r60, '90d': r90 },
         conservative: {
-          '30d': proj(30, adherenceCons),
-          '60d': proj(60, adherenceCons),
-          '90d': proj(90, adherenceCons),
+          '30d': proj(deficitCons, adherenceCons, 30, 1.5),
+          '60d': proj(deficitCons, adherenceCons, 60, 1.5),
+          '90d': proj(deficitCons, adherenceCons, 90, 1.5),
         },
       };
 
