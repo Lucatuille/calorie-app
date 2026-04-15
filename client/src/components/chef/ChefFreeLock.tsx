@@ -12,8 +12,8 @@
 import { useNavigate } from 'react-router-dom';
 
 type Props = {
-  /** 'day' | 'week' — ajusta el texto y beneficios listados */
-  feature: 'day' | 'week';
+  /** 'chat' | 'day' | 'week' — ajusta el texto y beneficios listados */
+  feature: 'chat' | 'day' | 'week';
 };
 
 const CHEF_INK = 'var(--chef-ink)';
@@ -21,22 +21,36 @@ const CHEF_INK = 'var(--chef-ink)';
 export default function ChefFreeLock({ feature }: Props) {
   const navigate = useNavigate();
 
-  const title = feature === 'day' ? 'Plan del día' : 'Plan semanal';
-  const hook = feature === 'day'
-    ? 'Genera 4 comidas ajustadas a tu objetivo del día en segundos.'
-    : 'Genera 7 días de comidas ajustadas a tus patrones reales y preferencias.';
+  const title =
+    feature === 'chat' ? 'Chat con Chef Caliro' :
+    feature === 'day'  ? 'Plan del día' :
+    'Plan semanal';
 
-  const bullets = feature === 'day'
-    ? [
-        'Basado en tu objetivo calórico y comidas frecuentes',
-        'Respeta tus preferencias y alergias',
-        'Pro: 2 planes al día',
-      ]
-    : [
-        'Contexto rico: 14 días de patrones + frecuentes + variedad',
-        'Calendario 7 × 4 editable, registro por comida',
-        'Pro: 1 plan semanal al día',
-      ];
+  const hook =
+    feature === 'chat'
+      ? 'Pregúntale al Chef lo que quieras: dudas de macros, comidas rápidas, por qué no bajas de peso…'
+      : feature === 'day'
+        ? 'Genera 4 comidas ajustadas a tu objetivo del día en segundos.'
+        : 'Genera 7 días de comidas ajustadas a tus patrones reales y preferencias.';
+
+  const bullets =
+    feature === 'chat'
+      ? [
+          'Conoce tu peso, macros, comidas frecuentes y preferencias',
+          'Explica los números: tendencia, proyecciones, adherencia',
+          'Pro: 30 mensajes/día · resumen semanal automático',
+        ]
+      : feature === 'day'
+        ? [
+            'Basado en tu objetivo calórico y comidas frecuentes',
+            'Respeta tus preferencias y alergias',
+            'Pro: 2 planes al día',
+          ]
+        : [
+            'Contexto rico: 14 días de patrones + frecuentes + variedad',
+            'Calendario 7 × 4 editable, registro por comida',
+            'Pro: 1 plan semanal al día',
+          ];
 
   return (
     <div style={{

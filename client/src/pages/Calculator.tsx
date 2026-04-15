@@ -106,6 +106,8 @@ export default function Calculator() {
   const [analyzing,       setAnalyzing]       = useState(false);
   const [aiResult,     setAiResult]     = useState(null);
   const [aiLimitData,  setAiLimitData]  = useState(null);
+  // Uso actual de IA (foto + texto) — { used, limit, remaining }. null = aún no cargado.
+  const [aiUsage,      setAiUsage]      = useState(null);
   const fileRef = useRef(null);
   const photoAnalysisRef = useRef(null);
 
@@ -117,6 +119,7 @@ export default function Calculator() {
   useEffect(() => {
     api.getTodayEntries(token).then(setEntries).catch(() => {});
     api.getProfile(token).then(setProfile).catch(() => {});
+    api.getAiUsage(token).then(setAiUsage).catch(() => {});
     // Cargar comidas frecuentes (solo Pro — requiere calibración)
     if (isPro(user?.access_level)) {
       api.getCalibrationProfile(token).then(data => {
@@ -239,9 +242,18 @@ export default function Calculator() {
         photo_plate_size: photoPlateSize || undefined,
       }, token);
       setAiResult(result);
+      // Actualizar badge con el uso real tras el análisis
+      if (result?.usage) {
+        setAiUsage({
+          used: result.usage.used,
+          limit: result.usage.limit,
+          remaining: result.usage.limit === null ? null : Math.max(0, result.usage.limit - result.usage.used),
+        });
+      }
     } catch (err) {
       if (err.data?.error === 'ai_limit_reached') {
         setAiLimitData(err.data);
+        setAiUsage({ used: err.data.used, limit: err.data.limit, remaining: 0 });
         api.trackUpgradeEvent('ai_limit_shown', token);
       } else {
         setAiResult({ error: err.data?.message || err.message });
@@ -356,7 +368,7 @@ export default function Calculator() {
         <div className="card card-padded card-bordered card-shadow">
 
           {/* Header del formulario: label + hint contextual */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span className="section-label" style={{ marginBottom: 0 }}>Añadir comida</span>
             {contextHint && (
               <span style={{
@@ -367,6 +379,42 @@ export default function Calculator() {
               </span>
             )}
           </div>
+
+          {/* Badge de uso de IA — transparencia desde la carga */}
+          {aiUsage && aiUsage.limit !== null && (
+            <div style={{
+              fontSize: 10,
+              color: aiUsage.remaining === 0 ? 'var(--accent-2)'
+                : aiUsage.remaining <= 1 ? 'var(--color-warning)'
+                : 'var(--text-tertiary)',
+              fontFamily: 'var(--font-sans)',
+              marginBottom: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', display: 'inline-block',
+                background: aiUsage.remaining === 0 ? 'var(--accent-2)'
+                  : aiUsage.remaining <= 1 ? 'var(--color-warning)'
+                  : 'var(--accent)',
+              }} />
+              {aiUsage.remaining === 0
+                ? <>Sin análisis IA hoy{!isPro(user?.access_level) && <> · <button
+                    type="button"
+                    onClick={() => { api.trackUpgradeEvent('ai_limit_badge_click', token); navigate('/upgrade'); }}
+                    style={{
+                      background: 'none', border: 'none', padding: 0,
+                      color: 'var(--accent)', cursor: 'pointer',
+                      fontSize: 'inherit', fontFamily: 'inherit',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Pro = ilimitado
+                  </button></>}</>
+                : `${aiUsage.remaining} de ${aiUsage.limit} análisis IA hoy`}
+            </div>
+          )}
 
           {/* Selector de método — igual jerarquía */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 14 }}>

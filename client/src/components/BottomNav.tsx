@@ -5,6 +5,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isPro } from '../utils/levels';
+import { api } from '../api';
 
 const IconHome = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -61,22 +62,38 @@ const BASE_ITEMS = [
   { to: '/profile',    label: 'Perfil',     end: false, Icon: IconUser,     proOnly: false },
 ];
 
+// Candado minimal para indicar feature Pro en nav a usuarios Free
+const LockDot = () => (
+  <svg width="8" height="8" viewBox="0 0 10 10" fill="none"
+       style={{ position: 'absolute', top: 4, right: 'calc(50% - 14px)' }}
+       aria-hidden="true">
+    <rect x="2.5" y="4.5" width="5" height="4" rx="1" fill="currentColor" opacity="0.9" />
+    <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" stroke="currentColor" strokeWidth="1" fill="none" />
+  </svg>
+);
+
 export default function BottomNav() {
-  const { user } = useAuth();
-  const items = BASE_ITEMS.filter(item => !item.proOnly || isPro(user?.access_level));
+  const { user, token } = useAuth();
+  const userIsPro = isPro(user?.access_level);
   return (
     <nav className="bottom-nav">
-      {items.map(({ to, label, end, Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          className={({ isActive }) => `bottom-nav__item${isActive ? ' bottom-nav__item--active' : ''}`}
-        >
-          <Icon />
-          <span className="bottom-nav__label">{label}</span>
-        </NavLink>
-      ))}
+      {BASE_ITEMS.map(({ to, label, end, Icon, proOnly }) => {
+        const locked = proOnly && !userIsPro;
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            onClick={locked ? () => api.trackUpgradeEvent('free_chef_nav_click', token) : undefined}
+            className={({ isActive }) => `bottom-nav__item${isActive ? ' bottom-nav__item--active' : ''}`}
+            style={locked ? { position: 'relative' } : undefined}
+          >
+            <Icon />
+            {locked && <LockDot />}
+            <span className="bottom-nav__label">{label}</span>
+          </NavLink>
+        );
+      })}
     </nav>
   );
 }

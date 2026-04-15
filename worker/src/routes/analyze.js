@@ -135,6 +135,21 @@ export async function handleAnalyze(request, env, path, ctx) {
     return jsonResponse({ error: 'waitlist', message: 'Tu cuenta está en lista de espera.' }, 403);
   }
 
+  // GET /api/analyze/usage — uso de IA del día + límite (para mostrar badge en UI)
+  if (path === '/api/analyze/usage' && request.method === 'GET') {
+    const limit = getAiLimit(accessLevel);
+    const today = new Date().toLocaleDateString('en-CA');
+    const row = await env.DB.prepare(
+      'SELECT count FROM ai_usage_log WHERE user_id = ? AND date = ?'
+    ).bind(user.userId, today).first();
+    const used = row?.count || 0;
+    return jsonResponse({
+      used,
+      limit,                                             // null = ilimitado
+      remaining: limit === null ? null : Math.max(0, limit - used),
+    });
+  }
+
   if (path === '/api/analyze' && request.method === 'POST') {
     // Rate limiting per-minute (burst protection además del daily)
     const rlUser = await rateLimit(env, request, `analyze:user:${user.userId}`, 10, 60);

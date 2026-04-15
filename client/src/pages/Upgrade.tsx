@@ -1,5 +1,5 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -23,9 +23,17 @@ export default function Upgrade() {
   const [upgrading, setUpgrading] = useState(null); // 'monthly' | 'yearly' | null
   const [error, setError]         = useState('');
 
+  // Track llegada a /upgrade (funnel de conversión)
+  useEffect(() => {
+    if (token && isFree(user?.access_level)) {
+      api.trackUpgradeEvent('upgrade_view', token);
+    }
+  }, [token, user?.access_level]);
+
   async function handleUpgrade(plan) {
     setUpgrading(plan);
     setError('');
+    api.trackUpgradeEvent(`checkout_start_${plan}`, token);
     try {
       const priceId = plan === 'yearly'
         ? 'price_1TCSydIDqPCl93zM6fMYoamR'
@@ -220,7 +228,7 @@ export default function Upgrade() {
               fontSize: 8, fontWeight: 700, letterSpacing: '0.4px',
               padding: '2px 7px', borderRadius: 99,
               whiteSpace: 'nowrap',
-            }}>MEJOR PRECIO</span>
+            }}>AHORRA 37%</span>
             <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
               {upgrading === 'yearly' ? '…' : '14,99€'}
             </div>
@@ -251,11 +259,43 @@ export default function Upgrade() {
           </button>
         </div>
 
-        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)',
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)',
           textAlign: 'center', marginTop: 14, fontFamily: 'var(--font-sans)',
           lineHeight: 1.4 }}>
-          Cancela cuando quieras · Sin permanencia
+          Menos de un café al mes · Cancela cuando quieras
         </p>
+      </div>
+
+      {/* Price comparison con competencia */}
+      <div style={{
+        background: 'var(--surface)', borderRadius: 14,
+        border: '0.5px solid var(--border)',
+        padding: '12px 14px', marginBottom: 14,
+      }}>
+        <div style={{
+          fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 8,
+          fontFamily: 'var(--font-sans)',
+        }}>
+          Comparado con la competencia
+        </div>
+        {[
+          { name: 'MyFitnessPal Premium', price: '9,99€/mes' },
+          { name: 'Yazio Pro',             price: '3,99€/mes' },
+          { name: 'Lifesum Premium',       price: '4,99€/mes' },
+          { name: 'Caliro Pro',            price: '1,25€/mes', highlight: true },
+        ].map(row => (
+          <div key={row.name} style={{
+            display: 'flex', justifyContent: 'space-between',
+            padding: '4px 0',
+            fontSize: 12, fontFamily: 'var(--font-sans)',
+            color: row.highlight ? 'var(--accent)' : 'var(--text-secondary)',
+            fontWeight: row.highlight ? 600 : 400,
+          }}>
+            <span>{row.name}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{row.price}</span>
+          </div>
+        ))}
       </div>
 
       {/* Free plan note */}

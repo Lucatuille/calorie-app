@@ -8,6 +8,7 @@ import { isPro } from '../utils/levels';
 import { openExternal } from '../utils/platform';
 const ChefPlanDay = lazy(() => import('../components/chef/ChefPlanDay'));
 const ChefPlanWeek = lazy(() => import('../components/chef/ChefPlanWeek'));
+const ChefFreeLock = lazy(() => import('../components/chef/ChefFreeLock'));
 
 // ── ProOnly (dark card) ──────────────────────────────────────
 
@@ -407,9 +408,8 @@ export default function Assistant() {
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
-  useEffect(() => {
-    if (user && !isPro(user.access_level)) navigate('/');
-  }, [user]);
+  // Free users ven Chef con lock overlays (no redirect). Así pueden
+  // explorar el producto Pro antes de upgrade. Decisión audit 2026-04-15.
 
   useEffect(() => {
     api.getSummary(token)
@@ -685,6 +685,15 @@ export default function Assistant() {
         {/* ══ MODE: Chat ══ */}
         <div style={{ display: mode === 'chat' ? 'contents' : 'none' }}>
 
+        {/* Free: lock state coherente con Día/Semana */}
+        {!isPro(user?.access_level) && (
+          <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" style={{ width: 24, height: 24 }} /></div>}>
+            <ChefFreeLock feature="chat" />
+          </Suspense>
+        )}
+
+        {/* Pro: chat completo abajo */}
+        {isPro(user?.access_level) && <>
         {/* ── Context strip ── */}
         {todayData && (
           <div className="context-strip">
@@ -806,6 +815,7 @@ export default function Assistant() {
             No es un profesional sanitario · Respuestas orientativas
           </p>
         </div>
+        </>}
 
         </div>
 

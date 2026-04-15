@@ -56,6 +56,7 @@ export const api = {
   chefGetCurrentDay:  (token)  => request('GET',  '/api/planner/day/current',  null, token),
   chefGetCurrentWeek: (token)  => request('GET',  '/api/planner/week/current', null, token),
   chefGetUsage:  (token)       => request('GET',  '/api/planner/usage', null, token),
+  getAiUsage:    (token)       => request('GET',  '/api/analyze/usage', null, token),
 
   // Entries
   getAllEntries:    (limit, token, offset = 0) => request('GET', `/api/entries?limit=${limit}&offset=${offset}`, null, token),

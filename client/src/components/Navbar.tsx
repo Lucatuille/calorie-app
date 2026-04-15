@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isPro } from '../utils/levels';
+import { api } from '../api';
 
 const links = [
   { to: '/',           label: 'Inicio' },
@@ -32,7 +33,7 @@ const linkStyle = ({ isActive }) => ({
 });
 
 export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
-  const { logout, user } = useAuth();
+  const { logout, user, token } = useAuth();
   const navigate = useNavigate();
   const [theme, toggleTheme] = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -75,11 +76,27 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
               {l.label}
             </NavLink>
           ))}
-          {isPro(user?.access_level) && (
-            <NavLink to="/chef" style={linkStyle}>
-              Chef
-            </NavLink>
-          )}
+          <NavLink
+            to="/chef"
+            onClick={!isPro(user?.access_level)
+              ? () => api.trackUpgradeEvent('free_chef_nav_click', token)
+              : undefined}
+            style={({ isActive }) => ({
+              ...linkStyle({ isActive }),
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+            })}
+          >
+            Chef
+            {!isPro(user?.access_level) && (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"
+                   style={{ opacity: 0.55 }}>
+                <rect x="2.5" y="4.5" width="5" height="4" rx="1" fill="currentColor" />
+                <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" stroke="currentColor" strokeWidth="1" fill="none" />
+              </svg>
+            )}
+          </NavLink>
         </div>
 
         {/* Right side */}
