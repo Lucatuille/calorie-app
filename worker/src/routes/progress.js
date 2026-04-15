@@ -494,23 +494,49 @@ export async function handleProgress(request, env, path) {
     // Anchor: usa el peso actual del Dashboard (mismo que el filtro), pero los datos
     // de calibración salen de los últimos 30 días.
     //
-    // 3 escenarios combinando 3 fuentes de incertidumbre (literatura):
-    //   Optimista:   adh 1.0    · TDEE ×1.06 · adaptación estándar
-    //   Realista:    adh actual · TDEE actual · adaptación estándar
-    //   Conservador: adh ×0.75  · TDEE ×0.94 · adaptación ×1.5 (agresiva)
+    // Los 3 escenarios combinan 3 fuentes de incertidumbre de la literatura:
+    //   - TDEE variance ±6% (Mifflin-St Jeor CV, Frankenfield 2005, Jagim 2018)
+    //   - Adherencia ×0.75 (caída típica findes/vacaciones, Livingstone 1992)
+    //   - Adaptación metabólica (Hall 2011, drops 10-15% en déficit prolongado)
     //
-    // Rango ±6% TDEE = CV típico Mifflin-St Jeor (Frankenfield 2005, Jagim 2018).
-    // Adherencia ×0.75 = caída típica findes/vacaciones (Livingstone 1992).
-    // Adaptación ×1.5 = escenario Hall 2011 de drop metabólico sostenido.
+    // CRÍTICO: la semántica de "optimista/conservador" depende del OBJETIVO.
+    // Si el user quiere perder, optimista = pierde más. Si quiere ganar,
+    // optimista = gana más. Detectamos el modo por el déficit actual:
+    //   deficit > 100   → CUT (perder)
+    //   deficit < -100  → BULK (ganar)
+    //   |deficit| ≤ 100 → MAINTAIN (estable)
     if (currentWeight !== null && dailyDeficitTheo !== null) {
-      const adherenceOpt   = 1.0;
-      const adherenceReal  = Math.max(0.1, adherenceRate);
-      const adherenceCons  = Math.max(0.1, adherenceRate * 0.75);
+      // Clasificar modo por el déficit calórico real del usuario
+      const goalMode =
+        dailyDeficitTheo > 100  ? 'cut' :
+        dailyDeficitTheo < -100 ? 'bulk' :
+        'maintain';
+
+      // Multipliers por modo. Maintain usa rango ±3% (menos incertidumbre).
+      const MULTIPLIERS = {
+        cut: {
+          optimistic:   { tdee: 1.06, adh: 1.0,  adapt: 1.0 },  // pierde más
+          conservative: { tdee: 0.94, adh: 0.75, adapt: 1.5 },  // pierde menos
+        },
+        bulk: {
+          optimistic:   { tdee: 0.94, adh: 1.0,  adapt: 0.9 },  // gana más
+          conservative: { tdee: 1.06, adh: 0.75, adapt: 1.5 },  // gana menos
+        },
+        maintain: {
+          optimistic:   { tdee: 1.03, adh: 1.0,  adapt: 1.0 },  // drift down leve
+          conservative: { tdee: 0.97, adh: 0.75, adapt: 1.5 },  // drift up leve
+        },
+      };
+      const m = MULTIPLIERS[goalMode];
+
+      const adherenceReal = Math.max(0.1, adherenceRate);
+      const adherenceOpt  = m.optimistic.adh;
+      const adherenceCons = Math.max(0.1, adherenceRate * m.conservative.adh);
 
       // Déficits por escenario — TDEE escalado y restado al intake del user
-      const deficitOpt  = (tdeeEffective * 1.06) - weightedAvgCal;
+      const deficitOpt  = (tdeeEffective * m.optimistic.tdee)   - weightedAvgCal;
       const deficitReal = dailyDeficitTheo;
-      const deficitCons = (tdeeEffective * 0.94) - weightedAvgCal;
+      const deficitCons = (tdeeEffective * m.conservative.tdee) - weightedAvgCal;
 
       const proj = (startDeficit, adh, days, adaptFactor = 1.0) =>
         projectWeightScenario(currentWeight, startDeficit, adh, days, adaptFactor);
@@ -521,15 +547,15 @@ export async function handleProgress(request, env, path) {
 
       scenarios = {
         optimistic: {
-          '30d': proj(deficitOpt, adherenceOpt, 30),
-          '60d': proj(deficitOpt, adherenceOpt, 60),
-          '90d': proj(deficitOpt, adherenceOpt, 90),
+          '30d': proj(deficitOpt, adherenceOpt, 30, m.optimistic.adapt),
+          '60d': proj(deficitOpt, adherenceOpt, 60, m.optimistic.adapt),
+          '90d': proj(deficitOpt, adherenceOpt, 90, m.optimistic.adapt),
         },
         realistic: { '30d': r30, '60d': r60, '90d': r90 },
         conservative: {
-          '30d': proj(deficitCons, adherenceCons, 30, 1.5),
-          '60d': proj(deficitCons, adherenceCons, 60, 1.5),
-          '90d': proj(deficitCons, adherenceCons, 90, 1.5),
+          '30d': proj(deficitCons, adherenceCons, 30, m.conservative.adapt),
+          '60d': proj(deficitCons, adherenceCons, 60, m.conservative.adapt),
+          '90d': proj(deficitCons, adherenceCons, 90, m.conservative.adapt),
         },
       };
 
@@ -707,6 +733,13 @@ export async function handleProgress(request, env, path) {
         tdee_calibrated:    tdeeCalibrated,
         tdee_source:        tdeeSource,
         scenarios,
+        // cut | bulk | maintain — detectado por signo del déficit, usado por
+        // el frontend para recalcular escenarios con el slider interactivo.
+        goal_mode:
+          dailyDeficitTheo == null ? null :
+          dailyDeficitTheo > 100   ? 'cut' :
+          dailyDeficitTheo < -100  ? 'bulk' :
+          'maintain',
         plateau_prediction: plateauPrediction,
         weekly_rate_realistic: weeklyRateRealistic,
         days_to_goal_realistic: daysToGoalRealistic,

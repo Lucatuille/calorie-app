@@ -102,20 +102,48 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
     adherence_rate:   data.projection.adherence_rate || 0,
   } : null;
 
-  // Los 3 escenarios combinan 3 fuentes de incertidumbre (literatura):
-  //   Optimista:   adherencia 1.0  · TDEE ×1.06  · adaptación estándar
-  //   Realista:    adherencia actual · TDEE actual · adaptación estándar
-  //   Conservador: adherencia ×0.75 · TDEE ×0.94  · adaptación ×1.5 (agresiva)
+  // Los 3 escenarios combinan 3 fuentes de incertidumbre de la literatura:
+  //   - TDEE variance ±6% (Mifflin-St Jeor CV, Frankenfield 2005)
+  //   - Adherencia ×0.75 (caída típica findes/vacaciones, Livingstone 1992)
+  //   - Adaptación metabólica (Hall 2011)
   //
-  // Rango ±6% TDEE = CV típico Mifflin-St Jeor (Frankenfield 2005, Jagim 2018).
-  // Adherencia ×0.75 = caída típica en findes/vacaciones (Livingstone 1992).
-  // Adaptación ×1.5 = escenario Hall 2011 de drop metabólico sostenido.
+  // Los multipliers se INVIERTEN según el objetivo del usuario:
+  //   Cut:      optimista = pierde más (TDEE alto)
+  //   Bulk:     optimista = gana más (TDEE bajo, adaptación reducida)
+  //   Maintain: rango ±3% (menos incertidumbre sin déficit claro)
+  //
+  // Modo detectado dinámicamente del slider actual (deficit con kcalAdjust).
   const baseAdh = projBase?.adherence_rate || 0.5;
-  const mkScenarios = (days: number) => projBase ? {
-    optimistic:   projectWithAdjustment(projBase, kcalAdjust, days, 1.0,                              1.06, 1.0),
-    realistic:    projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh),           1.0,  1.0),
-    conservative: projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh * 0.75),    0.94, 1.5),
-  } : null;
+  const currentDeficit = projBase ? projBase.tdee_effective - (projBase.weighted_avg_cal + kcalAdjust) : 0;
+  const goalMode: 'cut' | 'bulk' | 'maintain' =
+    currentDeficit >  100 ? 'cut' :
+    currentDeficit < -100 ? 'bulk' :
+    'maintain';
+
+  const MULTIPLIERS = {
+    cut: {
+      optimistic:   { tdee: 1.06, adh: 1.0,  adapt: 1.0 },
+      conservative: { tdee: 0.94, adh: 0.75, adapt: 1.5 },
+    },
+    bulk: {
+      optimistic:   { tdee: 0.94, adh: 1.0,  adapt: 0.9 },
+      conservative: { tdee: 1.06, adh: 0.75, adapt: 1.5 },
+    },
+    maintain: {
+      optimistic:   { tdee: 1.03, adh: 1.0,  adapt: 1.0 },
+      conservative: { tdee: 0.97, adh: 0.75, adapt: 1.5 },
+    },
+  };
+
+  const mkScenarios = (days: number) => {
+    if (!projBase) return null;
+    const m = MULTIPLIERS[goalMode];
+    return {
+      optimistic:   projectWithAdjustment(projBase, kcalAdjust, days, m.optimistic.adh,                          m.optimistic.tdee,   m.optimistic.adapt),
+      realistic:    projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh),                    1.0,                 1.0),
+      conservative: projectWithAdjustment(projBase, kcalAdjust, days, Math.max(0.1, baseAdh * m.conservative.adh), m.conservative.tdee, m.conservative.adapt),
+    };
+  };
 
   const adjustedScenarios = projBase && data?.projection?.scenarios && projBase.weighted_avg_cal
     ? {
@@ -1007,7 +1035,10 @@ export default function AdvancedAnalytics({ isOpen, onClose, userTarget }) {
                           fontStyle: 'italic', lineHeight: 1.5,
                           textAlign: 'center',
                         }}>
-                          Rango basado en ±6% TDEE y ±25% adherencia · Mifflin 1990, Hall 2011
+                          {goalMode === 'cut' && 'Modo déficit · Rango ±6% TDEE y ±25% adherencia'}
+                          {goalMode === 'bulk' && 'Modo superávit · Rango ±6% TDEE y ±25% adherencia'}
+                          {goalMode === 'maintain' && 'Modo mantenimiento · Rango ±3% TDEE y ±25% adherencia'}
+                          {' · Mifflin 1990, Hall 2011'}
                         </p>
                       </div>
                     )}
