@@ -648,14 +648,14 @@ export default function Assistant() {
                 style={{
                   flex: 1,
                   background: active ? 'var(--chef-stack-active-bg)' : 'var(--chef-stack-inactive-bg)',
-                  border: `0.5px solid ${active ? 'var(--chef-stack-active-bg)' : 'var(--border)'}`,
+                  border: `1px solid ${active ? 'var(--chef-stack-active-border)' : 'var(--border)'}`,
                   borderRadius: 10,
                   padding: '10px 10px 9px',
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all 0.15s ease',
                   transform: active ? 'translateY(-1px)' : 'none',
-                  boxShadow: active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                  boxShadow: active ? '0 4px 12px rgba(0,0,0,0.25)' : 'none',
                 }}
               >
                 <div style={{
