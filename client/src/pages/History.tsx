@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import PastMealRegistrar from '../components/PastMealRegistrar';
 import { HistorySkeleton } from '../components/Skeleton';
+import { fillDateGaps } from '../utils/fillDateGaps';
 
 function formatDateParts(dateStr) {
   const d = new Date(dateStr + 'T12:00:00Z');
@@ -118,7 +119,9 @@ export default function History() {
   }
 
   const set = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
-  const groups = groupByDate(entries);
+  // Rellenamos últimos 7 días con huecos vacíos para dar continuidad.
+  // El helper es idempotente si ya no faltan días.
+  const groups = fillDateGaps(groupByDate(entries));
 
   if (loading && entries.length === 0) return <HistorySkeleton />;
 
@@ -163,6 +166,68 @@ export default function History() {
             const dayTotal  = dayEntries.reduce((a, e) => a + (e.calories || 0), 0);
             const { weekday, rest } = formatDateParts(date);
             const today     = isToday(date);
+            const isEmpty   = dayEntries.length === 0;
+
+            // ── Día vacío — card dashed con CTA discreto ──────────
+            if (isEmpty) {
+              return (
+                <div key={date} style={{ marginBottom: 20 }}>
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'baseline', padding: '0 4px', marginBottom: 6,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                      <span style={{
+                        fontFamily: 'var(--font-serif)',
+                        fontSize: 21, fontStyle: 'italic', fontWeight: 400,
+                        color: today ? 'var(--accent)' : 'var(--text-tertiary)',
+                      }}>
+                        {today ? 'Hoy' : weekday}
+                      </span>
+                      {!today && (
+                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-sans)' }}>
+                          {rest}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAddingForDate(date)}
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      border: '1px dashed var(--border)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: '14px 16px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      color: 'var(--text-tertiary)',
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 12,
+                      fontStyle: 'italic',
+                      transition: 'border-color 0.15s, color 0.15s',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = 'var(--accent)';
+                      e.currentTarget.style.color = 'var(--accent)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'var(--border)';
+                      e.currentTarget.style.color = 'var(--text-tertiary)';
+                    }}
+                  >
+                    <span>Registrar comida pasada</span>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              );
+            }
 
             return (
               <div key={date} style={{ marginBottom: 20 }}>
