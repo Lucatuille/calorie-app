@@ -122,19 +122,22 @@ textarea:focus:not(:focus-visible) {
   --nav-bg:    rgba(15,15,15,0.92);
 
   /* Chef Caliro palette — dark adaptativo
-     Mantenemos identidad warm pero legible sobre dark bg. */
-  --chef-ink:       #f0e8d8;  /* cream invertido para texto */
+     Identidad warm la da el texto cream, los fondos son casi neutros
+     con un toque mínimo cálido. Evita la sensación "muddy brown".
+     Escala:
+       bg (#0f0f0f) < paper (#1a1815) < today-bg (#221e18) < footer (#2a2420) */
+  --chef-ink:       #f0e8d8;  /* cream cálido: ID del diseño chef en dark */
   --chef-ink-soft:  rgba(240,232,216,0.5);
   --chef-cream:     var(--bg);       /* = fondo app dark, coherente */
-  --chef-paper:     #242018;         /* celda week dark warm */
-  --chef-today-bg:  #2a2620;         /* today cell dark warm */
-  --chef-footer-bg: #242018;         /* footer levemente más claro */
+  --chef-paper:     #1a1815;         /* celda casi neutra, +2 unidades warm */
+  --chef-today-bg:  #221e18;         /* highlight today, claramente +clara */
+  --chef-footer-bg: #2a2420;         /* footer es la capa más elevada */
   --chef-footer-fg: #f0e8d8;
 
-  /* Card stack dark — invertir lógica: active CLARO, inactive oscuro warm */
+  /* Card stack dark — invertir lógica: active CLARO, inactive neutro warm */
   --chef-stack-active-bg:   #f0e8d8;   /* cream cálido, destaca sobre bg oscuro */
   --chef-stack-active-fg:   #1f1a12;   /* texto ink real */
-  --chef-stack-inactive-bg: #242018;   /* dark warm coherente con paper */
+  --chef-stack-inactive-bg: #1a1815;   /* coherente con --chef-paper */
   --chef-stack-inactive-fg: var(--text-primary);
 }
 
