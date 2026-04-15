@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 
 /* ─── Shared sub-components ─── */
@@ -352,73 +352,318 @@ function Page2() {
 }
 
 function Page3() {
-  const [activeQ, setActiveQ] = useState(0);
+  // 3 modos del Chef con demo interactiva en cada uno.
+  const [mode, setMode] = useState('chat');
 
-  const questions = [
-    '¿Cómo voy hoy?',
-    '¿Qué debería cenar?',
-    'Mis patrones',
-    '¿Por qué no bajo de peso?',
-  ];
-
-  const replies = [
-    `<strong>Llevas 820 kcal hoy</strong> con desayuno y almuerzo registrados.<br/><br/>Te quedan <strong>992 kcal</strong> para la cena y posibles snacks. En macros estás bien de proteína (62g de 140g objetivo) pero algo bajo en grasa saludable. Una cena con pescado o aguacate equilibraría el día.`,
-    `Basándome en lo que llevas hoy (<strong>820 kcal, 62g proteína</strong>), te sugiero algo con <strong>~900 kcal y alto en proteína</strong>:<br/><br/>• <strong>Salmón a la plancha</strong> con patata asada y ensalada — ~650 kcal, 45g prot<br/>• <strong>Pollo al horno</strong> con verduras y arroz — ~700 kcal, 50g prot<br/><br/>Cualquiera te deja margen para un snack ligero después.`,
-    `Analizando tus últimas 4 semanas:<br/><br/>• <strong>Desayuno:</strong> muy consistente (~350 kcal). Siempre registrado.<br/>• <strong>Almuerzo:</strong> el más variable (400-900 kcal). Los viernes subes ~200 kcal extra.<br/>• <strong>Cena:</strong> tiendes a subestimar — tus correcciones suben la cena un 15% de media.<br/>• <strong>Weekends:</strong> +320 kcal de media vs entre semana.`,
-    `Tu adherencia calórica es del <strong>71%</strong> — está bien, pero los fines de semana la rompes casi siempre.<br/><br/>Datos clave:<br/>• Promedio L-V: <strong>1.780 kcal</strong> (dentro de objetivo)<br/>• Promedio S-D: <strong>2.340 kcal</strong> (560 kcal sobre objetivo)<br/>• Eso anula ~2 días de déficit cada semana.<br/><br/>Si mantuvieras el fin de semana en ~2.000 kcal, tu proyección pasaría de −0.2 a <strong>−0.5 kg/semana</strong>.`,
+  const modes = [
+    { key: 'chat',  label: 'Chat',   desc: 'Pregunta libre' },
+    { key: 'day',   label: 'Día',    desc: 'Plan de hoy' },
+    { key: 'week',  label: 'Semana', desc: '7 días' },
   ];
 
   return (
     <>
-      <HeroBanner num="03" title="Asistente" subtitle="No es un chatbot genérico" color="#fef3c7" textColor="#92400e" />
-      <IntroText text="El asistente tiene acceso a tu historial completo y responde con tus datos reales. Toca una pregunta para ver cómo responde." />
-      <div style={{ margin: '0 16px 12px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ display: 'flex', gap: 8, paddingBottom: 4, whiteSpace: 'nowrap' }}>
-          {questions.map((q, i) => (
+      <HeroBanner
+        num="03"
+        title="Chef Caliro"
+        subtitle="Tres herramientas en una"
+        color="#fef3c7"
+        textColor="#92400e"
+      />
+      <IntroText text="El Chef conoce tus datos: peso, objetivo, comidas frecuentes, preferencias. Toca cada modo para ver qué hace con ellos." />
+
+      {/* Selector de modo — 3 cards estilo card stack */}
+      <div style={{ margin: '0 16px 12px', display: 'flex', gap: 8 }}>
+        {modes.map(m => {
+          const active = mode === m.key;
+          return (
             <button
-              key={i}
-              onClick={() => setActiveQ(i)}
+              key={m.key}
+              onClick={() => setMode(m.key)}
               style={{
-                padding: '7px 14px',
-                borderRadius: 100,
-                border: activeQ === i ? 'none' : '1px solid var(--border)',
-                background: activeQ === i ? '#111' : 'var(--surface-2)',
-                color: activeQ === i ? '#fff' : 'var(--text-1, #111)',
-                fontSize: 12,
-                fontWeight: 500,
+                flex: 1,
+                padding: '10px 10px 9px',
+                borderRadius: 10,
+                border: active ? 'none' : '1px solid var(--border)',
+                background: active ? '#1a1a1a' : 'var(--surface-2)',
+                color: active ? '#fff' : 'var(--text-1, #111)',
                 cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
+                textAlign: 'left',
                 transition: 'all 0.2s',
               }}
             >
-              {q}
+              <div style={{
+                fontFamily: "'Instrument Serif', Georgia, serif",
+                fontStyle: 'italic',
+                fontSize: 14,
+                lineHeight: 1.1,
+                marginBottom: 2,
+              }}>{m.label}</div>
+              <div style={{
+                fontSize: 9,
+                opacity: 0.6,
+                letterSpacing: '0.03em',
+              }}>{m.desc}</div>
             </button>
+          );
+        })}
+      </div>
+
+      {/* Contenido dinámico por modo */}
+      <div style={{ margin: '0 16px' }}>
+        {mode === 'chat'  && <ChatDemo />}
+        {mode === 'day'   && <DayDemo />}
+        {mode === 'week'  && <WeekDemo />}
+      </div>
+
+      <TipStrip text="El Chef se alimenta de tu historial. Cuanto más consistente registras, mejores recomendaciones. Las preferencias dietéticas (alergias, vegano, etc.) son reglas duras que nunca rompe." />
+    </>
+  );
+}
+
+// ── Demo: modo Chat ──────────────────────────────────────────
+
+function ChatDemo() {
+  const [activeQ, setActiveQ] = useState(0);
+
+  const questions = [
+    '¿Qué ceno hoy?',
+    '¿Por qué no bajo?',
+    'Mis patrones',
+  ];
+
+  const replies = [
+    `Llevas <strong>820 kcal</strong> con 62g de proteína. Te quedan <strong>992 kcal</strong>. Te sugiero <strong>salmón al horno con patata y ensalada</strong> (~650 kcal, 45g prot) para cerrar bien el día. Deja margen para un snack si quieres.`,
+    `Tu adherencia L-V es del <strong>92%</strong>, pero S-D caes al <strong>48%</strong>. Promedio finde: +560 kcal sobre objetivo. Eso anula ~2 días de déficit cada semana. Si el finde te mantienes en 2.000 kcal, pasas de −0.2 a <strong>−0.5 kg/semana</strong>.`,
+    `Últimas 4 semanas:<br/>• Desayuno muy consistente, ~350 kcal.<br/>• Comida variable (400-900). Los viernes subes ~200 kcal.<br/>• Cena: subestimas un 15% de media en tus correcciones.<br/>• Fines de semana: +320 kcal vs entre semana.`,
+  ];
+
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+        {questions.map((q, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveQ(i)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 100,
+              border: activeQ === i ? 'none' : '1px solid var(--border)',
+              background: activeQ === i ? '#111' : 'var(--surface-2)',
+              color: activeQ === i ? '#fff' : 'var(--text-1, #111)',
+              fontSize: 11,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+      <div style={{
+        background: '#fff',
+        border: '1px solid var(--border)',
+        borderRadius: '12px 12px 12px 3px',
+        padding: '10px 12px',
+        fontSize: 12,
+        lineHeight: 1.6,
+        color: 'var(--text-1, #111)',
+      }}>
+        <div dangerouslySetInnerHTML={{ __html: replies[activeQ] }} />
+      </div>
+      <div style={{
+        fontSize: 11,
+        color: 'var(--text-secondary)',
+        marginTop: 8,
+        lineHeight: 1.5,
+      }}>
+        Responde con tus datos reales — no consejos genéricos de internet.
+      </div>
+    </>
+  );
+}
+
+// ── Demo: modo Plan del día ──────────────────────────────────
+
+function DayDemo() {
+  const meals = [
+    { type: 'DESAYUNO', name: 'Avena con plátano y yogur', kcal: 420, prot: 22 },
+    { type: 'COMIDA',   name: 'Pechuga con arroz y brócoli', kcal: 580, prot: 48 },
+    { type: 'MERIENDA', name: 'Tostada integral con atún',    kcal: 280, prot: 22 },
+    { type: 'CENA',     name: 'Merluza al horno con patata',  kcal: 490, prot: 45 },
+  ];
+  const total = meals.reduce((s, m) => s + m.kcal, 0);
+  const target = 1812;
+
+  return (
+    <>
+      <div style={{
+        fontSize: 11, color: 'var(--text-secondary)',
+        marginBottom: 10, lineHeight: 1.5,
+      }}>
+        Genera 4 comidas ajustadas a tu objetivo del día. Pro = 2 planes/día.
+      </div>
+      <div style={{
+        background: '#fdf9ed',
+        borderRadius: 12,
+        padding: '12px 14px',
+      }}>
+        {meals.map((m, i) => (
+          <div key={i} style={{
+            paddingBottom: i < meals.length - 1 ? 10 : 0,
+            marginBottom: i < meals.length - 1 ? 10 : 0,
+            borderBottom: i < meals.length - 1 ? '0.5px dashed rgba(31,26,18,0.1)' : 'none',
+          }}>
+            <div style={{
+              fontSize: 8,
+              letterSpacing: '0.2em',
+              color: '#1f1a12',
+              fontWeight: 700,
+              marginBottom: 2,
+            }}>{m.type}</div>
+            <div style={{
+              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontStyle: 'italic',
+              fontSize: 14,
+              color: '#1f1a12',
+              lineHeight: 1.2,
+            }}>{m.name}</div>
+            <div style={{
+              fontSize: 10,
+              color: '#1f1a12',
+              fontWeight: 600,
+              marginTop: 3,
+              fontVariantNumeric: 'tabular-nums',
+            }}>{m.kcal} kcal · {m.prot}g prot</div>
+          </div>
+        ))}
+      </div>
+      <div style={{
+        marginTop: 10,
+        padding: '8px 12px',
+        background: '#1a1a1a',
+        color: '#fff',
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+      }}>
+        <span style={{ fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.5)' }}>
+          TOTAL
+        </span>
+        <span style={{
+          fontFamily: "'Instrument Serif', Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: 16,
+        }}>
+          {total} / {target} kcal
+        </span>
+      </div>
+    </>
+  );
+}
+
+// ── Demo: modo Plan semanal ──────────────────────────────────
+
+function WeekDemo() {
+  const days = ['MAR 15', 'MIÉ 16', 'JUE 17', 'VIE 18'];
+  const cells = {
+    desayuno: ['Tostadas pavo', 'Avena', 'Yogur granola', 'Huevos'],
+    comida:   ['Lentejas',      'Pasta atún', 'Pechuga arroz', 'Salmón'],
+    cena:     ['Sopa',          'Merluza',    'Tortilla',       'Ensalada'],
+  };
+  const kcalByDay = [1780, 1820, 1790, 1810];
+
+  return (
+    <>
+      <div style={{
+        fontSize: 11, color: 'var(--text-secondary)',
+        marginBottom: 10, lineHeight: 1.5,
+      }}>
+        Genera los días que faltan hasta el domingo, con variedad real entre ellos. Pro = 1/día.
+      </div>
+      <div style={{
+        background: '#fdf9ed',
+        borderRadius: 12,
+        padding: '12px 10px',
+        overflowX: 'auto',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '34px repeat(4, minmax(70px, 1fr))',
+          gap: 4,
+          minWidth: 340,
+        }}>
+          {/* Header row */}
+          <div />
+          {days.map(d => (
+            <div key={d} style={{
+              textAlign: 'center',
+              fontSize: 8,
+              letterSpacing: '0.15em',
+              color: 'var(--text-tertiary)',
+              fontWeight: 600,
+              padding: '4px 0',
+            }}>{d}</div>
+          ))}
+
+          {/* Rows per meal type */}
+          {['desayuno', 'comida', 'cena'].map(type => (
+            <Fragment key={type}>
+              <div style={{
+                fontSize: 7,
+                letterSpacing: '0.18em',
+                color: '#1f1a12',
+                fontWeight: 700,
+                writingMode: 'vertical-rl',
+                transform: 'rotate(180deg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                {type.toUpperCase()}
+              </div>
+              {cells[type].map((name, i) => (
+                <div key={i} style={{
+                  background: '#fff',
+                  border: '0.5px solid rgba(31,26,18,0.08)',
+                  borderRadius: 6,
+                  padding: '5px 6px',
+                  minHeight: 42,
+                  fontSize: 10,
+                  fontFamily: "'Instrument Serif', Georgia, serif",
+                  fontStyle: 'italic',
+                  color: '#1f1a12',
+                  lineHeight: 1.2,
+                }}>
+                  {name}
+                </div>
+              ))}
+            </Fragment>
           ))}
         </div>
       </div>
-      <div style={{ margin: '0 16px' }}>
-        <div style={{
-          background: '#fff',
-          border: '1px solid var(--border)',
-          borderRadius: '12px 12px 12px 3px',
-          padding: '10px 12px',
-          fontSize: 12,
-          lineHeight: 1.6,
-          color: 'var(--text-1, #111)',
+      <div style={{
+        marginTop: 10,
+        padding: '8px 12px',
+        background: '#1a1a1a',
+        color: '#fff',
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+      }}>
+        <span style={{ fontSize: 9, letterSpacing: '0.18em', color: 'rgba(255,255,255,0.5)' }}>
+          MEDIA DIARIA
+        </span>
+        <span style={{
+          fontFamily: "'Instrument Serif', Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: 16,
         }}>
-          <div dangerouslySetInnerHTML={{ __html: replies[activeQ] }} />
-        </div>
-        <div style={{
-          fontSize: 12,
-          color: 'var(--text-secondary)',
-          marginTop: 8,
-          lineHeight: 1.5,
-        }}>
-          El asistente tiene acceso a tu historial completo — responde con tus datos reales, no con consejos genéricos.
-        </div>
+          {Math.round(kcalByDay.reduce((s, k) => s + k, 0) / kcalByDay.length)} kcal
+        </span>
       </div>
-      <TipStrip text="Cuanto más específica la pregunta, mejor la respuesta. «¿Qué debería cenar para llegar a mi objetivo de proteína hoy?» es mejor que «¿qué ceno?»" />
     </>
   );
 }
@@ -521,12 +766,12 @@ function Page4() {
             ¿Comiste fuera sin el móvil?
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Puedes registrar esa comida después. Entra en el día correspondiente y añádela con foto, descripción o escáner. Tu historial queda completo y el asistente tiene toda la información.
+            Puedes registrar esa comida después. Entra en el día correspondiente y añádela con foto, descripción o escáner. Tu historial queda completo y el Chef tiene toda la información.
           </div>
         </div>
       </div>
 
-      <TipStrip text="Puedes añadir comidas a cualquier día de los últimos 30 días. Cuanto más completo sea tu historial, mejores las recomendaciones del asistente." />
+      <TipStrip text="Puedes añadir comidas a cualquier día de los últimos 30 días. Cuanto más completo sea tu historial, mejores las recomendaciones del Chef." />
     </>
   );
 }
@@ -671,7 +916,7 @@ function Page6() {
   return (
     <>
       <HeroBanner num="06" title="Suplementos" subtitle="Seguimiento diario automático" color="#f0fdf4" textColor="#166534" />
-      <IntroText text="Añádelos una vez en el Perfil y aparecen solos cada día. Toca cada uno para marcarlo como tomado — el asistente tiene ese contexto." />
+      <IntroText text="Añádelos una vez en el Perfil y aparecen solos cada día. Toca cada uno para marcarlo como tomado — el Chef tiene ese contexto." />
       <DemoBox>
         <div style={{
           fontSize: 13,
@@ -728,7 +973,7 @@ function Page6() {
         </div>
       </div>
 
-      <TipStrip text="El asistente sabe qué suplementos has tomado hoy. Si le preguntas sobre proteína o recuperación, tiene ese contexto." />
+      <TipStrip text="El Chef sabe qué suplementos has tomado hoy. Si le preguntas sobre proteína o recuperación, tiene ese contexto." />
     </>
   );
 }
@@ -739,7 +984,7 @@ const PAGES = [Page1, Page2, Page3, Page4, Page5, Page6];
 const PAGE_TITLES = [
   'Registrar comidas',
   'Motor de calibración',
-  'Asistente personal',
+  'Chef Caliro',
   'Historial',
   'Progreso',
   'Suplementos',
