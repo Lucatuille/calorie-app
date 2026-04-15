@@ -265,11 +265,20 @@ export function updateFrequentMeals(meals, mealName, kcal, macros = null) {
     // Media ponderada acumulada
     const t = existing.times;
     existing.avg_kcal = Math.round((existing.avg_kcal * t + kcal) / (t + 1));
-    if (prot || carbs || fat) {
-      existing.avg_protein = Math.round(((existing.avg_protein || 0) * t + prot) / (t + 1));
-      existing.avg_carbs   = Math.round(((existing.avg_carbs   || 0) * t + carbs) / (t + 1));
-      existing.avg_fat     = Math.round(((existing.avg_fat     || 0) * t + fat) / (t + 1));
-    }
+
+    // Macros por campo (independientes). Tres reglas:
+    //   1. Si el existente está vacío (null/0) y el nuevo tiene valor → inicializar con el nuevo.
+    //   2. Si el existente tiene valor y el nuevo tiene valor → media ponderada.
+    //   3. Si el nuevo es 0 → no tocar el existente (no pisar datos buenos con ceros).
+    const updateMacro = (fieldValue, newValue) => {
+      if (!newValue) return fieldValue;                         // regla 3
+      if (fieldValue == null || fieldValue === 0) return newValue; // regla 1
+      return Math.round((fieldValue * t + newValue) / (t + 1));    // regla 2
+    };
+    existing.avg_protein = updateMacro(existing.avg_protein, prot);
+    existing.avg_carbs   = updateMacro(existing.avg_carbs,   carbs);
+    existing.avg_fat     = updateMacro(existing.avg_fat,     fat);
+
     existing.times++;
     existing.last_seen = today;
     // Mantener el nombre más corto/limpio entre los dos

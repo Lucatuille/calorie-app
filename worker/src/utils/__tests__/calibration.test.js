@@ -306,4 +306,77 @@ describe('updateFrequentMeals', () => {
     const result = updateFrequentMeals(meals, null, 500);
     expect(result).toHaveLength(1);
   });
+
+  // ── Macros — reglas de backfill ────────────────────────────
+
+  it('new meal con macros → se guardan', () => {
+    const result = updateFrequentMeals([], 'Pollo', 450, { protein: 40, carbs: 20, fat: 10 });
+    expect(result[0].avg_protein).toBe(40);
+    expect(result[0].avg_carbs).toBe(20);
+    expect(result[0].avg_fat).toBe(10);
+  });
+
+  it('new meal sin macros → null', () => {
+    const result = updateFrequentMeals([], 'Pollo', 450);
+    expect(result[0].avg_protein).toBe(null);
+    expect(result[0].avg_carbs).toBe(null);
+    expect(result[0].avg_fat).toBe(null);
+  });
+
+  it('existing con macros null → SE INICIALIZA con nuevo valor (no weighted avg con 0)', () => {
+    // Bug reportado: frequent se creó sin macros, ahora el usuario guarda con macros.
+    // Antes: quedaba null forever. Ahora: se llena.
+    const meals = [{
+      name: 'Pollo', avg_kcal: 450, times: 3, last_seen: '2026-01-01',
+      avg_protein: null, avg_carbs: null, avg_fat: null,
+    }];
+    const result = updateFrequentMeals(meals, 'Pollo', 500, { protein: 40, carbs: 20, fat: 10 });
+    expect(result[0].avg_protein).toBe(40); // inicializado, no weighted
+    expect(result[0].avg_carbs).toBe(20);
+    expect(result[0].avg_fat).toBe(10);
+  });
+
+  it('existing con macros 0 → SE INICIALIZA con nuevo valor', () => {
+    const meals = [{
+      name: 'Pollo', avg_kcal: 450, times: 3, last_seen: '2026-01-01',
+      avg_protein: 0, avg_carbs: 0, avg_fat: 0,
+    }];
+    const result = updateFrequentMeals(meals, 'Pollo', 500, { protein: 40, carbs: 20, fat: 10 });
+    expect(result[0].avg_protein).toBe(40);
+    expect(result[0].avg_carbs).toBe(20);
+    expect(result[0].avg_fat).toBe(10);
+  });
+
+  it('existing con macros válidos + nuevo con macros → weighted average', () => {
+    const meals = [{
+      name: 'Pollo', avg_kcal: 450, times: 3, last_seen: '2026-01-01',
+      avg_protein: 30, avg_carbs: 25, avg_fat: 12,
+    }];
+    const result = updateFrequentMeals(meals, 'Pollo', 500, { protein: 40, carbs: 20, fat: 10 });
+    expect(result[0].avg_protein).toBe(Math.round((30 * 3 + 40) / 4)); // 33
+    expect(result[0].avg_carbs).toBe(Math.round((25 * 3 + 20) / 4));   // 24
+    expect(result[0].avg_fat).toBe(Math.round((12 * 3 + 10) / 4));     // 12
+  });
+
+  it('existing con macros válidos + nuevo SIN macros → NO se pisan con 0', () => {
+    const meals = [{
+      name: 'Pollo', avg_kcal: 450, times: 3, last_seen: '2026-01-01',
+      avg_protein: 40, avg_carbs: 20, avg_fat: 10,
+    }];
+    const result = updateFrequentMeals(meals, 'Pollo', 500); // sin macros
+    expect(result[0].avg_protein).toBe(40); // sin cambios
+    expect(result[0].avg_carbs).toBe(20);
+    expect(result[0].avg_fat).toBe(10);
+  });
+
+  it('solo un macro disponible (ej. protein sí, carbs/fat no)', () => {
+    const meals = [{
+      name: 'Pollo', avg_kcal: 450, times: 3, last_seen: '2026-01-01',
+      avg_protein: null, avg_carbs: null, avg_fat: null,
+    }];
+    const result = updateFrequentMeals(meals, 'Pollo', 500, { protein: 40, carbs: 0, fat: 0 });
+    expect(result[0].avg_protein).toBe(40);    // inicializado
+    expect(result[0].avg_carbs).toBe(null);    // sin cambio (0 = no data)
+    expect(result[0].avg_fat).toBe(null);
+  });
 });

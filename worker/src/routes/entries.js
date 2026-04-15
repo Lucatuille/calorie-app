@@ -3,6 +3,7 @@
 // ============================================================
 
 import { jsonResponse, errorResponse, authenticate, getClientToday, rateLimit } from '../utils.js';
+import { updateFrequentMeals } from '../utils/calibration.js';
 
 function isValidDate(d) {
   return !d || /^\d{4}-\d{2}-\d{2}$/.test(d);
@@ -55,6 +56,39 @@ export async function handleEntries(request, env, path) {
     const entry = await env.DB.prepare(
       'SELECT * FROM entries WHERE id = ?'
     ).bind(meta.last_row_id).first();
+
+    // Actualizar frequent_meals del usuario (nombre + kcal + macros).
+    // Fire-and-forget: si falla, no bloqueamos el flujo principal.
+    if (name && calories) {
+      (async () => {
+        try {
+          const calRow = await env.DB.prepare(
+            'SELECT frequent_meals FROM user_calibration WHERE user_id = ?'
+          ).bind(user.userId).first();
+          let meals = [];
+          try { meals = JSON.parse(calRow?.frequent_meals || '[]'); } catch {}
+          const updated = updateFrequentMeals(meals, name, Number(calories), {
+            protein: Number(protein) || 0,
+            carbs:   Number(carbs)   || 0,
+            fat:     Number(fat)     || 0,
+          });
+          // Upsert solo frequent_meals (preserva el resto del perfil si existe)
+          if (calRow) {
+            await env.DB.prepare(
+              'UPDATE user_calibration SET frequent_meals = ?, updated_at = datetime(\'now\') WHERE user_id = ?'
+            ).bind(JSON.stringify(updated), user.userId).run();
+          } else {
+            await env.DB.prepare(
+              `INSERT INTO user_calibration (user_id, global_bias, confidence, data_points,
+                 meal_factors, food_factors, time_factors, frequent_meals, updated_at)
+               VALUES (?, 1.0, 0, 0, '{}', '{}', '{}', ?, datetime('now'))`
+            ).bind(user.userId, JSON.stringify(updated)).run();
+          }
+        } catch (err) {
+          console.warn('[entries] frequent_meals update failed:', err.message);
+        }
+      })();
+    }
 
     return jsonResponse(entry, 201);
   }
