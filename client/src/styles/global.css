@@ -127,23 +127,25 @@ textarea:focus:not(:focus-visible) {
   --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
   --nav-bg:    rgba(15,15,15,0.92);
 
-  /* Chef Caliro palette — dark adaptativo (v2: cream sigue siendo ID
-     pero los fondos mantienen coherencia con el resto de la app dark).
-     Escala por elevación:
-       bg (#0f0f0f) < paper (#1c1a16) < today (#26221c) < footer/active (#2a2620) */
-  --chef-ink:       #f0e8d8;  /* cream cálido: ID del diseño chef en dark */
+  /* Chef Caliro palette — dark adaptativo (v3: reutilizamos los grises
+     neutros del sistema para coherencia con Dashboard/Progreso/etc. La
+     identidad chef vive exclusivamente en el TEXTO cream y tipografía
+     serif, no en los fondos.
+     Escala por elevación, misma que app:
+       bg (#0f0f0f) < paper (surface #1a1a1a) < today (surface-2 #222) < footer/active (surface-3 #2a2a2a) */
+  --chef-ink:       #f0e8d8;           /* cream cálido: ID visual chef */
   --chef-ink-soft:  rgba(240,232,216,0.5);
-  --chef-cream:     var(--bg);       /* = fondo app dark, coherente */
-  --chef-paper:     #1c1a16;         /* celdas — más contraste con bg */
-  --chef-today-bg:  #26221c;         /* highlight today — capa intermedia */
-  --chef-footer-bg: #2a2620;         /* footer es la capa más elevada */
+  --chef-cream:     var(--bg);         /* = fondo app dark, coherente */
+  --chef-paper:     var(--surface);    /* celdas = card estándar de app */
+  --chef-today-bg:  var(--surface-2);  /* highlight today — mismo gris que cards internas */
+  --chef-footer-bg: var(--surface-3);  /* footer capa elevada */
   --chef-footer-fg: #f0e8d8;
 
-  /* Card stack dark — active elevado + borde cream (ink) */
-  --chef-stack-active-bg:     #2a2620;         /* misma capa que footer = elevación */
-  --chef-stack-active-fg:     #f0e8d8;         /* cream cálido, legible */
-  --chef-stack-active-border: var(--chef-ink); /* cream ink, señal editorial */
-  --chef-stack-inactive-bg:   #1c1a16;         /* coherente con paper */
+  /* Card stack dark — alineado a grises de sistema */
+  --chef-stack-active-bg:     var(--surface-3);  /* elevado, coherente con footer */
+  --chef-stack-active-fg:     #f0e8d8;           /* cream cálido, legible */
+  --chef-stack-active-border: var(--chef-ink);   /* cream ink, señal editorial */
+  --chef-stack-inactive-bg:   var(--surface);    /* card base */
   --chef-stack-inactive-fg:   var(--text-primary);
 
   /* Chef highlight dark — el verde brand neón choca con la paleta warm.
