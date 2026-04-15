@@ -6,11 +6,14 @@
 export const ADHERENCE_TOLERANCE = 250; // kcal ± from target
 
 // ── Meal hour ranges (for auto-detecting meal type) ──────────
+// Alineadas con worker/src/utils/mealTypeInfer.js (Europe/Madrid).
+// Antes: breakfast 6-11. Causaba bug — desayunos a las 11h se
+// guardaban como 'lunch' y luego Chef no los detectaba al filtrar.
 export const MEAL_HOURS: Record<string, [number, number]> = {
-  breakfast: [6, 11],
-  lunch:     [11, 16],
-  snack:     [16, 20],
-  dinner:    [20, 24],
+  breakfast: [6, 12],   // desayuno tardío español hasta antes de las 12
+  lunch:     [12, 16],
+  snack:     [16, 19],
+  dinner:    [19, 24],
 };
 
 // ── Photo processing ─────────────────────────────────────────

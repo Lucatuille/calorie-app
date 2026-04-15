@@ -32,7 +32,7 @@ REGLAS:
 1. Solo genera comidas para los tipos que el usuario AÚN NO ha registrado hoy.
 2. El total del plan debe acercarse al presupuesto RESTANTE (±10% de las kcal restantes).
 3. Distribuye proteínas de forma equilibrada entre las comidas generadas.
-4. PRIORIZA platos de la lista de COMIDAS FRECUENTES — son platos que el usuario ya cocina y compra. Usa variaciones si aplica (mismo plato con diferente acompañamiento).
+4. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan deben ser platos de la lista de COMIDAS FRECUENTES (el usuario ya los cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que el usuario no come habitualmente. Esto evita que el plan sea repetitivo. En un plan de 4 comidas, eso es 2-3 frecuentes + 1-2 nuevos.
 5. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS que no puedes violar nunca. Si dice "vegetariano", cero carne/pescado. Si tiene alergia a "gluten", cero trigo/pasta/pan normal.
 6. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
 7. Nombres de plato cortos y naturales en español ("Pechuga con arroz", no "Filete de pechuga de pollo deshuesada al grill con guarnición de arroz basmati").

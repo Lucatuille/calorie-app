@@ -45,7 +45,7 @@ REGLAS:
 2. Para el día parcial (si existe — normalmente HOY), solo genera los tipos de comida que FALTAN por registrar, NO los ya registrados.
 3. Para los días completos (días futuros), genera siempre las 4 comidas: desayuno, comida, merienda, cena.
 4. El total calórico de CADA día completo debe acercarse al objetivo diario del usuario (±10%). Distribuye macros equilibradamente.
-5. PRIORIZA platos de la lista de COMIDAS FRECUENTES — son platos que el usuario ya cocina y compra. Úsalos con variaciones (mismo plato, distinto acompañamiento).
+5. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan semanal deben ser platos de COMIDAS FRECUENTES (los que ya cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que ampliarían su repertorio. En una semana completa de 28 comidas eso son ~17-20 frecuentes + ~8-11 nuevos. Esto evita la sensación de "todo es lo de siempre".
 6. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS — cero violaciones. Si dice "vegetariano", nada de carne ni pescado. Si tiene alergia a "gluten", nada de trigo/pasta/pan normal.
 7. VARIEDAD (crítico): ningún plato debe aparecer más de 2 veces en toda la semana planificada. La proteína principal debe ROTAR entre días consecutivos (alterna entre pollo, pescado, legumbre, huevo, ternera, cerdo, tofu...). Si se te da una lista de PLATOS RECIENTES (ya comidos o planificados días atrás), NO los uses en esta semana.
 8. Los fines de semana (sábado y domingo) pueden ser algo más flexibles calóricamente (±15% del objetivo) y con platos ligeramente más elaborados. Entre semana (lunes a viernes): practicidad y repeticiones razonables de frecuentes.

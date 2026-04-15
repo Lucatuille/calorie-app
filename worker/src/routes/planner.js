@@ -7,6 +7,7 @@ import { jsonResponse, errorResponse, authenticate, rateLimit } from '../utils.j
 import { checkAndIncrementPlannerLimit, rollbackPlannerLimit, getPlannerUsage } from '../utils/plannerLimits.js';
 import { savePlannerHistory, getRecentPlannerHistory, extractRecentDishNames } from '../utils/plannerHistory.js';
 import { resolveMealTypesRegistered } from '../utils/mealTypeInfer.js';
+import { calibrateMeals, recomputeTotals } from '../utils/calibratePlan.js';
 import { SYSTEM_PROMPT, buildDayPlanMessage, parseDayPlanResponse } from '../prompts/chef-day.js';
 import {
   SYSTEM_PROMPT_WEEK,
@@ -197,12 +198,14 @@ export async function handlePlanner(request, env, path, ctx) {
           const normalized = TYPE_MAP[t] || t;
           return !mealTypesRegistered.includes(normalized);
         });
-        planData.totals = {
-          kcal:    planData.meals.reduce((s, m) => s + (m.kcal    || 0), 0),
-          protein: planData.meals.reduce((s, m) => s + (m.protein || 0), 0),
-          carbs:   planData.meals.reduce((s, m) => s + (m.carbs   || 0), 0),
-          fat:     planData.meals.reduce((s, m) => s + (m.fat     || 0), 0),
-        };
+        planData.totals = recomputeTotals(planData.meals);
+      }
+
+      // Calibrar porciones para acercarse al presupuesto restante (±10%).
+      // Sonnet sub-estima a veces; este escalamiento corrige.
+      const calibration = calibrateMeals(planData.meals, remaining.kcal);
+      if (calibration.calibrated) {
+        planData.totals = recomputeTotals(planData.meals);
       }
 
       // Log token usage
@@ -373,6 +376,9 @@ export async function handlePlanner(request, env, path, ctx) {
         return errorResponse('Error al procesar el plan generado. Inténtalo de nuevo.', 502);
       }
 
+      // Calcular kcal ya consumidas hoy (para target del día parcial)
+      const consumedToday = todayMeals.reduce((s, e) => s + (e.calories || 0), 0);
+
       // Enforce server-side: si hoy es parcial, filtrar meals de tipos ya
       // registrados. Sonnet a veces ignora la instrucción "solo lo que falta".
       if (planData.days?.length > 0 && mealTypesRegistered.length > 0) {
@@ -389,20 +395,33 @@ export async function handlePlanner(request, env, path, ctx) {
             const normalized = TYPE_MAP[t] || t;
             return !mealTypesRegistered.includes(normalized);
           });
-          // Recalcular totals del día y de la semana
-          firstDay.totals = {
-            kcal:    firstDay.meals.reduce((s, m) => s + (m.kcal    || 0), 0),
-            protein: firstDay.meals.reduce((s, m) => s + (m.protein || 0), 0),
-            carbs:   firstDay.meals.reduce((s, m) => s + (m.carbs   || 0), 0),
-            fat:     firstDay.meals.reduce((s, m) => s + (m.fat     || 0), 0),
-          };
-          planData.week_totals = {
-            kcal:    planData.days.reduce((s, d) => s + (d.totals?.kcal    || 0), 0),
-            protein: planData.days.reduce((s, d) => s + (d.totals?.protein || 0), 0),
-            carbs:   planData.days.reduce((s, d) => s + (d.totals?.carbs   || 0), 0),
-            fat:     planData.days.reduce((s, d) => s + (d.totals?.fat     || 0), 0),
-          };
+          firstDay.totals = recomputeTotals(firstDay.meals);
         }
+      }
+
+      // Calibrar porciones por día. Sonnet sub-estima a veces.
+      // Primer día parcial: target = target_calories - consumedToday.
+      // Días futuros: target = target_calories.
+      if (planData.days?.length > 0) {
+        for (let i = 0; i < planData.days.length; i++) {
+          const day = planData.days[i];
+          const isFirstAndPartial = i === 0 && day.date === todayISO && consumedToday > 0;
+          const dayTarget = isFirstAndPartial
+            ? Math.max(0, (user.target_calories || 0) - consumedToday)
+            : (user.target_calories || 0);
+
+          const calRes = calibrateMeals(day.meals, dayTarget);
+          if (calRes.calibrated) {
+            day.totals = recomputeTotals(day.meals);
+          }
+        }
+        // Recalcular totals semanales tras todos los ajustes
+        planData.week_totals = {
+          kcal:    planData.days.reduce((s, d) => s + (d.totals?.kcal    || 0), 0),
+          protein: planData.days.reduce((s, d) => s + (d.totals?.protein || 0), 0),
+          carbs:   planData.days.reduce((s, d) => s + (d.totals?.carbs   || 0), 0),
+          fat:     planData.days.reduce((s, d) => s + (d.totals?.fat     || 0), 0),
+        };
       }
 
       await env.DB.prepare(

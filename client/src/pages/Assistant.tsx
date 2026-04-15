@@ -635,9 +635,9 @@ export default function Assistant() {
           flexShrink: 0,
         }}>
           {([
-            { key: 'chat',  label: 'Chat',    meta: 'Ahora' },
-            { key: 'day',   label: 'Día',     meta: 'Plan del día' },
-            { key: 'week',  label: 'Semana',  meta: 'Plan semanal' },
+            { key: 'chat',  label: 'Chat',    meta: 'Pregunta libre' },
+            { key: 'day',   label: 'Día',     meta: 'Comidas restantes' },
+            { key: 'week',  label: 'Semana',  meta: 'Lun – Dom' },
           ] as { key: ChefMode; label: string; meta: string }[]).map(({ key, label, meta }) => {
             const active = mode === key;
             return (
