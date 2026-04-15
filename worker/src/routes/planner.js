@@ -523,6 +523,69 @@ export async function handlePlanner(request, env, path, ctx) {
     });
   }
 
+  // ── POST /api/planner/day/save — Persistir plan editado manualmente ──
+  // No consume cuota (no llama a Sonnet). Guarda un row nuevo en
+  // planner_history que gana al anterior vía ORDER BY created_at DESC.
+  if (path === '/api/planner/day/save' && request.method === 'POST') {
+    const auth = await authenticate(request, env);
+    if (!auth) return errorResponse('No autorizado', 401);
+
+    // Burst protection (edits rápidas no deben crear 50 rows por segundo).
+    const rl = await rateLimit(env, request, `planner-save-day:${auth.userId}`, 30, 60);
+    if (rl) return rl;
+
+    const body = await request.json().catch(() => ({}));
+    const plan = body.plan;
+
+    // Validación de estructura mínima
+    if (!plan || !Array.isArray(plan.meals) || plan.meals.length === 0) {
+      return errorResponse('Plan inválido: falta meals[]', 400);
+    }
+    for (const m of plan.meals) {
+      if (!m || typeof m.name !== 'string' || !m.name.trim()) {
+        return errorResponse('Plan inválido: meal sin nombre', 400);
+      }
+      if (typeof m.kcal !== 'number' || m.kcal < 0 || m.kcal > 5000) {
+        return errorResponse('Plan inválido: kcal fuera de rango', 400);
+      }
+    }
+
+    await savePlannerHistory(auth.userId, 'day', plan, env);
+    return jsonResponse({ saved: true });
+  }
+
+  // ── POST /api/planner/week/save — Persistir plan semanal editado ──
+  if (path === '/api/planner/week/save' && request.method === 'POST') {
+    const auth = await authenticate(request, env);
+    if (!auth) return errorResponse('No autorizado', 401);
+
+    const rl = await rateLimit(env, request, `planner-save-week:${auth.userId}`, 30, 60);
+    if (rl) return rl;
+
+    const body = await request.json().catch(() => ({}));
+    const plan = body.plan;
+
+    if (!plan || !Array.isArray(plan.days) || plan.days.length === 0) {
+      return errorResponse('Plan inválido: falta days[]', 400);
+    }
+    for (const day of plan.days) {
+      if (!day || !day.date || !Array.isArray(day.meals)) {
+        return errorResponse('Plan inválido: día mal formado', 400);
+      }
+      for (const m of day.meals) {
+        if (!m || typeof m.name !== 'string' || !m.name.trim()) {
+          return errorResponse('Plan inválido: meal sin nombre', 400);
+        }
+        if (typeof m.kcal !== 'number' || m.kcal < 0 || m.kcal > 5000) {
+          return errorResponse('Plan inválido: kcal fuera de rango', 400);
+        }
+      }
+    }
+
+    await savePlannerHistory(auth.userId, 'week', plan, env);
+    return jsonResponse({ saved: true });
+  }
+
   // ── GET /api/planner/usage — Remaining counts ──
   if (path === '/api/planner/usage' && request.method === 'GET') {
     const auth = await authenticate(request, env);

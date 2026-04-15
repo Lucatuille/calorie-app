@@ -15,6 +15,8 @@ import { useAuth } from '../../context/AuthContext';
 import { isPro } from '../../utils/levels';
 import { describeChefError, formatUsageBadge, type ChefError } from './chefErrors';
 import ChefFreeLock from './ChefFreeLock';
+import ChefMealEditor, { type EditableMeal } from './ChefMealEditor';
+import { recomputeTotals, recomputeWeekTotals } from './chefTotals';
 
 type Meal = {
   type: string;
@@ -163,6 +165,7 @@ export default function ChefPlanWeek() {
   const [error, setError] = useState<ChefError | null>(null);
   const [context, setContext] = useState('');
   const [modalMeal, setModalMeal] = useState<{ meal: Meal; day: Day } | null>(null);
+  const [editingCell, setEditingCell] = useState<{ dayIdx: number; mealIdx: number } | null>(null);
   const [remainingDay, setRemainingDay] = useState<number | null>(null);
 
   const todayISO = new Date().toLocaleDateString('en-CA');
@@ -235,6 +238,44 @@ export default function ChefPlanWeek() {
         },
       },
     });
+  }
+
+  function handleStartEdit() {
+    if (!modalMeal || !plan) return;
+    // Encontrar índices del meal en la estructura del plan
+    const dayIdx = plan.days.findIndex(d => d.date === modalMeal.day.date);
+    if (dayIdx < 0) return;
+    const mealIdx = plan.days[dayIdx].meals.findIndex(
+      m => m.type === modalMeal.meal.type && m.name === modalMeal.meal.name
+    );
+    if (mealIdx < 0) return;
+    setModalMeal(null);
+    setEditingCell({ dayIdx, mealIdx });
+  }
+
+  function handleSaveEdit(updated: EditableMeal) {
+    if (!editingCell || !plan) return;
+    const { dayIdx, mealIdx } = editingCell;
+    const nextDays = plan.days.map((day, di) => {
+      if (di !== dayIdx) return day;
+      const nextMeals = day.meals.map((m, mi) =>
+        mi === mealIdx ? { ...m, ...updated } : m
+      );
+      return {
+        ...day,
+        meals: nextMeals,
+        totals: recomputeTotals(nextMeals),
+      };
+    });
+    const nextPlan: WeekPlanData = {
+      ...plan,
+      days: nextDays,
+      week_totals: recomputeWeekTotals(nextDays),
+    };
+    setPlan(nextPlan);
+    savePlanToCache(nextPlan, targetKcal);
+    setEditingCell(null);
+    api.chefSaveWeek(nextPlan, token).catch(() => {});
   }
 
   // ── Shared wrapper for empty/loading/error ──
@@ -920,7 +961,7 @@ export default function ChefPlanWeek() {
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               <button
                 type="button"
                 onClick={() => setModalMeal(null)}
@@ -930,14 +971,32 @@ export default function ChefPlanWeek() {
                   color: 'var(--text-secondary)',
                   border: '0.5px solid var(--border)',
                   borderRadius: 'var(--radius-full)',
-                  padding: '11px 18px',
-                  fontSize: 13,
+                  padding: '11px 10px',
+                  fontSize: 12,
                   fontWeight: 500,
                   fontFamily: 'var(--font-sans)',
                   cursor: 'pointer',
                 }}
               >
                 Cerrar
+              </button>
+              <button
+                type="button"
+                onClick={handleStartEdit}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '0.5px solid var(--text-primary)',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '11px 10px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  fontFamily: 'var(--font-sans)',
+                  cursor: 'pointer',
+                }}
+              >
+                Editar
               </button>
               <button
                 type="button"
@@ -948,8 +1007,8 @@ export default function ChefPlanWeek() {
                   color: '#fff',
                   border: 'none',
                   borderRadius: 'var(--radius-full)',
-                  padding: '11px 18px',
-                  fontSize: 13,
+                  padding: '11px 10px',
+                  fontSize: 12,
                   fontWeight: 600,
                   fontFamily: 'var(--font-sans)',
                   cursor: 'pointer',
@@ -962,6 +1021,18 @@ export default function ChefPlanWeek() {
           </div>
         </div>
       )}
+
+      {/* Modal de edición de meal */}
+      <ChefMealEditor
+        meal={editingCell && plan?.days[editingCell.dayIdx]?.meals[editingCell.mealIdx]
+          ? (plan.days[editingCell.dayIdx].meals[editingCell.mealIdx] as EditableMeal)
+          : null}
+        subtitle={editingCell && plan?.days[editingCell.dayIdx]?.meals[editingCell.mealIdx]
+          ? `${plan.days[editingCell.dayIdx].day_name} · ${plan.days[editingCell.dayIdx].meals[editingCell.mealIdx].type}`
+          : undefined}
+        onSave={handleSaveEdit}
+        onClose={() => setEditingCell(null)}
+      />
     </div>
   );
 }

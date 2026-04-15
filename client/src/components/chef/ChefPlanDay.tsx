@@ -12,6 +12,8 @@ import { useAuth } from '../../context/AuthContext';
 import { isPro } from '../../utils/levels';
 import { describeChefError, formatUsageBadge, type ChefError } from './chefErrors';
 import ChefFreeLock from './ChefFreeLock';
+import ChefMealEditor, { type EditableMeal } from './ChefMealEditor';
+import { recomputeTotals } from './chefTotals';
 
 type Meal = {
   type: string;
@@ -71,6 +73,7 @@ export default function ChefPlanDay() {
   const [context, setContext] = useState(''); // input de contexto opcional
   const [remainingDay, setRemainingDay] = useState<number | null>(null);
   const [targetKcal, setTargetKcal] = useState<number>(0);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
 
   const today = new Date();
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -143,6 +146,23 @@ export default function ChefPlanDay() {
         },
       },
     });
+  }
+
+  function handleSaveEdit(updated: EditableMeal) {
+    if (editingIdx == null || !plan) return;
+    const nextMeals = plan.meals.map((m, i) =>
+      i === editingIdx ? { ...m, ...updated } : m
+    );
+    const nextPlan: PlanData = {
+      ...plan,
+      meals: nextMeals,
+      totals: recomputeTotals(nextMeals),
+    };
+    setPlan(nextPlan);
+    savePlanToCache(nextPlan);
+    setEditingIdx(null);
+    // Persistir en backend (fire-and-forget — UI ya actualizada)
+    api.chefSaveDay(nextPlan, token).catch(() => {});
   }
 
   // Shared wrapper for non-plan states (card container)
@@ -585,17 +605,23 @@ export default function ChefPlanDay() {
                 }}>
                   {meal.ingredients}
                 </div>
-                <span
+                <button
+                  type="button"
+                  onClick={() => setEditingIdx(i)}
                   style={{
                     fontSize: 10,
                     color: 'var(--text-tertiary)',
                     marginTop: 8,
                     cursor: 'pointer',
                     display: 'inline-block',
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    fontFamily: 'inherit',
                   }}
                 >
-                  Regenerar
-                </span>
+                  Editar
+                </button>
               </div>
 
               {/* Circular register button */}
@@ -703,6 +729,18 @@ export default function ChefPlanDay() {
           {targetKcal > 0 ? `Objetivo ${targetKcal} kcal · ${diffLabel}` : diffLabel}
         </div>
       </div>
+
+      {/* Modal de edición de meal */}
+      <ChefMealEditor
+        meal={editingIdx != null && plan?.meals[editingIdx]
+          ? (plan.meals[editingIdx] as EditableMeal)
+          : null}
+        subtitle={editingIdx != null && plan?.meals[editingIdx]
+          ? plan.meals[editingIdx].type
+          : undefined}
+        onSave={handleSaveEdit}
+        onClose={() => setEditingIdx(null)}
+      />
     </div>
   );
 }

@@ -573,3 +573,132 @@ describe('GET /api/planner/usage', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ── POST /api/planner/day/save ──────────────────────────────
+
+describe('POST /api/planner/day/save', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authenticate.mockResolvedValue({ userId: 1 });
+  });
+
+  it('sin token → 401', async () => {
+    authenticate.mockResolvedValue(null);
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day/save', { plan: {} }),
+      makeEnv(),
+      '/api/planner/day/save'
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it('plan sin meals → 400', async () => {
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day/save', { plan: {} }),
+      makeEnv(),
+      '/api/planner/day/save'
+    );
+    expect(res.status).toBe(400);
+    expect(res.data.error).toMatch(/meals/i);
+  });
+
+  it('meal sin nombre → 400', async () => {
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day/save', {
+        plan: { meals: [{ kcal: 400 }] },
+      }),
+      makeEnv(),
+      '/api/planner/day/save'
+    );
+    expect(res.status).toBe(400);
+    expect(res.data.error).toMatch(/nombre/i);
+  });
+
+  it('meal con kcal inválido → 400', async () => {
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day/save', {
+        plan: { meals: [{ name: 'X', kcal: -10 }] },
+      }),
+      makeEnv(),
+      '/api/planner/day/save'
+    );
+    expect(res.status).toBe(400);
+
+    const res2 = await handlePlanner(
+      makeRequest('POST', '/api/planner/day/save', {
+        plan: { meals: [{ name: 'X', kcal: 9999 }] },
+      }),
+      makeEnv(),
+      '/api/planner/day/save'
+    );
+    expect(res2.status).toBe(400);
+  });
+
+  it('plan válido → 200 + persiste en history', async () => {
+    const plan = {
+      meals: [
+        { type: 'desayuno', name: 'Avena', kcal: 400, protein: 20, carbs: 50, fat: 10 },
+        { type: 'cena',     name: 'Merluza', kcal: 500, protein: 35, carbs: 20, fat: 15 },
+      ],
+      totals: { kcal: 900, protein: 55, carbs: 70, fat: 25 },
+    };
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day/save', { plan }),
+      makeEnv(),
+      '/api/planner/day/save'
+    );
+    expect(res.status).toBe(200);
+    expect(res.data.saved).toBe(true);
+    expect(savePlannerHistory).toHaveBeenCalledWith(1, 'day', plan, expect.any(Object));
+  });
+});
+
+// ── POST /api/planner/week/save ─────────────────────────────
+
+describe('POST /api/planner/week/save', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authenticate.mockResolvedValue({ userId: 1 });
+  });
+
+  it('plan sin days → 400', async () => {
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/week/save', { plan: { meals: [] } }),
+      makeEnv(),
+      '/api/planner/week/save'
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('día sin date o meals → 400', async () => {
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/week/save', {
+        plan: { days: [{ day_name: 'lunes' }] },
+      }),
+      makeEnv(),
+      '/api/planner/week/save'
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('plan semanal válido → 200 + persiste', async () => {
+    const plan = {
+      days: [
+        {
+          date: '2026-04-15',
+          day_name: 'miércoles',
+          meals: [{ name: 'Avena', kcal: 400 }],
+          totals: { kcal: 400, protein: 20, carbs: 50, fat: 10 },
+        },
+      ],
+    };
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/week/save', { plan }),
+      makeEnv(),
+      '/api/planner/week/save'
+    );
+    expect(res.status).toBe(200);
+    expect(res.data.saved).toBe(true);
+    expect(savePlannerHistory).toHaveBeenCalledWith(1, 'week', plan, expect.any(Object));
+  });
+});

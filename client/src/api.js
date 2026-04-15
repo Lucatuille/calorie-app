@@ -51,6 +51,8 @@ export const api = {
   // Planner (Chef Caliro)
   chefPlanDay:   (body, token) => request('POST', '/api/planner/day', body, token),
   chefPlanWeek:  (body, token) => request('POST', '/api/planner/week', body, token),
+  chefSaveDay:   (plan, token) => request('POST', '/api/planner/day/save',  { plan }, token),
+  chefSaveWeek:  (plan, token) => request('POST', '/api/planner/week/save', { plan }, token),
   chefGetCurrentDay:  (token)  => request('GET',  '/api/planner/day/current',  null, token),
   chefGetCurrentWeek: (token)  => request('GET',  '/api/planner/week/current', null, token),
   chefGetUsage:  (token)       => request('GET',  '/api/planner/usage', null, token),
