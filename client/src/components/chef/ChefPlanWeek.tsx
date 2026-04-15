@@ -44,7 +44,7 @@ type WeekPlanData = {
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 const CHEF_BG = 'var(--bg)';
-const CHEF_INK = '#1f1a12';
+const CHEF_INK = 'var(--chef-ink)';
 
 const STORAGE_KEY = 'caliro_week_plan';
 
@@ -82,7 +82,7 @@ function FragmentRow({
         fontSize: 8,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
-        color: '#1f1a12',
+        color: 'var(--chef-ink)',
         fontWeight: 700,
         writingMode: 'vertical-rl',
         transform: 'rotate(180deg)',
@@ -614,8 +614,8 @@ export default function ChefPlanWeek() {
           to { opacity: 1; transform: translateY(0); }
         }
         .chef-week-cell {
-          background: #fdf9ed;
-          border: 0.5px solid rgba(31,26,18,0.08);
+          background: var(--chef-paper);
+          border: 0.5px solid var(--border);
           border-radius: 8px;
           padding: 8px 9px;
           min-height: 64px;
@@ -627,14 +627,14 @@ export default function ChefPlanWeek() {
           font-family: inherit;
           text-align: left;
         }
-        .chef-week-cell:hover { border-color: rgba(31,26,18,0.25); }
-        .chef-week-cell.today { border-color: var(--accent); background: #fdfaf0; }
+        .chef-week-cell:hover { border-color: var(--border-strong); }
+        .chef-week-cell.today { border-color: var(--accent); background: var(--chef-today-bg); }
         .chef-week-cell .name {
           font-family: var(--font-serif);
           font-style: italic;
           font-size: 12px;
           line-height: 1.2;
-          color: ${CHEF_INK};
+          color: var(--chef-ink);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -642,14 +642,14 @@ export default function ChefPlanWeek() {
         }
         .chef-week-cell .kcal {
           font-size: 9px;
-          color: ${CHEF_INK};
+          color: var(--chef-ink);
           font-weight: 600;
           font-variant-numeric: tabular-nums;
           margin-top: 4px;
         }
         .chef-week-cell-empty {
-          background: rgba(0,0,0,0.015);
-          border: 0.5px dashed rgba(31,26,18,0.12);
+          background: transparent;
+          border: 0.5px dashed var(--border);
           border-radius: 8px;
           min-height: 64px;
           display: flex;
@@ -657,7 +657,7 @@ export default function ChefPlanWeek() {
           justify-content: center;
           font-size: 9px;
           font-style: italic;
-          color: rgba(31,26,18,0.3);
+          color: var(--text-tertiary);
           padding: 4px;
           text-align: center;
         }
@@ -711,7 +711,7 @@ export default function ChefPlanWeek() {
             fontSize: 10,
             color: 'var(--text-secondary)',
             background: 'transparent',
-            border: '0.5px solid rgba(31,26,18,0.2)',
+            border: '0.5px solid var(--border-strong)',
             borderRadius: 'var(--radius-full)',
             padding: '5px 11px',
             cursor: 'pointer',
@@ -802,8 +802,8 @@ export default function ChefPlanWeek() {
       {/* Footer — chef-ink, compact */}
       <div style={{
         padding: '14px 22px',
-        background: CHEF_INK,
-        color: '#fff',
+        background: 'var(--chef-footer-bg)',
+        color: 'var(--chef-footer-fg)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -928,9 +928,9 @@ export default function ChefPlanWeek() {
               marginBottom: 18,
             }}>
               {[
-                { label: 'Prot', value: modalMeal.meal.protein, color: '#2d6a4f' },
-                { label: 'Carb', value: modalMeal.meal.carbs,   color: '#d4a017' },
-                { label: 'Grasa',value: modalMeal.meal.fat,     color: '#5b8dd9' },
+                { label: 'Prot', value: modalMeal.meal.protein, color: 'var(--color-protein)' },
+                { label: 'Carb', value: modalMeal.meal.carbs,   color: 'var(--color-carbs)' },
+                { label: 'Grasa',value: modalMeal.meal.fat,     color: 'var(--color-fat)' },
               ].map(m => (
                 <div key={m.label} style={{
                   padding: '10px 8px',

@@ -16,7 +16,7 @@ type Props = {
   feature: 'day' | 'week';
 };
 
-const CHEF_INK = '#1f1a12';
+const CHEF_INK = 'var(--chef-ink)';
 
 export default function ChefFreeLock({ feature }: Props) {
   const navigate = useNavigate();

@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useId } from 'react';
 
-const CHEF_INK = '#1f1a12';
+const CHEF_INK = 'var(--chef-ink)';
 
 export type EditableMeal = {
   type?: string;

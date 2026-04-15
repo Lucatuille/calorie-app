@@ -34,7 +34,7 @@ type PlanData = {
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 const CHEF_BG = 'var(--bg)';
-const CHEF_INK = '#1f1a12';
+const CHEF_INK = 'var(--chef-ink)';
 
 const STORAGE_KEY = 'caliro_day_plan';
 
@@ -492,7 +492,7 @@ export default function ChefPlanDay() {
         alignItems: 'flex-end',
         paddingBottom: 16,
         marginBottom: 20,
-        borderBottom: '0.5px solid rgba(31,26,18,0.12)',
+        borderBottom: '0.5px solid var(--border-strong)',
       }}>
         <div>
           <h2 style={{
@@ -534,7 +534,7 @@ export default function ChefPlanDay() {
             fontSize: 10,
             color: 'var(--text-secondary)',
             background: 'transparent',
-            border: '0.5px solid rgba(31,26,18,0.2)',
+            border: '0.5px solid var(--border-strong)',
             borderRadius: 'var(--radius-full)',
             padding: '5px 11px',
             cursor: 'pointer',
@@ -656,7 +656,7 @@ export default function ChefPlanDay() {
           {i < plan.meals.length - 1 && (
             <div style={{
               height: '0.5px',
-              background: 'rgba(31,26,18,0.1)',
+              background: 'var(--border)',
               marginBottom: 24,
             }} />
           )}
@@ -668,8 +668,8 @@ export default function ChefPlanDay() {
         ...staggerStyle(plan.meals.length),
         marginTop: 12,
         padding: '16px 18px',
-        background: '#1a1a1a',
-        color: '#fff',
+        background: 'var(--chef-footer-bg)',
+        color: 'var(--chef-footer-fg)',
         borderRadius: 14,
       }}>
         <div style={{
@@ -703,9 +703,9 @@ export default function ChefPlanDay() {
           background: 'rgba(255,255,255,0.1)',
           marginBottom: 8,
         }}>
-          <div style={{ width: `${pPct}%`, height: '100%', background: '#2d6a4f' }} />
-          <div style={{ width: `${cPct}%`, height: '100%', background: '#d4a017' }} />
-          <div style={{ width: `${fPct}%`, height: '100%', background: '#5b8dd9' }} />
+          <div style={{ width: `${pPct}%`, height: '100%', background: 'var(--color-protein)' }} />
+          <div style={{ width: `${cPct}%`, height: '100%', background: 'var(--color-carbs)' }} />
+          <div style={{ width: `${fPct}%`, height: '100%', background: 'var(--color-fat)' }} />
         </div>
         <div style={{
           display: 'flex',
