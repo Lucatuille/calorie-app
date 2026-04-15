@@ -94,6 +94,11 @@ textarea:focus:not(:focus-visible) {
   --chef-stack-active-border: #1a1a1a;      /* = bg = invisible en light (el bg ya destaca) */
   --chef-stack-inactive-bg:   #faf6ef;
   --chef-stack-inactive-fg:   var(--text-primary);
+
+  /* Chef highlight (today, active selection) — separado del accent funcional
+     de botones. En light = accent verde brand. En dark = cream ink, elegante
+     y coherente con paleta warm. Se aplica solo a indicadores, NO a botones. */
+  --chef-accent: var(--accent);
 }
 
 [data-theme="dark"] {
@@ -134,12 +139,17 @@ textarea:focus:not(:focus-visible) {
   --chef-footer-bg: #2a2620;         /* footer es la capa más elevada */
   --chef-footer-fg: #f0e8d8;
 
-  /* Card stack dark — active elevado + borde accent (no cream loud) */
-  --chef-stack-active-bg:     #2a2620;     /* misma capa que footer = elevación */
-  --chef-stack-active-fg:     #f0e8d8;     /* cream cálido, legible */
-  --chef-stack-active-border: var(--accent); /* señal de "seleccionado" visible */
-  --chef-stack-inactive-bg:   #1c1a16;     /* coherente con paper */
+  /* Card stack dark — active elevado + borde cream (ink) */
+  --chef-stack-active-bg:     #2a2620;         /* misma capa que footer = elevación */
+  --chef-stack-active-fg:     #f0e8d8;         /* cream cálido, legible */
+  --chef-stack-active-border: var(--chef-ink); /* cream ink, señal editorial */
+  --chef-stack-inactive-bg:   #1c1a16;         /* coherente con paper */
   --chef-stack-inactive-fg:   var(--text-primary);
+
+  /* Chef highlight dark — el verde brand neón choca con la paleta warm.
+     Usamos el cream ink como "accent" para today/selección. Los botones
+     de acción (--accent) siguen verdes funcionalmente. */
+  --chef-accent: var(--chef-ink);
 }
 
 html { font-size: 16px; overflow-x: hidden; }

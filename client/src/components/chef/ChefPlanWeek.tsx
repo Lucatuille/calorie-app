@@ -628,7 +628,7 @@ export default function ChefPlanWeek() {
           text-align: left;
         }
         .chef-week-cell:hover { border-color: var(--border-strong); }
-        .chef-week-cell.today { border-color: var(--accent); background: var(--chef-today-bg); }
+        .chef-week-cell.today { border-color: var(--chef-accent); background: var(--chef-today-bg); }
         .chef-week-cell .name {
           font-family: var(--font-serif);
           font-style: italic;
@@ -765,7 +765,7 @@ export default function ChefPlanWeek() {
                   fontSize: 8,
                   letterSpacing: '0.15em',
                   textTransform: 'uppercase',
-                  color: isToday ? 'var(--accent)' : 'var(--text-tertiary)',
+                  color: isToday ? 'var(--chef-accent)' : 'var(--text-tertiary)',
                   fontWeight: 600,
                 }}>
                   {DOW_SHORT[day.day_name.toLowerCase()] || day.day_name.slice(0, 3)}
@@ -774,7 +774,7 @@ export default function ChefPlanWeek() {
                   fontFamily: 'var(--font-serif)',
                   fontStyle: 'italic',
                   fontSize: 20,
-                  color: isToday ? 'var(--accent)' : CHEF_INK,
+                  color: isToday ? 'var(--chef-accent)' : CHEF_INK,
                   display: 'block',
                   lineHeight: 1,
                   marginTop: 2,
