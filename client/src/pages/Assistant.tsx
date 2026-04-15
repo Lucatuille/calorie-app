@@ -647,22 +647,22 @@ export default function Assistant() {
                 onClick={() => setMode(key)}
                 style={{
                   flex: 1,
-                  background: active ? '#1a1a1a' : '#faf6ef',
-                  border: `0.5px solid ${active ? '#1a1a1a' : 'var(--border)'}`,
+                  background: active ? 'var(--chef-stack-active-bg)' : 'var(--chef-stack-inactive-bg)',
+                  border: `0.5px solid ${active ? 'var(--chef-stack-active-bg)' : 'var(--border)'}`,
                   borderRadius: 10,
                   padding: '10px 10px 9px',
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all 0.15s ease',
                   transform: active ? 'translateY(-1px)' : 'none',
-                  boxShadow: active ? '0 4px 12px rgba(26,26,26,0.15)' : 'none',
+                  boxShadow: active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
                 }}
               >
                 <div style={{
                   fontFamily: 'var(--font-serif)',
                   fontStyle: 'italic',
                   fontSize: 14,
-                  color: active ? '#fff' : 'var(--text-primary)',
+                  color: active ? 'var(--chef-stack-active-fg)' : 'var(--chef-stack-inactive-fg)',
                   lineHeight: 1.1,
                   marginBottom: 2,
                 }}>
@@ -670,7 +670,9 @@ export default function Assistant() {
                 </div>
                 <div style={{
                   fontSize: 9,
-                  color: active ? 'rgba(255,255,255,0.5)' : 'var(--text-tertiary)',
+                  color: active
+                    ? 'color-mix(in srgb, var(--chef-stack-active-fg) 55%, transparent)'
+                    : 'var(--text-tertiary)',
                   letterSpacing: '0.03em',
                 }}>
                   {meta}

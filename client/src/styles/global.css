@@ -87,6 +87,12 @@ textarea:focus:not(:focus-visible) {
   --chef-today-bg:  #fdfaf0;  /* today cell highlight */
   --chef-footer-bg: #1a1a1a;  /* footer oscuro de planes */
   --chef-footer-fg: #ffffff;
+
+  /* Card stack (Chat · Día · Semana selector) */
+  --chef-stack-active-bg:   #1a1a1a;
+  --chef-stack-active-fg:   #ffffff;
+  --chef-stack-inactive-bg: #faf6ef;
+  --chef-stack-inactive-fg: var(--text-primary);
 }
 
 [data-theme="dark"] {
@@ -124,6 +130,12 @@ textarea:focus:not(:focus-visible) {
   --chef-today-bg:  #2a2620;         /* today cell dark warm */
   --chef-footer-bg: #242018;         /* footer levemente más claro */
   --chef-footer-fg: #f0e8d8;
+
+  /* Card stack dark — invertir lógica: active CLARO, inactive oscuro warm */
+  --chef-stack-active-bg:   #f0e8d8;   /* cream cálido, destaca sobre bg oscuro */
+  --chef-stack-active-fg:   #1f1a12;   /* texto ink real */
+  --chef-stack-inactive-bg: #242018;   /* dark warm coherente con paper */
+  --chef-stack-inactive-fg: var(--text-primary);
 }
 
 html { font-size: 16px; overflow-x: hidden; }
