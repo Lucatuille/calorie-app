@@ -46,7 +46,10 @@ type Status = 'idle' | 'loading' | 'ready' | 'error';
 const CHEF_BG = 'var(--bg)';
 const CHEF_INK = 'var(--chef-ink)';
 
-const STORAGE_KEY = 'caliro_week_plan';
+// Clave por-usuario. Crítico para privacidad: sin userId el cache
+// podía exponer el plan de un user a otro en el mismo navegador.
+const storageKey = (userId: number | string | undefined) =>
+  userId ? `caliro_week_plan_u${userId}` : null;
 
 const MEAL_ORDER: string[] = ['desayuno', 'comida', 'merienda', 'cena'];
 const MEAL_LABELS: Record<string, string> = {
@@ -128,9 +131,11 @@ function currentWeekStart(): string {
   return d.toLocaleDateString('en-CA');
 }
 
-function loadCachedPlan(): { plan: WeekPlanData; targetKcal: number } | null {
+function loadCachedPlan(userId: number | string | undefined): { plan: WeekPlanData; targetKcal: number } | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const key = storageKey(userId);
+    if (!key) return null;
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const cached = JSON.parse(raw);
     if (cached.weekStart !== currentWeekStart() || !cached.plan) return null;
@@ -140,9 +145,11 @@ function loadCachedPlan(): { plan: WeekPlanData; targetKcal: number } | null {
   }
 }
 
-function savePlanToCache(plan: WeekPlanData, targetKcal: number) {
+function savePlanToCache(plan: WeekPlanData, targetKcal: number, userId: number | string | undefined) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    const key = storageKey(userId);
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify({
       weekStart: currentWeekStart(),
       targetKcal,
       plan,
@@ -150,15 +157,19 @@ function savePlanToCache(plan: WeekPlanData, targetKcal: number) {
   } catch { /* silent */ }
 }
 
-function clearPlanCache() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+function clearPlanCache(userId: number | string | undefined) {
+  try {
+    const key = storageKey(userId);
+    if (key) localStorage.removeItem(key);
+  } catch {}
 }
 
 export default function ChefPlanWeek() {
   const navigate = useNavigate();
   const { token, user: authUser } = useAuth();
+  const userId = authUser?.id;
 
-  const cached = loadCachedPlan();
+  const cached = loadCachedPlan(userId);
   const [status, setStatus] = useState<Status>(cached ? 'ready' : 'idle');
   const [plan, setPlan] = useState<WeekPlanData | null>(cached?.plan || null);
   const [targetKcal, setTargetKcal] = useState<number>(cached?.targetKcal || 0);
@@ -186,9 +197,13 @@ export default function ChefPlanWeek() {
           setPlan(planRes.plan);
           const tk = planRes.target_kcal || 0;
           setTargetKcal(tk);
-          savePlanToCache(planRes.plan, tk);
+          savePlanToCache(planRes.plan, tk, userId);
           setStatus('ready');
-        } else if (!cached) {
+        } else {
+          // Backend confirma que NO hay plan para este user esta semana →
+          // descartar cache local (podría ser leftover de otro user en este navegador)
+          setPlan(null);
+          clearPlanCache(userId);
           setStatus('idle');
         }
         if (usageRes?.week) {
@@ -209,7 +224,7 @@ export default function ChefPlanWeek() {
         setPlan(res.plan);
         const tk = res.target_kcal || 0;
         setTargetKcal(tk);
-        savePlanToCache(res.plan, tk);
+        savePlanToCache(res.plan, tk, userId);
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
         }
@@ -273,7 +288,7 @@ export default function ChefPlanWeek() {
       week_totals: recomputeWeekTotals(nextDays),
     };
     setPlan(nextPlan);
-    savePlanToCache(nextPlan, targetKcal);
+    savePlanToCache(nextPlan, targetKcal, userId);
     setEditingCell(null);
     api.chefSaveWeek(nextPlan, token).catch(() => {});
   }
@@ -706,7 +721,7 @@ export default function ChefPlanWeek() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); clearPlanCache(); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(userId); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',

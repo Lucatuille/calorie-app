@@ -119,6 +119,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Limpiar cachés privadas de Chef y otras features por-usuario.
+    // Crítico para privacidad: sin esto, el próximo user en el navegador
+    // podía ver planes cacheados del user anterior.
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('caliro_day_plan') || k.startsWith('caliro_week_plan'))) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch { /* silent */ }
     setToken(null);
     setUser(null);
     Sentry.setUser(null);

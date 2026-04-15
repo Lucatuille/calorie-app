@@ -36,11 +36,16 @@ type Status = 'idle' | 'loading' | 'ready' | 'error';
 const CHEF_BG = 'var(--bg)';
 const CHEF_INK = 'var(--chef-ink)';
 
-const STORAGE_KEY = 'caliro_day_plan';
+// Clave por-usuario. Crítico: sin el userId, un user A podía ver el
+// plan cacheado de un user B en el mismo navegador tras logout/login.
+const storageKey = (userId: number | string | undefined) =>
+  userId ? `caliro_day_plan_u${userId}` : null;
 
-function loadCachedPlan(): { plan: PlanData; status: Status } | null {
+function loadCachedPlan(userId: number | string | undefined): { plan: PlanData; status: Status } | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const key = storageKey(userId);
+    if (!key) return null;
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const cached = JSON.parse(raw);
     // Solo válido si es de hoy
@@ -52,21 +57,27 @@ function loadCachedPlan(): { plan: PlanData; status: Status } | null {
   }
 }
 
-function savePlanToCache(plan: PlanData) {
+function savePlanToCache(plan: PlanData, userId: number | string | undefined) {
   try {
+    const key = storageKey(userId);
+    if (!key) return;
     const today = new Date().toLocaleDateString('en-CA');
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today, plan }));
+    localStorage.setItem(key, JSON.stringify({ date: today, plan }));
   } catch { /* silent — localStorage full or unavailable */ }
 }
 
-function clearPlanCache() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+function clearPlanCache(userId: number | string | undefined) {
+  try {
+    const key = storageKey(userId);
+    if (key) localStorage.removeItem(key);
+  } catch {}
 }
 
 export default function ChefPlanDay() {
   const navigate = useNavigate();
   const { token, user: authUser } = useAuth();
-  const cached = loadCachedPlan();
+  const userId = authUser?.id;
+  const cached = loadCachedPlan(userId);
   const [status, setStatus] = useState<Status>(cached?.status || 'idle');
   const [plan, setPlan] = useState<PlanData | null>(cached?.plan || null);
   const [error, setError] = useState<ChefError | null>(null);
@@ -96,9 +107,13 @@ export default function ChefPlanDay() {
         if (planRes?.plan) {
           setPlan(planRes.plan);
           if (planRes.target_kcal) setTargetKcal(planRes.target_kcal);
-          savePlanToCache(planRes.plan);
+          savePlanToCache(planRes.plan, userId);
           setStatus('ready');
-        } else if (!cached) {
+        } else {
+          // Backend confirma que NO hay plan para este user hoy → descartar
+          // cualquier cache local (podría ser de otro user en este navegador)
+          setPlan(null);
+          clearPlanCache(userId);
           setStatus('idle');
         }
         if (usageRes?.day) {
@@ -117,7 +132,7 @@ export default function ChefPlanDay() {
       const res = await api.chefPlanDay({ context: context || undefined }, token);
       if (res.plan) {
         setPlan(res.plan);
-        savePlanToCache(res.plan);
+        savePlanToCache(res.plan, userId);
         if (res.target_kcal) setTargetKcal(res.target_kcal);
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
@@ -159,7 +174,7 @@ export default function ChefPlanDay() {
       totals: recomputeTotals(nextMeals),
     };
     setPlan(nextPlan);
-    savePlanToCache(nextPlan);
+    savePlanToCache(nextPlan, userId);
     setEditingIdx(null);
     // Persistir en backend (fire-and-forget — UI ya actualizada)
     api.chefSaveDay(nextPlan, token).catch(() => {});
@@ -529,7 +544,7 @@ export default function ChefPlanDay() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); clearPlanCache(); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(userId); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',
