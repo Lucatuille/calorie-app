@@ -250,6 +250,9 @@ export default function ChefPlanWeek() {
           protein: String(meal.protein),
           carbs: String(meal.carbs),
           fat: String(meal.fat),
+          weight: (meal as any).portion_g ? String((meal as any).portion_g) : '',
+          meal_type: meal.type,
+          ingredients: meal.ingredients || '',
         },
       },
     });

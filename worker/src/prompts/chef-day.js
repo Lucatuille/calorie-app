@@ -21,6 +21,7 @@ FORMATO DE RESPUESTA:
       "protein": número entero (gramos),
       "carbs": número entero (gramos),
       "fat": número entero (gramos),
+      "portion_g": número entero (peso total del plato servido en gramos, ver regla 14),
       "ingredients": "ingrediente1 Xg · ingrediente2 Xg · ..."
     }
   ],
@@ -46,7 +47,8 @@ REGLAS:
     - Si el contexto contradice lo que normalmente generarías, el CONTEXTO gana.
 11. Si al usuario le faltan POCAS kcal (< 200), genera solo un snack ligero, no una comida completa.
 12. Los totals deben ser la SUMA real de los meals generados — no inventes un total diferente.
-13. VARIEDAD: si se te da una lista de PLATOS RECIENTES (comidos o planificados en últimos días), NO los repitas hoy. Busca alternativas equivalentes en macros. Si no tienes alternativa en los frecuentes del usuario, usa conocimiento general de cocina mediterránea/española. La proteína principal de hoy debe variar respecto a lo comido o planificado ayer y antesdeayer (alterna entre pollo, pescado, legumbre, huevo, ternera, tofu, etc.).`;
+13. VARIEDAD: si se te da una lista de PLATOS RECIENTES (comidos o planificados en últimos días), NO los repitas hoy. Busca alternativas equivalentes en macros. Si no tienes alternativa en los frecuentes del usuario, usa conocimiento general de cocina mediterránea/española. La proteína principal de hoy debe variar respecto a lo comido o planificado ayer y antesdeayer (alterna entre pollo, pescado, legumbre, huevo, ternera, tofu, etc.).
+14. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come en el plato). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático de peso cuando el usuario registra. Si dudas, estima conservador pero NUNCA omitas el campo.`;
 
 /**
  * Construye el user message con datos reales del usuario.
@@ -224,6 +226,11 @@ export function parseDayPlanResponse(raw) {
     meal.carbs = meal.carbs || 0;
     meal.fat = meal.fat || 0;
     meal.ingredients = meal.ingredients || '';
+    // portion_g es obligatorio (regla 14) pero por seguridad estimamos
+    // desde kcal si Sonnet lo omite: ~1.5 g/kcal promedio plato preparado.
+    if (typeof meal.portion_g !== 'number' || meal.portion_g <= 0) {
+      meal.portion_g = Math.round((meal.kcal || 0) * 1.5);
+    }
   }
 
   // Recalcular totals por seguridad (no confiar en el total del modelo)

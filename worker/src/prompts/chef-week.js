@@ -32,6 +32,7 @@ FORMATO DE RESPUESTA:
           "protein": número entero (gramos),
           "carbs": número entero (gramos),
           "fat": número entero (gramos),
+          "portion_g": número entero (peso total del plato servido en gramos, ver regla 15),
           "ingredients": "ingrediente1 Xg · ingrediente2 Xg · ..."
         }
       ]
@@ -54,7 +55,8 @@ REGLAS:
 11. Si el usuario da CONTEXTO, respétalo ("semana ligera", "tengo batch-cooking del domingo", "viajo jueves y viernes"). El CONTEXTO gana sobre las reglas por defecto.
 12. Los campos "ingredients" listan ingredientes principales con gramos estimados separados por " · ".
 13. Cada "time" es una hora sugerida razonable para ese tipo de comida.
-14. NUNCA añadas campos extra al JSON. NO incluyas "totals" — los calcula el servidor.`;
+14. NUNCA añadas campos extra al JSON. NO incluyas "totals" — los calcula el servidor.
+15. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático al registrar. Si dudas, estima conservador pero NUNCA omitas el campo.`;
 
 /**
  * Construye el user message con datos reales para el plan semanal.
@@ -221,6 +223,10 @@ export function parseWeekPlanResponse(raw) {
       meal.carbs = meal.carbs || 0;
       meal.fat = meal.fat || 0;
       meal.ingredients = meal.ingredients || '';
+      // portion_g es obligatorio (regla 15). Estimación conservadora si falta.
+      if (typeof meal.portion_g !== 'number' || meal.portion_g <= 0) {
+        meal.portion_g = Math.round((meal.kcal || 0) * 1.5);
+      }
     }
 
     // Recalcular totals por día (no confiar en el modelo)

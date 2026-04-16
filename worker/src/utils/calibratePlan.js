@@ -48,6 +48,9 @@ export function calibrateMeals(meals, targetKcal) {
     meal.protein = Math.round((meal.protein || 0) * factor);
     meal.carbs   = Math.round((meal.carbs   || 0) * factor);
     meal.fat     = Math.round((meal.fat     || 0) * factor);
+    if (meal.portion_g) {
+      meal.portion_g = Math.round(meal.portion_g * factor);
+    }
     if (meal.ingredients) {
       meal.ingredients = scaleIngredientsGrams(meal.ingredients, factor);
     }

@@ -158,6 +158,12 @@ export default function ChefPlanDay() {
           protein: String(meal.protein),
           carbs: String(meal.carbs),
           fat: String(meal.fat),
+          // portion_g → weight si existe (peso total del plato servido)
+          weight: (meal as any).portion_g ? String((meal as any).portion_g) : '',
+          // type español del plan → Calculator lo mapea a meal_type inglés
+          meal_type: meal.type,
+          // ingredients como referencia en notes
+          ingredients: meal.ingredients || '',
         },
       },
     });

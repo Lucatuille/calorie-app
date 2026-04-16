@@ -2,7 +2,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import { MEAL_HOURS, MAX_IMAGE_PX, JPEG_QUALITY } from '../utils/constants';
 import { isPro } from '../utils/levels';
@@ -114,6 +114,15 @@ export default function Calculator() {
   // Comidas frecuentes (chips en el form)
   const [frequentMeals, setFrequentMeals] = useState([]);
 
+  // Prefill desde los planners (Chef Caliro): al registrar un plato del plan,
+  // se navega a /calculator con state.prefill. Guardamos el 1× original para
+  // escalar con los chips de porción sin perder la referencia.
+  const [fromPlan, setFromPlan] = useState(false);
+  const [planBaseline, setPlanBaseline] = useState(null); // { calories, protein, carbs, fat, weight } × 1
+  const [portionFactor, setPortionFactor] = useState(1);  // 0.5 | 1 | 1.5
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   useEffect(() => {
@@ -130,6 +139,67 @@ export default function Calculator() {
       }).catch(() => {});
     }
   }, [token]);
+
+  // Consumir prefill desde Chef Caliro (state.prefill pasado por navigate).
+  // Se rellena UNA vez al montar, luego se limpia el state para no re-prefill
+  // al navegar atrás. Esto permite que el usuario edite y guarde normalmente.
+  useEffect(() => {
+    const prefill = location.state?.prefill;
+    if (!prefill) return;
+
+    // Map meal_type español del plan → inglés del Calculator
+    const TYPE_MAP = {
+      desayuno: 'breakfast',
+      comida:   'lunch',
+      merienda: 'snack',
+      cena:     'dinner',
+    };
+    const mealType = prefill.meal_type
+      ? (TYPE_MAP[prefill.meal_type.toLowerCase()] || prefill.meal_type)
+      : form.meal_type;
+
+    // Poblar el form. Los números llegan como string (historial: string → string).
+    setForm(f => ({
+      ...f,
+      meal_type: mealType,
+      name:      prefill.name     || f.name,
+      calories:  prefill.calories || f.calories,
+      protein:   prefill.protein  || f.protein,
+      carbs:     prefill.carbs    || f.carbs,
+      fat:       prefill.fat      || f.fat,
+      weight:    prefill.weight   || f.weight,
+      notes:     prefill.ingredients || f.notes,
+    }));
+
+    // Guardar el baseline 1× para poder escalar con los chips sin perder los originales.
+    setPlanBaseline({
+      calories: Number(prefill.calories) || 0,
+      protein:  Number(prefill.protein)  || 0,
+      carbs:    Number(prefill.carbs)    || 0,
+      fat:      Number(prefill.fat)      || 0,
+      weight:   Number(prefill.weight)   || 0,
+    });
+    setFromPlan(true);
+    setPortionFactor(1);
+
+    // Limpiar state de navegación — evita re-prefill al pulsar back.
+    window.history.replaceState({}, '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Aplicar factor de porción: escala kcal + macros + peso desde el baseline 1×.
+  function applyPortionFactor(factor) {
+    if (!planBaseline) return;
+    setPortionFactor(factor);
+    setForm(f => ({
+      ...f,
+      calories: planBaseline.calories ? String(Math.round(planBaseline.calories * factor)) : f.calories,
+      protein:  planBaseline.protein  ? String(Math.round(planBaseline.protein  * factor)) : f.protein,
+      carbs:    planBaseline.carbs    ? String(Math.round(planBaseline.carbs    * factor)) : f.carbs,
+      fat:      planBaseline.fat      ? String(Math.round(planBaseline.fat     * factor)) : f.fat,
+      weight:   planBaseline.weight   ? String(Math.round(planBaseline.weight   * factor)) : f.weight,
+    }));
+  }
 
   const total = entries.reduce((a, e) => ({
     calories: a.calories + (e.calories || 0),
@@ -161,6 +231,10 @@ export default function Calculator() {
       }, token);
       setEntries(prev => [...prev, entry]);
       setForm(emptyForm());
+      // Reset estado de prefill — siguiente registro empieza limpio
+      setFromPlan(false);
+      setPlanBaseline(null);
+      setPortionFactor(1);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       if (photoAnalysisRef.current) {
@@ -733,6 +807,61 @@ export default function Calculator() {
                 </button>
               ))}
             </div>
+
+            {/* Banner + selector de porción cuando el form viene de Chef */}
+            {fromPlan && (
+              <div style={{
+                background: 'var(--surface-2)',
+                border: '0.5px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '10px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                flexWrap: 'wrap',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 11, color: 'var(--text-secondary)',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                       stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                       aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Desde tu plan · ¿Cuánto comiste?</span>
+                </div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[0.5, 1, 1.5].map(f => {
+                    const active = Math.abs(portionFactor - f) < 0.01;
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => applyPortionFactor(f)}
+                        style={{
+                          padding: '5px 10px',
+                          minWidth: 40,
+                          background: active ? 'var(--accent)' : 'var(--surface)',
+                          color: active ? '#fff' : 'var(--text-primary)',
+                          border: active ? 'none' : '0.5px solid var(--border)',
+                          borderRadius: 'var(--radius-full)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontFamily: 'var(--font-sans)',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {f === 0.5 ? '½' : f === 1 ? '1×' : '1½×'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Nombre */}
             <input
