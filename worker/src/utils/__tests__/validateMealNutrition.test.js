@@ -65,6 +65,51 @@ describe('estimateKcalFromIngredients — parsing básico', () => {
   });
 });
 
+describe('estimateKcalFromIngredients — bug orden keywords (2026-04-17)', () => {
+  // "carne picada de ternera" contenía "ternera" (150 kcal/100g) ANTES que
+  // 'carne picada' (200) en la tabla → matcheaba ternera primero. Resultado:
+  // hamburguesa 680 kcal daba false positive "kcal no cuadra" (estimado 493
+  // en vez de los 583 reales). Fix: reordenar la tabla (específico primero).
+  it('"180g carne picada de ternera" matchea carne picada, no ternera', () => {
+    const r = estimateKcalFromIngredients('180g carne picada de ternera');
+    expect(r.matched).toBe(1);
+    // 180/100 * 200 (carne picada) = 360, no 270 (ternera=150)
+    expect(r.estimate).toBe(360);
+  });
+
+  it('"200g solomillo de ternera" matchea solomillo, no ternera', () => {
+    const r = estimateKcalFromIngredients('200g solomillo de ternera');
+    // 200/100 * 160 = 320, no 300 (ternera=150)
+    expect(r.estimate).toBe(320);
+  });
+
+  it('"100g judías verdes" matchea verdura, no legumbre', () => {
+    const r = estimateKcalFromIngredients('100g judías verdes');
+    // 100/100 * 31 = 31, no 125 (alubias)
+    expect(r.estimate).toBe(31);
+  });
+
+  it('"100g judías" (sin verdes) sigue matcheando como legumbre', () => {
+    const r = estimateKcalFromIngredients('100g judías blancas');
+    // "judías blancas" no contiene "judías verdes" → sigue hasta alubias row
+    expect(r.estimate).toBe(125);
+  });
+
+  it('hamburguesa completa ya NO da false positive (screenshot 2026-04-17)', () => {
+    const meal = {
+      name: 'Hamburguesa con ensalada verde',
+      kcal: 680,
+      ingredients: '180g carne picada de ternera · 1 pan de hamburguesa (~60g) · 30g lechuga · 1 tomate mediano (~80g) · 10g mostaza · 5ml aceite de oliva',
+    };
+    const r = validateMealCoherence(meal);
+    // Estimate real: 360 (carne) + 159 (pan) + 4.5 (lechuga) + 14.4 (tomate)
+    // + 45 (aceite) ≈ 583. Declared 680. Diff +17% < 25% → NO suspicious.
+    expect(r.estimate).toBeGreaterThan(560);
+    expect(r.estimate).toBeLessThan(620);
+    expect(r.suspicious).toBe(false);
+  });
+});
+
 describe('estimateKcalFromIngredients — caso reportado (dorada)', () => {
   // Screenshot usuario 2026-04-17: plato dice 279 kcal pero ingredientes
   // suman ~500+. Este test documenta el caso real.

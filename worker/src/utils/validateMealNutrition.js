@@ -47,13 +47,18 @@ const DENSITY_TABLE = [
   { keywords: ['muslo de pollo', 'muslo pollo'],             density: 180, unit: 'g' },
   { keywords: ['pollo'],                                     density: 170, unit: 'g' },
   { keywords: ['pechuga de pavo', 'pechuga pavo', 'pavo'],   density: 110, unit: 'g' },
-  { keywords: ['solomillo de cerdo', 'solomillo'],           density: 143, unit: 'g' },
+  // 'solomillo' genérico ambiguo (cerdo 143 vs ternera 160) — solo matcheamos
+  // explícitos. Lo mismo para 'lomo'.
+  { keywords: ['solomillo de cerdo'],                        density: 143, unit: 'g' },
   { keywords: ['lomo de cerdo', 'lomo'],                     density: 165, unit: 'g' },
   { keywords: ['cerdo'],                                     density: 242, unit: 'g' },
-  { keywords: ['ternera magra', 'ternera'],                  density: 150, unit: 'g' },
+  // Específicos primero, general al final. Si "ternera" fuera antes, matchearía
+  // "carne picada de ternera" y daría 150 kcal/100g (falso bajo — era el bug
+  // del banner rojo false positive en hamburguesa).
   { keywords: ['solomillo de ternera'],                      density: 160, unit: 'g' },
-  { keywords: ['vacuno', 'filete'],                          density: 220, unit: 'g' },
   { keywords: ['carne picada'],                              density: 200, unit: 'g' },
+  { keywords: ['vacuno', 'filete'],                          density: 220, unit: 'g' },
+  { keywords: ['ternera magra', 'ternera'],                  density: 150, unit: 'g' },
   { keywords: ['jamón serrano', 'jamon serrano'],            density: 250, unit: 'g' },
   { keywords: ['jamón cocido', 'jamon cocido', 'fiambre'],   density: 125, unit: 'g' },
   { keywords: ['chorizo'],                                   density: 450, unit: 'g' },
@@ -104,8 +109,12 @@ const DENSITY_TABLE = [
   { keywords: ['lentejas'],                                  density: 115, unit: 'g' }, // Sonnet casi siempre habla cocidas en plato
   { keywords: ['garbanzos cocidos'],                         density: 140, unit: 'g' },
   { keywords: ['garbanzos'],                                 density: 140, unit: 'g' },
-  { keywords: ['alubias cocidas', 'judías cocidas', 'judias'],                density: 125, unit: 'g' },
-  { keywords: ['alubias', 'judías'],                         density: 125, unit: 'g' },
+  // 'judías verdes' PRIMERO — antes de cualquier row que mencione 'judías'.
+  // Sin esto, "100g judías verdes" matchearía 'judías' (125 kcal legumbre)
+  // en vez de la verdura (31 kcal). El orden de rows gana.
+  { keywords: ['judías verdes', 'judias verdes'],            density: 31,  unit: 'g' },
+  { keywords: ['alubias cocidas', 'judías cocidas', 'judias cocidas'], density: 125, unit: 'g' },
+  { keywords: ['alubias', 'judías', 'judias'],               density: 125, unit: 'g' },
   { keywords: ['tofu'],                                      density: 76,  unit: 'g' },
   { keywords: ['tempeh'],                                    density: 190, unit: 'g' },
   { keywords: ['seitán', 'seitan'],                          density: 150, unit: 'g' },
@@ -123,7 +132,8 @@ const DENSITY_TABLE = [
   { keywords: ['cebolla'],                                   density: 40,  unit: 'g' },
   { keywords: ['ajo'],                                       density: 150, unit: 'g' }, // seco, pero cantidades muy pequeñas
   { keywords: ['champiñones', 'champiñon', 'setas', 'seta'], density: 22,  unit: 'g' },
-  { keywords: ['judías verdes', 'judias verdes'],            density: 31,  unit: 'g' },
+  // judías verdes: entrada duplicada arriba en LEGUMBRES section — el orden
+  // ahí es crítico para no perder contra el keyword 'judías' de alubias.
   { keywords: ['espárragos', 'esparragos'],                  density: 20,  unit: 'g' },
   { keywords: ['patata'],                                    density: 77,  unit: 'g' },
   { keywords: ['boniato'],                                   density: 86,  unit: 'g' },
