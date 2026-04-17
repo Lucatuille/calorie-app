@@ -156,14 +156,26 @@ function scaleProteinAware(meals, factor) {
 }
 
 /**
- * Escala gramos en un string de ingredientes.
- * "60g avena · 1 plátano · 150g yogur" con factor 1.2 → "72g avena · 1 plátano · 180g yogur"
- * Solo toca números seguidos inmediatamente de "g". No toca "1 plátano", "1 cdta", etc.
+ * Escala gramos y mililitros en un string de ingredientes.
+ *
+ * Soporta:
+ *  - "60g avena" / "60G avena"
+ *  - "30ml aceite" / "30ML aceite"
+ *  - Decimales con punto: "1.5g sal"
+ *  - Decimales con coma (locale ES): "1,5g sal"
+ *
+ * NO toca:
+ *  - Números sin unidad g/ml ("4 huevos", "1 plátano", "1 cdta miel")
+ *
+ * Output: siempre entero (1,5g × 1.2 = 2g, no 1.8g). Los decimales quedan
+ * raros en listas de ingredientes post-escalado.
  */
 export function scaleIngredientsGrams(text, factor) {
-  return String(text).replace(/(\d+)g\b/gi, (_, n) => {
-    const scaled = Math.round(parseInt(n, 10) * factor);
-    return `${scaled}g`;
+  // Capturar (número entero o decimal con . o ,)(g|ml), case insensitive.
+  return String(text).replace(/(\d+(?:[.,]\d+)?)(g|ml)\b/gi, (_, num, unit) => {
+    const value = parseFloat(String(num).replace(',', '.'));
+    const scaled = Math.round(value * factor);
+    return `${scaled}${unit.toLowerCase()}`;
   });
 }
 

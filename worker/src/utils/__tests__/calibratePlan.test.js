@@ -41,6 +41,32 @@ describe('scaleIngredientsGrams', () => {
     expect(scaleIngredientsGrams('60g avena · 150g yogur', 1.0))
       .toBe('60g avena · 150g yogur');
   });
+
+  it('escala ml (aceite, caldos, leche)', () => {
+    expect(scaleIngredientsGrams('30ml AOVE · 200ml leche', 1.2))
+      .toBe('36ml AOVE · 240ml leche');
+  });
+
+  it('acepta decimales con punto', () => {
+    expect(scaleIngredientsGrams('1.5g sal · 2.5ml vainilla', 1.2))
+      .toBe('2g sal · 3ml vainilla');
+  });
+
+  it('acepta decimales con coma (locale español)', () => {
+    expect(scaleIngredientsGrams('1,5g sal · 30,5ml aceite', 1.2))
+      .toBe('2g sal · 37ml aceite');
+  });
+
+  it('mezcla g + ml + no-unidad', () => {
+    expect(scaleIngredientsGrams('150g pollo · 30ml aceite · 1 diente ajo', 1.5))
+      .toBe('225g pollo · 45ml aceite · 1 diente ajo');
+  });
+
+  it('no escala si el número va seguido de palabra (no unidad)', () => {
+    // "4 huevos" no debe escalarse — no es g ni ml
+    expect(scaleIngredientsGrams('4 huevos · 100g arroz', 1.2))
+      .toBe('4 huevos · 120g arroz');
+  });
 });
 
 describe('calibrateMeals — tolerancia y extremos', () => {
@@ -202,6 +228,19 @@ describe('calibrateMeals — protein-aware (target {kcal, protein})', () => {
     // Sin C/F que escalar → fallback uniforme → protein escala a 120
     expect(meals[0].kcal).toBe(480);
     expect(meals[0].protein).toBe(120);
+  });
+});
+
+describe('calibrateMeals — portion_g preservation sin fallback inventado', () => {
+  it('meal con portion_g=0 se respeta (no inventa)', () => {
+    // El fallback kcal*1.5 se eliminó. Si Sonnet no manda portion_g,
+    // queda en 0 y la calibración no lo infla. Entra en tolerance (factor 1.0) →
+    // forzamos factor fuera de tolerance con target diferente para testear.
+    const meals = [{ kcal: 500, protein: 30, carbs: 50, fat: 15, portion_g: 0 }];
+    const res = calibrateMeals(meals, { kcal: 600, protein: 30 });
+    expect(res.calibrated).toBe(true);
+    // portion_g se queda en 0, no se infla
+    expect(meals[0].portion_g).toBe(0);
   });
 });
 

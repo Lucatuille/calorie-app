@@ -47,17 +47,18 @@ REGLAS:
 3. Para los días completos (días futuros), genera siempre las 4 comidas: desayuno, comida, merienda, cena.
 4. El total calórico de CADA día completo debe acercarse al objetivo diario del usuario (±10%). Cada línea de "=== DÍAS A PLANIFICAR ===" lleva su target exacto (kcal y macros).
 5. PROTEÍNA — PISO NUTRICIONAL NO NEGOCIABLE: cada día debe alcanzar AL MENOS el 85% del target de proteína indicado para ese día. No sacrifiques proteína por llegar a kcal con carbos o grasa. Fuentes densas: pechuga, pescado, huevo, atún, legumbre con cereal, yogur griego, queso fresco, tofu.
-6. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan semanal deben ser platos de COMIDAS FRECUENTES (los que ya cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que ampliarían su repertorio. En una semana completa de 28 comidas eso son ~17-20 frecuentes + ~8-11 nuevos. Esto evita la sensación de "todo es lo de siempre".
-7. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS — cero violaciones. Si dice "vegetariano", nada de carne ni pescado. Si tiene alergia a "gluten", nada de trigo/pasta/pan normal.
-8. VARIEDAD (crítico): ningún plato debe aparecer más de 2 veces en toda la semana planificada. La proteína principal debe ROTAR entre días consecutivos (alterna entre pollo, pescado, legumbre, huevo, ternera, cerdo, tofu...). Si se te da una lista de PLATOS RECIENTES (ya comidos o planificados días atrás), NO los uses en esta semana.
-9. Los fines de semana (sábado y domingo) pueden ser algo más flexibles calóricamente (±15% del objetivo) y con platos ligeramente más elaborados. Entre semana (lunes a viernes): practicidad y repeticiones razonables de frecuentes.
-10. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
-11. Nombres de plato cortos y naturales en español. NO descripciones largas tipo "Filete de pechuga de pollo deshuesada al grill con...". Dí "Pechuga con arroz".
-12. Si el usuario da CONTEXTO, respétalo ("semana ligera", "tengo batch-cooking del domingo", "viajo jueves y viernes"). El CONTEXTO gana sobre las reglas por defecto.
-13. Los campos "ingredients" listan ingredientes principales con gramos estimados separados por " · ".
-14. Cada "time" es una hora sugerida razonable para ese tipo de comida.
-15. NUNCA añadas campos extra al JSON. NO incluyas "totals" — los calcula el servidor.
-16. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático al registrar. Si dudas, estima conservador pero NUNCA omitas el campo.`;
+6. DISTRIBUCIÓN POR COMIDA: en cada día completo (4 comidas), ninguna comida debe representar más del 45% ni menos del 10% de las kcal totales del día. Reparte razonablemente: desayuno 20-30%, comida 30-40%, merienda 10-20%, cena 25-35% (orientativo). En días parciales (2-3 comidas) la regla se relaja pero evita extremos (>60% en una sola comida).
+7. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan semanal deben ser platos de COMIDAS FRECUENTES (los que ya cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que ampliarían su repertorio. En una semana completa de 28 comidas eso son ~17-20 frecuentes + ~8-11 nuevos. Esto evita la sensación de "todo es lo de siempre".
+8. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS — cero violaciones. Si dice "vegetariano", nada de carne ni pescado. Si tiene alergia a "gluten", nada de trigo/pasta/pan normal.
+9. VARIEDAD (crítico): ningún plato debe aparecer más de 2 veces en toda la semana planificada. La proteína principal debe ROTAR entre días consecutivos (alterna entre pollo, pescado, legumbre, huevo, ternera, cerdo, tofu...). Si se te da una lista de PLATOS RECIENTES (ya comidos o planificados días atrás), NO los uses en esta semana.
+10. Los fines de semana (sábado y domingo) pueden ser algo más flexibles calóricamente (±15% del objetivo) y con platos ligeramente más elaborados. Entre semana (lunes a viernes): practicidad y repeticiones razonables de frecuentes.
+11. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
+12. Nombres de plato cortos y naturales en español. NO descripciones largas tipo "Filete de pechuga de pollo deshuesada al grill con...". Dí "Pechuga con arroz".
+13. Si el usuario da CONTEXTO, respétalo ("semana ligera", "tengo batch-cooking del domingo", "viajo jueves y viernes"). El CONTEXTO gana sobre las reglas por defecto.
+14. Los campos "ingredients" listan ingredientes principales con gramos o mililitros separados por " · " (ej: "180g ternera · 100g quinoa · 30ml aceite · 1 diente ajo"). Usa g para sólidos y ml para líquidos.
+15. Cada "time" es una hora sugerida razonable para ese tipo de comida.
+16. NUNCA añadas campos extra al JSON. NO incluyas "totals" — los calcula el servidor.
+17. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático al registrar. Si dudas, estima conservador pero NUNCA omitas el campo.`;
 
 /**
  * Construye el user message con datos reales para el plan semanal.
@@ -241,9 +242,10 @@ export function parseWeekPlanResponse(raw) {
       meal.carbs = meal.carbs || 0;
       meal.fat = meal.fat || 0;
       meal.ingredients = meal.ingredients || '';
-      // portion_g es obligatorio (regla 15). Estimación conservadora si falta.
+      // portion_g: si Sonnet lo omite dejamos 0 (schema estable, prefill vacío).
+      // Ver chef-day.js para el razonamiento completo del kill del guess.
       if (typeof meal.portion_g !== 'number' || meal.portion_g <= 0) {
-        meal.portion_g = Math.round((meal.kcal || 0) * 1.5);
+        meal.portion_g = 0;
       }
     }
 

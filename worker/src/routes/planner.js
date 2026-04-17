@@ -328,6 +328,21 @@ export async function handlePlanner(request, env, path, ctx) {
 
       const daysToPlan = computeDaysToPlan(today, mealTypesRegistered);
 
+      // Guard: si el único día a planear es HOY y ya están registrados los 4
+      // meal_types, no tiene sentido llamar a Sonnet (devolvería un plan vacío
+      // y gastaría la cuota del usuario). Sucede solo en domingo con toda la
+      // jornada registrada. Rollback + 400 con mensaje claro.
+      const NOTHING_TO_PLAN = daysToPlan.length === 1
+        && daysToPlan[0].isPartial
+        && (daysToPlan[0].skipMealTypes || []).length >= 4;
+      if (NOTHING_TO_PLAN) {
+        await rollbackPlannerLimit(auth.userId, 'week', env);
+        return jsonResponse({
+          error: 'Ya tienes todas las comidas registradas para hoy y no queda ningún día de la semana por planear.',
+          reason: 'nothing_to_plan',
+        }, 400);
+      }
+
       let frequentMeals = [];
       try {
         if (calibRow?.frequent_meals) {
@@ -428,7 +443,12 @@ export async function handlePlanner(request, env, path, ctx) {
       // Calibrar porciones por día. Protein-aware: cada día mantiene el piso
       // de proteína del usuario; C+F absorben el ajuste kcal.
       // Acumulamos warnings para devolverlos en la respuesta.
-      const weekWarnings = { off_budget_days: [], low_protein_days: [], over_budget_today: null };
+      const weekWarnings = {
+        off_budget_days: [],
+        low_protein_days: [],
+        over_budget_today: null,
+        repeats: null, // { name, count } para platos que aparecen >2× en la semana
+      };
 
       if (planData.days?.length > 0) {
         for (let i = 0; i < planData.days.length; i++) {
@@ -488,6 +508,14 @@ export async function handlePlanner(request, env, path, ctx) {
           carbs:   planData.days.reduce((s, d) => s + (d.totals?.carbs   || 0), 0),
           fat:     planData.days.reduce((s, d) => s + (d.totals?.fat     || 0), 0),
         };
+
+        // Validación variedad post-parse: ningún plato debe aparecer >2 veces
+        // en toda la semana. Es warning, no rechazo — sonnet suele respetarlo
+        // pero si falla queremos enterarnos.
+        const repeats = findRepeatedDishes(planData.days, 2);
+        if (repeats.length > 0) {
+          weekWarnings.repeats = repeats;
+        }
       }
 
       await env.DB.prepare(
@@ -514,6 +542,7 @@ export async function handlePlanner(request, env, path, ctx) {
           off_budget_days: weekWarnings.off_budget_days.length ? weekWarnings.off_budget_days : null,
           low_protein_days: weekWarnings.low_protein_days.length ? weekWarnings.low_protein_days : null,
           over_budget_today: weekWarnings.over_budget_today,
+          repeats: weekWarnings.repeats,
         },
         usage: {
           remaining_day: limitCheck.remainingDay,
@@ -736,4 +765,49 @@ function buildDayWarnings({ planData, remaining, calibration, isOverBudget, targ
   }
 
   return warnings;
+}
+
+/**
+ * Normaliza un nombre de plato para dedupe/matching.
+ * "Pollo al Curry  " == "pollo al curry" == "Pollo al Curry"
+ */
+function normalizeDishName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Encuentra platos que aparecen más de `threshold` veces en los 28 slots
+ * (7 días × 4 comidas) de un plan semanal. La regla 9 del prompt dice
+ * "ningún plato >2×" — aquí validamos post-parse.
+ *
+ * @returns {Array<{name, count}>} platos que violan el umbral, ordenados por count desc
+ */
+function findRepeatedDishes(days, threshold = 2) {
+  const counter = new Map();
+  // Guardamos el primer nombre "display" por clave normalizada para reportar.
+  const displayName = new Map();
+
+  for (const day of days || []) {
+    for (const meal of day?.meals || []) {
+      const raw = meal?.name;
+      if (!raw) continue;
+      const key = normalizeDishName(raw);
+      if (!key) continue;
+      if (!displayName.has(key)) displayName.set(key, raw.trim());
+      counter.set(key, (counter.get(key) || 0) + 1);
+    }
+  }
+
+  const out = [];
+  for (const [key, count] of counter) {
+    if (count > threshold) {
+      out.push({ name: displayName.get(key), count });
+    }
+  }
+  out.sort((a, b) => b.count - a.count);
+  return out;
 }

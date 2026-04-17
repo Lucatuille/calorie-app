@@ -33,23 +33,24 @@ REGLAS:
 1. Solo genera comidas para los tipos que el usuario AÚN NO ha registrado hoy.
 2. El total del plan debe acercarse al presupuesto RESTANTE (±10% de las kcal restantes).
 3. PROTEÍNA — PISO NUTRICIONAL NO NEGOCIABLE: la suma de proteína del plan debe cubrir AL MENOS el 85% de la proteína pendiente indicada en PRESUPUESTO. La proteína es un piso (1.6–2.2 g/kg/día); no la sacrifiques por alcanzar kcal con carbos o grasa. Si hace falta, prioriza fuentes densas (pechuga, pescado blanco, claras, atún, legumbres con cereal, tofu, yogur griego, queso fresco batido).
-4. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan deben ser platos de la lista de COMIDAS FRECUENTES (el usuario ya los cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que el usuario no come habitualmente. Esto evita que el plan sea repetitivo. En un plan de 4 comidas, eso es 2-3 frecuentes + 1-2 nuevos.
-5. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS que no puedes violar nunca. Si dice "vegetariano", cero carne/pescado. Si tiene alergia a "gluten", cero trigo/pasta/pan normal.
-6. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
-7. Nombres de plato cortos y naturales en español ("Pechuga con arroz", no "Filete de pechuga de pollo deshuesada al grill con guarnición de arroz basmati").
-8. El campo "ingredients" lista los ingredientes principales con gramos estimados, separados por " · ".
-9. El campo "time" es una hora sugerida razonable para ese tipo de comida.
-10. Si el usuario da CONTEXTO, respétalo:
+4. DISTRIBUCIÓN POR COMIDA: en un plan completo (4 comidas), ninguna comida individual debe representar más del 45% ni menos del 10% de las kcal totales del plan. Reparte razonablemente: desayuno 20-30%, comida 30-40%, merienda 10-20%, cena 25-35% (orientativo). En planes parciales (2-3 comidas generadas) la regla se relaja pero EVITA extremos (una sola comida que absorba >60% del presupuesto).
+5. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan deben ser platos de la lista de COMIDAS FRECUENTES (el usuario ya los cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que el usuario no come habitualmente. Esto evita que el plan sea repetitivo. En un plan de 4 comidas, eso es 2-3 frecuentes + 1-2 nuevos.
+6. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS que no puedes violar nunca. Si dice "vegetariano", cero carne/pescado. Si tiene alergia a "gluten", cero trigo/pasta/pan normal.
+7. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
+8. Nombres de plato cortos y naturales en español ("Pechuga con arroz", no "Filete de pechuga de pollo deshuesada al grill con guarnición de arroz basmati").
+9. El campo "ingredients" lista los ingredientes principales con gramos o mililitros estimados, separados por " · " (ej: "150g pollo · 80g arroz · 30ml aceite · 1 diente ajo"). Usa g para sólidos y ml para líquidos.
+10. El campo "time" es una hora sugerida razonable para ese tipo de comida.
+11. Si el usuario da CONTEXTO, respétalo:
     - "solo cena" → genera SOLO 1 meal tipo cena
     - "tengo pollo" → prioriza platos con pollo
     - "algo rápido" → platos de preparación < 15 min
     - "estoy en restaurante" → sugiere opciones típicas de restaurante
     - Si el contexto contradice lo que normalmente generarías, el CONTEXTO gana.
-11. Si al usuario le faltan POCAS kcal (< 200), genera solo un snack ligero, no una comida completa.
-12. Los totals deben ser la SUMA real de los meals generados — no inventes un total diferente.
-13. VARIEDAD: si se te da una lista de PLATOS RECIENTES (comidos o planificados en últimos días), NO los repitas hoy. Busca alternativas equivalentes en macros. Si no tienes alternativa en los frecuentes del usuario, usa conocimiento general de cocina mediterránea/española. La proteína principal de hoy debe variar respecto a lo comido o planificado ayer y antesdeayer (alterna entre pollo, pescado, legumbre, huevo, ternera, tofu, etc.).
-14. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come en el plato). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático de peso cuando el usuario registra. Si dudas, estima conservador pero NUNCA omitas el campo.
-15. USUARIO YA EXCEDIDO: si el bloque PRESUPUESTO indica que el usuario YA SE HA PASADO del objetivo diario, y todavía le falta algún meal_type por registrar, genera UNA sola opción lo más ligera posible (≤200 kcal, snack tipo fruta o yogur natural). Si no falta ningún meal_type (ya tiene todas sus comidas), responde con "meals": [] y "totals": {"kcal":0,"protein":0,"carbs":0,"fat":0}. No inventes comidas extra — sería contraproducente.`;
+12. Si al usuario le faltan POCAS kcal (< 200), genera solo un snack ligero, no una comida completa.
+13. Los totals deben ser la SUMA real de los meals generados — no inventes un total diferente.
+14. VARIEDAD: si se te da una lista de PLATOS RECIENTES (comidos o planificados en últimos días), NO los repitas hoy. Busca alternativas equivalentes en macros. Si no tienes alternativa en los frecuentes del usuario, usa conocimiento general de cocina mediterránea/española. La proteína principal de hoy debe variar respecto a lo comido o planificado ayer y antesdeayer (alterna entre pollo, pescado, legumbre, huevo, ternera, tofu, etc.).
+15. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come en el plato). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático de peso cuando el usuario registra. Si dudas, estima conservador pero NUNCA omitas el campo.
+16. USUARIO YA EXCEDIDO: si el bloque PRESUPUESTO indica que el usuario YA SE HA PASADO del objetivo diario, y todavía le falta algún meal_type por registrar, genera UNA sola opción lo más ligera posible (≤200 kcal, snack tipo fruta o yogur natural). Si no falta ningún meal_type (ya tiene todas sus comidas), responde con "meals": [] y "totals": {"kcal":0,"protein":0,"carbs":0,"fat":0}. No inventes comidas extra — sería contraproducente.`;
 
 /**
  * Construye el user message con datos reales del usuario.
@@ -100,7 +101,7 @@ Peso: ${user.weight || '?'}kg | Meta peso: ${user.goal_weight || 'no definida'}k
   const budgetBlock = isOverBudget
     ? `=== PRESUPUESTO — USUARIO YA EXCEDIDO ===
 El usuario YA SE HA PASADO de su objetivo diario en ${Math.abs(Math.round(remaining.kcal))} kcal.
-Aplica la regla 15: si falta algún meal_type por registrar, sugiere UNA sola opción ligera (≤200 kcal). Si ya tiene todas sus comidas registradas, responde con "meals": [].`
+Aplica la regla 16: si falta algún meal_type por registrar, sugiere UNA sola opción ligera (≤200 kcal). Si ya tiene todas sus comidas registradas, responde con "meals": [].`
     : `=== PRESUPUESTO RESTANTE ===
 Calorías libres: ${Math.round(remaining.kcal)} kcal
 Proteína por cubrir: ${Math.round(Math.max(0, remaining.protein))}g (PISO — regla 3)
@@ -234,10 +235,12 @@ export function parseDayPlanResponse(raw) {
     meal.carbs = meal.carbs || 0;
     meal.fat = meal.fat || 0;
     meal.ingredients = meal.ingredients || '';
-    // portion_g es obligatorio (regla 14) pero por seguridad estimamos
-    // desde kcal si Sonnet lo omite: ~1.5 g/kcal promedio plato preparado.
+    // portion_g: si Sonnet lo omite lo dejamos en 0 (schema estable).
+    // Antes estimábamos `kcal * 1.5` pero un croissant 400kcal ≠ 600g y
+    // una ensalada 400kcal ≠ 600g — el guess engañaba al prefill de
+    // Calculator. Mejor campo vacío que peso plausiblemente incorrecto.
     if (typeof meal.portion_g !== 'number' || meal.portion_g <= 0) {
-      meal.portion_g = Math.round((meal.kcal || 0) * 1.5);
+      meal.portion_g = 0;
     }
   }
 
