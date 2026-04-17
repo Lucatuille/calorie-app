@@ -16,6 +16,8 @@ import { isPro } from '../../utils/levels';
 import { describeChefError, formatUsageBadge, type ChefError } from './chefErrors';
 import ChefFreeLock from './ChefFreeLock';
 import ChefMealEditor, { type EditableMeal } from './ChefMealEditor';
+import ChefWarningBanner from './ChefWarningBanner';
+import { weekSummaryWarnings, type WeekWarnings, type BannerData } from './chefWarningMessages';
 import { recomputeTotals, recomputeWeekTotals } from './chefTotals';
 
 type Meal = {
@@ -178,6 +180,10 @@ export default function ChefPlanWeek() {
   const [modalMeal, setModalMeal] = useState<{ meal: Meal; day: Day } | null>(null);
   const [editingCell, setEditingCell] = useState<{ dayIdx: number; mealIdx: number } | null>(null);
   const [remainingDay, setRemainingDay] = useState<number | null>(null);
+  // Warnings del plan recién generado. No persisten en GET current → si el
+  // usuario recarga la página, los banners se pierden. Acepttable V1 porque
+  // los warnings son más relevantes justo al generar.
+  const [banners, setBanners] = useState<BannerData[]>([]);
 
   const todayISO = new Date().toLocaleDateString('en-CA');
   const userIsPro = isPro(authUser?.access_level);
@@ -218,6 +224,7 @@ export default function ChefPlanWeek() {
   async function handleGenerate() {
     setStatus('loading');
     setError(null);
+    setBanners([]);
     try {
       const res = await api.chefPlanWeek({ context: context || undefined }, token);
       if (res?.plan) {
@@ -228,6 +235,7 @@ export default function ChefPlanWeek() {
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
         }
+        setBanners(weekSummaryWarnings(res.warnings as WeekWarnings | null));
         setStatus('ready');
       } else {
         throw Object.assign(new Error(res?.error || 'No se recibió un plan válido'), {
@@ -724,7 +732,7 @@ export default function ChefPlanWeek() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); clearPlanCache(userId); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(userId); setBanners([]); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',
@@ -739,6 +747,17 @@ export default function ChefPlanWeek() {
           Regenerar
         </button>
       </div>
+
+      {/* Warnings del backend — se renderizan bajo el header, antes de la grid */}
+      {banners.length > 0 && (
+        <div style={{ padding: '0 22px 4px', flexShrink: 0 }}>
+          {banners.map((b, i) => (
+            <ChefWarningBanner key={i} tone={b.tone} title={b.title}>
+              {b.detail}
+            </ChefWarningBanner>
+          ))}
+        </div>
+      )}
 
       {/* Scroll hint — solo si el grid excede el contenedor (típico móvil) */}
       {needsHorizontalScroll && (

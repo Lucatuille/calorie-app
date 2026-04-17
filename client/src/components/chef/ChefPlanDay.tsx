@@ -13,6 +13,8 @@ import { isPro } from '../../utils/levels';
 import { describeChefError, formatUsageBadge, type ChefError } from './chefErrors';
 import ChefFreeLock from './ChefFreeLock';
 import ChefMealEditor, { type EditableMeal } from './ChefMealEditor';
+import ChefWarningBanner from './ChefWarningBanner';
+import { daySummaryWarnings, type DayWarnings, type BannerData } from './chefWarningMessages';
 import { recomputeTotals } from './chefTotals';
 
 type Meal = {
@@ -85,6 +87,10 @@ export default function ChefPlanDay() {
   const [remainingDay, setRemainingDay] = useState<number | null>(null);
   const [targetKcal, setTargetKcal] = useState<number>(0);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  // Warnings vienen en la respuesta de generación (POST). GET current no los
+  // persiste — si el usuario recarga la página, los banners desaparecen.
+  // Aceptable V1: los warnings son más relevantes recién generado el plan.
+  const [banners, setBanners] = useState<BannerData[]>([]);
 
   const today = new Date();
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -128,6 +134,7 @@ export default function ChefPlanDay() {
   async function handleGenerate() {
     setStatus('loading');
     setError(null);
+    setBanners([]);
     try {
       const res = await api.chefPlanDay({ context: context || undefined }, token);
       if (res.plan) {
@@ -137,6 +144,8 @@ export default function ChefPlanDay() {
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
         }
+        // Mapear warnings del backend a banners renderizables.
+        setBanners(daySummaryWarnings(res.warnings as DayWarnings | null));
         setStatus('ready');
       } else {
         throw Object.assign(new Error(res.error || 'No se recibió un plan válido'), {
@@ -550,7 +559,7 @@ export default function ChefPlanDay() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); clearPlanCache(userId); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(userId); setBanners([]); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',
@@ -565,6 +574,17 @@ export default function ChefPlanDay() {
           Regenerar todo
         </button>
       </div>
+
+      {/* Warnings del backend — stack de banners editoriales (nutritional safety). */}
+      {banners.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          {banners.map((b, i) => (
+            <ChefWarningBanner key={i} tone={b.tone} title={b.title}>
+              {b.detail}
+            </ChefWarningBanner>
+          ))}
+        </div>
+      )}
 
       {/* Meals */}
       {plan.meals.map((meal, i) => (

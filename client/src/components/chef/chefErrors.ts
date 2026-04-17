@@ -22,7 +22,7 @@ type RequestError = {
   message?: string;
   data?: {
     error?: string;
-    reason?: 'day_limit' | 'week_limit' | 'blocked';
+    reason?: 'day_limit' | 'week_limit' | 'blocked' | 'nothing_to_plan';
     limits?: { day?: number; week?: number };
   };
 };
@@ -99,8 +99,16 @@ export function describeChefError(err: unknown, feature: 'day' | 'week'): ChefEr
     };
   }
 
-  // 400 — falta setup
+  // 400 — falta setup o nada que planear (domingo completo)
   if (status === 400) {
+    if (reason === 'nothing_to_plan') {
+      return {
+        title: 'Nada que planear',
+        detail: 'Ya tienes todas las comidas de hoy registradas y no quedan días en esta semana. Vuelve el próximo lunes.',
+        retryLabel: null,
+        tone: 'info',
+      };
+    }
     return {
       title: 'Perfil incompleto',
       detail: e?.data?.error || 'Configura tu objetivo calórico en el perfil primero.',
