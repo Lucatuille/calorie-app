@@ -15,6 +15,7 @@ import ChefFreeLock from './ChefFreeLock';
 import ChefMealEditor, { type EditableMeal } from './ChefMealEditor';
 import ChefWarningBanner from './ChefWarningBanner';
 import { daySummaryWarnings, type DayWarnings, type BannerData } from './chefWarningMessages';
+import { pickChefTip } from './chefTips';
 import { recomputeTotals } from './chefTotals';
 
 type Meal = {
@@ -93,6 +94,9 @@ export default function ChefPlanDay() {
   // sin ese dato. Se usa para calcular el diff honesto en el footer.
   const [remainingBudget, setRemainingBudget] = useState<Remaining | null>(cached?.remaining || null);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  // Tip mostrado durante el loading — se elige 1 por petición (random con
+  // memoria corta, sin repetir los últimos 2 vistos). Evita spinner mudo.
+  const [loadingTip, setLoadingTip] = useState<string>('');
   // Warnings vienen en la respuesta de generación (POST). GET current no los
   // persiste — si el usuario recarga la página, los banners desaparecen.
   // Aceptable V1: los warnings son más relevantes recién generado el plan.
@@ -143,6 +147,7 @@ export default function ChefPlanDay() {
     setStatus('loading');
     setError(null);
     setBanners([]);
+    setLoadingTip(pickChefTip());
     try {
       const res = await api.chefPlanDay({ context: context || undefined }, token);
       if (res.plan) {
@@ -419,13 +424,28 @@ export default function ChefPlanDay() {
         }}>
           Preparando tu plan…
         </p>
-        <p style={{
-          fontSize: 11,
-          color: 'var(--text-tertiary)',
-          margin: 0,
-        }}>
-          Analizando tu objetivo, macros y comidas frecuentes
-        </p>
+        {loadingTip && (
+          <>
+            <div style={{
+              width: 40,
+              height: 0,
+              borderTop: '0.5px solid var(--border-strong)',
+              margin: '14px auto 12px',
+            }} />
+            <p style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: 13,
+              lineHeight: 1.55,
+              color: 'var(--text-secondary)',
+              maxWidth: 280,
+              margin: '0 auto',
+              fontWeight: 400,
+            }}>
+              {loadingTip}
+            </p>
+          </>
+        )}
     </>);
   }
 

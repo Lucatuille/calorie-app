@@ -18,6 +18,7 @@ import ChefFreeLock from './ChefFreeLock';
 import ChefMealEditor, { type EditableMeal } from './ChefMealEditor';
 import ChefWarningBanner from './ChefWarningBanner';
 import { weekSummaryWarnings, type WeekWarnings, type BannerData } from './chefWarningMessages';
+import { pickChefTip } from './chefTips';
 import { recomputeTotals, recomputeWeekTotals } from './chefTotals';
 
 type Meal = {
@@ -184,6 +185,8 @@ export default function ChefPlanWeek() {
   // usuario recarga la página, los banners se pierden. Acepttable V1 porque
   // los warnings son más relevantes justo al generar.
   const [banners, setBanners] = useState<BannerData[]>([]);
+  // Tip durante loading — 1 por petición, sin repetir los últimos 2 vistos.
+  const [loadingTip, setLoadingTip] = useState<string>('');
 
   const todayISO = new Date().toLocaleDateString('en-CA');
   const userIsPro = isPro(authUser?.access_level);
@@ -225,6 +228,7 @@ export default function ChefPlanWeek() {
     setStatus('loading');
     setError(null);
     setBanners([]);
+    setLoadingTip(pickChefTip());
     try {
       const res = await api.chefPlanWeek({ context: context || undefined }, token);
       if (res?.plan) {
@@ -510,8 +514,30 @@ export default function ChefPlanWeek() {
         color: 'var(--text-tertiary)',
         margin: 0,
       }}>
-        Analizando 14 días de patrones y priorizando variedad. Puede tardar 8–12 segundos.
+        Puede tardar 8–12 segundos.
       </p>
+      {loadingTip && (
+        <>
+          <div style={{
+            width: 40,
+            height: 0,
+            borderTop: '0.5px solid var(--border-strong)',
+            margin: '14px auto 12px',
+          }} />
+          <p style={{
+            fontFamily: 'var(--font-serif)',
+            fontStyle: 'italic',
+            fontSize: 13,
+            lineHeight: 1.55,
+            color: 'var(--text-secondary)',
+            maxWidth: 280,
+            margin: '0 auto',
+            fontWeight: 400,
+          }}>
+            {loadingTip}
+          </p>
+        </>
+      )}
     </>);
   }
 
