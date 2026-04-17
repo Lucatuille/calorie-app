@@ -83,6 +83,8 @@ function makeEnv({
       async first() {
         if (s.startsWith('SELECT id, name, weight, goal_weight')) return userRow;
         if (s.startsWith('SELECT target_calories FROM users'))    return userRow;
+        // GET /day/current amplió el SELECT para incluir targets de macros.
+        if (s.startsWith('SELECT target_calories, target_protein')) return userRow;
         if (s.startsWith('SELECT access_level FROM users'))       return userRow;
         if (s.startsWith('SELECT frequent_meals FROM user_calibration')) return calib;
         if (s.includes('FROM planner_history') && s.includes('ORDER BY created_at DESC')) {
@@ -92,6 +94,10 @@ function makeEnv({
       },
       async all() {
         if (s.startsWith('SELECT meal_type, name, calories, protein, carbs, fat, created_at FROM entries WHERE user_id = ? AND date = ?')) {
+          return { results: todayEntries };
+        }
+        // GET /day/current lee todas las entries del día (sin meal_type/created_at) para computar remaining.
+        if (s.startsWith('SELECT calories, protein, carbs, fat FROM entries')) {
           return { results: todayEntries };
         }
         if (s.startsWith('SELECT date, meal_type, name, calories FROM entries')) {
@@ -674,6 +680,50 @@ describe('GET /api/planner/day/current', () => {
     expect(res.data.plan).toEqual(planObj);
     expect(res.data.target_kcal).toBe(1812);
     expect(res.data.generated_at).toBe(123);
+  });
+
+  it('devuelve remaining actualizado desde entries de hoy', async () => {
+    // Usuario con target 1800/150/200/60. Ya consumió 2 entries = 1100/70/130/30.
+    // Remaining debería ser 700/80/70/30.
+    const planObj = { meals: [{ name: 'Cena', kcal: 700 }] };
+    const res = await handlePlanner(
+      makeRequest('GET', '/api/planner/day/current'),
+      makeEnv({
+        userRow: {
+          target_calories: 1800, target_protein: 150,
+          target_carbs: 200, target_fat: 60,
+        },
+        todayEntries: [
+          { calories: 500, protein: 30, carbs: 60, fat: 15 },
+          { calories: 600, protein: 40, carbs: 70, fat: 15 },
+        ],
+        historyRows: [{ plan_json: JSON.stringify(planObj), created_at: 123 }],
+      }),
+      '/api/planner/day/current'
+    );
+    expect(res.status).toBe(200);
+    expect(res.data.remaining).toEqual({
+      kcal:    700,  // 1800 - 1100
+      protein: 80,   // 150 - 70
+      carbs:   70,   // 200 - 130
+      fat:     30,   // 60 - 30
+    });
+  });
+
+  it('remaining sin entries = target completo', async () => {
+    const res = await handlePlanner(
+      makeRequest('GET', '/api/planner/day/current'),
+      makeEnv({
+        userRow: {
+          target_calories: 1800, target_protein: 150,
+          target_carbs: 200, target_fat: 60,
+        },
+        historyRows: [{ plan_json: JSON.stringify({ meals: [] }), created_at: 1 }],
+      }),
+      '/api/planner/day/current'
+    );
+    expect(res.data.remaining.kcal).toBe(1800);
+    expect(res.data.remaining.protein).toBe(150);
   });
 
   it('JSON corrupto en DB → { plan: null } (no crash)', async () => {

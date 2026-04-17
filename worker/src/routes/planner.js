@@ -583,16 +583,29 @@ export async function handlePlanner(request, env, path, ctx) {
     const auth = await authenticate(request, env);
     if (!auth) return errorResponse('No autorizado', 401);
 
+    // Fetch user con targets completos para calcular remaining actual.
     const user = await env.DB.prepare(
-      'SELECT target_calories FROM users WHERE id = ?'
+      `SELECT target_calories, target_protein, target_carbs, target_fat
+         FROM users WHERE id = ?`
     ).bind(auth.userId).first();
 
     const today = new Date().toLocaleDateString('en-CA');
-    const row = await env.DB.prepare(
-      `SELECT plan_json, created_at FROM planner_history
-       WHERE user_id = ? AND feature = 'day' AND date = ?
-       ORDER BY created_at DESC LIMIT 1`
-    ).bind(auth.userId, today).first();
+
+    // Leer plan guardado + entries de hoy en paralelo para devolver
+    // remaining actualizado (no el del momento de generación — puede haber
+    // cambiado si el usuario registró después).
+    const [row, entriesRes] = await Promise.all([
+      env.DB.prepare(
+        `SELECT plan_json, created_at FROM planner_history
+         WHERE user_id = ? AND feature = 'day' AND date = ?
+         ORDER BY created_at DESC LIMIT 1`
+      ).bind(auth.userId, today).first(),
+
+      env.DB.prepare(
+        `SELECT calories, protein, carbs, fat FROM entries
+         WHERE user_id = ? AND date = ?`
+      ).bind(auth.userId, today).all().catch(() => ({ results: [] })),
+    ]);
 
     if (!row) return jsonResponse({ plan: null });
 
@@ -600,9 +613,25 @@ export async function handlePlanner(request, env, path, ctx) {
     try { plan = JSON.parse(row.plan_json); }
     catch { return jsonResponse({ plan: null }); }
 
+    // Remaining actual — consumido real AHORA, no al generar.
+    const consumed = (entriesRes.results || []).reduce((acc, e) => ({
+      kcal:    acc.kcal    + (e.calories || 0),
+      protein: acc.protein + (e.protein  || 0),
+      carbs:   acc.carbs   + (e.carbs    || 0),
+      fat:     acc.fat     + (e.fat      || 0),
+    }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
+    const remaining = {
+      kcal:    (user?.target_calories || 0) - consumed.kcal,
+      protein: (user?.target_protein  || 0) - consumed.protein,
+      carbs:   (user?.target_carbs    || 0) - consumed.carbs,
+      fat:     (user?.target_fat      || 0) - consumed.fat,
+    };
+
     return jsonResponse({
       plan,
       target_kcal: user?.target_calories || 0,
+      remaining,
       generated_at: row.created_at,
     });
   }

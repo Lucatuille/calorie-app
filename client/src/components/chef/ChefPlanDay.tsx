@@ -33,6 +33,8 @@ type PlanData = {
   totals: { kcal: number; protein: number; carbs: number; fat: number };
 };
 
+type Remaining = { kcal: number; protein: number; carbs: number; fat: number };
+
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 const CHEF_BG = 'var(--bg)';
@@ -43,7 +45,7 @@ const CHEF_INK = 'var(--chef-ink)';
 const storageKey = (userId: number | string | undefined) =>
   userId ? `caliro_day_plan_u${userId}` : null;
 
-function loadCachedPlan(userId: number | string | undefined): { plan: PlanData; status: Status } | null {
+function loadCachedPlan(userId: number | string | undefined): { plan: PlanData; remaining: Remaining | null; status: Status } | null {
   try {
     const key = storageKey(userId);
     if (!key) return null;
@@ -53,18 +55,18 @@ function loadCachedPlan(userId: number | string | undefined): { plan: PlanData; 
     // Solo válido si es de hoy
     const today = new Date().toLocaleDateString('en-CA');
     if (cached.date !== today || !cached.plan) return null;
-    return { plan: cached.plan, status: 'ready' };
+    return { plan: cached.plan, remaining: cached.remaining || null, status: 'ready' };
   } catch {
     return null;
   }
 }
 
-function savePlanToCache(plan: PlanData, userId: number | string | undefined) {
+function savePlanToCache(plan: PlanData, userId: number | string | undefined, remaining?: Remaining | null) {
   try {
     const key = storageKey(userId);
     if (!key) return;
     const today = new Date().toLocaleDateString('en-CA');
-    localStorage.setItem(key, JSON.stringify({ date: today, plan }));
+    localStorage.setItem(key, JSON.stringify({ date: today, plan, remaining: remaining || null }));
   } catch { /* silent — localStorage full or unavailable */ }
 }
 
@@ -86,6 +88,10 @@ export default function ChefPlanDay() {
   const [context, setContext] = useState(''); // input de contexto opcional
   const [remainingDay, setRemainingDay] = useState<number | null>(null);
   const [targetKcal, setTargetKcal] = useState<number>(0);
+  // remainingBudget = kcal/macros que le quedaban al user cuando se generó
+  // el plan (o cuando se hizo GET current). Null si el plan se cargó de cache
+  // sin ese dato. Se usa para calcular el diff honesto en el footer.
+  const [remainingBudget, setRemainingBudget] = useState<Remaining | null>(cached?.remaining || null);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   // Warnings vienen en la respuesta de generación (POST). GET current no los
   // persiste — si el usuario recarga la página, los banners desaparecen.
@@ -113,12 +119,14 @@ export default function ChefPlanDay() {
         if (planRes?.plan) {
           setPlan(planRes.plan);
           if (planRes.target_kcal) setTargetKcal(planRes.target_kcal);
-          savePlanToCache(planRes.plan, userId);
+          if (planRes.remaining) setRemainingBudget(planRes.remaining);
+          savePlanToCache(planRes.plan, userId, planRes.remaining);
           setStatus('ready');
         } else {
           // Backend confirma que NO hay plan para este user hoy → descartar
           // cualquier cache local (podría ser de otro user en este navegador)
           setPlan(null);
+          setRemainingBudget(null);
           clearPlanCache(userId);
           setStatus('idle');
         }
@@ -139,7 +147,12 @@ export default function ChefPlanDay() {
       const res = await api.chefPlanDay({ context: context || undefined }, token);
       if (res.plan) {
         setPlan(res.plan);
-        savePlanToCache(res.plan, userId);
+        // El backend devuelve `remaining_before` al generar (kcal/macros que
+        // le quedaban al user en ese momento). Lo guardamos para calcular el
+        // diff correcto en el footer — comparar plan vs remaining, no vs total.
+        const remaining = res.remaining_before || null;
+        setRemainingBudget(remaining);
+        savePlanToCache(res.plan, userId, remaining);
         if (res.target_kcal) setTargetKcal(res.target_kcal);
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
@@ -492,10 +505,33 @@ export default function ChefPlanDay() {
 
   if (!plan) return null;
 
-  const diff = plan.totals.kcal - (targetKcal || plan.totals.kcal);
-  const diffLabel = diff <= 0
-    ? `−${Math.abs(diff)} kcal (dentro del rango)`
-    : `+${diff} kcal sobre objetivo`;
+  // Footer diff — comparamos contra lo que al user le QUEDA del día, no contra
+  // el target total. Si el plan tiene 697 kcal y al user le quedaban 700 tras
+  // ya haber comido 1100, eso ES "dentro del rango", aunque el target diario
+  // sea 1800. Antes mostrábamos -1115 (dentro del rango) → confuso.
+  const planKcal = plan.totals.kcal;
+  const hasRemaining = !!(remainingBudget && remainingBudget.kcal > 0 && remainingBudget.kcal < targetKcal);
+  const isOverBudget = !!(remainingBudget && remainingBudget.kcal <= 0);
+  const reference = hasRemaining ? remainingBudget!.kcal : targetKcal;
+  const tolerance = reference * 0.10;
+  const diff = reference > 0 ? planKcal - reference : 0;
+
+  // Status pill text
+  let footerStatus = '';
+  if (isOverBudget) {
+    footerStatus = `Ya superaste tu objetivo por ${Math.abs(remainingBudget!.kcal)} kcal`;
+  } else if (reference > 0) {
+    const sign = diff > 0 ? '+' : '−';
+    const absDiff = Math.abs(diff);
+    let relation: string;
+    if (absDiff <= tolerance) relation = 'dentro del rango';
+    else if (diff > 0)         relation = `${sign}${absDiff} kcal sobre`;
+    else                       relation = `${sign}${absDiff} kcal por debajo`;
+    const refLabel = hasRemaining
+      ? `${Math.round(reference)} kcal restantes`
+      : `Objetivo ${Math.round(reference)} kcal`;
+    footerStatus = `${refLabel} · ${relation}`;
+  }
 
   const totalG = plan.totals.protein + plan.totals.carbs + plan.totals.fat;
   const pPct = totalG > 0 ? (plan.totals.protein / totalG) * 100 : 33;
@@ -559,7 +595,7 @@ export default function ChefPlanDay() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); clearPlanCache(userId); setBanners([]); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(userId); setBanners([]); setRemainingBudget(null); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',
@@ -758,17 +794,20 @@ export default function ChefPlanDay() {
           <span><strong style={{ color: '#fff', fontWeight: 600 }}>{plan.totals.carbs}g</strong> carb</span>
           <span><strong style={{ color: '#fff', fontWeight: 600 }}>{plan.totals.fat}g</strong> grasa</span>
         </div>
-        <div style={{
-          marginTop: 10,
-          paddingTop: 10,
-          borderTop: '0.5px dashed rgba(255,255,255,0.15)',
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.5)',
-          textAlign: 'center',
-          fontStyle: 'italic',
-        }}>
-          {targetKcal > 0 ? `Objetivo ${targetKcal} kcal · ${diffLabel}` : diffLabel}
-        </div>
+        {footerStatus && (
+          <div style={{
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: '0.5px dashed rgba(255,255,255,0.15)',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.5)',
+            textAlign: 'center',
+            fontStyle: 'italic',
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {footerStatus}
+          </div>
+        )}
       </div>
 
       {/* Modal de edición de meal */}
