@@ -7,10 +7,15 @@
 //  por la hora de created_at.
 //
 //  Ventanas (heurística pragmática ajustada al horario español):
-//    <  12:00  → desayuno  (incluye desayunos tardíos típicos en ES)
-//    12 - 16   → comida
+//    <  13:00  → desayuno  (incluye desayunos tardíos / media mañana ES)
+//    13 - 16   → comida
 //    16 - 19   → merienda
 //    >= 19     → cena
+//
+//  Decisión 2026-04-17: ventana desayuno ampliada de <12 a <13 para
+//  cubrir el patrón cultural español (desayuno tardío a las 12:30 es
+//  común, comida real arranca a las 14h). Antes 12:30 se clasificaba
+//  como 'comida' y Chef generaba otro desayuno.
 //
 //  Decisión 2026-04-14: prioridad invertida — la HORA manda sobre el
 //  meal_type explícito. Motivo: en la práctica el meal_type explícito
@@ -27,7 +32,7 @@ const EXPLICIT = {
 };
 
 function inferFromHour(hour) {
-  if (hour < 12) return 'desayuno';
+  if (hour < 13) return 'desayuno';
   if (hour < 16) return 'comida';
   if (hour < 19) return 'merienda';
   return 'cena';

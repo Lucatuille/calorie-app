@@ -59,24 +59,25 @@ export default function ChefWarningBanner({
       borderRight:  `0.5px solid ${s.borderSoft}`,
       borderBottom: `0.5px solid ${s.borderSoft}`,
       borderRadius: 'var(--radius-md)',
-      padding: '11px 14px 12px',
-      marginBottom: 12,
+      padding: '9px 13px 10px',
+      marginBottom: 10,
+      fontVariantNumeric: 'tabular-nums',
     }}>
       <div style={{
         fontFamily: 'var(--font-serif)',
         fontStyle: 'italic',
-        fontSize: 15,
+        fontSize: 14.5,
         color: s.title,
         lineHeight: 1.25,
-        marginBottom: 3,
+        marginBottom: 2,
         fontWeight: 400,
       }}>
         {title}
       </div>
       <div style={{
-        fontSize: 12,
+        fontSize: 11.5,
         color: 'var(--text-secondary)',
-        lineHeight: 1.5,
+        lineHeight: 1.45,
         fontFamily: 'var(--font-sans)',
       }}>
         {children}

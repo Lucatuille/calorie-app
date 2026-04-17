@@ -53,6 +53,20 @@ describe('resolveMealType — inferencia por hora (Europe/Madrid)', () => {
     })).toBe('desayuno');
   });
 
+  it('UTC 11:00 → 13:00 Madrid → comida (ventana 13+)', () => {
+    expect(resolveMealType({
+      meal_type: 'other',
+      created_at: '2026-04-14 11:00:00',
+    })).toBe('comida');
+  });
+
+  it('UTC 10:30 → 12:30 Madrid → desayuno (desayuno tardío ES)', () => {
+    expect(resolveMealType({
+      meal_type: 'other',
+      created_at: '2026-04-14 10:30:00',
+    })).toBe('desayuno');
+  });
+
   it('UTC 12:00 → 14:00 Madrid → comida', () => {
     expect(resolveMealType({
       meal_type: 'other',
@@ -84,14 +98,14 @@ describe('resolveMealType — inferencia por hora (Europe/Madrid)', () => {
   it('meal_type vacío string también infiere', () => {
     expect(resolveMealType({
       meal_type: '',
-      created_at: '2026-04-14 12:00:00',
+      created_at: '2026-04-14 12:00:00',  // 14:00 Madrid → comida
     })).toBe('comida');
   });
 
   it('meal_type null infiere', () => {
     expect(resolveMealType({
       meal_type: null,
-      created_at: '2026-04-14 12:00:00',
+      created_at: '2026-04-14 12:00:00',  // 14:00 Madrid → comida
     })).toBe('comida');
   });
 
@@ -171,11 +185,21 @@ describe('resolveMealType — hora MANDA sobre meal_type explícito', () => {
     expect(resolveMealType({ meal_type: 'lunch',     created_at: null })).toBe('comida');
   });
 
-  it('ventana desayuno ampliada a <12h (patrón español)', () => {
-    // UTC 10:00 = 12:00 Madrid → comida (>=12h)
-    expect(resolveMealType({ meal_type: 'other', created_at: '2026-04-14 10:00:00' })).toBe('comida');
-    // UTC 09:59 = 11:59 Madrid → desayuno (<12h)
-    expect(resolveMealType({ meal_type: 'other', created_at: '2026-04-14 09:59:00' })).toBe('desayuno');
+  it('ventana desayuno <13h (patrón español, cubre desayuno tardío)', () => {
+    // UTC 10:59 = 12:59 Madrid → desayuno (<13h)
+    expect(resolveMealType({ meal_type: 'other', created_at: '2026-04-14 10:59:00' })).toBe('desayuno');
+    // UTC 11:00 = 13:00 Madrid → comida (>=13h)
+    expect(resolveMealType({ meal_type: 'other', created_at: '2026-04-14 11:00:00' })).toBe('comida');
+  });
+
+  it('desayuno tardío 12:30 Madrid se clasifica como desayuno', () => {
+    // Caso real: usuario registra desayuno a las 12:30 → form default = 'lunch'
+    // → created_at = 10:30 UTC (verano) = 12:30 Madrid → DEBE ser 'desayuno'
+    // para que Chef no regenere otro desayuno.
+    expect(resolveMealType({
+      meal_type: 'lunch',  // default del form a esa hora
+      created_at: '2026-04-14 10:30:00',
+    })).toBe('desayuno');
   });
 });
 

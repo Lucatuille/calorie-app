@@ -8,6 +8,7 @@ import { checkAndIncrementPlannerLimit, rollbackPlannerLimit, getPlannerUsage } 
 import { savePlannerHistory, getRecentPlannerHistory, extractRecentDishNames } from '../utils/plannerHistory.js';
 import { resolveMealTypesRegistered } from '../utils/mealTypeInfer.js';
 import { calibrateMeals, recomputeTotals } from '../utils/calibratePlan.js';
+import { findCoherenceIssues } from '../utils/validateMealNutrition.js';
 import { SYSTEM_PROMPT, buildDayPlanMessage, parseDayPlanResponse } from '../prompts/chef-day.js';
 import {
   SYSTEM_PROMPT_WEEK,
@@ -225,6 +226,12 @@ export async function handlePlanner(request, env, path, ctx) {
         isOverBudget,
         targetProtein: user.target_protein,
       });
+
+      // Coherencia nutricional — post calibración para reflejar el estado final.
+      const coherenceIssues = findCoherenceIssues(planData.meals || []);
+      if (coherenceIssues.length > 0) {
+        warnings.kcal_mismatch = coherenceIssues;
+      }
 
       // Log token usage
       await env.DB.prepare(
@@ -444,10 +451,11 @@ export async function handlePlanner(request, env, path, ctx) {
       // de proteína del usuario; C+F absorben el ajuste kcal.
       // Acumulamos warnings para devolverlos en la respuesta.
       const weekWarnings = {
-        off_budget_days: [],
-        low_protein_days: [],
+        off_budget_days:   [],
+        low_protein_days:  [],
         over_budget_today: null,
-        repeats: null, // { name, count } para platos que aparecen >2× en la semana
+        repeats:           null, // { name, count } para platos >2× en la semana
+        kcal_mismatch:     null, // [{ date, name, declared, estimate, diff_pct }]
       };
 
       if (planData.days?.length > 0) {
@@ -516,6 +524,18 @@ export async function handlePlanner(request, env, path, ctx) {
         if (repeats.length > 0) {
           weekWarnings.repeats = repeats;
         }
+
+        // Coherencia nutricional por día. Agregamos issues con fecha.
+        const allCoherenceIssues = [];
+        for (const day of planData.days) {
+          const issues = findCoherenceIssues(day.meals || []);
+          for (const issue of issues) {
+            allCoherenceIssues.push({ ...issue, date: day.date });
+          }
+        }
+        if (allCoherenceIssues.length > 0) {
+          weekWarnings.kcal_mismatch = allCoherenceIssues;
+        }
       }
 
       await env.DB.prepare(
@@ -539,10 +559,11 @@ export async function handlePlanner(request, env, path, ctx) {
           fat: user.target_fat,
         },
         warnings: {
-          off_budget_days: weekWarnings.off_budget_days.length ? weekWarnings.off_budget_days : null,
-          low_protein_days: weekWarnings.low_protein_days.length ? weekWarnings.low_protein_days : null,
+          off_budget_days:   weekWarnings.off_budget_days.length  ? weekWarnings.off_budget_days  : null,
+          low_protein_days:  weekWarnings.low_protein_days.length ? weekWarnings.low_protein_days : null,
           over_budget_today: weekWarnings.over_budget_today,
-          repeats: weekWarnings.repeats,
+          repeats:           weekWarnings.repeats,
+          kcal_mismatch:     weekWarnings.kcal_mismatch,
         },
         usage: {
           remaining_day: limitCheck.remainingDay,
@@ -728,9 +749,10 @@ export async function handlePlanner(request, env, path, ctx) {
  */
 function buildDayWarnings({ planData, remaining, calibration, isOverBudget, targetProtein }) {
   const warnings = {
-    off_budget: null,
-    low_protein: null,
-    over_budget: null,
+    off_budget:    null,
+    low_protein:   null,
+    over_budget:   null,
+    kcal_mismatch: null, // poblado en la ruta tras findCoherenceIssues
   };
 
   // Over-budget: usuario ya se pasó antes de generar. Avisar al cliente

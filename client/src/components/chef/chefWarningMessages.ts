@@ -8,17 +8,27 @@
 
 import type { WarningTone } from './ChefWarningBanner';
 
+export type KcalMismatchIssue = {
+  name: string;
+  declared: number;
+  estimate: number;
+  diff_pct: number; // negativo si Sonnet subestimó
+  date?: string;    // presente en week, ausente en day
+};
+
 export type DayWarnings = {
-  over_budget?:  { exceeded_by_kcal: number } | null;
-  off_budget?:   { actual_kcal: number; target_kcal: number; diff: number } | null;
-  low_protein?:  { actual_g: number; target_g: number } | null;
+  over_budget?:   { exceeded_by_kcal: number } | null;
+  off_budget?:    { actual_kcal: number; target_kcal: number; diff: number } | null;
+  low_protein?:   { actual_g: number; target_g: number } | null;
+  kcal_mismatch?: KcalMismatchIssue[] | null;
 };
 
 export type WeekWarnings = {
-  off_budget_days?:  Array<{ date: string; actual_kcal: number; target_kcal: number; diff: number }> | null;
-  low_protein_days?: Array<{ date: string; actual_g: number; target_g: number }> | null;
+  off_budget_days?:   Array<{ date: string; actual_kcal: number; target_kcal: number; diff: number }> | null;
+  low_protein_days?:  Array<{ date: string; actual_g: number; target_g: number }> | null;
   over_budget_today?: { exceeded_by_kcal: number } | null;
-  repeats?: Array<{ name: string; count: number }> | null;
+  repeats?:           Array<{ name: string; count: number }> | null;
+  kcal_mismatch?:     KcalMismatchIssue[] | null;
 };
 
 export type BannerData = { tone: WarningTone; title: string; detail: string };
@@ -70,6 +80,19 @@ export function daySummaryWarnings(w: DayWarnings | null | undefined): BannerDat
     });
   }
 
+  if (w.kcal_mismatch?.length) {
+    const n = w.kcal_mismatch.length;
+    const shown = w.kcal_mismatch.slice(0, 2).map(i =>
+      `${i.name} (declara ${i.declared} · ingredientes ~${i.estimate})`
+    ).join(', ');
+    const more = n > 2 ? ` y ${n - 2} más` : '';
+    out.push({
+      tone: 'error',
+      title: n === 1 ? 'Kcal no cuadra con los ingredientes' : `${n} platos con kcal inconsistente`,
+      detail: `${shown}${more}. La IA ha calculado mal. Regenera o edita el valor manualmente antes de registrar.`,
+    });
+  }
+
   return out;
 }
 
@@ -116,6 +139,24 @@ export function weekSummaryWarnings(w: WeekWarnings | null | undefined): BannerD
       tone: 'info',
       title: 'Platos repetidos en la semana',
       detail: `Aparecen más de 2 veces: ${shown}${more}.`,
+    });
+  }
+
+  if (w.kcal_mismatch?.length) {
+    const n = w.kcal_mismatch.length;
+    // Agrupar por fecha para no listar cada meal individualmente
+    const byDate = new Map<string, number>();
+    for (const i of w.kcal_mismatch) {
+      const k = i.date || '?';
+      byDate.set(k, (byDate.get(k) || 0) + 1);
+    }
+    const dates = Array.from(byDate.entries()).map(([d, c]) =>
+      `${formatShortDate(d)} (${c})`
+    ).join(', ');
+    out.push({
+      tone: 'error',
+      title: n === 1 ? 'Un plato con kcal inconsistente' : `${n} platos con kcal inconsistente`,
+      detail: `Las calorías no cuadran con los ingredientes en: ${dates}. Revisa esos días antes de registrar.`,
     });
   }
 
