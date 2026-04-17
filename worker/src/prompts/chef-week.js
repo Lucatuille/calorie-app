@@ -45,18 +45,19 @@ REGLAS:
 1. SOLO genera entradas en "days" para las fechas indicadas en "=== DÍAS A PLANIFICAR ===". Respeta el orden y las fechas exactas.
 2. Para el día parcial (si existe — normalmente HOY), solo genera los tipos de comida que FALTAN por registrar, NO los ya registrados.
 3. Para los días completos (días futuros), genera siempre las 4 comidas: desayuno, comida, merienda, cena.
-4. El total calórico de CADA día completo debe acercarse al objetivo diario del usuario (±10%). Distribuye macros equilibradamente.
-5. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan semanal deben ser platos de COMIDAS FRECUENTES (los que ya cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que ampliarían su repertorio. En una semana completa de 28 comidas eso son ~17-20 frecuentes + ~8-11 nuevos. Esto evita la sensación de "todo es lo de siempre".
-6. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS — cero violaciones. Si dice "vegetariano", nada de carne ni pescado. Si tiene alergia a "gluten", nada de trigo/pasta/pan normal.
-7. VARIEDAD (crítico): ningún plato debe aparecer más de 2 veces en toda la semana planificada. La proteína principal debe ROTAR entre días consecutivos (alterna entre pollo, pescado, legumbre, huevo, ternera, cerdo, tofu...). Si se te da una lista de PLATOS RECIENTES (ya comidos o planificados días atrás), NO los uses en esta semana.
-8. Los fines de semana (sábado y domingo) pueden ser algo más flexibles calóricamente (±15% del objetivo) y con platos ligeramente más elaborados. Entre semana (lunes a viernes): practicidad y repeticiones razonables de frecuentes.
-9. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
-10. Nombres de plato cortos y naturales en español. NO descripciones largas tipo "Filete de pechuga de pollo deshuesada al grill con...". Dí "Pechuga con arroz".
-11. Si el usuario da CONTEXTO, respétalo ("semana ligera", "tengo batch-cooking del domingo", "viajo jueves y viernes"). El CONTEXTO gana sobre las reglas por defecto.
-12. Los campos "ingredients" listan ingredientes principales con gramos estimados separados por " · ".
-13. Cada "time" es una hora sugerida razonable para ese tipo de comida.
-14. NUNCA añadas campos extra al JSON. NO incluyas "totals" — los calcula el servidor.
-15. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático al registrar. Si dudas, estima conservador pero NUNCA omitas el campo.`;
+4. El total calórico de CADA día completo debe acercarse al objetivo diario del usuario (±10%). Cada línea de "=== DÍAS A PLANIFICAR ===" lleva su target exacto (kcal y macros).
+5. PROTEÍNA — PISO NUTRICIONAL NO NEGOCIABLE: cada día debe alcanzar AL MENOS el 85% del target de proteína indicado para ese día. No sacrifiques proteína por llegar a kcal con carbos o grasa. Fuentes densas: pechuga, pescado, huevo, atún, legumbre con cereal, yogur griego, queso fresco, tofu.
+6. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan semanal deben ser platos de COMIDAS FRECUENTES (los que ya cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que ampliarían su repertorio. En una semana completa de 28 comidas eso son ~17-20 frecuentes + ~8-11 nuevos. Esto evita la sensación de "todo es lo de siempre".
+7. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS — cero violaciones. Si dice "vegetariano", nada de carne ni pescado. Si tiene alergia a "gluten", nada de trigo/pasta/pan normal.
+8. VARIEDAD (crítico): ningún plato debe aparecer más de 2 veces en toda la semana planificada. La proteína principal debe ROTAR entre días consecutivos (alterna entre pollo, pescado, legumbre, huevo, ternera, cerdo, tofu...). Si se te da una lista de PLATOS RECIENTES (ya comidos o planificados días atrás), NO los uses en esta semana.
+9. Los fines de semana (sábado y domingo) pueden ser algo más flexibles calóricamente (±15% del objetivo) y con platos ligeramente más elaborados. Entre semana (lunes a viernes): practicidad y repeticiones razonables de frecuentes.
+10. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
+11. Nombres de plato cortos y naturales en español. NO descripciones largas tipo "Filete de pechuga de pollo deshuesada al grill con...". Dí "Pechuga con arroz".
+12. Si el usuario da CONTEXTO, respétalo ("semana ligera", "tengo batch-cooking del domingo", "viajo jueves y viernes"). El CONTEXTO gana sobre las reglas por defecto.
+13. Los campos "ingredients" listan ingredientes principales con gramos estimados separados por " · ".
+14. Cada "time" es una hora sugerida razonable para ese tipo de comida.
+15. NUNCA añadas campos extra al JSON. NO incluyas "totals" — los calcula el servidor.
+16. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático al registrar. Si dudas, estima conservador pero NUNCA omitas el campo.`;
 
 /**
  * Construye el user message con datos reales para el plan semanal.
@@ -65,6 +66,7 @@ REGLAS:
  * @param {object} params.user                 — row de users
  * @param {Array}  params.daysToPlan           — [{date, day_name, isPartial, skipMealTypes[]}]
  * @param {Array}  params.todayMeals           — meals ya registrados hoy (para el parcial)
+ * @param {object} [params.consumedToday]      — {kcal,protein,carbs,fat} consumido hoy (para target del día parcial)
  * @param {Array}  params.frequentMeals        — top 20 frequent_meals
  * @param {object|null} params.preferences     — dietary_preferences
  * @param {string} params.context              — texto libre del usuario
@@ -75,6 +77,7 @@ export function buildWeekPlanMessage({
   user,
   daysToPlan,
   todayMeals,
+  consumedToday = { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   frequentMeals,
   preferences,
   context,
@@ -86,15 +89,30 @@ export function buildWeekPlanMessage({
 Objetivo diario: ${user.target_calories || '?'} kcal | Prot: ${user.target_protein || '?'}g | Carbs: ${user.target_carbs || '?'}g | Grasa: ${user.target_fat || '?'}g
 Peso: ${user.weight || '?'}kg | Meta peso: ${user.goal_weight || 'no definida'}kg`;
 
-  // Días a planificar
+  // Días a planificar — cada línea lleva su target nutricional concreto
+  // para que Sonnet no tenga que recordarlo del bloque PERFIL a lo largo
+  // de 7 días. Para el día parcial, descontamos lo ya consumido hoy.
+  const targetK = user.target_calories || 0;
+  const targetP = user.target_protein  || 0;
+  const targetC = user.target_carbs    || 0;
+  const targetF = user.target_fat      || 0;
+
   const daysLines = daysToPlan.map(d => {
+    let tK = targetK, tP = targetP, tC = targetC, tF = targetF;
+    if (d.isPartial) {
+      tK = Math.max(0, targetK - (consumedToday.kcal    || 0));
+      tP = Math.max(0, targetP - (consumedToday.protein || 0));
+      tC = Math.max(0, targetC - (consumedToday.carbs   || 0));
+      tF = Math.max(0, targetF - (consumedToday.fat     || 0));
+    }
+    const targetStr = `target: ${Math.round(tK)} kcal | ${Math.round(tP)}g prot | ${Math.round(tC)}g carb | ${Math.round(tF)}g grasa`;
     if (d.isPartial) {
       const skip = d.skipMealTypes?.length > 0
         ? ` — YA registrado: ${d.skipMealTypes.join(', ')}. Generar SOLO los que faltan.`
         : ' — completo (nada registrado todavía).';
-      return `  ${d.date} (${d.day_name}) — PARCIAL${skip}`;
+      return `  ${d.date} (${d.day_name}) — PARCIAL [${targetStr}]${skip}`;
     }
-    return `  ${d.date} (${d.day_name}) — COMPLETO (4 comidas)`;
+    return `  ${d.date} (${d.day_name}) — COMPLETO 4 comidas [${targetStr}]`;
   }).join('\n');
 
   const daysBlock = `=== DÍAS A PLANIFICAR (en este orden exacto) ===

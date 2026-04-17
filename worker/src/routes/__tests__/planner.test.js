@@ -318,6 +318,120 @@ describe('POST /api/planner/day', () => {
     expect(res.data.plan.totals.kcal).toBe(1100); // 1500 - 400
   });
 
+  it('warnings.over_budget cuando el usuario ya se pasó antes de generar', async () => {
+    global.fetch = vi.fn(async () => mockAnthropicResponse({
+      meals: [{ type: 'cena', name: 'Yogur natural', kcal: 150, protein: 12, carbs: 10, fat: 5, portion_g: 200 }],
+      totals: { kcal: 150, protein: 12, carbs: 10, fat: 5 },
+    }));
+
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day', {}),
+      makeEnv({
+        userRow: { id: 1, target_calories: 2000, target_protein: 150, access_level: 2 },
+        todayEntries: [
+          // Usuario ya consumió 2300 kcal → se pasó 300
+          { meal_type: 'breakfast', name: 'A', calories: 800, protein: 40, carbs: 80, fat: 30 },
+          { meal_type: 'lunch',     name: 'B', calories: 900, protein: 50, carbs: 90, fat: 40 },
+          { meal_type: 'snack',     name: 'C', calories: 600, protein: 30, carbs: 60, fat: 25 },
+        ],
+      }),
+      '/api/planner/day'
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.data.warnings).toBeTruthy();
+    expect(res.data.warnings.over_budget).toEqual({ exceeded_by_kcal: 300 });
+    expect(res.data.remaining_before.kcal).toBe(-300); // Negativo, NO clampeado a 0
+  });
+
+  it('warnings.low_protein cuando plan no cubre 85% de proteína pendiente', async () => {
+    // Target 150g protein; pendiente 150g. Plan solo trae 60g (40% del piso).
+    const lowProteinPlan = {
+      meals: [
+        { type: 'desayuno', name: 'Tostadas', kcal: 600, protein: 15, carbs: 90, fat: 20, portion_g: 300 },
+        { type: 'comida',   name: 'Pasta',    kcal: 700, protein: 20, carbs: 100, fat: 25, portion_g: 400 },
+        { type: 'cena',     name: 'Arroz',    kcal: 500, protein: 25, carbs: 80, fat: 15, portion_g: 350 },
+      ],
+      totals: { kcal: 1800, protein: 60, carbs: 270, fat: 60 },
+    };
+    global.fetch = vi.fn(async () => mockAnthropicResponse(lowProteinPlan));
+
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day', {}),
+      makeEnv({
+        userRow: { id: 1, target_calories: 1800, target_protein: 150, access_level: 2 },
+        todayEntries: [],
+      }),
+      '/api/planner/day'
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.data.warnings.low_protein).toBeTruthy();
+    expect(res.data.warnings.low_protein.target_g).toBe(150);
+    expect(res.data.warnings.low_protein.actual_g).toBeLessThan(150 * 0.85);
+  });
+
+  it('warnings.off_budget cuando factor cae fuera de [0.70, 1.40]', async () => {
+    // Target 2000, Sonnet devuelve 900 → factor 2.22 → extreme.
+    const lowKcalPlan = {
+      meals: [
+        { type: 'desayuno', name: 'Avena', kcal: 400, protein: 20, carbs: 50, fat: 10, portion_g: 300 },
+        { type: 'comida',   name: 'Ensalada', kcal: 500, protein: 30, carbs: 40, fat: 15, portion_g: 350 },
+      ],
+      totals: { kcal: 900, protein: 50, carbs: 90, fat: 25 },
+    };
+    global.fetch = vi.fn(async () => mockAnthropicResponse(lowKcalPlan));
+
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day', {}),
+      makeEnv({
+        userRow: { id: 1, target_calories: 2000, target_protein: 150, access_level: 2 },
+        todayEntries: [],
+      }),
+      '/api/planner/day'
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.data.warnings.off_budget).toBeTruthy();
+    expect(res.data.warnings.off_budget.actual_kcal).toBe(900);
+    expect(res.data.warnings.off_budget.target_kcal).toBe(2000);
+    expect(res.data.warnings.off_budget.diff).toBe(-1100);
+    // Plan NO escalado (es extremo) → se mantiene en 900
+    expect(res.data.plan.totals.kcal).toBe(900);
+  });
+
+  it('protein-aware calibration preserva proteína, ajusta carbos/grasa', async () => {
+    // Target 1800 kcal, 150g prot. Plan trae 1500 kcal, 150g prot (ya cubre).
+    // Factor 1.2 → escalamos SOLO carbos+grasa, proteína se queda.
+    const plan = {
+      meals: [
+        { type: 'desayuno', name: 'A', kcal: 500, protein: 50, carbs: 50, fat: 15, portion_g: 350 },
+        { type: 'comida',   name: 'B', kcal: 500, protein: 50, carbs: 40, fat: 18, portion_g: 400 },
+        { type: 'cena',     name: 'C', kcal: 500, protein: 50, carbs: 30, fat: 22, portion_g: 400 },
+      ],
+      totals: { kcal: 1500, protein: 150, carbs: 120, fat: 55 },
+    };
+    global.fetch = vi.fn(async () => mockAnthropicResponse(plan));
+
+    const res = await handlePlanner(
+      makeRequest('POST', '/api/planner/day', {}),
+      makeEnv({
+        userRow: { id: 1, target_calories: 1800, target_protein: 150, access_level: 2 },
+        todayEntries: [],
+      }),
+      '/api/planner/day'
+    );
+
+    expect(res.status).toBe(200);
+    // Proteína total intacta (piso nutricional)
+    expect(res.data.plan.totals.protein).toBe(150);
+    // kcal acercado a 1800 (±5%)
+    expect(res.data.plan.totals.kcal).toBeGreaterThanOrEqual(1800 * 0.95);
+    expect(res.data.plan.totals.kcal).toBeLessThanOrEqual(1800 * 1.05);
+    // No warning de low_protein (proteína cubre > 85%)
+    expect(res.data.warnings.low_protein).toBeNull();
+  });
+
   it('contexto del body se pasa al prompt', async () => {
     global.fetch = vi.fn(async () => mockAnthropicResponse({
       meals: [{ type: 'cena', name: 'X', kcal: 400, protein: 10, carbs: 10, fat: 5 }],

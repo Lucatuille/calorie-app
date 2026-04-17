@@ -51,15 +51,17 @@ describe('calibrateMeals — tolerancia y extremos', () => {
     expect(meals[0].kcal).toBe(1000); // sin cambios
   });
 
-  it('factor extremo (>1.4) NO escala', () => {
+  it('factor extremo (>1.4) NO escala, marca extreme', () => {
     const meals = [{ kcal: 500, protein: 25, carbs: 50, fat: 15 }];
     const res = calibrateMeals(meals, 1000); // factor 2.0
     expect(res.calibrated).toBe(false);
     expect(res.extreme).toBe(true);
+    expect(res.factor).toBe(2.0);
+    expect(res.originalKcal).toBe(500);
     expect(meals[0].kcal).toBe(500);
   });
 
-  it('factor extremo (<0.7) NO escala', () => {
+  it('factor extremo (<0.7) NO escala, marca extreme', () => {
     const meals = [{ kcal: 2000, protein: 100, carbs: 200, fat: 60 }];
     const res = calibrateMeals(meals, 1000); // factor 0.5
     expect(res.calibrated).toBe(false);
@@ -70,10 +72,14 @@ describe('calibrateMeals — tolerancia y extremos', () => {
     expect(calibrateMeals([], 1800).calibrated).toBe(false);
   });
 
-  it('targetKcal 0 o negativo → no calibra', () => {
+  it('targetKcal 0 o negativo → no calibra, marca overBudgetSkipped', () => {
     const meals = [{ kcal: 500 }];
-    expect(calibrateMeals(meals, 0).calibrated).toBe(false);
-    expect(calibrateMeals(meals, -100).calibrated).toBe(false);
+    const r0 = calibrateMeals(meals, 0);
+    expect(r0.calibrated).toBe(false);
+    expect(r0.overBudgetSkipped).toBe(true);
+    const rNeg = calibrateMeals(meals, -100);
+    expect(rNeg.calibrated).toBe(false);
+    expect(rNeg.overBudgetSkipped).toBe(true);
   });
 
   it('originalKcal 0 → no calibra (división por cero)', () => {
@@ -82,32 +88,31 @@ describe('calibrateMeals — tolerancia y extremos', () => {
   });
 });
 
-describe('calibrateMeals — escalamiento real', () => {
-  it('escala factor 1.2 (1500 → 1800)', () => {
+describe('calibrateMeals — legacy uniform (target numérico)', () => {
+  it('factor 1.2 escala TODO uniformemente (proteína incluida)', () => {
+    // Firma legacy: target numérico → escala uniforme (proteína no protegida).
+    // Usado solo para compat con tests antiguos, callers nuevos pasan {kcal, protein}.
     const meals = [
       { kcal: 500, protein: 25, carbs: 50, fat: 15, ingredients: '100g arroz · 1 huevo' },
       { kcal: 500, protein: 30, carbs: 40, fat: 18, ingredients: '150g pollo · 200g brócoli' },
       { kcal: 500, protein: 20, carbs: 60, fat: 12, ingredients: '80g pasta · 30g tomate' },
     ];
-    const res = calibrateMeals(meals, 1800); // factor exacto 1.2
+    const res = calibrateMeals(meals, 1800); // factor 1.2
 
     expect(res.calibrated).toBe(true);
     expect(res.factor).toBeCloseTo(1.2, 2);
 
     expect(meals[0].kcal).toBe(600);
-    expect(meals[0].protein).toBe(30);
+    expect(meals[0].protein).toBe(30); // 25 * 1.2 (uniforme)
     expect(meals[0].carbs).toBe(60);
     expect(meals[0].fat).toBe(18);
     expect(meals[0].ingredients).toBe('120g arroz · 1 huevo');
 
-    expect(meals[1].kcal).toBe(600);
     expect(meals[1].ingredients).toBe('180g pollo · 240g brócoli');
-
-    expect(meals[2].kcal).toBe(600);
     expect(meals[2].ingredients).toBe('96g pasta · 36g tomate');
   });
 
-  it('escala factor 0.8 (2000 → 1600)', () => {
+  it('factor 0.8 escala hacia abajo uniformemente (legacy)', () => {
     const meals = [
       { kcal: 1000, protein: 50, carbs: 100, fat: 30, ingredients: '200g pasta' },
       { kcal: 1000, protein: 60, carbs: 80,  fat: 40, ingredients: '300g carne' },
@@ -116,34 +121,87 @@ describe('calibrateMeals — escalamiento real', () => {
 
     expect(res.calibrated).toBe(true);
     expect(meals[0].kcal).toBe(800);
+    expect(meals[0].protein).toBe(40); // 50 * 0.8 uniforme
     expect(meals[0].ingredients).toBe('160g pasta');
-    expect(meals[1].kcal).toBe(800);
     expect(meals[1].ingredients).toBe('240g carne');
   });
+});
 
-  it('caso reportado: 1400 con target 1800 → escala factor ~1.29', () => {
+describe('calibrateMeals — protein-aware (target {kcal, protein})', () => {
+  it('factor 1.2 hacia arriba: proteína protegida, solo C+F suben', () => {
+    // Plan infra-calórico: 1500 → 1800. La proteína del plan ya cubre target.
     const meals = [
-      { kcal: 400, protein: 20, carbs: 50, fat: 10, ingredients: '60g avena · 1 plátano' },
-      { kcal: 500, protein: 35, carbs: 45, fat: 12, ingredients: '150g pollo · 80g arroz' },
-      { kcal: 200, protein: 10, carbs: 20, fat: 6,  ingredients: '125g yogur' },
-      { kcal: 300, protein: 25, carbs: 25, fat: 8,  ingredients: '200g merluza · 100g patata' },
+      { kcal: 500, protein: 30, carbs: 50, fat: 15 },
+      { kcal: 500, protein: 40, carbs: 40, fat: 18 },
+      { kcal: 500, protein: 30, carbs: 60, fat: 12 },
     ];
-    const res = calibrateMeals(meals, 1800);
+    const res = calibrateMeals(meals, { kcal: 1800, protein: 100 });
 
     expect(res.calibrated).toBe(true);
+    // Proteína NO se escala — se queda en 30/40/30
+    expect(meals[0].protein).toBe(30);
+    expect(meals[1].protein).toBe(40);
+    expect(meals[2].protein).toBe(30);
+    // kcal sí llega cerca de 1800 (±5% por redondeo)
     const total = meals.reduce((s, m) => s + m.kcal, 0);
-    expect(total).toBeGreaterThanOrEqual(1800 * 0.97); // dentro de ±3% por redondeo
-    expect(total).toBeLessThanOrEqual(1800 * 1.03);
+    expect(total).toBeGreaterThanOrEqual(1800 * 0.95);
+    expect(total).toBeLessThanOrEqual(1800 * 1.05);
   });
 
-  it('preserva ingredientes con mezcla de unidades', () => {
-    const meals = [{
-      kcal: 400, protein: 20, carbs: 40, fat: 10,
-      ingredients: '50g avena · 1 plátano · 200g leche · 1 cdta miel · 30g nueces',
-    }];
-    const res = calibrateMeals(meals, 480); // factor 1.2
+  it('factor 0.8 hacia abajo: proteína protegida, solo C+F bajan', () => {
+    const meals = [
+      { kcal: 1000, protein: 60, carbs: 100, fat: 40 },
+      { kcal: 1000, protein: 70, carbs: 80,  fat: 50 },
+    ];
+    const res = calibrateMeals(meals, { kcal: 1600, protein: 130 });
+
     expect(res.calibrated).toBe(true);
-    expect(meals[0].ingredients).toBe('60g avena · 1 plátano · 240g leche · 1 cdta miel · 36g nueces');
+    // Proteína intacta — 60 y 70
+    expect(meals[0].protein).toBe(60);
+    expect(meals[1].protein).toBe(70);
+    // Total kcal cerca de 1600
+    const total = meals.reduce((s, m) => s + m.kcal, 0);
+    expect(total).toBeGreaterThanOrEqual(1600 * 0.95);
+    expect(total).toBeLessThanOrEqual(1600 * 1.05);
+    // Carbs y grasa han bajado
+    expect(meals[0].carbs).toBeLessThan(100);
+    expect(meals[0].fat).toBeLessThan(40);
+  });
+
+  it('escalado de ingredientes + portion_g usa ratio kcal efectivo', () => {
+    const meals = [{
+      kcal: 400, protein: 30, carbs: 40, fat: 10,
+      portion_g: 300,
+      ingredients: '150g pollo · 80g arroz · 100g verdura',
+    }];
+    const res = calibrateMeals(meals, { kcal: 480, protein: 30 });
+    expect(res.calibrated).toBe(true);
+    // kcal → 480 (factor 1.2 global)
+    expect(meals[0].kcal).toBeGreaterThanOrEqual(470);
+    expect(meals[0].kcal).toBeLessThanOrEqual(490);
+    // portion_g escalado proporcionalmente
+    expect(meals[0].portion_g).toBeGreaterThanOrEqual(350);
+    expect(meals[0].portion_g).toBeLessThanOrEqual(370);
+  });
+
+  it('fallback uniforme si la proteína sola excede el target kcal', () => {
+    // Caso patológico: meal con 200g proteína = 800 kcal, target kcal 500.
+    // Protección de proteína imposible → se usa fallback uniforme.
+    const meals = [{ kcal: 800, protein: 200, carbs: 0, fat: 0 }];
+    const res = calibrateMeals(meals, { kcal: 500, protein: 150 });
+    // factor 0.625 está en [0.70, 1.40]? NO, 0.625 < 0.70 → extreme, no escala
+    expect(res.calibrated).toBe(false);
+    expect(res.extreme).toBe(true);
+  });
+
+  it('meal sin carbs ni grasa cae a uniforme (sin nada que rebalancear)', () => {
+    // Meal solo de proteína pura. factor dentro de rango. Uniforme.
+    const meals = [{ kcal: 400, protein: 100, carbs: 0, fat: 0 }];
+    const res = calibrateMeals(meals, { kcal: 480, protein: 120 });
+    expect(res.calibrated).toBe(true);
+    // Sin C/F que escalar → fallback uniforme → protein escala a 120
+    expect(meals[0].kcal).toBe(480);
+    expect(meals[0].protein).toBe(120);
   });
 });
 

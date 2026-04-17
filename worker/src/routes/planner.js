@@ -90,7 +90,9 @@ export async function handlePlanner(request, env, path, ctx) {
       const recentEntries = recentEntriesRes.results || [];
       const recentPlannedDishes = extractRecentDishNames(recentHistoryDay, 20);
 
-      // Calculate remaining budget
+      // Calculate remaining budget — puede ser negativo si el usuario ya se pasó.
+      // No lo clampeamos: el prompt y el cliente tienen que saber la verdad para
+      // actuar bien (sugerir solo snack mínimo, avisar de exceso, etc.).
       const consumed = meals.reduce((acc, e) => ({
         kcal: acc.kcal + (e.calories || 0),
         protein: acc.protein + (e.protein || 0),
@@ -99,11 +101,12 @@ export async function handlePlanner(request, env, path, ctx) {
       }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
       const remaining = {
-        kcal: Math.max(0, (user.target_calories || 0) - consumed.kcal),
-        protein: Math.max(0, (user.target_protein || 0) - consumed.protein),
-        carbs: Math.max(0, (user.target_carbs || 0) - consumed.carbs),
-        fat: Math.max(0, (user.target_fat || 0) - consumed.fat),
+        kcal:    (user.target_calories || 0) - consumed.kcal,
+        protein: (user.target_protein  || 0) - consumed.protein,
+        carbs:   (user.target_carbs    || 0) - consumed.carbs,
+        fat:     (user.target_fat      || 0) - consumed.fat,
       };
+      const isOverBudget = remaining.kcal <= 0;
 
       // Parse frequent meals
       let frequentMeals = [];
@@ -131,6 +134,7 @@ export async function handlePlanner(request, env, path, ctx) {
         user,
         todayMeals: meals,
         remaining,
+        isOverBudget,
         frequentMeals,
         preferences,
         context: userContext,
@@ -202,11 +206,25 @@ export async function handlePlanner(request, env, path, ctx) {
       }
 
       // Calibrar porciones para acercarse al presupuesto restante (±10%).
-      // Sonnet sub-estima a veces; este escalamiento corrige.
-      const calibration = calibrateMeals(planData.meals, remaining.kcal);
+      // Protein-aware: protegemos proteína, C+F absorben el ajuste.
+      // Si remaining <= 0 (usuario ya se pasó) calibrateMeals lo detecta y
+      // devuelve { overBudgetSkipped: true } sin tocar nada.
+      const calibration = calibrateMeals(planData.meals, {
+        kcal: remaining.kcal,
+        protein: remaining.protein > 0 ? remaining.protein : undefined,
+      });
       if (calibration.calibrated) {
         planData.totals = recomputeTotals(planData.meals);
       }
+
+      // Warnings honestos al cliente. Campos nuevos, todos nullables.
+      const warnings = buildDayWarnings({
+        planData,
+        remaining,
+        calibration,
+        isOverBudget,
+        targetProtein: user.target_protein,
+      });
 
       // Log token usage
       await env.DB.prepare(
@@ -226,6 +244,7 @@ export async function handlePlanner(request, env, path, ctx) {
         plan: planData,
         target_kcal: user.target_calories,
         remaining_before: remaining,
+        warnings,
         usage: {
           remaining_day: limitCheck.remainingDay,
           remaining_week: limitCheck.remainingWeek,
@@ -325,10 +344,20 @@ export async function handlePlanner(request, env, path, ctx) {
         }
       } catch {}
 
+      // Consumido hoy — kcal + macros. Usado tanto para inyectar target real
+      // en el prompt (día parcial) como para calibración post-parse.
+      const consumedToday = todayMeals.reduce((acc, e) => ({
+        kcal:    acc.kcal    + (e.calories || 0),
+        protein: acc.protein + (e.protein  || 0),
+        carbs:   acc.carbs   + (e.carbs    || 0),
+        fat:     acc.fat     + (e.fat      || 0),
+      }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+
       const userMessage = buildWeekPlanMessage({
         user,
         daysToPlan,
         todayMeals,
+        consumedToday,
         frequentMeals,
         preferences,
         context: userContext,
@@ -376,9 +405,6 @@ export async function handlePlanner(request, env, path, ctx) {
         return errorResponse('Error al procesar el plan generado. Inténtalo de nuevo.', 502);
       }
 
-      // Calcular kcal ya consumidas hoy (para target del día parcial)
-      const consumedToday = todayMeals.reduce((s, e) => s + (e.calories || 0), 0);
-
       // Enforce server-side: si hoy es parcial, filtrar meals de tipos ya
       // registrados. Sonnet a veces ignora la instrucción "solo lo que falta".
       if (planData.days?.length > 0 && mealTypesRegistered.length > 0) {
@@ -399,22 +425,62 @@ export async function handlePlanner(request, env, path, ctx) {
         }
       }
 
-      // Calibrar porciones por día. Sonnet sub-estima a veces.
-      // Primer día parcial: target = target_calories - consumedToday.
-      // Días futuros: target = target_calories.
+      // Calibrar porciones por día. Protein-aware: cada día mantiene el piso
+      // de proteína del usuario; C+F absorben el ajuste kcal.
+      // Acumulamos warnings para devolverlos en la respuesta.
+      const weekWarnings = { off_budget_days: [], low_protein_days: [], over_budget_today: null };
+
       if (planData.days?.length > 0) {
         for (let i = 0; i < planData.days.length; i++) {
           const day = planData.days[i];
-          const isFirstAndPartial = i === 0 && day.date === todayISO && consumedToday > 0;
-          const dayTarget = isFirstAndPartial
-            ? Math.max(0, (user.target_calories || 0) - consumedToday)
-            : (user.target_calories || 0);
+          const isFirstAndPartial = i === 0 && day.date === todayISO && consumedToday.kcal > 0;
 
-          const calRes = calibrateMeals(day.meals, dayTarget);
+          // Target del día: completo (target_calories) o parcial (restante).
+          const dayTargetKcal = isFirstAndPartial
+            ? (user.target_calories || 0) - consumedToday.kcal
+            : (user.target_calories || 0);
+          const dayTargetProtein = isFirstAndPartial
+            ? Math.max(0, (user.target_protein || 0) - consumedToday.protein)
+            : (user.target_protein || 0);
+
+          // Día parcial con remaining <= 0 → usuario ya se pasó hoy. Saltamos
+          // calibración; warning de over_budget_today.
+          if (isFirstAndPartial && dayTargetKcal <= 0) {
+            weekWarnings.over_budget_today = { exceeded_by_kcal: Math.abs(dayTargetKcal) };
+            continue;
+          }
+
+          const calRes = calibrateMeals(day.meals, {
+            kcal:    dayTargetKcal,
+            protein: dayTargetProtein > 0 ? dayTargetProtein : undefined,
+          });
           if (calRes.calibrated) {
             day.totals = recomputeTotals(day.meals);
           }
+
+          // Warning: plan del día extremo (Sonnet muy fuera de rango).
+          if (calRes.extreme) {
+            weekWarnings.off_budget_days.push({
+              date: day.date,
+              actual_kcal: calRes.originalKcal,
+              target_kcal: dayTargetKcal,
+              diff: calRes.originalKcal - dayTargetKcal,
+            });
+          }
+
+          // Warning: proteína total del día < 85% del piso del usuario.
+          if (dayTargetProtein > 0 && day.totals?.protein != null) {
+            const floor = dayTargetProtein * 0.85;
+            if (day.totals.protein < floor) {
+              weekWarnings.low_protein_days.push({
+                date: day.date,
+                actual_g: day.totals.protein,
+                target_g: dayTargetProtein,
+              });
+            }
+          }
         }
+
         // Recalcular totals semanales tras todos los ajustes
         planData.week_totals = {
           kcal:    planData.days.reduce((s, d) => s + (d.totals?.kcal    || 0), 0),
@@ -443,6 +509,11 @@ export async function handlePlanner(request, env, path, ctx) {
           protein: user.target_protein,
           carbs: user.target_carbs,
           fat: user.target_fat,
+        },
+        warnings: {
+          off_budget_days: weekWarnings.off_budget_days.length ? weekWarnings.off_budget_days : null,
+          low_protein_days: weekWarnings.low_protein_days.length ? weekWarnings.low_protein_days : null,
+          over_budget_today: weekWarnings.over_budget_today,
         },
         usage: {
           remaining_day: limitCheck.remainingDay,
@@ -602,4 +673,67 @@ export async function handlePlanner(request, env, path, ctx) {
   }
 
   return errorResponse('Route not found', 404);
+}
+
+// ============================================================
+//  Helpers internos
+// ============================================================
+
+/**
+ * Construye el objeto `warnings` para la respuesta del plan del día.
+ * Todos los campos son nullable — ninguno se renderiza si no aplica.
+ * El cliente puede ignorarlos (campos aditivos, cero retrocompat risk).
+ *
+ * @param {{
+ *   planData: {meals: Array, totals: {kcal,protein,carbs,fat}},
+ *   remaining: {kcal,protein,carbs,fat},
+ *   calibration: {calibrated, factor?, originalKcal?, extreme?, overBudgetSkipped?},
+ *   isOverBudget: boolean,
+ *   targetProtein: number|null,
+ * }} params
+ * @returns {{
+ *   off_budget: {actual_kcal,target_kcal,diff}|null,
+ *   low_protein: {actual_g,target_g}|null,
+ *   over_budget: {exceeded_by_kcal}|null,
+ * }}
+ */
+function buildDayWarnings({ planData, remaining, calibration, isOverBudget, targetProtein }) {
+  const warnings = {
+    off_budget: null,
+    low_protein: null,
+    over_budget: null,
+  };
+
+  // Over-budget: usuario ya se pasó antes de generar. Avisar al cliente
+  // para que muestre "te has pasado X kcal" en lugar de un contador a 0.
+  if (isOverBudget) {
+    warnings.over_budget = { exceeded_by_kcal: Math.abs(remaining.kcal) };
+  }
+
+  // Off-budget: Sonnet se salió del rango calibrable (<0.70 o >1.40). Antes
+  // se devolvía el plan sin flag; ahora se avisa para que el cliente pueda
+  // mostrar "el plan está X kcal fuera de tu objetivo".
+  if (calibration?.extreme) {
+    warnings.off_budget = {
+      actual_kcal: calibration.originalKcal,
+      target_kcal: remaining.kcal,
+      diff: calibration.originalKcal - remaining.kcal,
+    };
+  }
+
+  // Low-protein: tras calibración, si el plan cubre < 85% de la proteína
+  // pendiente, flag. Umbral nutricional pragmático (1.6g/kg es el piso,
+  // 85% = un pequeño margen antes de alertar).
+  if (typeof targetProtein === 'number' && targetProtein > 0 && remaining.protein > 0) {
+    const floor = remaining.protein * 0.85;
+    const actual = planData?.totals?.protein ?? 0;
+    if (actual < floor) {
+      warnings.low_protein = {
+        actual_g: actual,
+        target_g: Math.round(remaining.protein),
+      };
+    }
+  }
+
+  return warnings;
 }

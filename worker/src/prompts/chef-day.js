@@ -32,7 +32,7 @@ REGLAS:
 0. IDIOMA: todo el JSON (nombres de platos, ingredientes, tipos de comida) debe estar en ESPAÑOL. Nunca uses inglés ("Turkey", "Chicken", "Spinach Salad", "Quinoa Bowl"). Usa "pavo", "pollo", "ensalada de espinacas", "bowl de quinoa". Esto es una regla no negociable.
 1. Solo genera comidas para los tipos que el usuario AÚN NO ha registrado hoy.
 2. El total del plan debe acercarse al presupuesto RESTANTE (±10% de las kcal restantes).
-3. Distribuye proteínas de forma equilibrada entre las comidas generadas.
+3. PROTEÍNA — PISO NUTRICIONAL NO NEGOCIABLE: la suma de proteína del plan debe cubrir AL MENOS el 85% de la proteína pendiente indicada en PRESUPUESTO. La proteína es un piso (1.6–2.2 g/kg/día); no la sacrifiques por alcanzar kcal con carbos o grasa. Si hace falta, prioriza fuentes densas (pechuga, pescado blanco, claras, atún, legumbres con cereal, tofu, yogur griego, queso fresco batido).
 4. BALANCE FRECUENTES vs NUEVOS: aproximadamente 60-70% del plan deben ser platos de la lista de COMIDAS FRECUENTES (el usuario ya los cocina y compra). El 30-40% restante deben ser platos NUEVOS — variaciones interesantes o platos típicos de la cocina mediterránea/española que el usuario no come habitualmente. Esto evita que el plan sea repetitivo. En un plan de 4 comidas, eso es 2-3 frecuentes + 1-2 nuevos.
 5. Las PREFERENCIAS DIETÉTICAS son REGLAS DURAS que no puedes violar nunca. Si dice "vegetariano", cero carne/pescado. Si tiene alergia a "gluten", cero trigo/pasta/pan normal.
 6. Porciones realistas en gramos. No inventes datos nutricionales — razona desde los frecuentes del usuario o desde cocina mediterránea/española estándar.
@@ -48,7 +48,8 @@ REGLAS:
 11. Si al usuario le faltan POCAS kcal (< 200), genera solo un snack ligero, no una comida completa.
 12. Los totals deben ser la SUMA real de los meals generados — no inventes un total diferente.
 13. VARIEDAD: si se te da una lista de PLATOS RECIENTES (comidos o planificados en últimos días), NO los repitas hoy. Busca alternativas equivalentes en macros. Si no tienes alternativa en los frecuentes del usuario, usa conocimiento general de cocina mediterránea/española. La proteína principal de hoy debe variar respecto a lo comido o planificado ayer y antesdeayer (alterna entre pollo, pescado, legumbre, huevo, ternera, tofu, etc.).
-14. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come en el plato). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático de peso cuando el usuario registra. Si dudas, estima conservador pero NUNCA omitas el campo.`;
+14. PORTION_G OBLIGATORIO: cada meal debe incluir "portion_g" = peso total en gramos del plato SERVIDO (no ingredientes crudos sumados, sino lo que el usuario se come en el plato). Típicos: desayuno 300-450g, comida 400-600g, merienda 150-300g, cena 350-550g. Se usa para prefill automático de peso cuando el usuario registra. Si dudas, estima conservador pero NUNCA omitas el campo.
+15. USUARIO YA EXCEDIDO: si el bloque PRESUPUESTO indica que el usuario YA SE HA PASADO del objetivo diario, y todavía le falta algún meal_type por registrar, genera UNA sola opción lo más ligera posible (≤200 kcal, snack tipo fruta o yogur natural). Si no falta ningún meal_type (ya tiene todas sus comidas), responde con "meals": [] y "totals": {"kcal":0,"protein":0,"carbs":0,"fat":0}. No inventes comidas extra — sería contraproducente.`;
 
 /**
  * Construye el user message con datos reales del usuario.
@@ -56,7 +57,8 @@ REGLAS:
  * @param {object} params
  * @param {object} params.user       — row de users (target_calories, weight, etc.)
  * @param {Array}  params.todayMeals — entries de hoy [{meal_type, name, calories, protein, carbs, fat}]
- * @param {object} params.remaining  — {kcal, protein, carbs, fat} restantes
+ * @param {object} params.remaining  — {kcal, protein, carbs, fat} restantes (pueden ser negativos si el usuario se pasó)
+ * @param {boolean} [params.isOverBudget] — true si remaining.kcal <= 0
  * @param {Array}  params.frequentMeals — top N frequent meals [{name, avg_kcal, times, avg_protein, avg_carbs, avg_fat}]
  * @param {object|null} params.preferences — {diet, allergies[], dislikes} o null
  * @param {string} params.context    — texto libre del usuario (puede estar vacío)
@@ -70,6 +72,7 @@ export function buildDayPlanMessage({
   user,
   todayMeals,
   remaining,
+  isOverBudget = false,
   frequentMeals,
   preferences,
   context,
@@ -92,12 +95,17 @@ Peso: ${user.weight || '?'}kg | Meta peso: ${user.goal_weight || 'no definida'}k
       ).join('\n')
     : `=== HOY (${dayOfWeek}, ${hourNow}:00h) ===\n  Sin registros todavía`;
 
-  // Presupuesto restante
-  const budgetBlock = `=== PRESUPUESTO RESTANTE ===
+  // Presupuesto restante. Si el usuario se pasó (remaining.kcal <= 0) se lo
+  // decimos explícitamente para que no invente comidas extra.
+  const budgetBlock = isOverBudget
+    ? `=== PRESUPUESTO — USUARIO YA EXCEDIDO ===
+El usuario YA SE HA PASADO de su objetivo diario en ${Math.abs(Math.round(remaining.kcal))} kcal.
+Aplica la regla 15: si falta algún meal_type por registrar, sugiere UNA sola opción ligera (≤200 kcal). Si ya tiene todas sus comidas registradas, responde con "meals": [].`
+    : `=== PRESUPUESTO RESTANTE ===
 Calorías libres: ${Math.round(remaining.kcal)} kcal
-Proteína por cubrir: ${Math.round(remaining.protein)}g
-Carbos por cubrir: ${Math.round(remaining.carbs)}g
-Grasa por cubrir: ${Math.round(remaining.fat)}g`;
+Proteína por cubrir: ${Math.round(Math.max(0, remaining.protein))}g (PISO — regla 3)
+Carbos por cubrir: ${Math.round(Math.max(0, remaining.carbs))}g
+Grasa por cubrir: ${Math.round(Math.max(0, remaining.fat))}g`;
 
   // Tipos de comida que ya tiene → el modelo solo genera los que faltan
   const registeredTypes = mealTypesRegistered.length > 0
