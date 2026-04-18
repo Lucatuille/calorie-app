@@ -251,6 +251,10 @@ export async function handlePlanner(request, env, path, ctx) {
         plan: planData,
         target_kcal: user.target_calories,
         remaining_before: remaining,
+        // Los meals del plan NO incluyen los tipos ya registrados (filtro
+        // server-side arriba). Devolvemos el set para que el frontend pueda
+        // marcar correctamente si el user registra un meal entre recargas.
+        registered_meal_types: mealTypesRegistered,
         warnings,
         usage: {
           remaining_day: limitCheck.remainingDay,
@@ -602,7 +606,10 @@ export async function handlePlanner(request, env, path, ctx) {
       ).bind(auth.userId, today).first(),
 
       env.DB.prepare(
-        `SELECT calories, protein, carbs, fat FROM entries
+        // meal_type + created_at necesarios para resolveMealTypesRegistered,
+        // que infiere por hora cuando meal_type es 'other' o inconsistente
+        // con el horario español.
+        `SELECT calories, protein, carbs, fat, meal_type, created_at FROM entries
          WHERE user_id = ? AND date = ?`
       ).bind(auth.userId, today).all().catch(() => ({ results: [] })),
     ]);
@@ -613,8 +620,10 @@ export async function handlePlanner(request, env, path, ctx) {
     try { plan = JSON.parse(row.plan_json); }
     catch { return jsonResponse({ plan: null }); }
 
+    const entries = entriesRes.results || [];
+
     // Remaining actual — consumido real AHORA, no al generar.
-    const consumed = (entriesRes.results || []).reduce((acc, e) => ({
+    const consumed = entries.reduce((acc, e) => ({
       kcal:    acc.kcal    + (e.calories || 0),
       protein: acc.protein + (e.protein  || 0),
       carbs:   acc.carbs   + (e.carbs    || 0),
@@ -628,10 +637,17 @@ export async function handlePlanner(request, env, path, ctx) {
       fat:     (user?.target_fat      || 0) - consumed.fat,
     };
 
+    // registered_meal_types — para que el frontend marque los meals del plan
+    // cuyo tipo ya está registrado hoy como "✓ Registrado" y evite doble
+    // submission. Usa la misma lógica que la ruta POST (hora-first con
+    // fallback a explícito).
+    const registered_meal_types = resolveMealTypesRegistered(entries);
+
     return jsonResponse({
       plan,
       target_kcal: user?.target_calories || 0,
       remaining,
+      registered_meal_types,
       generated_at: row.created_at,
     });
   }

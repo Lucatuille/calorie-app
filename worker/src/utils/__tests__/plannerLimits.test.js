@@ -12,11 +12,6 @@ import {
 function todayISO() {
   return new Date().toLocaleDateString('en-CA');
 }
-function daysAgoISO(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toLocaleDateString('en-CA');
-}
 
 function makeMockDB() {
   const rows = new Map(); // key: `${uid}|${feature}|${date}` → count
@@ -72,20 +67,22 @@ function makeMockDB() {
 // ── PLANNER_LIMITS config ──────────────────────────────────
 
 describe('PLANNER_LIMITS config', () => {
-  it('Free tiene 2/semana en suggest y 0 en day/week', () => {
-    expect(PLANNER_LIMITS.suggest[3]).toEqual({ day: 0, week: 2 });
+  it('Features disponibles: day + week (suggest descartado 2026-04-18)', () => {
+    expect(Object.keys(PLANNER_LIMITS).sort()).toEqual(['day', 'week']);
+    expect(PLANNER_LIMITS.suggest).toBeUndefined();
+  });
+
+  it('Free tiene day y week bloqueados (0/0)', () => {
     expect(PLANNER_LIMITS.day[3]).toEqual({ day: 0, week: 0 });
     expect(PLANNER_LIMITS.week[3]).toEqual({ day: 0, week: 0 });
   });
 
   it('Pro tiene limites razonables', () => {
-    expect(PLANNER_LIMITS.suggest[2].day).toBe(10);
     expect(PLANNER_LIMITS.day[2].day).toBe(2);
     expect(PLANNER_LIMITS.week[2].day).toBe(1);
   });
 
   it('Admin es Infinity en todo', () => {
-    expect(PLANNER_LIMITS.suggest[99].day).toBe(Infinity);
     expect(PLANNER_LIMITS.day[99].day).toBe(Infinity);
     expect(PLANNER_LIMITS.week[99].day).toBe(Infinity);
   });
@@ -96,24 +93,6 @@ describe('PLANNER_LIMITS config', () => {
 describe('checkAndIncrementPlannerLimit — Free user (access_level=3)', () => {
   let env;
   beforeEach(() => { env = makeMockDB(); });
-
-  it('permite 2 llamadas de suggest en la semana', async () => {
-    const r1 = await checkAndIncrementPlannerLimit(42, 'suggest', 3, env);
-    expect(r1.allowed).toBe(true);
-    expect(r1.remainingWeek).toBe(1);
-
-    const r2 = await checkAndIncrementPlannerLimit(42, 'suggest', 3, env);
-    expect(r2.allowed).toBe(true);
-    expect(r2.remainingWeek).toBe(0);
-  });
-
-  it('bloquea la 3a llamada de suggest por week_limit', async () => {
-    await checkAndIncrementPlannerLimit(42, 'suggest', 3, env);
-    await checkAndIncrementPlannerLimit(42, 'suggest', 3, env);
-    const r3 = await checkAndIncrementPlannerLimit(42, 'suggest', 3, env);
-    expect(r3.allowed).toBe(false);
-    expect(r3.reason).toBe('week_limit');
-  });
 
   it('bloquea day completamente con reason blocked', async () => {
     const r = await checkAndIncrementPlannerLimit(42, 'day', 3, env);
@@ -131,16 +110,6 @@ describe('checkAndIncrementPlannerLimit — Free user (access_level=3)', () => {
 describe('checkAndIncrementPlannerLimit — Pro user (access_level=2)', () => {
   let env;
   beforeEach(() => { env = makeMockDB(); });
-
-  it('permite hasta 10 suggests al dia', async () => {
-    for (let i = 0; i < 10; i++) {
-      const r = await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
-      expect(r.allowed).toBe(true);
-    }
-    const r11 = await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
-    expect(r11.allowed).toBe(false);
-    expect(r11.reason).toBe('day_limit');
-  });
 
   it('permite hasta 2 day planners al dia', async () => {
     const r1 = await checkAndIncrementPlannerLimit(7, 'day', 2, env);
@@ -163,6 +132,16 @@ describe('checkAndIncrementPlannerLimit — Pro user (access_level=2)', () => {
     expect(r2.allowed).toBe(false);
     expect(r2.reason).toBe('day_limit');
   });
+
+  it('permite hasta 5 day planners al dia para Founder (access_level=1)', async () => {
+    for (let i = 0; i < 5; i++) {
+      const r = await checkAndIncrementPlannerLimit(11, 'day', 1, env);
+      expect(r.allowed).toBe(true);
+    }
+    const r6 = await checkAndIncrementPlannerLimit(11, 'day', 1, env);
+    expect(r6.allowed).toBe(false);
+    expect(r6.reason).toBe('day_limit');
+  });
 });
 
 describe('checkAndIncrementPlannerLimit — Admin (access_level=99)', () => {
@@ -180,40 +159,40 @@ describe('checkAndIncrementPlannerLimit — Admin (access_level=99)', () => {
 describe('rollbackPlannerLimit', () => {
   it('decrementa el contador del dia', async () => {
     const env = makeMockDB();
-    await checkAndIncrementPlannerLimit(42, 'suggest', 2, env);
-    await checkAndIncrementPlannerLimit(42, 'suggest', 2, env);
+    // Pro tiene 2/day, Founder tiene 5/day — usamos Founder para tener margen
+    await checkAndIncrementPlannerLimit(42, 'day', 1, env);
+    await checkAndIncrementPlannerLimit(42, 'day', 1, env);
 
     const today = todayISO();
-    expect(env._rows.get(`42|suggest|${today}`)).toBe(2);
+    expect(env._rows.get(`42|day|${today}`)).toBe(2);
 
-    await rollbackPlannerLimit(42, 'suggest', env);
-    expect(env._rows.get(`42|suggest|${today}`)).toBe(1);
+    await rollbackPlannerLimit(42, 'day', env);
+    expect(env._rows.get(`42|day|${today}`)).toBe(1);
   });
 
   it('nunca baja de 0', async () => {
     const env = makeMockDB();
-    await rollbackPlannerLimit(42, 'suggest', env);
-    await rollbackPlannerLimit(42, 'suggest', env);
+    await rollbackPlannerLimit(42, 'day', env);
+    await rollbackPlannerLimit(42, 'day', env);
     const today = todayISO();
-    const count = env._rows.get(`42|suggest|${today}`);
+    const count = env._rows.get(`42|day|${today}`);
     expect(count == null || count === 0).toBe(true);
   });
 
   it('rollback tras fallo mantiene capacidad para reintentar', async () => {
     const env = makeMockDB();
-    // Usuario Pro hace 10 suggests hoy → alcanza el limite
-    for (let i = 0; i < 10; i++) {
-      await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
-    }
-    // La 11a falla
-    const blocked = await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
+    // Usuario Pro hace 2 day planners → alcanza el limite
+    await checkAndIncrementPlannerLimit(7, 'day', 2, env);
+    await checkAndIncrementPlannerLimit(7, 'day', 2, env);
+    // La 3a falla
+    const blocked = await checkAndIncrementPlannerLimit(7, 'day', 2, env);
     expect(blocked.allowed).toBe(false);
 
-    // Simulamos que una de las 10 anteriores fallo por error Anthropic → rollback
-    await rollbackPlannerLimit(7, 'suggest', env);
+    // Simulamos que uno anterior fallo por error Anthropic → rollback
+    await rollbackPlannerLimit(7, 'day', env);
 
     // Ahora puede reintentar
-    const retry = await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
+    const retry = await checkAndIncrementPlannerLimit(7, 'day', 2, env);
     expect(retry.allowed).toBe(true);
   });
 });
@@ -221,25 +200,21 @@ describe('rollbackPlannerLimit', () => {
 // ── getPlannerUsage ────────────────────────────────────────
 
 describe('getPlannerUsage', () => {
-  it('Free usuario sin uso: remaining week=2 en suggest, blocked en day y week', async () => {
+  it('Free usuario: day y week bloqueados, no expone feature suggest', async () => {
     const env = makeMockDB();
     const usage = await getPlannerUsage(42, 3, env);
-    expect(usage.suggest.remaining_week).toBe(2);
-    expect(usage.suggest.limit_week).toBe(2);
     expect(usage.day.blocked).toBe(true);
     expect(usage.week.blocked).toBe(true);
+    expect(usage.suggest).toBeUndefined();
   });
 
-  it('Pro usuario tras 3 suggests: remaining_day=7', async () => {
+  it('Pro usuario tras 1 plan día: remaining_day=1', async () => {
     const env = makeMockDB();
-    await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
-    await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
-    await checkAndIncrementPlannerLimit(7, 'suggest', 2, env);
+    await checkAndIncrementPlannerLimit(7, 'day', 2, env);
 
     const usage = await getPlannerUsage(7, 2, env);
-    expect(usage.suggest.used_day).toBe(3);
-    expect(usage.suggest.remaining_day).toBe(7);
-    expect(usage.day.remaining_day).toBe(2);
+    expect(usage.day.used_day).toBe(1);
+    expect(usage.day.remaining_day).toBe(1);
     expect(usage.week.remaining_day).toBe(1);
   });
 });

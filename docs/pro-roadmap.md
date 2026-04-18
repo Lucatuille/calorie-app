@@ -220,281 +220,60 @@ Si toca el componente Analytics, aprovechar para arreglar:
 
 ---
 
-## Chef Caliro — pendiente sesion dedicada
+## Chef Caliro — V1 ENTREGADO ✅
 
-> **NOTA AL CLAUDE QUE LEA ESTO TRAS COMPACT:** Este es el feature mas importante pendiente. El usuario quiere hacer una sesion dedicada de planning + diseño + implementacion. NO empieces a codificar sin antes tener el plan claro y aprobado. Lee primero todas las ideas, decisiones tomadas, y preguntas abiertas. Despues haz preguntas al usuario, no asumas.
+> Estado a 2026-04-18: Chef Caliro V1 está en producción. El contexto completo del plan y las sesiones previas vive en `~/.claude/plans/elegant-hopping-spark.md`; aquí solo se resume lo entregado y lo que queda para V2+.
 
-### Vision general
+### Entregado (producción)
 
-**Idea central:** Caliro deja de ser un "tracker que registra lo que comiste" y se convierte en un "asistente de cocina personal que te dice que comer". Es un cambio de categoria de producto, no solo una feature.
+**Arquitectura**:
+- Tab "Chef" en bottom nav, rutada a `/chef` → `Assistant.tsx` con 3 sub-tabs: **Chat** (asistente existente), **Día** (plan del día), **Semana** (plan semanal).
+- Backend: `/api/planner/day`, `/api/planner/week`, `/api/planner/day/current`, `/api/planner/week/current`, `/api/planner/day/save`, `/api/planner/week/save`, `/api/planner/usage`.
+- Modelos: Sonnet para day + week. Haiku no se usa (ver "Descartadas" abajo).
+- D1: tablas `planner_usage`, `planner_history`, columna `users.dietary_preferences`.
 
-Comparacion con competidores:
-- **MyFitnessPal / Yazio / Lose It**: registras lo que comiste (pasado)
-- **Caliro con Chef**: registras + recibes sugerencias inteligentes (futuro)
+**Funcionalidad**:
+- Plan del día: 4 comidas generadas respetando lo ya registrado hoy, con preferencias dietéticas como reglas duras.
+- Plan semanal: 7 días × 4 comidas con target por día inyectado, variedad enforced (>2× penalizado).
+- Editor inline de cualquier plato antes de registrar (kcal, macros, ingredientes).
+- Prefill Chef → Calculator con chips de porción (½ / 1× / 1½).
 
-**Por que Caliro puede hacerlo bien (ventaja competitiva):**
-1. Tiene un **motor de calibracion** que ya conoce las comidas reales del usuario (top 20 frequent_meals con macros aprendidos)
-2. Tiene una **BD de platos espanoles** (tabla `spanish_dishes`, ~500 platos con macros verificados, porciones, categorias)
-3. Tiene **Claude IA** ya integrado para analisis de texto/foto
-4. Es **especifico para cocina mediterranea/espanola** — los competidores son anglosajones genericos
+**Capa de seguridad nutricional** (añadida post-plan original):
+- Calibración protein-aware (proteína protegida, C+F absorben ajuste).
+- Piso de proteína en prompts (≥85% target).
+- Validador coherencia kcal/ingredientes con tabla ~100 alimentos.
+- 6 tipos de warning editoriales: over_budget, off_budget, low_protein, repeats, kcal_mismatch, nothing_to_plan.
+- Footer con diff honesto (vs restantes, no vs total del día).
 
-### Conversaciones previas con el usuario (decisiones tomadas)
+**UX**:
+- Pantalla de carga con 5 cartas temáticas editoriales (3 pasos cada una).
+- Banners warm palette (ámbar / verde / terracotta) consistentes con el chef.
 
-**Sesion 1 — Brainstorming inicial:**
-- Usuario propuso "menu-maker teniendo en cuenta los ingredientes del usuario, platos inteligentes"
-- Llegamos a la conclusion de que Chef Caliro tiene "potencial infinito" como producto entero, no solo feature
-- Decision: NO mezclarlo con el refactor de analytics, merecia plan propio
-- Usuario dijo "tengo que sleep on it"
+### Pendientes V1 (acabando en sesión actual)
 
-**Sesion 2 — Confirmacion:**
-- Usuario confirmo que quiere hacer Chef Caliro antes de Capacitor / App Store launch
-- Razon: prefiere lanzar con producto completo que ir parcheando con updates de App Store
-- Tiempo estimado: ~1 mes de sprint dedicado
-- Usuario tiene 9 usuarios reales (5 amigos + 4 randoms) — momento de validar antes de añadir mas complejidad
+- **Mark "already registered" meals** — prevenir doble registro.
+- **Register all button** — adoptar plan entero con 1 tap.
+- **Stale plan banner** (opcional) — avisar cuando plan y entries divergen.
 
-**Sesion 3 — Sobre el alcance V1:**
-- Usuario propuso V1 mas simple ("Que como?") y construir incrementalmente
-- Yo (Claude) propuse V1 ambicioso (plan semanal completo)
-- **Decision pendiente** — esperar a la sesion dedicada
+### Descartadas explícitamente
 
-### Posibles versiones (a discutir el alcance)
+- **Fase 2 "¿Qué como ya?" (Haiku)** — el endpoint `/api/planner/suggest` y la tab dedicada NO se construyen. El Chat existente cubre ese caso de uso con el mismo contexto rico y sin ingeniería adicional.
 
-**V1 Minima — "Que como?"**
-- Usuario en cualquier momento del dia toca un boton "¿Que como?"
-- Recibe 3 sugerencias concretas adaptadas a su presupuesto restante (kcal y macros que le quedan hoy)
-- Cada sugerencia: nombre del plato, calorias, macros, porcion estimada en gramos, breve razon ("cubre tu deficit de proteina")
-- Tap en una sugerencia → pre-rellena el form de Calculator → usuario revisa y guarda
-- Opcional: input de texto para contexto ("algo rapido", "tengo pollo", "estoy en restaurante")
+### V2+ (post-V1, cuando haya tracción)
 
-**V2 — Plan semanal**
-- Usuario solicita plan para la semana
-- Claude genera un menu para 7 dias (desayuno + comida + cena + snacks) que cumple sus targets
-- Basado en sus comidas frecuentes (lo que ya come) + variedad de spanish_dishes
-- Editable: usuario puede cambiar comidas individuales o regenerar dias
-- Opcional: generar lista de compra agregando ingredientes
+Items del plan original aún vivos para más adelante:
 
-**V3 — "Tengo estos ingredientes"**
-- Usuario escribe o fotografia los ingredientes que tiene en casa
-- Claude sugiere recetas que puede hacer con eso + cuanto le aporta a su dia
-- Util para evitar desperdicio y reducir trips al super
+- **Variety score multidimensional** (Nivel 3 del roadmap de variedad) — clasificar platos por proteína/carbo/cocina y validar diversidad semántica.
+- **Feedback loop explícito** (Nivel 4) — botones me gusta / no quiero, tabla `planner_feedback`.
+- **Temas semanales** (Nivel 5) — "semana mediterránea", "batch-cooking", narrativa coherente.
+- **Trial 7 días Pro** — al lanzar iOS/Capacitor, con RevenueCat/Stripe trial.
+- **Preview plan Free** — sample plans pre-generados read-only en vez del candado seco.
+- **Persistir warnings en `planner_history`** — para que sobrevivan al reload.
 
-**V4 — Lista de compra inteligente**
-- Genera lista de la compra a partir del plan semanal o de los frecuentes
-- Opcional: integrar con supermercados (futuro lejano, bloqueado por APIs)
+### Histórico (archivado)
 
-**V5 — Modo restaurante**
-- Usuario indica "estoy en italiano / japones / mcdonalds"
-- Sugerencias tipicas de ese tipo de restaurante ajustadas a su presupuesto
-- "En un italiano: pasta al pomodoro 80g (450 kcal) cubre tu deficit de carbs"
+> La sección completa de planning original (visiones, versiones V1-V6, preguntas pendientes, estimaciones de tiempo) vivía aquí. Se archiva en `~/.claude/plans/elegant-hopping-spark.md`. Si alguna vez se retoma el diseño de zero, consultar esa fuente.
 
-**V6 — Comparador de platos** (idea de sesion anterior)
-- Usuario duda entre 2 platos en un menu
-- Escribe los dos, ve comparacion lado a lado con macros y "fit score" (cual encaja mejor con su presupuesto)
-- Esto se planteo originalmente como feature separada, podria absorberse en Chef Caliro
-
-### Datos disponibles para alimentar el sistema
-
-**Del usuario (calculados en tiempo real):**
-- `entries` de hoy → `consumed_kcal`, `consumed_protein`, `consumed_carbs`, `consumed_fat`
-- `target_calories`, `target_protein`, `target_carbs`, `target_fat` del perfil
-- `remaining = target - consumed` por cada macro
-- `meal_type` actual segun la hora del dia (breakfast/lunch/dinner/snack)
-
-**Del historial del usuario:**
-- `user_calibration.frequent_meals` (JSON) — top 20 comidas con `name, avg_kcal, times, last_seen, avg_protein, avg_carbs, avg_fat`
-- `entries` ultimos 90 dias agrupadas por nombre — top foods
-- `meal_type` patterns — que tipo de comida hace en cada hora
-- `weekday_weekend` patterns — que come entre semana vs finde
-
-**Tabla spanish_dishes (~500 platos):**
-- `nombre, categoria, kcal_ref, kcal_min, kcal_max`
-- `proteina_g, carbos_g, grasa_g` por porcion
-- `kcal_per_100g, proteina_per_100g, carbos_per_100g, grasa_per_100g`
-- `porcion_g, porcion_desc` (porcion estandar)
-- `aliases, token_principal, tokens_secundarios` (para fuzzy match)
-- `referencias_visuales` (descripcion visual del plato)
-- `notas_claude` (notas para el modelo)
-- `confianza` (alta/media/baja)
-
-**Ya implementadas en `worker/src/utils/spanishDishes.js`:**
-- `matchDish(userInput, env)` — busqueda fuzzy por aliases/tokens
-- `formatDishContext(match)` — formatea el dish para inyectar en prompt de Claude
-- **NO existe aun:** `findDishesByCalorieRange(env, minKcal, maxKcal, limit)` — necesario para Chef Caliro V1
-
-### Arquitectura tecnica propuesta (V1)
-
-**Backend nuevo: `worker/src/routes/planner.js`**
-
-```
-POST /api/planner/suggest
-  Body: {
-    context?: string,           // texto libre opcional ("algo rapido", "tengo pollo", "estoy en italiano")
-    meal_type?: string,         // override del meal_type auto
-    constraint?: string,        // opcional: "vegetariano", "sin gluten" (V2)
-  }
-
-  Logica:
-  1. requireProAccess (posible: o disponible para todos? decision pendiente)
-  2. rateLimit: ej 10/dia
-  3. Calcular presupuesto restante de hoy
-  4. Determinar meal_type por hora si no viene en body
-  5. Query frequent_meals del usuario filtrados por rango calorico (~30% ±)
-  6. Query spanish_dishes por rango calorico
-  7. Construir prompt para Claude Haiku con:
-     - Presupuesto restante (kcal + macros)
-     - 3-5 platos frecuentes del usuario que encajan
-     - 3-5 platos de spanish_dishes que encajan
-     - Contexto del usuario si lo dio
-     - Meal type
-  8. Claude devuelve JSON con 3 sugerencias
-  9. Return: { budget: {...}, suggestions: [{name, calories, protein, carbs, fat, portion_g, reason}] }
-```
-
-**System prompt (borrador):**
-```
-Eres el chef personal de Caliro. El usuario tiene un presupuesto nutricional
-restante para hoy. Debes sugerir EXACTAMENTE 3 opciones de comida que:
-1. Encajen en su presupuesto sin pasarse
-2. Prioricen platos que ya come (lista de frecuentes proporcionada)
-3. Cubran macros donde tiene deficit
-4. Sean realistas en cocina espanola/mediterranea
-
-Reglas:
-- Cada sugerencia: nombre corto y claro, calorias enteras, proteina/carbs/grasa en gramos, porcion en gramos
-- "reason": una frase corta explicando por que esta opcion es buena ahora
-- Responde en espanol
-- Si presupuesto < 200 kcal: snacks ligeros
-- Si presupuesto > 800 kcal: comida completa
-- Si el usuario da contexto, respetalo (ingredientes, tipo de cocina, restaurante)
-- NO inventes datos nutricionales — usa los frecuentes o spanish_dishes como referencia
-```
-
-**Frontend nuevo: `client/src/components/ChefCaliro.tsx`**
-- Bottom sheet (reutilizar patron de TextAnalyzer / AdvancedAnalytics)
-- Header: presupuesto restante con barras de macros
-- Input opcional de contexto
-- Boton "Sugerir"
-- Estado: idle → loading → results
-- 3 cards de sugerencia con animacion cascada (estilo chips frecuentes)
-- Cada card: nombre serif, macros pills, porcion, razon italic, boton "Registrar"
-- Tap "Registrar" → navigate a Calculator con state pre-rellenado
-
-**Modificaciones a archivos existentes:**
-- `worker/src/utils/spanishDishes.js` → añadir `findDishesByCalorieRange()`
-- `worker/src/index.js` → registrar ruta `/api/planner/*`
-- `client/src/api.js` → añadir `suggestMeal(body, token)`
-- `client/src/pages/Dashboard.tsx` → boton "¿Que como?" visible para Pro (o todos)
-- `client/src/pages/Calculator.tsx` → leer `location.state` para pre-rellenar form
-
-### Decisiones pendientes (preguntar al usuario en sesion dedicada)
-
-**1. ¿Free o Pro?**
-- Si Pro: justifica la suscripcion, valor diferenciador claro
-- Si Free: mas usuarios lo descubren, viralidad
-- Si Pro pero "limitado en Free": ej 3 sugerencias/dia gratis, ilimitado en Pro
-- Mi voto: Pro completo o Free limitado, no Free completo
-
-**2. ¿V1 minimo o V1 ambicioso?**
-- V1 minimo = solo "Que como?" (1 sesion para construir, validable rapido)
-- V1 ambicioso = "Que como?" + Plan semanal + Lista compra (~1 mes)
-- Mi voto: empezar minimo, validar uso, despues expandir
-
-**3. ¿Donde vive el boton de entrada?**
-- Dashboard (boton grande prominente)
-- Calculator (boton al lado de los metodos)
-- Bottom nav (nuevo tab "Chef")
-- Mi voto: Dashboard, mas visibilidad
-
-**4. ¿Sustituye al Asistente de chat o complementa?**
-- Sustituye: el chat actual de IA queda obsoleto
-- Complementa: el chat sigue para preguntas abiertas, Chef es estructurado
-- Mi voto: complementa, son casos de uso distintos
-
-**5. ¿Fotos de los platos?**
-- Sin fotos: simple, rapido
-- Con fotos generadas por DALL-E o Midjourney: caro
-- Con fotos pre-cargadas de spanish_dishes: requiere construir un dataset visual
-- Mi voto: sin fotos en V1, podria añadirse despues
-
-**6. ¿Cuantas sugerencias por peticion?**
-- 3 (mi propuesta inicial) — manejable, da opciones
-- 5 — mas variedad, mas overwhelm
-- 1 — demasiado restrictivo
-- Mi voto: 3
-
-**7. ¿Limite de uso?**
-- Free: ej 3/dia
-- Pro: ilimitado (o 30/dia)
-- Coste por llamada: ~$0.001 con Haiku, asequible
-- Mi voto: 5/dia Free, 30/dia Pro
-
-**8. ¿Personalizacion por preferencias?**
-- Setup inicial: usuario marca alergias, preferencias (vegetariano, sin gluten, etc.)
-- Cada sugerencia respeta esas preferencias
-- Implica nuevo schema en `users` table o nueva tabla `user_preferences`
-- Mi voto: V2, no V1
-
-### Inspiracion de competidores (lo que han hecho mal o bien)
-
-**Fitia (lider en meal planning):**
-- Bueno: genera plan semanal con lista de compra
-- Malo: planes muy genericos, no adaptados al usuario real
-- Aprender: lista de compra es valiosa, planes genericos no diferencian
-
-**Cal AI:**
-- Bueno: foto de comida con IA (rapido)
-- Malo: no sugiere nada, solo registra
-- Aprender: la velocidad es clave, no overcomplicar
-
-**Strongr Fastr:**
-- Bueno: genera planes basados en macros target
-- Malo: catalogo generico, sin contexto cultural
-- Aprender: el contexto cultural (mediterraneo/espanol) es nuestra ventaja
-
-**MyFitnessPal:**
-- Bueno: enorme base de datos de comidas
-- Malo: nunca te dice que comer, solo te deja registrar
-- Aprender: la pregunta "¿que como?" es un hueco gigante en el mercado
-
-### Riesgos y mitigaciones
-
-**Riesgo 1: Sugerencias mediocres porque la BD de spanish_dishes es limitada**
-- Mitigacion: combinar siempre con frequent_meals del usuario (lo que ya come). Si la BD esta limitada, los frecuentes la complementan.
-
-**Riesgo 2: Coste de Claude por usuario activo**
-- Mitigacion: rate limit estricto (5/dia Free, 30/dia Pro). Con Haiku, ~$0.001 por sugerencia × 30 = $0.03/usuario/dia maximo. Asumible.
-
-**Riesgo 3: Sugerencias no factibles ("hazte un risotto en 5 min")**
-- Mitigacion: prompt explicito sobre tiempo de preparacion + categoria del plato (rapido/elaborado)
-
-**Riesgo 4: El usuario no entiende como usar la feature**
-- Mitigacion: empty state claro, ejemplo en el primer uso, micro-onboarding
-
-**Riesgo 5: Las sugerencias se sienten genericas a pesar del esfuerzo**
-- Mitigacion: priorizar fuerte los frequent_meals del usuario en el prompt, no solo spanish_dishes
-
-### Metricas de exito (V1)
-
-- **Adopcion**: % de usuarios Pro que usan el boton "¿Que como?" al menos 1 vez en su primera semana
-- **Retencion del feature**: % de usuarios que vuelven a usarlo en la 2da semana
-- **Conversion**: % de sugerencias que el usuario tappea para registrar
-- **Satisfaccion**: feedback cualitativo via mensaje en la app despues de N usos
-
-### Trabajo previo necesario antes de empezar
-
-1. **Auditar `spanish_dishes` actual** — ¿realmente tiene ~500 platos? ¿que campos? ¿cobertura de categorias?
-2. **Diseñar el system prompt completo** con varias iteraciones
-3. **Mockup visual** del bottom sheet (puede ser un HTML preview como hicimos con tooltip onboarding)
-4. **Decidir las preguntas pendientes** (puntos 1-8 arriba)
-
-### Estimacion de tiempo
-
-- **Planning + diseño UI**: 2-3 sesiones (incluye preview en HTML y validacion del prompt)
-- **Implementacion V1 minima**: 1-2 sesiones
-- **Iteracion sobre feedback de los 5 amigos**: 1-2 semanas
-- **V1 → V2 plan semanal**: otro sprint dedicado de 1-2 semanas
-
-**Total realista para V1 estable: 3-4 semanas calendar.**
 
 ---
 

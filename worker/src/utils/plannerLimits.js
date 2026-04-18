@@ -14,14 +14,11 @@
 // Config — editable sin tocar la lógica del helper.
 // Niveles: 0=Waitlist, 1=Founder, 2=Pro, 3=Free, 99=Admin
 // week: Infinity significa "sin límite semanal, solo respetar el diario".
+//
+// Nota 2026-04-18: la feature `suggest` (Haiku "¿Qué como ya?") se descartó
+// del plan. El Chat existente cubre ese caso de uso. Aquí queda sólo day +
+// week. Si alguna vez se reintroduce, basta con volver a añadir la clave.
 export const PLANNER_LIMITS = {
-  suggest: {
-    0: { day: 0,        week: 0        }, // Waitlist: bloqueado
-    1: { day: 20,       week: Infinity }, // Founder
-    2: { day: 10,       week: Infinity }, // Pro
-    3: { day: 0,        week: 2        }, // Free: 2 por semana
-    99:{ day: Infinity, week: Infinity }, // Admin
-  },
   day: {
     0: { day: 0,        week: 0        },
     1: { day: 5,        week: Infinity },
@@ -38,7 +35,7 @@ export const PLANNER_LIMITS = {
   },
 };
 
-const FEATURES = ['suggest', 'day', 'week'];
+const FEATURES = ['day', 'week'];
 
 function todayISO() {
   return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD en zona local

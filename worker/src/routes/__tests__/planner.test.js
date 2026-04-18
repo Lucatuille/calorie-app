@@ -96,8 +96,9 @@ function makeEnv({
         if (s.startsWith('SELECT meal_type, name, calories, protein, carbs, fat, created_at FROM entries WHERE user_id = ? AND date = ?')) {
           return { results: todayEntries };
         }
-        // GET /day/current lee todas las entries del día (sin meal_type/created_at) para computar remaining.
-        if (s.startsWith('SELECT calories, protein, carbs, fat FROM entries')) {
+        // GET /day/current lee todas las entries del día para computar
+        // remaining + registered_meal_types (necesita meal_type/created_at).
+        if (s.startsWith('SELECT calories, protein, carbs, fat, meal_type, created_at FROM entries')) {
           return { results: todayEntries };
         }
         if (s.startsWith('SELECT date, meal_type, name, calories FROM entries')) {
@@ -708,6 +709,30 @@ describe('GET /api/planner/day/current', () => {
       carbs:   70,   // 200 - 130
       fat:     30,   // 60 - 30
     });
+  });
+
+  it('devuelve registered_meal_types desde los entries del día', async () => {
+    // Usuario registró desayuno (a las 9 UTC = 11 Madrid) y comida (14 UTC).
+    // resolveMealTypesRegistered debería inferir desayuno + comida.
+    const planObj = { meals: [{ name: 'Cena', kcal: 500 }] };
+    const res = await handlePlanner(
+      makeRequest('GET', '/api/planner/day/current'),
+      makeEnv({
+        userRow: {
+          target_calories: 1800, target_protein: 150,
+          target_carbs: 200, target_fat: 60,
+        },
+        todayEntries: [
+          { calories: 400, protein: 20, carbs: 50, fat: 10, meal_type: 'breakfast', created_at: '2026-04-18 09:00:00' },
+          { calories: 700, protein: 40, carbs: 80, fat: 20, meal_type: 'lunch',     created_at: '2026-04-18 12:00:00' },
+        ],
+        historyRows: [{ plan_json: JSON.stringify(planObj), created_at: 1 }],
+      }),
+      '/api/planner/day/current'
+    );
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.data.registered_meal_types)).toBe(true);
+    expect(res.data.registered_meal_types.sort()).toEqual(['comida', 'desayuno']);
   });
 
   it('remaining sin entries = target completo', async () => {
