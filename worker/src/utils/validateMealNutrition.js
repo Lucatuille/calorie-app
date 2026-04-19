@@ -83,7 +83,11 @@ const DENSITY_TABLE = [
   { keywords: ['clara de huevo', 'clara'],                   density: 50,  unit: 'g' },
   { keywords: ['yema de huevo', 'yema'],                     density: 320, unit: 'g' },
   { keywords: ['huevo'],                                     density: 143, unit: 'g' }, // 1 huevo ~50g ~72kcal
-  { keywords: ['yogur griego', 'yogur proteico'],            density: 130, unit: 'g' },
+  // Yogur griego: rango real 60-150 kcal/100g según marca (full fat vs 0%
+  // vs sin lactosa, que suele ser más ligero). 90 es punto medio pragmático
+  // que evita false positives con las variedades light/sin lactosa más
+  // populares sin inflar demasiado con full-fat.
+  { keywords: ['yogur griego', 'yogur proteico'],            density: 90,  unit: 'g' },
   { keywords: ['yogur natural', 'yogur'],                    density: 61,  unit: 'g' },
   { keywords: ['queso fresco batido', 'requesón', 'requeson'], density: 75, unit: 'g' },
   { keywords: ['queso fresco'],                              density: 98,  unit: 'g' },
@@ -92,16 +96,23 @@ const DENSITY_TABLE = [
   { keywords: ['queso'],                                     density: 350, unit: 'g' }, // fallback genérico queso curado
 
   // ── CEREALES / PASTA / PAN (g) ──────────────────────────────
-  { keywords: ['arroz cocido'],                              density: 130, unit: 'g' },
-  { keywords: ['arroz crudo', 'arroz'],                      density: 365, unit: 'g' }, // Sonnet suele poner crudo
-  { keywords: ['pasta cocida', 'espaguetis cocidos'],        density: 131, unit: 'g' },
-  { keywords: ['pasta', 'espaguetis', 'macarrones', 'fideos', 'tallarines'], density: 370, unit: 'g' },
+  // Default NO modificador = cocido. Razón: en un plato servido, "90g arroz"
+  // casi siempre significa el peso YA cocido, no crudo. Tratar crudo como
+  // default inflaba kcal por 2.5-3× y disparaba false positives del validador
+  // (ver screenshot 2026-04-19: arroz con pollo 628 declarado vs 873 estimado).
+  // "arroz crudo" / "pasta cruda" explícitos siguen matcheando su densidad real.
+  { keywords: ['arroz crudo'],                               density: 365, unit: 'g' },
+  { keywords: ['arroz cocido', 'arroz'],                     density: 130, unit: 'g' }, // default = cocido
+  { keywords: ['pasta cruda', 'espaguetis crudos', 'macarrones crudos'], density: 370, unit: 'g' },
+  { keywords: ['pasta cocida', 'espaguetis cocidos', 'pasta', 'espaguetis', 'macarrones', 'fideos', 'tallarines'], density: 131, unit: 'g' },
   { keywords: ['pan integral'],                              density: 245, unit: 'g' },
   { keywords: ['pan'],                                       density: 265, unit: 'g' },
   { keywords: ['tostada'],                                   density: 380, unit: 'g' },
+  // Avena se queda en crudo: en desayuno se pesa seca antes de cocinar,
+  // Sonnet típicamente dice "60g avena" = 60g en crudo.
   { keywords: ['avena'],                                     density: 380, unit: 'g' },
-  { keywords: ['quinoa cocida'],                             density: 120, unit: 'g' },
-  { keywords: ['quinoa'],                                    density: 368, unit: 'g' },
+  { keywords: ['quinoa cruda'],                              density: 368, unit: 'g' },
+  { keywords: ['quinoa cocida', 'quinoa'],                   density: 120, unit: 'g' }, // default = cocida
   { keywords: ['cuscús', 'cuscus', 'couscous'],              density: 112, unit: 'g' }, // cocido
 
   // ── LEGUMBRES (g) ───────────────────────────────────────────

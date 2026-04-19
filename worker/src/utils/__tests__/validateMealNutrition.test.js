@@ -46,11 +46,11 @@ describe('estimateKcalFromIngredients — parsing básico', () => {
     expect(r.total).toBe(3);   // 3 con cantidad+unidad
     expect(r.matched).toBe(3); // los 3 reconocidos
     // 150/100 * 170 (pollo) = 255
-    // 80/100 * 365 (arroz crudo) = 292
+    // 80/100 * 130 (arroz cocido — default post 2026-04-19) = 104
     // 30 * 9 = 270
-    // Total ~817
-    expect(r.estimate).toBeGreaterThan(780);
-    expect(r.estimate).toBeLessThan(850);
+    // Total ~629
+    expect(r.estimate).toBeGreaterThan(600);
+    expect(r.estimate).toBeLessThan(660);
   });
 
   it('decimales con coma (locale ES)', () => {
@@ -93,6 +93,59 @@ describe('estimateKcalFromIngredients — bug orden keywords (2026-04-17)', () =
     const r = estimateKcalFromIngredients('100g judías blancas');
     // "judías blancas" no contiene "judías verdes" → sigue hasta alubias row
     expect(r.estimate).toBe(125);
+  });
+
+  // Casos del screenshot 2026-04-19: el validador daba false positives
+  // porque trataba arroz/pasta/quinoa sin modificador como crudo, y yogur
+  // griego siempre como full-fat. Tras flip de defaults:
+  it('"90g arroz" sin modificador → cocido (130), no crudo', () => {
+    const r = estimateKcalFromIngredients('90g arroz');
+    // 90 * 1.30 = 117 (cocido), no 329 (crudo)
+    expect(r.estimate).toBe(117);
+  });
+
+  it('"90g arroz crudo" explícito sigue siendo crudo (365)', () => {
+    const r = estimateKcalFromIngredients('90g arroz crudo');
+    expect(r.estimate).toBe(329); // 90 * 365/100
+  });
+
+  it('"80g pasta" sin modificador → cocida (131)', () => {
+    const r = estimateKcalFromIngredients('80g pasta');
+    expect(r.estimate).toBe(105); // 80 * 131/100
+  });
+
+  it('arroz con pollo completo del screenshot ya NO da false positive', () => {
+    const meal = {
+      name: 'Arroz con pollo',
+      kcal: 628,
+      ingredients: '150g pechuga de pollo · 90g arroz · 80g tomate triturado · 50g pimiento rojo · 30ml aceite de oliva · ajo y especias',
+    };
+    const r = validateMealCoherence(meal);
+    // 150/100 * 165 (pechuga pollo) = 248
+    // 90/100 * 130 (arroz cocido, nuevo default) = 117
+    // 80/100 * 18 (tomate) = 14
+    // 50/100 * 26 (pimiento) = 13
+    // 30 * 9 (aceite) = 270
+    // Total ~662. Declared 628. Diff -5% → NO suspicious.
+    expect(r.estimate).toBeGreaterThan(630);
+    expect(r.estimate).toBeLessThan(690);
+    expect(r.suspicious).toBe(false);
+  });
+
+  it('yogur griego con nueces y plátano del screenshot ya NO da false positive', () => {
+    const meal = {
+      name: 'Yogur griego con nueces y plátano',
+      kcal: 280,
+      ingredients: '200g yogur griego natural sin lactosa · 1 plátano pequeño 80g · 15g nueces',
+    };
+    const r = validateMealCoherence(meal);
+    // 200/100 * 90 (yogur griego, ajustado) = 180
+    // 80/100 * 90 (plátano) = 72
+    // 15/100 * 654 (nueces) = 98
+    // Total ~350. Declared 280. Diff -20% → NO suspicious (bajo umbral 25%).
+    expect(r.estimate).toBeGreaterThan(330);
+    expect(r.estimate).toBeLessThan(380);
+    expect(r.suspicious).toBe(false);
   });
 
   it('hamburguesa completa ya NO da false positive (screenshot 2026-04-17)', () => {
