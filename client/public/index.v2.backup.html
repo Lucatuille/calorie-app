@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- SEO -->
+<title>Caliro — La app de nutrición que aprende cómo comes tú</title>
+<meta name="description" content="Registra comidas con foto, escáner o texto. La IA aprende tus porciones y mejora con cada corrección. Alternativa española a MyFitnessPal. Gratis.">
+<link rel="canonical" href="https://caliro.dev/">
+<link rel="alternate" hreflang="es" href="https://caliro.dev/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://caliro.dev/">
+<meta property="og:title" content="Caliro — La app de nutrición que aprende cómo comes tú">
+<meta property="og:description" content="Foto, escáner o texto. Sin anuncios. La alternativa española a MyFitnessPal.">
+<meta property="og:image" content="https://caliro.dev/og-image.png">
+<meta property="og:locale" content="es_ES">
+
+<!-- Twitter/X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Caliro — La app de nutrición que aprende cómo comes tú">
+<meta name="twitter:description" content="Foto, escáner o texto. Sin anuncios. La alternativa española a MyFitnessPal.">
+<meta name="twitter:image" content="https://caliro.dev/og-image.png">
+
+<!-- Google Search Console -->
+<meta name="google-site-verification" content="7M6oLzfYaBAnQYXVLzmDetdD27nQfliCpcYYXrDJ0jA">
+
+<!-- Favicon -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+<!-- PWA: manifest necesario para que iOS use start_url=/app/ al añadir a inicio -->
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Caliro">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script>
+  // Instalaciones antiguas sin manifest: si la PWA se abre en modo standalone desde /,
+  // redirigir a la app automáticamente
+  if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+    window.location.replace('/app');
+  }
+</script>
+
+<!-- Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  "name": "Caliro",
+  "description": "App de nutrición con IA que aprende cómo comes tú. Alternativa española a MyFitnessPal.",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "iOS, Android, Web",
+  "inLanguage": "es",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Qué diferencia al plan Free del Pro?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Free incluye registro manual ilimitado, escáner, 5 análisis por foto y 2 sugerencias semanales del Chef Caliro. Pro desbloquea el asistente completo, planes del día y semanales, el motor de calibración que aprende de ti, análisis profundo con proyecciones de peso y foto IA ilimitada."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿La IA realmente aprende de mis correcciones?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Cada corrección que haces queda registrada y el motor la aplica a futuros análisis similares. Con el tiempo las estimaciones son cada vez más precisas para tu forma de comer específica."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Funciona para comida española y mediterránea?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Usamos Claude Vision que reconoce platos mediterráneos reales — tortilla española, bocadillos, arroces, tapas. Si la estimación no es correcta, corriges y el sistema aprende."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo cancelar en cualquier momento?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Sin permanencia ni penalización. Si cancelas, pasas al plan Free con todos tus datos intactos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Está disponible en iOS y Android?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Caliro funciona desde el navegador en cualquier dispositivo — iPhone, Android o PC. Puedes añadirla a tu pantalla de inicio como una app normal, sin descargar nada. Próximamente también en App Store."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- Analytics -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="0ea8f133-f719-429d-8876-b1d4a901c556"></script>
+
+<!-- Fuentes -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F2EE;
+  --white: #FFFFFF;
+  --dark: #111111;
+  --mid: #888888;
+  --light: #E8E4DE;
+  --inner: #F0EDE9;
+  --green: #22c55e;
+  --green-d: #16a34a;
+  --green-s: #dcfce7;
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+  --sh: 0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  --sh-lg: 0 24px 64px rgba(0,0,0,0.16), 0 4px 16px rgba(0,0,0,0.07);
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); overflow-x: hidden; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  padding: 16px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(245,242,238,0.92);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+nav.scrolled { border-bottom-color: var(--light); }
+.nav-logo { font-family: var(--serif); font-size: 20px; color: var(--green); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+.nav-links a { font-size: 13px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--dark); }
+.nav-cta { background: var(--dark) !important; color: white !important; padding: 8px 18px; border-radius: 100px; font-weight: 500 !important; font-size: 13px !important; }
+@media (max-width: 640px) { nav { padding: 14px 20px; } .nav-links { display: none; } }
+
+/* HERO */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 120px 24px 80px; text-align: center;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--white); border: 1px solid var(--light); border-radius: 100px;
+  padding: 6px 14px; font-size: 12px; color: var(--mid);
+  margin-bottom: 28px; box-shadow: var(--sh);
+  animation: fadeUp 0.7s ease both;
+}
+.badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.hero-h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 7vw, 76px);
+  line-height: 1.08; max-width: 820px; margin-bottom: 22px;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+.hero-h1 em { font-style: italic; color: var(--green); }
+.hero-p {
+  font-size: clamp(15px, 2vw, 18px); color: var(--mid);
+  max-width: 500px; line-height: 1.65; margin-bottom: 40px; font-weight: 300;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+.hero-btns {
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 36px; animation: fadeUp 0.7s 0.3s ease both;
+}
+.btn-dark {
+  background: var(--dark); color: white; padding: 14px 28px; border-radius: 100px;
+  font-family: var(--sans); font-size: 15px; font-weight: 500; text-decoration: none;
+  transition: opacity 0.2s, transform 0.1s; display: inline-block;
+}
+.btn-dark:hover { opacity: 0.82; transform: scale(1.02); }
+.btn-ghost { font-size: 14px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.btn-ghost:hover { color: var(--dark); }
+.hero-trust {
+  display: flex; align-items: center; gap: 18px; font-size: 12px; color: var(--mid);
+  flex-wrap: wrap; justify-content: center;
+  animation: fadeUp 0.7s 0.4s ease both;
+}
+.hero-trust span { display: flex; align-items: center; gap: 5px; }
+
+/* PHONE MOCKUPS */
+.phones {
+  display: flex; justify-content: center; align-items: flex-end; gap: 14px;
+  margin-top: 64px;
+  animation: fadeUp 0.9s 0.5s ease both;
+}
+.phone { border-radius: 32px; overflow: hidden; box-shadow: var(--sh-lg); flex-shrink: 0; }
+.phone.c { width: 210px; }
+.phone.s { width: 170px; transform: translateY(28px); opacity: 0.78; }
+@media (max-width: 640px) { .phone.s { display: none; } }
+
+/* Simulated screens */
+.scr { background: var(--cream); padding: 14px; min-height: 400px; display: flex; flex-direction: column; gap: 8px; }
+.s-logo { font-family: var(--serif); font-size: 13px; color: var(--green); }
+.s-name { font-family: var(--serif); font-size: 20px; color: var(--dark); }
+.s-card { background: var(--white); border-radius: 14px; padding: 12px; box-shadow: 0 3px 10px rgba(0,0,0,.07); }
+.s-big { font-family: var(--serif); font-size: 32px; line-height: 1; }
+.s-lbl { font-size: 9px; color: var(--mid); margin: 2px 0 8px; }
+.s-prog { height: 3px; background: var(--light); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.s-prog-f { height: 100%; background: var(--green); border-radius: 3px; }
+.s-macs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+.s-mac { background: var(--cream); border-radius: 8px; padding: 7px 5px; position: relative; overflow: hidden; text-align: center; }
+.s-mac::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 2px 2px 0 0; }
+.mg::before { background: var(--green); } .ma::before { background: var(--amber); } .mb::before { background: var(--blue); }
+.s-mv { font-size: 12px; font-weight: 600; } .s-ml { font-size: 8px; color: var(--mid); }
+.s-food { background: var(--white); border-radius: 12px; padding: 10px 11px; box-shadow: 0 2px 6px rgba(0,0,0,.05); }
+.s-fl { font-size: 8px; color: var(--mid); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+.s-fr { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--light); }
+.s-fr:last-child { border: none; padding-bottom: 0; }
+.s-fn { font-size: 10px; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-fk { font-size: 10px; color: var(--green); font-weight: 600; }
+.s-dark { background: var(--dark); border-radius: 12px; padding: 10px 11px; margin-top: auto; }
+.s-dbadge { background: var(--green); color: white; font-size: 8px; font-weight: 600; padding: 2px 7px; border-radius: 100px; display: inline-block; margin-bottom: 4px; }
+.s-dt { font-family: var(--serif); font-size: 13px; color: white; margin-bottom: 2px; }
+.s-dd { font-size: 9px; color: #777; line-height: 1.4; }
+
+/* PROBLEMA */
+.problema { background: var(--dark); padding: 100px 24px; }
+.prob-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.prob-sl { color: #555; } .prob-h { font-family: var(--serif); font-size: clamp(32px,4vw,52px); line-height: 1.1; color: white; margin-bottom: 16px; }
+.prob-h em { font-style: italic; color: var(--green); }
+.prob-p { font-size: 16px; color: #777; line-height: 1.65; font-weight: 300; }
+.prob-list { display: flex; flex-direction: column; gap: 16px; }
+.prob-item { display: flex; gap: 14px; align-items: flex-start; }
+.prob-ico { width: 38px; height: 38px; border-radius: 10px; background: #1e1e1e; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.prob-item strong { display: block; font-size: 14px; font-weight: 500; color: white; margin-bottom: 3px; }
+.prob-item span { font-size: 12px; color: #666; line-height: 1.5; }
+@media (max-width: 768px) { .prob-inner { grid-template-columns: 1fr; gap: 40px; } }
+
+/* DIFERENCIADORES */
+.diffs-wrap { max-width: 1100px; margin: 0 auto; padding: 100px 24px; }
+.diffs-hdr { text-align: center; margin-bottom: 56px; }
+.sl { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--mid); margin-bottom: 12px; }
+.sh { font-family: var(--serif); font-size: clamp(32px,4vw,52px); line-height: 1.1; max-width: 600px; margin: 0 auto 14px; }
+.sh em { font-style: italic; color: var(--green); }
+.sp { font-size: 16px; color: var(--mid); max-width: 480px; margin: 0 auto; line-height: 1.65; font-weight: 300; }
+.diffs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.diff-card { background: var(--white); border-radius: 20px; padding: 28px 24px; box-shadow: var(--sh); transition: transform 0.2s, box-shadow 0.2s; }
+.diff-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.12); }
+.diff-card.feat { background: var(--dark); color: white; }
+.diff-n { font-family: var(--serif); font-size: 48px; color: var(--light); line-height: 1; margin-bottom: 16px; }
+.diff-card.feat .diff-n { color: #2a2a2a; }
+.diff-t { font-family: var(--serif); font-size: 22px; margin-bottom: 10px; line-height: 1.2; }
+.diff-card.feat .diff-t { color: white; }
+.diff-b { font-size: 14px; color: var(--mid); line-height: 1.65; }
+.diff-card.feat .diff-b { color: #777; }
+@media (max-width: 768px) { .diffs-grid { grid-template-columns: 1fr; } }
+
+/* CÓMO FUNCIONA */
+.como { background: var(--white); padding: 100px 24px; }
+.como-inner { max-width: 900px; margin: 0 auto; }
+.como-hdr { text-align: center; margin-bottom: 64px; }
+.steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; position: relative; }
+.steps::before { content: ''; position: absolute; top: 28px; left: 16.66%; right: 16.66%; height: 1px; background: var(--light); }
+.step { text-align: center; padding: 0 20px; }
+.step-n { width: 56px; height: 56px; border-radius: 50%; background: var(--white); border: 1.5px solid var(--light); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 22px; margin: 0 auto 20px; position: relative; z-index: 1; }
+.step-n.on { background: var(--dark); border-color: var(--dark); color: white; }
+.step-t { font-family: var(--serif); font-size: 18px; margin-bottom: 8px; }
+.step-b { font-size: 13px; color: var(--mid); line-height: 1.6; }
+@media (max-width: 640px) { .steps { grid-template-columns: 1fr; gap: 32px; } .steps::before { display: none; } }
+
+/* COMPARATIVA */
+.vs-wrap { max-width: 860px; margin: 0 auto; padding: 100px 24px; }
+.vs-hdr { text-align: center; margin-bottom: 48px; }
+.vs-table { background: var(--white); border-radius: 20px; box-shadow: var(--sh); overflow: hidden; }
+.vs-row { display: grid; grid-template-columns: 1fr 100px 100px 100px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--light); font-size: 13px; }
+.vs-row:last-child { border: none; }
+.vs-row.hdr { background: var(--cream); font-weight: 600; font-size: 12px; letter-spacing: .05em; padding: 12px 24px; }
+.ck { text-align: center; }
+.cy { color: var(--green); font-size: 16px; }
+.cn { color: var(--light); font-size: 16px; }
+.cp { color: var(--amber); font-size: 12px; font-weight: 600; }
+@media (max-width: 640px) {
+  .vs-row { grid-template-columns: 1fr 70px 70px; font-size: 12px; padding: 12px 16px; }
+  .vs-row .hide { display: none; }
+}
+
+/* PRICING */
+.pricing { background: var(--dark); padding: 100px 24px; }
+.pricing-inner { max-width: 860px; margin: 0 auto; }
+.pr-hdr { text-align: center; margin-bottom: 48px; }
+.pr-hdr .sl { color: #555; }
+.pr-hdr .sh { color: white; }
+.pr-hdr .sp { color: #888; }
+.pr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pr-card { border-radius: 20px; padding: 32px 28px; background: #1a1a1a; border: 1px solid #2a2a2a; }
+.pr-card.feat { background: var(--white); border-color: transparent; box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+.pr-badge { display: inline-block; background: var(--green); color: white; font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 100px; margin-bottom: 14px; }
+.pr-name { font-family: var(--serif); font-size: 28px; color: white; margin-bottom: 4px; }
+.pr-card.feat .pr-name { color: var(--dark); }
+.pr-price { font-family: var(--serif); font-size: 48px; color: white; line-height: 1; margin-bottom: 4px; }
+.pr-card.feat .pr-price { color: var(--dark); }
+.pr-period { font-size: 12px; color: #555; margin-bottom: 24px; }
+.pr-card.feat .pr-period { color: var(--mid); }
+.pr-feats { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.pr-feats li { font-size: 13px; color: #777; display: flex; align-items: center; gap: 8px; }
+.pr-card.feat .pr-feats li { color: var(--mid); }
+.pr-feats li::before { content: '✓'; color: var(--green); font-weight: 600; flex-shrink: 0; }
+.pr-feats li.dim::before { content: '–'; color: #333; }
+.pr-feats li.dim { color: #444; }
+.pr-card.feat .pr-feats li.dim { color: #ccc; }
+.pr-btn { display: block; text-align: center; padding: 13px; border-radius: 12px; font-family: var(--sans); font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity 0.2s; background: #222; color: #666; }
+.pr-card.feat .pr-btn { background: var(--dark); color: white; }
+.pr-btn:hover { opacity: 0.8; }
+@media (max-width: 640px) { .pr-grid { grid-template-columns: 1fr; } }
+
+/* FAQ */
+.faq-wrap { max-width: 680px; margin: 0 auto; padding: 100px 24px; }
+.faq-hdr { text-align: center; margin-bottom: 48px; }
+.faq-item { border-bottom: 1px solid var(--light); padding: 20px 0; cursor: pointer; }
+.faq-q { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 500; gap: 16px; }
+.faq-plus { color: var(--mid); font-size: 22px; transition: transform 0.25s; flex-shrink: 0; font-family: var(--serif); line-height: 1; }
+.faq-item.open .faq-plus { transform: rotate(45deg); }
+.faq-a { font-size: 14px; color: var(--mid); line-height: 1.7; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; }
+.faq-item.open .faq-a { max-height: 240px; padding-top: 12px; }
+
+/* CTA FINAL */
+.cta-final { background: var(--dark); padding: 120px 24px; text-align: center; }
+.cta-final .sh { color: white; margin: 0 auto 16px; }
+.cta-final .sh em { color: var(--green); }
+.cta-final .sp { color: #888; margin: 0 auto 40px; }
+.btn-green { background: var(--green); color: white; padding: 16px 36px; border-radius: 100px; font-family: var(--sans); font-size: 16px; font-weight: 500; text-decoration: none; transition: background 0.2s, transform 0.1s; display: inline-block; }
+.btn-green:hover { background: var(--green-d); transform: scale(1.02); }
+
+/* FOOTER */
+footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+.f-logo { font-family: var(--serif); font-size: 18px; color: var(--green); }
+.f-links { display: flex; gap: 24px; list-style: none; }
+.f-links a { font-size: 12px; color: #555; text-decoration: none; transition: color 0.2s; }
+.f-links a:hover { color: #888; }
+.f-copy { font-size: 12px; color: #444; }
+
+/* REVEAL */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="/" class="nav-logo">Caliro</a>
+  <ul class="nav-links">
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#diferencias">Por qué Caliro</a></li>
+    <li><a href="#precios">Precios</a></li>
+    <li><a href="/app/register" class="nav-cta">Empieza gratis</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Alternativa gratuita a MyFitnessPal
+  </div>
+  <h1 class="hero-h1">La app de nutrición que<br><em>aprende cómo comes tú</em></h1>
+  <p class="hero-p">Foto, escáner o texto. Sin anuncios. Sin 10€ al mes. La IA se calibra a tu dieta real — tostadas con tomate incluidas.</p>
+  <div class="hero-btns">
+    <a href="/app/register" class="btn-dark">Empieza gratis →</a>
+    <a href="#como-funciona" class="btn-ghost">Ver cómo funciona ↓</a>
+  </div>
+  <div class="hero-trust">
+    <span>✓ Gratis para siempre</span>
+    <span>✓ Sin anuncios</span>
+    <span>✓ En español</span>
+    <span>✓ Dieta mediterránea</span>
+  </div>
+  <a href="/blog/calculadora-tdee" style="display:inline-block; margin-top:16px; font-size:13px; color:var(--mid); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--mid)'">¿No sabes cuántas calorías necesitas? Calcula tu TDEE gratis →</a>
+
+  <!-- Phones -->
+  <div class="phones">
+    <!-- Asistente -->
+    <div class="phone s">
+      <div class="scr">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-family:var(--serif);font-size:16px;">Asistente <span style="font-size:11px;color:var(--mid);">∞</span></div>
+          <div style="font-size:9px;color:var(--mid);background:var(--white);padding:3px 9px;border-radius:100px;box-shadow:0 1px 3px rgba(0,0,0,.06);">Historial</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px;">
+          <div style="background:var(--white);border-radius:9px;padding:7px 5px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);"><div style="font-size:12px;font-weight:600;color:var(--green);">1327</div><div style="font-size:8px;color:var(--mid);margin-top:1px;">kcal libres</div></div>
+          <div style="background:var(--white);border-radius:9px;padding:7px 5px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);"><div style="font-size:12px;font-weight:600;">107g</div><div style="font-size:8px;color:var(--mid);margin-top:1px;">proteína</div></div>
+          <div style="background:var(--white);border-radius:9px;padding:7px 5px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);"><div style="font-size:12px;font-weight:600;">🔥4</div><div style="font-size:8px;color:var(--mid);margin-top:1px;">racha</div></div>
+        </div>
+        <div style="background:var(--white);border-radius:13px 13px 13px 4px;padding:11px 12px;font-size:10px;line-height:1.55;box-shadow:0 1px 4px rgba(0,0,0,.06);max-width:88%;">Llevas <span style="color:var(--green);font-weight:600;">485 kcal</span> — te quedan <span style="color:var(--green);font-weight:600;">1327</span> y <span style="color:var(--green);font-weight:600;">107g proteína</span> para hoy. ¿Cómo lo llevas?</div>
+        <div style="background:var(--white);border-radius:13px 13px 13px 4px;padding:11px 12px;font-size:10px;line-height:1.55;box-shadow:0 1px 4px rgba(0,0,0,.06);max-width:88%;margin-top:6px;">Con esas kcal te sugiero pechuga con arroz. Llegarías al objetivo con +40g de proteína.</div>
+        <div style="background:var(--white);border-radius:12px;padding:9px 11px;font-size:9px;color:#bbb;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-top:auto;">Pregúntame sobre tus datos...</div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="phone c">
+      <div class="scr">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="s-logo">Caliro</div>
+          <div style="font-size:9px;background:var(--dark);color:white;padding:2px 8px;border-radius:100px;">👑 Admin</div>
+        </div>
+        <div style="font-size:9px;color:var(--mid);">Buenos días,</div>
+        <div class="s-name">Luca <span style="font-size:10px;background:#fff3e0;border:1px solid #f59e0b33;border-radius:100px;padding:2px 7px;font-family:var(--sans);">🔥 4 días</span></div>
+        <div class="s-card">
+          <div class="s-big">1327</div>
+          <div class="s-lbl">kcal libres hoy</div>
+          <div class="s-prog"><div class="s-prog-f" style="width:27%;"></div></div>
+          <div class="s-macs">
+            <div class="s-mac mg"><div class="s-mv">29g</div><div class="s-ml">proteína</div></div>
+            <div class="s-mac ma"><div class="s-mv">32g</div><div class="s-ml">carbos</div></div>
+            <div class="s-mac mb"><div class="s-mv">27g</div><div class="s-ml">grasa</div></div>
+          </div>
+        </div>
+        <div class="s-food">
+          <div class="s-fl">HOY · 1 COMIDA</div>
+          <div class="s-fr"><div class="s-fn">Tostadas con jamón serrano...</div><div class="s-fk">485</div></div>
+        </div>
+        <div style="background:var(--white);border-radius:12px;padding:10px 11px;box-shadow:0 2px 6px rgba(0,0,0,.05);">
+          <div style="font-size:8px;color:var(--mid);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;">SUPLEMENTOS</div>
+          <div style="display:flex;gap:6px;">
+            <div style="flex:1;background:var(--cream);border-radius:8px;padding:8px 5px;text-align:center;font-size:14px;">💪</div>
+            <div style="flex:1;background:var(--cream);border-radius:8px;padding:8px 5px;text-align:center;font-size:14px;">🐟</div>
+            <div style="flex:1;background:var(--cream);border-radius:8px;padding:8px 5px;text-align:center;font-size:14px;">😴</div>
+          </div>
+        </div>
+        <div class="s-dark">
+          <div class="s-dbadge">Pro</div>
+          <div class="s-dt">Asistente personal</div>
+          <div class="s-dd">Llevas 485 kcal — te quedan 1327 kcal y 108g de proteína para hoy.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registrar -->
+    <div class="phone s">
+      <div class="scr">
+        <div style="font-size:9px;color:var(--mid);">Miércoles, 18 De Marzo</div>
+        <div style="font-family:var(--serif);font-size:22px;margin-bottom:10px;">Registrar</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:var(--green-s);border:1.5px solid var(--green);border-radius:12px;padding:12px 6px;text-align:center;"><div style="font-size:16px;margin-bottom:3px;">📷</div><div style="font-size:9px;color:var(--green-d);font-weight:600;">Foto IA</div></div>
+          <div style="background:var(--white);border:1px solid var(--light);border-radius:12px;padding:12px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);"><div style="font-size:16px;margin-bottom:3px;">≡</div><div style="font-size:9px;color:var(--mid);">Escanear</div></div>
+          <div style="background:var(--white);border:1px solid var(--light);border-radius:12px;padding:12px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);"><div style="font-size:16px;margin-bottom:3px;">✓</div><div style="font-size:9px;color:var(--mid);">Describir</div></div>
+        </div>
+        <div style="background:var(--white);border-radius:14px;padding:14px;box-shadow:0 3px 10px rgba(0,0,0,.07);">
+          <div style="font-size:10px;color:#bbb;padding-bottom:8px;border-bottom:1px solid var(--light);margin-bottom:8px;">¿Qué has comido?</div>
+          <div style="font-family:var(--serif);font-size:32px;color:var(--dark);margin-bottom:8px;">0 <span style="font-size:12px;font-family:var(--sans);color:var(--mid);">kcal</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;">
+            <div style="background:var(--cream);border-radius:8px;padding:7px 4px;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);"></div><div style="font-size:11px;font-weight:600;margin-top:2px;">0g</div><div style="font-size:8px;color:var(--mid);">proteína</div></div>
+            <div style="background:var(--cream);border-radius:8px;padding:7px 4px;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber);"></div><div style="font-size:11px;font-weight:600;margin-top:2px;">0g</div><div style="font-size:8px;color:var(--mid);">carbos</div></div>
+            <div style="background:var(--cream);border-radius:8px;padding:7px 4px;text-align:center;position:relative;overflow:hidden;"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue);"></div><div style="font-size:11px;font-weight:600;margin-top:2px;">0g</div><div style="font-size:8px;color:var(--mid);">grasa</div></div>
+          </div>
+        </div>
+        <div style="background:var(--dark);color:white;border-radius:12px;padding:12px;text-align:center;font-size:12px;font-weight:500;opacity:.3;margin-top:auto;">Guardar comida</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEMA -->
+<section class="problema">
+  <div class="prob-inner">
+    <div class="reveal">
+      <div class="sl prob-sl">El problema</div>
+      <h2 class="prob-h">MyFitnessPal no entiende <em>cómo comes tú</em></h2>
+      <p class="prob-p">Las apps americanas están hechas para la dieta americana. Estimaciones genéricas, base de datos llena de errores, y encima 9€/mes con anuncios.</p>
+    </div>
+    <div class="prob-list reveal">
+      <div class="prob-item">
+        <div class="prob-ico">💸</div>
+        <div><strong>8,99€/mes con anuncios</strong><span>Pagar para ver publicidad no tiene sentido. Caliro es gratis y sin anuncios.</span></div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-ico">🍕</div>
+        <div><strong>No entiende la comida española</strong><span>¿Cocido madrileño? ¿Tostadas con tomate? Errores constantes en su base de datos.</span></div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-ico">🤖</div>
+        <div><strong>La misma IA para todos</strong><span>Estimaciones genéricas que no aprenden de tus correcciones ni de cómo comes tú.</span></div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-ico">🌍</div>
+        <div><strong>500M de hispanohablantes ignorados</strong><span>No existe una app de nutrición con diseño premium hecha para España y Latinoamérica.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIFERENCIADORES -->
+<section id="diferencias">
+  <div class="diffs-wrap">
+    <div class="diffs-hdr reveal">
+      <div class="sl">Por qué Caliro</div>
+      <h2 class="sh">Lo que ninguna<br>otra app tiene</h2>
+      <p class="sp">Tres diferencias técnicas reales. No marketing.</p>
+    </div>
+    <div class="diffs-grid">
+      <div class="diff-card feat reveal">
+        <div class="diff-n">01</div>
+        <h3 class="diff-t">Motor de calibración personal</h3>
+        <p class="diff-b">La IA aprende de cada corrección que haces. Sus estimaciones son específicas para ti, no para un usuario promedio. Ningún competidor tiene esto.</p>
+      </div>
+      <div class="diff-card reveal">
+        <div class="diff-n">02</div>
+        <h3 class="diff-t">Asistente con tu historial real</h3>
+        <p class="diff-b">No es un chatbot genérico. Tiene acceso a todo tu historial y puede decirte "tus viernes son tus peores días" porque realmente lo sabe.</p>
+      </div>
+      <div class="diff-card reveal">
+        <div class="diff-n">03</div>
+        <h3 class="diff-t">Para la dieta mediterránea</h3>
+        <p class="diff-b">Tortilla española, bocadillo de lomo, paella. Foto y listo — sin buscar en bases de datos americanas llenas de errores.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="como" id="como-funciona">
+  <div class="como-inner">
+    <div class="como-hdr reveal">
+      <div class="sl">Cómo funciona</div>
+      <h2 class="sh" style="margin:0 auto 14px;">Tres pasos.<br><em>Un segundo cada uno.</em></h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-n on">1</div>
+        <h3 class="step-t">Foto, escáner o texto</h3>
+        <p class="step-b">Haz una foto a tu plato, escanea el código de barras, o describe lo que has comido. La IA lo interpreta al instante.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <h3 class="step-t">La IA lo calcula</h3>
+        <p class="step-b">Claude Vision analiza la foto y devuelve calorías y macros en segundos. Si corriges, el motor aprende para la próxima vez.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <h3 class="step-t">El asistente te guía</h3>
+        <p class="step-b">Tu asistente sabe lo que has comido, cuánto te queda y cómo vas esta semana. Pregúntale lo que quieras.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARATIVA -->
+<div class="vs-wrap reveal">
+  <div class="vs-hdr">
+    <div class="sl">Comparativa</div>
+    <h2 class="sh" style="margin:0 auto;">Caliro vs el resto</h2>
+  </div>
+  <div class="vs-table">
+    <div class="vs-row hdr">
+      <div></div>
+      <div class="ck" style="color:var(--green);">Caliro</div>
+      <div class="ck hide" style="color:var(--mid);">MFP</div>
+      <div class="ck" style="color:var(--mid);">Cal AI</div>
+    </div>
+    <div class="vs-row"><div>Gratis de verdad</div><div class="ck cy">✓</div><div class="ck hide cn">✗</div><div class="ck cn">✗</div></div>
+    <div class="vs-row"><div>Sin anuncios</div><div class="ck cy">✓</div><div class="ck hide cn">✗</div><div class="ck cy">✓</div></div>
+    <div class="vs-row"><div>IA que aprende de ti</div><div class="ck cy">✓</div><div class="ck hide cn">✗</div><div class="ck cn">✗</div></div>
+    <div class="vs-row"><div>Asistente con historial real</div><div class="ck cy">✓</div><div class="ck hide cn">✗</div><div class="ck cn">✗</div></div>
+    <div class="vs-row"><div>En español nativo</div><div class="ck cy">✓</div><div class="ck hide cn">✗</div><div class="ck cn">✗</div></div>
+    <div class="vs-row"><div>Foto con IA</div><div class="ck cy">✓</div><div class="ck hide cp">Pro</div><div class="ck cy">✓</div></div>
+    <div class="vs-row">
+      <div>Precio mensual</div>
+      <div class="ck" style="font-size:12px;font-weight:600;color:var(--green);">1,99€</div>
+      <div class="ck hide" style="font-size:12px;color:var(--mid);">8,99€</div>
+      <div class="ck" style="font-size:12px;color:var(--mid);">~5€</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section class="pricing" id="precios">
+  <div class="pricing-inner">
+    <div class="pr-hdr reveal">
+      <div class="sl">Precios</div>
+      <h2 class="sh">Simple. Sin letra pequeña.</h2>
+      <p class="sp">Los beta testers que nos acompañaron desde el principio tienen Pro gratis para siempre.</p>
+    </div>
+    <div class="pr-grid">
+      <div class="pr-card reveal">
+        <div class="pr-name">Free</div>
+        <div class="pr-price">0€</div>
+        <div class="pr-period">para siempre</div>
+        <ul class="pr-feats">
+          <li>Registro manual ilimitado</li>
+          <li>Escáner de código de barras</li>
+          <li>5 análisis por foto con IA</li>
+          <li>2 sugerencias Chef / semana</li>
+          <li class="dim">Planes del día y semanales</li>
+          <li class="dim">Motor de calibración</li>
+          <li class="dim">Análisis profundo</li>
+        </ul>
+        <a href="/app/register" class="pr-btn">Empezar gratis</a>
+      </div>
+      <div class="pr-card feat reveal">
+        <div class="pr-badge">PRO</div>
+        <div class="pr-name">Pro</div>
+        <div class="pr-price">1,99€</div>
+        <div class="pr-period">al mes · o 14,99€/año</div>
+        <ul class="pr-feats">
+          <li>Todo lo de Free</li>
+          <li>Foto IA ilimitada</li>
+          <li>Chef Caliro completo (chat + planes)</li>
+          <li>Motor de calibración personal</li>
+          <li>Análisis profundo y proyecciones</li>
+          <li>Exportar datos CSV</li>
+        </ul>
+        <a href="/app/register" class="pr-btn">Empezar con Pro</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-wrap">
+  <div class="faq-hdr reveal">
+    <div class="sl">FAQ</div>
+    <h2 class="sh" style="margin:0 auto;">Preguntas frecuentes</h2>
+  </div>
+  <div class="reveal">
+    <div class="faq-item">
+      <div class="faq-q">¿Qué diferencia al plan Free del Pro?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Free incluye registro manual ilimitado, escáner y 5 análisis por foto. Pro desbloquea el asistente personal, el motor de calibración que aprende de ti, análisis profundo con proyecciones de peso y foto IA ilimitada.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">¿La IA realmente aprende de mis correcciones?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Sí. Cada corrección que haces queda registrada y el motor la aplica a futuros análisis similares. Con el tiempo las estimaciones son cada vez más precisas para tu forma de comer específica.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">¿Funciona para comida española y mediterránea?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Sí. Usamos Claude Vision que reconoce platos mediterráneos reales — tortilla española, bocadillos, arroces, tapas. Si la estimación no es correcta, corriges y el sistema aprende.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">¿Puedo cancelar en cualquier momento?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Sí. Sin permanencia ni penalización. Si cancelas, pasas al plan Free con todos tus datos intactos.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">¿Está disponible en iOS y Android?<span class="faq-plus">+</span></div>
+      <div class="faq-a">Sí. Caliro funciona desde el navegador en cualquier dispositivo — iPhone, Android o PC. Puedes añadirla a tu pantalla de inicio como una app normal, sin descargar nada. Próximamente también en App Store.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final">
+  <h2 class="sh reveal">Deja de pagar 10€<br>por algo que<br><em>no entiende tu dieta</em></h2>
+  <p class="sp reveal">Caliro es gratis. La IA aprende de ti. En español, para tu forma de comer.</p>
+  <a href="/app/register" class="btn-green reveal">Empieza gratis ahora →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">Caliro</div>
+  <ul class="f-links">
+    <li><a href="/blog/">Blog</a></li>
+    <li><a href="/app/privacy">Privacidad</a></li>
+    <li><a href="/app/terms">Términos</a></li>
+    <li><a href="mailto:contacto@caliro.dev">Contacto</a></li>
+  </ul>
+  <div class="f-copy">© 2026 Caliro. Hecho en Barcelona.</div>
+</footer>
+
+<script>
+// Redirect installed PWA users to /app (they have start_url="/")
+if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+  window.location.replace('/app');
+}
+
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 20));
+
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!open) item.classList.add('open');
+  });
+});
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
