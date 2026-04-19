@@ -137,6 +137,10 @@ export default function ChefPlanDay() {
   // los meals faltantes, pero si el user registra uno entre recargas, se
   // marca como ✓ para evitar doble registro.
   const [registeredTypes, setRegisteredTypes] = useState<Set<string>>(cached?.registeredTypes || new Set());
+  // Estado del batch "Registrar todo" — durante la ejecución bloqueamos el
+  // botón y mostramos spinner. Si alguno falla, batchMessage lo cuenta abajo.
+  const [batching, setBatching] = useState(false);
+  const [batchMessage, setBatchMessage] = useState<string>('');
   // Warnings vienen en la respuesta de generación (POST). GET current no los
   // persiste — si el usuario recarga la página, los banners desaparecen.
   // Aceptable V1: los warnings son más relevantes recién generado el plan.
@@ -270,6 +274,73 @@ export default function ChefPlanDay() {
     setEditingIdx(null);
     // Persistir en backend (fire-and-forget — UI ya actualizada)
     api.chefSaveDay(nextPlan, token).catch(() => {});
+  }
+
+  // ── Register All ─────────────────────────────────────────
+  // Batch sequential: para cada meal pendiente, llamamos a api.saveEntry
+  // con el mapping ES→EN del meal_type (mismo que hace Calculator al
+  // recibir prefill). UI progresiva: marcamos cada meal tras su éxito,
+  // así si algo falla a mitad el usuario ve qué se registró y qué no.
+  async function handleRegisterAll() {
+    if (!plan || batching) return;
+    const ES_TO_EN: Record<string, string> = {
+      desayuno: 'breakfast',
+      comida:   'lunch',
+      merienda: 'snack',
+      cena:     'dinner',
+    };
+
+    // Solo meals cuyo tipo NO está ya en registeredTypes.
+    const pending = plan.meals.filter(m => {
+      const normType = normalizeMealType(m.type);
+      return normType && !registeredTypes.has(normType);
+    });
+    if (pending.length === 0) return;
+
+    setBatching(true);
+    setBatchMessage('');
+    const accumulated = new Set<string>(registeredTypes);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const meal of pending) {
+      try {
+        const rawType = (meal.type || '').toLowerCase();
+        const mealType = ES_TO_EN[rawType] || rawType;
+        await api.saveEntry({
+          meal_type: mealType,
+          name:      meal.name || null,
+          calories:  Math.round(meal.kcal),
+          protein:   Math.round(meal.protein) || null,
+          carbs:     Math.round(meal.carbs)   || null,
+          fat:       Math.round(meal.fat)     || null,
+          weight:    (meal as any).portion_g || null,
+          notes:     meal.ingredients || null,
+        }, token);
+        successCount++;
+        const normType = normalizeMealType(meal.type);
+        if (normType) {
+          accumulated.add(normType);
+          // Actualización progresiva — el user ve los checks apareciendo.
+          setRegisteredTypes(new Set(accumulated));
+        }
+      } catch {
+        failCount++;
+        // Seguimos intentando los demás — no abortamos el batch.
+      }
+    }
+
+    savePlanToCache(plan, userId, remainingBudget, accumulated);
+    setBatching(false);
+
+    if (failCount === 0) {
+      setBatchMessage(`${successCount === 1 ? '1 plato registrado' : `${successCount} platos registrados`}`);
+      setTimeout(() => setBatchMessage(''), 2500);
+    } else if (successCount === 0) {
+      setBatchMessage('No se pudo registrar ninguno. Revisa tu conexión.');
+    } else {
+      setBatchMessage(`${successCount} de ${successCount + failCount} registrados. Reintenta los pendientes individualmente.`);
+    }
   }
 
   // Shared wrapper for non-plan states (card container)
@@ -885,6 +956,73 @@ export default function ChefPlanDay() {
           </div>
         )}
       </div>
+
+      {/* Registrar todo — solo aparece si quedan meals pendientes. Debajo
+          del footer oscuro, centrado. Batch sequential progresivo. */}
+      {(() => {
+        const pendingCount = plan.meals.reduce((n, m) => {
+          const t = normalizeMealType(m.type);
+          return t && !registeredTypes.has(t) ? n + 1 : n;
+        }, 0);
+        const showMessage = !!batchMessage;
+        if (pendingCount === 0 && !showMessage) return null;
+        return (
+          <div style={{
+            marginTop: 18,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+            {pendingCount > 0 && (
+              <button
+                type="button"
+                onClick={handleRegisterAll}
+                disabled={batching}
+                style={{
+                  background: batching ? 'var(--text-tertiary)' : 'var(--accent)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '11px 24px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-sans)',
+                  cursor: batching ? 'wait' : 'pointer',
+                  boxShadow: batching ? 'none' : '0 2px 6px rgba(45,106,79,0.2)',
+                  minWidth: 220,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  opacity: batching ? 0.7 : 1,
+                }}
+              >
+                {batching ? (
+                  <>
+                    <span className="spinner" style={{ width: 12, height: 12 }} />
+                    Registrando…
+                  </>
+                ) : (
+                  <>Registrar {pendingCount === 1 ? '1 pendiente' : `${pendingCount} pendientes`}</>
+                )}
+              </button>
+            )}
+            {showMessage && (
+              <span style={{
+                fontSize: 11,
+                color: 'var(--text-secondary)',
+                fontStyle: 'italic',
+                fontFamily: 'var(--font-sans)',
+                textAlign: 'center',
+                maxWidth: 280,
+              }}>
+                {batchMessage}
+              </span>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Modal de edición de meal */}
       <ChefMealEditor

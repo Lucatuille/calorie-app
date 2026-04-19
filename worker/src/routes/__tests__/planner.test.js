@@ -633,11 +633,15 @@ describe('POST /api/planner/week', () => {
       makeRequest('POST', '/api/planner/week', {}),
       makeEnv({
         userRow: { id: 1, target_calories: 2000, access_level: 2 },
+        // Horas UTC elegidas para que cada entry mapee a un meal_type distinto
+        // en Madrid (UTC+2 verano) tras la ampliación de ventana desayuno a <13.
+        // 07 UTC = 09 Madrid → desayuno, 12 UTC = 14 → comida,
+        // 15 UTC = 17 → merienda, 19 UTC = 21 → cena.
         todayEntries: [
-          { meal_type: 'breakfast', name: 'A', calories: 400, created_at: '2026-04-19 09:00:00' },
-          { meal_type: 'lunch',     name: 'B', calories: 500, created_at: '2026-04-19 14:00:00' },
-          { meal_type: 'snack',     name: 'C', calories: 200, created_at: '2026-04-19 17:00:00' },
-          { meal_type: 'dinner',    name: 'D', calories: 500, created_at: '2026-04-19 21:00:00' },
+          { meal_type: 'breakfast', name: 'A', calories: 400, created_at: '2026-04-19 07:00:00' },
+          { meal_type: 'lunch',     name: 'B', calories: 500, created_at: '2026-04-19 12:00:00' },
+          { meal_type: 'snack',     name: 'C', calories: 200, created_at: '2026-04-19 15:00:00' },
+          { meal_type: 'dinner',    name: 'D', calories: 500, created_at: '2026-04-19 19:00:00' },
         ],
       }),
       '/api/planner/week'
