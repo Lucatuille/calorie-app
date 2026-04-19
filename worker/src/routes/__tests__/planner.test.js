@@ -32,6 +32,17 @@ vi.mock('../../utils/plannerHistory.js', () => ({
   extractRecentDishNames:   vi.fn(() => []),
 }));
 
+// Mock getCurrentHourMadrid → 10am Madrid por defecto (ninguna ventana
+// horaria pasada). Los tests que esperen un comportamiento a hora tardía
+// pueden hacer spyOn local. Mantiene retrocompat con tests pre-fix.
+vi.mock('../../utils/mealTypeInfer.js', async () => {
+  const actual = await vi.importActual('../../utils/mealTypeInfer.js');
+  return {
+    ...actual,
+    getCurrentHourMadrid: vi.fn(() => 10),
+  };
+});
+
 import { handlePlanner } from '../planner.js';
 import { authenticate } from '../../utils.js';
 import {

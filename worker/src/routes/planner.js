@@ -6,7 +6,12 @@
 import { jsonResponse, errorResponse, authenticate, rateLimit } from '../utils.js';
 import { checkAndIncrementPlannerLimit, rollbackPlannerLimit, getPlannerUsage } from '../utils/plannerLimits.js';
 import { savePlannerHistory, getRecentPlannerHistory, extractRecentDishNames } from '../utils/plannerHistory.js';
-import { resolveMealTypesRegistered, resolveMealItems } from '../utils/mealTypeInfer.js';
+import {
+  resolveMealTypesRegistered,
+  resolveMealItems,
+  mealTypesPassedByNow,
+  getCurrentHourMadrid,
+} from '../utils/mealTypeInfer.js';
 import { calibrateMeals, recomputeTotals } from '../utils/calibratePlan.js';
 import { findCoherenceIssues } from '../utils/validateMealNutrition.js';
 import { SYSTEM_PROMPT, buildDayPlanMessage, parseDayPlanResponse } from '../prompts/chef-day.js';
@@ -57,7 +62,9 @@ export async function handlePlanner(request, env, path, ctx) {
 
       const today = new Date().toLocaleDateString('en-CA');
       const now = new Date();
-      const hourNow = now.getHours();
+      // Usa Madrid time para ventanas horarias (DST-safe). getHours() del
+      // runtime en CF Workers devuelve UTC — inconsistente en verano.
+      const hourNow = getCurrentHourMadrid();
       const dayOfWeek = DAY_NAMES_ES[now.getDay()];
 
       // Variedad — ventana de 3 días atrás (sin incluir hoy)
@@ -134,8 +141,15 @@ export async function handlePlanner(request, env, path, ctx) {
       // coincide, evitando el falso positivo cuando el user comió otra cosa
       // en la misma franja horaria.
       const mealItemsRegistered = resolveMealItems(meals);
+      // Tipos cuya ventana horaria ya pasó (p.ej. desayuno a las 22h). Bug
+      // reportado 2026-04-19: Chef generaba desayuno a las 22:30 porque no
+      // estaba registrado. Combinamos con registered para no sugerir comidas
+      // imposibles de hacer a la hora actual.
+      const mealTypesPassed = mealTypesPassedByNow(hourNow);
+      const mealTypesToSkip = [...new Set([...mealTypesRegistered, ...mealTypesPassed])];
 
-      // Build prompt
+      // Build prompt. Pasamos mealTypesToSkip (registered ∪ fuera de ventana)
+      // para que Sonnet NO genere tipos ya imposibles a esta hora.
       const userMessage = buildDayPlanMessage({
         user,
         todayMeals: meals,
@@ -147,6 +161,7 @@ export async function handlePlanner(request, env, path, ctx) {
         dayOfWeek,
         hourNow,
         mealTypesRegistered,
+        mealTypesToSkip,
         recentEntries,
         recentPlannedDishes,
       });
@@ -194,9 +209,10 @@ export async function handlePlanner(request, env, path, ctx) {
         return errorResponse('Error al procesar el plan generado. Inténtalo de nuevo.', 502);
       }
 
-      // Enforce server-side: filtrar meals de tipos ya registrados (Sonnet
-      // a veces ignora la instrucción "solo genera los que faltan").
-      if (mealTypesRegistered.length > 0 && Array.isArray(planData.meals)) {
+      // Enforce server-side: filtrar meals de tipos en la lista skip (Sonnet
+      // a veces ignora la instrucción "solo genera los que faltan"). skip
+      // incluye ya-registrados + fuera de ventana horaria.
+      if (mealTypesToSkip.length > 0 && Array.isArray(planData.meals)) {
         const TYPE_MAP = {
           desayuno: 'desayuno', breakfast: 'desayuno',
           comida:   'comida',   lunch:     'comida',
@@ -206,7 +222,7 @@ export async function handlePlanner(request, env, path, ctx) {
         planData.meals = planData.meals.filter(m => {
           const t = (m.type || '').toLowerCase();
           const normalized = TYPE_MAP[t] || t;
-          return !mealTypesRegistered.includes(normalized);
+          return !mealTypesToSkip.includes(normalized);
         });
         planData.totals = recomputeTotals(planData.meals);
       }
@@ -345,7 +361,13 @@ export async function handlePlanner(request, env, path, ctx) {
       // Normalizar meal_types registrados hoy (inglés/español + inferencia por hora para 'other')
       const mealTypesRegistered = resolveMealTypesRegistered(todayMeals);
 
-      const daysToPlan = computeDaysToPlan(today, mealTypesRegistered);
+      // Mismo fix que en /planner/day: ventana horaria. Si son las 22h y
+      // el user no desayunó, NO generamos desayuno en el día HOY.
+      const hourNowMadrid = getCurrentHourMadrid();
+      const mealTypesPassed = mealTypesPassedByNow(hourNowMadrid);
+      const mealTypesToSkipToday = [...new Set([...mealTypesRegistered, ...mealTypesPassed])];
+
+      const daysToPlan = computeDaysToPlan(today, mealTypesToSkipToday);
 
       // Guard: si el único día a planear es HOY y ya están registrados los 4
       // meal_types, no tiene sentido llamar a Sonnet (devolvería un plan vacío
@@ -440,8 +462,9 @@ export async function handlePlanner(request, env, path, ctx) {
       }
 
       // Enforce server-side: si hoy es parcial, filtrar meals de tipos ya
-      // registrados. Sonnet a veces ignora la instrucción "solo lo que falta".
-      if (planData.days?.length > 0 && mealTypesRegistered.length > 0) {
+      // registrados Y de tipos cuya ventana horaria ya pasó. Sonnet a veces
+      // ignora la instrucción "solo lo que falta".
+      if (planData.days?.length > 0 && mealTypesToSkipToday.length > 0) {
         const firstDay = planData.days[0];
         if (firstDay.date === todayISO) {
           const TYPE_MAP = {
@@ -453,7 +476,7 @@ export async function handlePlanner(request, env, path, ctx) {
           firstDay.meals = (firstDay.meals || []).filter(m => {
             const t = (m.type || '').toLowerCase();
             const normalized = TYPE_MAP[t] || t;
-            return !mealTypesRegistered.includes(normalized);
+            return !mealTypesToSkipToday.includes(normalized);
           });
           firstDay.totals = recomputeTotals(firstDay.meals);
         }

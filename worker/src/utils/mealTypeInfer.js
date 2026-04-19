@@ -118,6 +118,43 @@ export function normalizeDishName(name) {
 }
 
 /**
+ * Meal_types cuya ventana horaria ya pasó a la hora Madrid dada.
+ * Se usa en /planner/day + /planner/week para evitar generar p.ej.
+ * un "desayuno a las 22:30" simplemente porque el user no registró
+ * desayuno — a esa hora ya no tiene sentido planificar desayuno.
+ *
+ * La CENA no expira: se puede cenar tarde (0:00, 1:00, etc).
+ *
+ * @param {number} hourMadrid — 0-23
+ * @returns {Array<'desayuno'|'comida'|'merienda'>}
+ */
+export function mealTypesPassedByNow(hourMadrid) {
+  const passed = [];
+  if (hourMadrid >= 13) passed.push('desayuno');
+  if (hourMadrid >= 16) passed.push('comida');
+  if (hourMadrid >= 19) passed.push('merienda');
+  // cena nunca expira
+  return passed;
+}
+
+/**
+ * Devuelve la hora actual en Europa/Madrid (0-23), cubriendo DST.
+ * Fallback aproximado a CEST si Intl falla (nunca en CF Workers reales).
+ */
+export function getCurrentHourMadrid() {
+  try {
+    const hourStr = new Date().toLocaleString('en-US', {
+      timeZone: 'Europe/Madrid',
+      hour: 'numeric',
+      hour12: false,
+    });
+    const h = parseInt(hourStr, 10);
+    if (!Number.isNaN(h)) return h;
+  } catch {}
+  return (new Date().getUTCHours() + 2) % 24;
+}
+
+/**
  * Dadas las entries de hoy, devuelve el detalle de cada comida registrada:
  * type resuelto + nombre original + nombre normalizado.
  *

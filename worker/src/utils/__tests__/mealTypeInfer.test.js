@@ -9,6 +9,8 @@ import {
   resolveMealTypesRegistered,
   resolveMealItems,
   normalizeDishName,
+  mealTypesPassedByNow,
+  getCurrentHourMadrid,
 } from '../mealTypeInfer.js';
 
 describe('resolveMealType — meal_type explícito', () => {
@@ -349,6 +351,13 @@ describe('resolveMealItems', () => {
     expect(result[0].name).toBe('Desayuno OK');
   });
 
+  it('smoke test getCurrentHourMadrid — devuelve int entre 0 y 23', () => {
+    const h = getCurrentHourMadrid();
+    expect(typeof h).toBe('number');
+    expect(h).toBeGreaterThanOrEqual(0);
+    expect(h).toBeLessThanOrEqual(23);
+  });
+
   it('caso real — hamburguesa a las 17h inferida como merienda', () => {
     // Bug reportado 2026-04-19: user come "comida tardía como snack" a las
     // 17h. resolveMealType infiere 'merienda' por la hora. El frontend NO
@@ -369,5 +378,44 @@ describe('resolveMealItems', () => {
         normalized_name: 'hamburguesa doble',
       },
     ]);
+  });
+});
+
+describe('mealTypesPassedByNow', () => {
+  it('8h Madrid → nada pasado', () => {
+    expect(mealTypesPassedByNow(8)).toEqual([]);
+  });
+
+  it('13h Madrid → desayuno pasado', () => {
+    expect(mealTypesPassedByNow(13)).toEqual(['desayuno']);
+  });
+
+  it('12h Madrid → nada pasado (ventana desayuno aún activa)', () => {
+    expect(mealTypesPassedByNow(12)).toEqual([]);
+  });
+
+  it('16h Madrid → desayuno + comida pasados', () => {
+    expect(mealTypesPassedByNow(16)).toEqual(['desayuno', 'comida']);
+  });
+
+  it('19h Madrid → desayuno + comida + merienda pasados', () => {
+    expect(mealTypesPassedByNow(19)).toEqual(['desayuno', 'comida', 'merienda']);
+  });
+
+  it('22h Madrid → los 3 pasados, cena nunca expira', () => {
+    const passed = mealTypesPassedByNow(22);
+    expect(passed).toEqual(['desayuno', 'comida', 'merienda']);
+    expect(passed).not.toContain('cena');
+  });
+
+  it('00h Madrid (madrugada) → nada pasado', () => {
+    expect(mealTypesPassedByNow(0)).toEqual([]);
+  });
+
+  it('caso real bug 2026-04-19 — 22:30 Madrid no debe generar desayuno', () => {
+    // El user reportó que el Chef generaba "desayuno a las 22:30" porque
+    // no lo había registrado hoy. Verificamos: a las 22h Madrid,
+    // desayuno está entre los "skip".
+    expect(mealTypesPassedByNow(22)).toContain('desayuno');
   });
 });

@@ -114,7 +114,7 @@ Peso: ${user.weight || '?'}kg | Meta peso: ${user.goal_weight || 'no definida'}k
     const targetStr = `target: ${Math.round(tK)} kcal | ${Math.round(tP)}g prot | ${Math.round(tC)}g carb | ${Math.round(tF)}g grasa`;
     if (d.isPartial) {
       const skip = d.skipMealTypes?.length > 0
-        ? ` — YA registrado: ${d.skipMealTypes.join(', ')}. Generar SOLO los que faltan.`
+        ? ` — SALTAR: ${d.skipMealTypes.join(', ')} (ya registrados o fuera de ventana horaria). Generar SOLO los que faltan.`
         : ' — completo (nada registrado todavía).';
       return `  ${d.date} (${d.day_name}) — PARCIAL [${targetStr}]${skip}`;
     }

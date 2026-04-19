@@ -35,7 +35,7 @@ FORMATO DE RESPUESTA:
 
 REGLAS:
 0. IDIOMA: todo el JSON (nombres de platos, ingredientes, tipos de comida) debe estar en ESPAÑOL. Nunca uses inglés ("Turkey", "Chicken", "Spinach Salad", "Quinoa Bowl"). Usa "pavo", "pollo", "ensalada de espinacas", "bowl de quinoa". Esto es una regla no negociable.
-1. Solo genera comidas para los tipos que el usuario AÚN NO ha registrado hoy.
+1. Solo genera comidas para los tipos que NO estén en el bloque "COMIDAS A SALTAR". Esa lista incluye tanto los tipos ya registrados por el usuario como los tipos cuya ventana horaria ya ha pasado (p.ej. no generar desayuno si es de noche). Si un tipo está en la lista, NO lo generas bajo ninguna circunstancia.
 2. El total del plan debe acercarse al presupuesto RESTANTE (±10% de las kcal restantes).
 3. PROTEÍNA — PISO NUTRICIONAL NO NEGOCIABLE: la suma de proteína del plan debe cubrir AL MENOS el 85% de la proteína pendiente indicada en PRESUPUESTO. La proteína es un piso (1.6–2.2 g/kg/día); no la sacrifiques por alcanzar kcal con carbos o grasa. Si hace falta, prioriza fuentes densas (pechuga, pescado blanco, claras, atún, legumbres con cereal, tofu, yogur griego, queso fresco batido).
 4. DISTRIBUCIÓN POR COMIDA: en un plan completo (4 comidas), ninguna comida individual debe representar más del 45% ni menos del 10% de las kcal totales del plan. Reparte razonablemente: desayuno 20-30%, comida 30-40%, merienda 10-20%, cena 25-35% (orientativo). En planes parciales (2-3 comidas generadas) la regla se relaja pero EVITA extremos (una sola comida que absorba >60% del presupuesto).
@@ -85,9 +85,13 @@ export function buildDayPlanMessage({
   dayOfWeek,
   hourNow,
   mealTypesRegistered,
+  mealTypesToSkip,
   recentEntries = [],
   recentPlannedDishes = [],
 }) {
+  // Si el caller no pasó mealTypesToSkip, fallback a los solo-registrados
+  // (retro-compat — nunca genera la diferencia por ventana horaria).
+  const typesToSkip = Array.isArray(mealTypesToSkip) ? mealTypesToSkip : mealTypesRegistered;
   // Perfil
   const profileBlock = `=== PERFIL ===
 Objetivo diario: ${user.target_calories || '?'} kcal | Prot: ${user.target_protein || '?'}g | Carbs: ${user.target_carbs || '?'}g | Grasa: ${user.target_fat || '?'}g
@@ -113,9 +117,10 @@ Proteína por cubrir: ${Math.round(Math.max(0, remaining.protein))}g (PISO — r
 Carbos por cubrir: ${Math.round(Math.max(0, remaining.carbs))}g
 Grasa por cubrir: ${Math.round(Math.max(0, remaining.fat))}g`;
 
-  // Tipos de comida que ya tiene → el modelo solo genera los que faltan
-  const registeredTypes = mealTypesRegistered.length > 0
-    ? `=== COMIDAS YA REGISTRADAS (no generar estos tipos) ===\n  ${mealTypesRegistered.join(', ')}`
+  // Tipos a saltar: combinación de ya-registrados + fuera de ventana
+  // horaria. El prompt NUNCA debe generar ninguno de estos.
+  const registeredTypes = typesToSkip.length > 0
+    ? `=== COMIDAS A SALTAR (no generar estos tipos) ===\n  ${typesToSkip.join(', ')}\n  Razón: ya registradas por el usuario o fuera de su ventana horaria (p.ej. desayuno pasadas las 13h Madrid).`
     : '=== Ninguna comida registrada todavía — generar plan completo ===';
 
   // Hora actual → sugiere qué comidas tienen sentido
