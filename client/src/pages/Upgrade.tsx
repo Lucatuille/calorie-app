@@ -22,7 +22,7 @@ const FEATURES = [
     free: false, pro: true,
   },
   {
-    label:    'Coach con tu historial',
+    label:    'Chef con tu historial',
     subtitle: 'Responde con tus datos reales, no consejos genéricos de Google.',
     free: false, pro: true,
   },
@@ -194,12 +194,12 @@ export default function Upgrade() {
               </div>
               {f.subtitle && (
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   color: 'var(--text-secondary)',
-                  fontFamily: 'var(--font-serif)',
-                  fontStyle: 'italic',
-                  lineHeight: 1.45,
-                  marginTop: 3,
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 400,
+                  lineHeight: 1.5,
+                  marginTop: 4,
                   textWrap: 'pretty',
                 }}>
                   {f.subtitle}
