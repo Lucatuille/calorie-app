@@ -7,13 +7,30 @@ import { isFree } from '../utils/levels';
 import { isNative } from '../utils/platform';
 
 // Solo diferenciadores Pro. Historial y CSV se omiten (ambos niveles los
-// tienen) — las filas "✓ / ✓" diluyen el argumento Pro. Nombres en clave
-// benefit, no feature: "Aprende tus porciones" vs "Motor de calibración".
+// tienen) — las filas "✓ / ✓" diluyen el argumento Pro. Cada fila: label
+// benefit + subtitle editorial que da "chicha" con ejemplo concreto del
+// producto real (no marketing abstracto).
 const FEATURES = [
-  { label: 'Foto IA',                    free: '3/día',  pro: 'Ilimitada' },
-  { label: 'Aprende tus porciones',      free: false,    pro: true },
-  { label: 'Coach con tu historial',     free: false,    pro: true },
-  { label: 'Tendencias y proyecciones',  free: false,    pro: true },
+  {
+    label:    'Foto IA',
+    subtitle: 'Registra cada comida del día sin elegir cuáles sacrificar.',
+    free: '3/día', pro: 'Ilimitada',
+  },
+  {
+    label:    'Aprende tus porciones',
+    subtitle: 'Cada corrección entrena las estimaciones para tu cocina real.',
+    free: false, pro: true,
+  },
+  {
+    label:    'Coach con tu historial',
+    subtitle: 'Responde con tus datos reales, no consejos genéricos de Google.',
+    free: false, pro: true,
+  },
+  {
+    label:    'Tendencias y proyecciones',
+    subtitle: 'Ves si realmente vas a llegar a tu objetivo, no solo las kcal de ayer.',
+    free: false, pro: true,
+  },
 ];
 
 export default function Upgrade() {
@@ -163,12 +180,32 @@ export default function Upgrade() {
         {FEATURES.map((f, i) => (
           <div key={f.label} style={{
             display: 'grid', gridTemplateColumns: '1fr 72px 72px',
-            padding: '11px 16px',
+            padding: '14px 16px',
             borderBottom: i < FEATURES.length - 1 ? '0.5px solid var(--border)' : 'none',
             alignItems: 'center',
           }}>
-            <span style={{ fontSize: 13, color: 'var(--text-primary)',
-              fontFamily: 'var(--font-sans)' }}>{f.label}</span>
+            {/* Title + subtitle: el subtext da contexto real con ejemplo
+                concreto del producto. Serif italic editorial (mismo tono
+                que la landing), muted para no competir con el title. */}
+            <div style={{ paddingRight: 12 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-primary)',
+                fontFamily: 'var(--font-sans)', fontWeight: 500, lineHeight: 1.3 }}>
+                {f.label}
+              </div>
+              {f.subtitle && (
+                <div style={{
+                  fontSize: 11,
+                  color: 'var(--text-secondary)',
+                  fontFamily: 'var(--font-serif)',
+                  fontStyle: 'italic',
+                  lineHeight: 1.45,
+                  marginTop: 3,
+                  textWrap: 'pretty',
+                }}>
+                  {f.subtitle}
+                </div>
+              )}
+            </div>
             <span style={{ textAlign: 'center', fontSize: 12,
               color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>
               {f.free === false ? <span style={{ color: 'var(--border)', fontSize: 14 }}>—</span>
