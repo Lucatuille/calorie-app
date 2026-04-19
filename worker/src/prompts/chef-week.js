@@ -280,10 +280,13 @@ export function parseWeekPlanResponse(raw) {
  * Si hoy es domingo, devuelve [domingo (parcial)].
  *
  * @param {Date} today
- * @param {string[]} mealTypesRegisteredToday — ["desayuno", "comida", ...]
+ * @param {string[]} mealTypesToSkipToday — meal_types que NO deben generarse
+ *   para el día de hoy. Combina ya-registrados (de entries) + pasados por
+ *   ventana horaria (p.ej. "desayuno" a las 22h Madrid). El primer día del
+ *   array resultante será "parcial" si esta lista no está vacía.
  * @returns {Array<{date, day_name, isPartial, skipMealTypes}>}
  */
-export function computeDaysToPlan(today, mealTypesRegisteredToday = []) {
+export function computeDaysToPlan(today, mealTypesToSkipToday = []) {
   const DAY_NAMES_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const todayDow = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
@@ -301,8 +304,8 @@ export function computeDaysToPlan(today, mealTypesRegisteredToday = []) {
     result.push({
       date: iso,
       day_name: dayName,
-      isPartial: isFirst && mealTypesRegisteredToday.length > 0,
-      skipMealTypes: isFirst ? mealTypesRegisteredToday : [],
+      isPartial: isFirst && mealTypesToSkipToday.length > 0,
+      skipMealTypes: isFirst ? mealTypesToSkipToday : [],
     });
   }
   return result;
