@@ -181,6 +181,75 @@ describe('estimateKcalFromIngredients — caso reportado (dorada)', () => {
   });
 });
 
+describe('estimateKcalFromIngredients — modificador "seco/seca" (2026-04-19)', () => {
+  // Bug reportado: "90g macarrones secos" estimaba 118 kcal (matcheaba
+  // 'macarrones' cocido 131) en vez de ~333 (seco/crudo 370). Generaba
+  // warning "kcal no cuadra" false-positive en platos de pasta/arroz.
+  //
+  // Ahora los modificadores "secos/seca/seco" aplican densidad crudo.
+
+  it('90g macarrones secos → ~333 kcal (no 118 cocido)', () => {
+    const r = estimateKcalFromIngredients('90g macarrones secos');
+    expect(r.matched).toBe(1);
+    // 90/100 * 370 = 333
+    expect(r.estimate).toBe(333);
+  });
+
+  it('80g espaguetis secos → densidad crudo', () => {
+    const r = estimateKcalFromIngredients('80g espaguetis secos');
+    // 80/100 * 370 = 296
+    expect(r.estimate).toBe(296);
+  });
+
+  it('80g pasta seca = 80g pasta cruda (equivalentes)', () => {
+    const a = estimateKcalFromIngredients('80g pasta seca');
+    const b = estimateKcalFromIngredients('80g pasta cruda');
+    expect(a.estimate).toBe(b.estimate);
+  });
+
+  it('70g arroz seco → densidad crudo (no cocido)', () => {
+    const r = estimateKcalFromIngredients('70g arroz seco');
+    // 70/100 * 365 = 255.5 (±1 por precisión flotante 0.7 en binario)
+    expect(r.estimate).toBeGreaterThanOrEqual(255);
+    expect(r.estimate).toBeLessThanOrEqual(256);
+  });
+
+  it('50g quinoa seca → densidad cruda', () => {
+    const r = estimateKcalFromIngredients('50g quinoa seca');
+    // 50/100 * 368 = 184
+    expect(r.estimate).toBe(184);
+  });
+
+  it('80g lentejas secas → densidad crudo, no cocido', () => {
+    const r = estimateKcalFromIngredients('80g lentejas secas');
+    // 80/100 * 343 = 274.4 → 274
+    expect(r.estimate).toBe(274);
+  });
+
+  it('75g garbanzos secos → densidad crudo', () => {
+    const r = estimateKcalFromIngredients('75g garbanzos secos');
+    // 75/100 * 364 = 273
+    expect(r.estimate).toBe(273);
+  });
+
+  it('"150g lentejas" sin modificador sigue siendo cocido (default)', () => {
+    const r = estimateKcalFromIngredients('150g lentejas');
+    // Sin modificador = default cocido
+    expect(r.estimate).toBe(173); // 150/100 * 115
+  });
+
+  it('caso reproducible user 2026-04-19 — macarrones con tortilla', () => {
+    // Plato: "90g macarrones secos · 150g calabacín · 2 huevos (120g) · 30ml aceite de oliva · sal · pimienta"
+    // Antes: 118 + 25 + 172 + 270 = 585 (falso positivo vs declarado 950).
+    // Ahora: 333 + 25 + 172 + 270 = 800 → dentro de ±25% de 950.
+    const r = estimateKcalFromIngredients(
+      '90g macarrones secos · 150g calabacín · 2 huevos (120g) · 30ml aceite de oliva · sal · pimienta'
+    );
+    expect(r.estimate).toBeGreaterThan(770);
+    expect(r.estimate).toBeLessThan(830);
+  });
+});
+
 describe('validateMealCoherence', () => {
   it('meal coherente (declared ≈ estimate) → NO suspicious', () => {
     const meal = {

@@ -100,10 +100,21 @@ const DENSITY_TABLE = [
   // casi siempre significa el peso YA cocido, no crudo. Tratar crudo como
   // default inflaba kcal por 2.5-3× y disparaba false positives del validador
   // (ver screenshot 2026-04-19: arroz con pollo 628 declarado vs 873 estimado).
-  // "arroz crudo" / "pasta cruda" explícitos siguen matcheando su densidad real.
-  { keywords: ['arroz crudo'],                               density: 365, unit: 'g' },
+  // Modificadores explícitos "crudo" o "seco" siguen matcheando la densidad
+  // real de crudo (Sonnet dice ambos — "secos" es más común en español
+  // natural para pasta/arroz/legumbres pesadas pre-cocción).
+  { keywords: ['arroz crudo', 'arroz seco'],                 density: 365, unit: 'g' },
   { keywords: ['arroz cocido', 'arroz'],                     density: 130, unit: 'g' }, // default = cocido
-  { keywords: ['pasta cruda', 'espaguetis crudos', 'macarrones crudos'], density: 370, unit: 'g' },
+  {
+    keywords: [
+      'pasta cruda', 'pasta seca',
+      'espaguetis crudos', 'espaguetis secos',
+      'macarrones crudos', 'macarrones secos',
+      'tallarines crudos', 'tallarines secos',
+      'fideos crudos', 'fideos secos',
+    ],
+    density: 370, unit: 'g',
+  },
   { keywords: ['pasta cocida', 'espaguetis cocidos', 'pasta', 'espaguetis', 'macarrones', 'fideos', 'tallarines'], density: 131, unit: 'g' },
   { keywords: ['pan integral'],                              density: 245, unit: 'g' },
   { keywords: ['pan'],                                       density: 265, unit: 'g' },
@@ -111,19 +122,23 @@ const DENSITY_TABLE = [
   // Avena se queda en crudo: en desayuno se pesa seca antes de cocinar,
   // Sonnet típicamente dice "60g avena" = 60g en crudo.
   { keywords: ['avena'],                                     density: 380, unit: 'g' },
-  { keywords: ['quinoa cruda'],                              density: 368, unit: 'g' },
+  { keywords: ['quinoa cruda', 'quinoa seca'],               density: 368, unit: 'g' },
   { keywords: ['quinoa cocida', 'quinoa'],                   density: 120, unit: 'g' }, // default = cocida
   { keywords: ['cuscús', 'cuscus', 'couscous'],              density: 112, unit: 'g' }, // cocido
 
   // ── LEGUMBRES (g) ───────────────────────────────────────────
-  { keywords: ['lentejas cocidas'],                          density: 115, unit: 'g' },
-  { keywords: ['lentejas'],                                  density: 115, unit: 'g' }, // Sonnet casi siempre habla cocidas en plato
-  { keywords: ['garbanzos cocidos'],                         density: 140, unit: 'g' },
-  { keywords: ['garbanzos'],                                 density: 140, unit: 'g' },
+  // Modificadores secas/crudas primero (mayor densidad) para que no caigan
+  // al default cocido. Sonnet con frecuencia dice "80g lentejas secas" en
+  // desayunos/tuppers donde pesa pre-cocción.
+  { keywords: ['lentejas crudas', 'lentejas secas'],         density: 343, unit: 'g' },
+  { keywords: ['lentejas cocidas', 'lentejas'],              density: 115, unit: 'g' }, // default = cocidas
+  { keywords: ['garbanzos crudos', 'garbanzos secos'],       density: 364, unit: 'g' },
+  { keywords: ['garbanzos cocidos', 'garbanzos'],            density: 140, unit: 'g' }, // default = cocidos
   // 'judías verdes' PRIMERO — antes de cualquier row que mencione 'judías'.
   // Sin esto, "100g judías verdes" matchearía 'judías' (125 kcal legumbre)
   // en vez de la verdura (31 kcal). El orden de rows gana.
   { keywords: ['judías verdes', 'judias verdes'],            density: 31,  unit: 'g' },
+  { keywords: ['alubias crudas', 'alubias secas', 'judías crudas', 'judias crudas', 'judías secas', 'judias secas'], density: 343, unit: 'g' },
   { keywords: ['alubias cocidas', 'judías cocidas', 'judias cocidas'], density: 125, unit: 'g' },
   { keywords: ['alubias', 'judías', 'judias'],               density: 125, unit: 'g' },
   { keywords: ['tofu'],                                      density: 76,  unit: 'g' },
