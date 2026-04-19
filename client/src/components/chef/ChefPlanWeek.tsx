@@ -8,7 +8,7 @@
 //  Cache localStorage con expiración al cambio de lunes.
 // ============================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -188,6 +188,12 @@ export default function ChefPlanWeek() {
   const [banners, setBanners] = useState<BannerData[]>([]);
   // Carta de loading — 1 por petición, random sin repetir las últimas 2.
   const [loadingCard, setLoadingCard] = useState<ChefTipCard | null>(null);
+  // Error persistente de guardado (edición fallida). Antes fire-and-forget.
+  const [saveError, setSaveError] = useState<boolean>(false);
+  // Ref de weekStart al mount — detectar cruce al siguiente lunes con la app
+  // abierta en background. Sin esto, el plan de la semana pasada seguiría en
+  // pantalla hasta navegación o recarga.
+  const mountedWeekRef = useRef<string>(currentWeekStart());
 
   const todayISO = new Date().toLocaleDateString('en-CA');
   const userIsPro = isPro(authUser?.access_level);
@@ -224,6 +230,44 @@ export default function ChefPlanWeek() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  // Cross-semana: si el user tiene la app abierta en background y el lunes
+  // empieza una semana nueva, detectamos el cambio al volver a visible y
+  // limpiamos. Sin esto seguiría viendo el plan de la semana anterior.
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState !== 'visible') return;
+      if (!token) return;
+      const currentWS = currentWeekStart();
+      if (currentWS === mountedWeekRef.current) return; // misma semana
+      mountedWeekRef.current = currentWS;
+      clearPlanCache(userId);
+      setPlan(null);
+      setTargetKcal(0);
+      setBanners([]);
+      setSaveError(false);
+      setStatus('idle');
+      (async () => {
+        try {
+          const [planRes, usageRes] = await Promise.all([
+            api.chefGetCurrentWeek(token),
+            api.chefGetUsage(token),
+          ]);
+          if (planRes?.plan) {
+            setPlan(planRes.plan);
+            const tk = planRes.target_kcal || 0;
+            setTargetKcal(tk);
+            savePlanToCache(planRes.plan, tk, userId);
+            setStatus('ready');
+          }
+          if (usageRes?.week) setRemainingDay(usageRes.week.remaining_day);
+        } catch {}
+      })();
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, userId]);
 
   async function handleGenerate() {
     setStatus('loading');
@@ -284,6 +328,17 @@ export default function ChefPlanWeek() {
     setEditingCell({ dayIdx, mealIdx });
   }
 
+  // Guardado backend con feedback al user (paridad con ChefPlanDay). Antes
+  // fire-and-forget — un fallo de red perdía silenciosamente la edición.
+  async function trySaveWeek(planToSave: WeekPlanData) {
+    try {
+      await api.chefSaveWeek(planToSave, token);
+      setSaveError(false);
+    } catch {
+      setSaveError(true);
+    }
+  }
+
   function handleSaveEdit(updated: EditableMeal) {
     if (!editingCell || !plan) return;
     const { dayIdx, mealIdx } = editingCell;
@@ -306,7 +361,12 @@ export default function ChefPlanWeek() {
     setPlan(nextPlan);
     savePlanToCache(nextPlan, targetKcal, userId);
     setEditingCell(null);
-    api.chefSaveWeek(nextPlan, token).catch(() => {});
+    trySaveWeek(nextPlan);
+  }
+
+  function handleRetrySave() {
+    if (!plan) return;
+    trySaveWeek(plan);
   }
 
   // ── Shared wrapper for empty/loading/error ──
@@ -746,6 +806,54 @@ export default function ChefPlanWeek() {
               {b.detail}
             </ChefWarningBanner>
           ))}
+        </div>
+      )}
+
+      {/* Save error — edición persistida en cache local pero no en backend. */}
+      {saveError && (
+        <div style={{
+          padding: '0 22px',
+          flexShrink: 0,
+          marginBottom: 8,
+        }}>
+          <div style={{
+            background: 'rgba(231,111,81,0.08)',
+            border: '0.5px solid rgba(231,111,81,0.25)',
+            borderRadius: 'var(--radius-md)',
+            padding: '10px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}>
+            <span style={{
+              fontSize: 12,
+              color: 'var(--accent-2)',
+              fontFamily: 'var(--font-sans)',
+              lineHeight: 1.4,
+            }}>
+              No se pudo guardar el cambio en el servidor. Tu edición sigue visible aquí.
+            </span>
+            <button
+              type="button"
+              onClick={handleRetrySave}
+              style={{
+                background: 'var(--accent-2)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 'var(--radius-full)',
+                padding: '5px 14px',
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: 'var(--font-sans)',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              Reintentar
+            </button>
+          </div>
         </div>
       )}
 

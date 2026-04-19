@@ -5,7 +5,7 @@
 //  Layout P13 clean. Sonnet genera via POST /api/planner/day.
 // ============================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -182,6 +182,15 @@ export default function ChefPlanDay() {
   // persiste — si el usuario recarga la página, los banners desaparecen.
   // Aceptable V1: los warnings son más relevantes recién generado el plan.
   const [banners, setBanners] = useState<BannerData[]>([]);
+  // Error persistente de guardado (edición fallida). Antes el save era
+  // fire-and-forget — si la red caía, el cache local quedaba más nuevo que
+  // backend y el próximo fetch silenciosamente pisaba el cambio. Ahora el
+  // user ve un banner "No se pudo guardar · Reintentar".
+  const [saveError, setSaveError] = useState<boolean>(false);
+  // Fecha de mount — detectar cruce de medianoche cuando el user tiene la
+  // app abierta en segundo plano (patrón común: deja el tab abierto y vuelve
+  // al día siguiente). Sin este ref, seguiría viendo el plan de ayer.
+  const mountedDateRef = useRef<string>(new Date().toLocaleDateString('en-CA'));
 
   const today = new Date();
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -231,6 +240,57 @@ export default function ChefPlanDay() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  // Cross-medianoche: si el user tiene la app abierta en background y vuelve
+  // al día siguiente, detectamos el cambio de fecha al recibir visibilitychange
+  // y refrescamos. Sin esto, seguiría viendo el plan de ayer hasta recargar.
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState !== 'visible') return;
+      if (!token) return;
+      const currentDate = new Date().toLocaleDateString('en-CA');
+      if (currentDate === mountedDateRef.current) return; // mismo día, nada que hacer
+      mountedDateRef.current = currentDate;
+      // Limpiar todo lo del día anterior
+      clearPlanCache(userId);
+      setPlan(null);
+      setRemainingBudget(null);
+      setRegisteredTypes(new Set());
+      setRegisteredItems([]);
+      setBanners([]);
+      setSaveError(false);
+      setStatus('idle');
+      // Re-fetch (mismo flujo que el mount useEffect). Si no hay plan para
+      // HOY, quedará en idle y el user verá el action page para generar.
+      (async () => {
+        try {
+          const [planRes, usageRes] = await Promise.all([
+            api.chefGetCurrentDay(token),
+            api.chefGetUsage(token),
+          ]);
+          if (planRes?.plan) {
+            setPlan(planRes.plan);
+            if (planRes.target_kcal) setTargetKcal(planRes.target_kcal);
+            if (planRes.remaining) setRemainingBudget(planRes.remaining);
+            const regSet = Array.isArray(planRes.registered_meal_types)
+              ? new Set<string>(planRes.registered_meal_types)
+              : new Set<string>();
+            setRegisteredTypes(regSet);
+            const regItems: RegisteredItem[] = Array.isArray(planRes.registered_meal_items)
+              ? planRes.registered_meal_items
+              : [];
+            setRegisteredItems(regItems);
+            savePlanToCache(planRes.plan, userId, planRes.remaining, regSet, regItems);
+            setStatus('ready');
+          }
+          if (usageRes?.day) setRemainingDay(usageRes.day.remaining_day);
+        } catch {}
+      })();
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, userId]);
 
   async function handleGenerate() {
     setStatus('loading');
@@ -320,6 +380,19 @@ export default function ChefPlanDay() {
     });
   }
 
+  // Guardado al backend con feedback al user. Si falla, el banner saveError
+  // informa + ofrece reintentar. Antes era fire-and-forget — perdíamos
+  // ediciones silenciosamente cuando la red caía y el próximo fetch del
+  // backend pisaba el cache local.
+  async function trySaveDay(planToSave: PlanData) {
+    try {
+      await api.chefSaveDay(planToSave, token);
+      setSaveError(false);
+    } catch {
+      setSaveError(true);
+    }
+  }
+
   function handleSaveEdit(updated: EditableMeal) {
     if (editingIdx == null || !plan) return;
     const nextMeals = plan.meals.map((m, i) =>
@@ -333,8 +406,12 @@ export default function ChefPlanDay() {
     setPlan(nextPlan);
     savePlanToCache(nextPlan, userId, remainingBudget, registeredTypes, registeredItems);
     setEditingIdx(null);
-    // Persistir en backend (fire-and-forget — UI ya actualizada)
-    api.chefSaveDay(nextPlan, token).catch(() => {});
+    trySaveDay(nextPlan);
+  }
+
+  function handleRetrySave() {
+    if (!plan) return;
+    trySaveDay(plan);
   }
 
   // ── Register All ─────────────────────────────────────────
@@ -813,6 +890,52 @@ export default function ChefPlanDay() {
               {b.detail}
             </ChefWarningBanner>
           ))}
+        </div>
+      )}
+
+      {/* Save error — edición persistida en cache local pero no en backend.
+          Antes se perdía silenciosamente; ahora el user ve el fallo y puede
+          reintentar. El plan local sigue mostrando el cambio, solo falta
+          confirmar con el servidor. */}
+      {saveError && (
+        <div style={{
+          background: 'rgba(231,111,81,0.08)',
+          border: '0.5px solid rgba(231,111,81,0.25)',
+          borderRadius: 'var(--radius-md)',
+          padding: '10px 14px',
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}>
+          <span style={{
+            fontSize: 12,
+            color: 'var(--accent-2)',
+            fontFamily: 'var(--font-sans)',
+            lineHeight: 1.4,
+          }}>
+            No se pudo guardar el cambio en el servidor. Tu edición sigue visible aquí.
+          </span>
+          <button
+            type="button"
+            onClick={handleRetrySave}
+            style={{
+              background: 'var(--accent-2)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--radius-full)',
+              padding: '5px 14px',
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: 'var(--font-sans)',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            Reintentar
+          </button>
         </div>
       )}
 
