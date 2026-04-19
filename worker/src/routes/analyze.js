@@ -8,6 +8,7 @@ import { applyCalibration, findSimilarMeal } from '../utils/calibration.js';
 import { getAiLimit, canAccess } from '../utils/levels.js';
 import { SONNET_PHOTO_DAILY_LIMIT, MAX_TEXT_LENGTH, ADHERENCE_TOLERANCE } from '../constants.js';
 import { matchDish, formatDishContext, formatDishValidation } from '../utils/spanishDishes.js';
+import { NUTRITION_RULES_BLOCK } from '../prompts/nutritionRules.js';
 
 // Tamaño máximo de imagen permitido (base64, ~2 MB de imagen original)
 const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
@@ -17,44 +18,40 @@ const MAX_IMAGE_B64_CHARS = 2_800_000; // ≈ 2 MB en base64
 
 const PHOTO_SYSTEM_PROMPT = `Eres un nutricionista experto analizando una foto de comida.
 
+${NUTRITION_RULES_BLOCK}
+
 Proceso obligatorio antes de estimar:
 1. Identifica cada componente visible (proteína, carbohidrato, verdura, salsa, aceite)
 2. Estima el peso aproximado de cada uno en gramos según el tamaño del plato
-3. Calcula kcal por componente y suma → ese es el total real
+3. Calcula kcal por componente aplicando las reglas de arriba y suma → ese es el total real
 
 Devuelve SOLO JSON válido:
 {"name":"nombre descriptivo","calories":entero,"calories_min":entero|null,"calories_max":entero|null,"protein":decimal,"carbs":decimal,"fat":decimal,"confidence":"alta"|"media"|"baja","notes":"componentes: X g proteína (~Nkcal) + Y g carbos (~Nkcal) + ...","categories":["cat1","cat2"]}
 
 Si confidence!="alta", rellena calories_min y calories_max con el rango realista (±15-25%).
 
-Referencia por 100g (úsala para calcular, no como techo):
-pollo/pavo pechuga 120kcal | muslo pollo 180kcal | ternera 250kcal | cerdo 280kcal | pescado blanco 90kcal | salmón 200kcal | huevo 155kcal | arroz cocido 130kcal | pasta cocida 160kcal | pan 260kcal | patata cocida 85kcal | patata frita 310kcal | legumbres cocidas 120kcal | verdura hoja 25kcal | aceite 880kcal | chorizo 380kcal | jamón serrano 240kcal | sofrito base por ración 100kcal
-NOTA: pasta y arroz en la tabla son valores COCIDOS. Si estimas peso de pasta/arroz en plato, es peso cocido — usar 160/130 kcal/100g respectivamente.
-
-Reglas:
+Notas específicas de foto:
 - El total depende de la CANTIDAD visible — un plato grande de pasta puede ser 700kcal, uno pequeño 350kcal
-- Grasa de cocción según método: hervido/vapor +0 | plancha/horno +15-30kcal | salteado/rehogado +80-150kcal | sofrito español (aceite+cebolla+tomate) +120-200kcal | frito sartén +100-180kcal | frito freidora +150-250kcal | salsa cremosa visible +100-200kcal | aliño ensalada +80-150kcal
-- Si hay múltiples platos o acompañamientos visibles (guarnición, pan, bebida), estímalos todos y suma al total
-- Restaurante o preparación elaborada: +25-35% vs casero simple (ya incluido en grasa si aplica)
+- Pasta y arroz VISTOS EN EL PLATO son peso cocido (usa 160 / 130 kcal/100g respectivamente, no los valores de seco del bloque de reglas)
 - confidence "baja" si la imagen no muestra comida claramente, valores 0
 - categories: máx 4, inglés snake_case`;
 
 // ── System prompt texto — estático, apto para prompt caching ─
 // ~200 tokens
 
-const TEXT_SYSTEM_PROMPT = `Eres un nutricionista experto. El usuario describe su comida en texto. Devuelve SOLO JSON válido:
+const TEXT_SYSTEM_PROMPT = `Eres un nutricionista experto. El usuario describe su comida en texto.
+
+${NUTRITION_RULES_BLOCK}
+
+Devuelve SOLO JSON válido:
 {"name":"nombre descriptivo","items":[{"name":"nombre","quantity":"cantidad","calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal}],"total":{"calories":entero,"protein":decimal,"carbs":decimal,"fat":decimal},"categories":["cat1","cat2"],"confidence":"high"|"medium"|"low","notes":"observaciones breves","clarification_question":null,"clarification_options":null}
 
 Si confidence="low", rellena clarification_question con la duda más relevante (ej: "¿El pollo era a la plancha o frito?") y clarification_options con 2-3 opciones cortas.
 
-Reglas:
-- Ración normal española si no se especifica cantidad | no seas conservador
-- IMPORTANTE peso seco vs cocido: si el usuario dice "Xg de pasta/arroz/legumbres" sin decir "cocido/a", asumir peso SECO (lo que pone en la bolsa). Pasta seca: 350 kcal/100g. Arroz seco: 360 kcal/100g. Legumbres secas: 350 kcal/100g. Solo usar valores "cocido" si dice explícitamente "cocido/a" o "hervido/a"
-- Cocina española usa aceite de oliva generosamente: sofrito base = +80-120 kcal, fritura = +150-250 kcal. NO asumir "moderado en aceites" — el aceite es ingrediente principal en la cocina española
-- Restaurante: +25-35% vs casero (por mantequilla, salsas, raciones mayores)
-- Cocción no especificada en casa: carnes → sartén con aceite; pescado → rebozado o sartén; patatas → fritas salvo que diga cocidas
-- Cocción no especificada en restaurante: carnes → plancha o sartén; patatas → fritas
-- Múltiples alimentos: analiza cada uno individualmente y suma`;
+Notas específicas de texto:
+- Aplica las reglas de precisión (arriba) al estimar cada item.
+- Si el usuario da cantidad explícita ("150g"), úsala. Si no da, usa la ración normal española.
+- items[] es un desglose por alimento/componente; total es la suma.`;
 
 // ── Rate limiting con incremento atómico previo ─────────────
 // FIX: incremento ANTES de llamar a Claude, rollback si falla.

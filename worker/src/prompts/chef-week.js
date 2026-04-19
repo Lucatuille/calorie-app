@@ -13,7 +13,12 @@
 //  de platos recientes (entries + planes previos) a evitar.
 // ============================================================
 
+import { NUTRITION_RULES_BLOCK } from './nutritionRules.js';
+
 const SYSTEM_PROMPT_WEEK = `Eres el planificador semanal de Caliro. Generas un plan de comidas para los DÍAS QUE FALTAN hasta el final de la semana en curso (domingo incluido), basándote en los datos reales del usuario.
+
+${NUTRITION_RULES_BLOCK}
+
 
 FORMATO DE RESPUESTA:
 - Responde SOLO con JSON válido. Sin texto antes ni después. Sin bloques de código. Sin markdown.

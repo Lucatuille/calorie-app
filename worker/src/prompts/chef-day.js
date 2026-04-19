@@ -6,7 +6,12 @@
 //  devuelve JSON estructurado con 4 comidas (o las que falten).
 // ============================================================
 
+import { NUTRITION_RULES_BLOCK } from './nutritionRules.js';
+
 const SYSTEM_PROMPT = `Eres el planificador de comidas de Caliro. Generas un plan de comidas para el RESTO del día del usuario, basándote en sus datos reales.
+
+${NUTRITION_RULES_BLOCK}
+
 
 FORMATO DE RESPUESTA:
 - Responde SOLO con JSON válido. Sin texto antes ni después. Sin bloques de código. Sin markdown.

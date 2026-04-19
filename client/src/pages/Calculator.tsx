@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { MEAL_TYPES, getMeal } from '../utils/meals';
 import { MEAL_HOURS, MAX_IMAGE_PX, JPEG_QUALITY } from '../utils/constants';
 import { isPro } from '../utils/levels';
+import { scaleIngredientsGrams } from '../utils/scaleIngredients';
 import BarcodeScanner from '../components/BarcodeScanner';
 import TextAnalyzer   from '../components/TextAnalyzer';
 
@@ -118,8 +119,10 @@ export default function Calculator() {
   // se navega a /calculator con state.prefill. Guardamos el 1× original para
   // escalar con los chips de porción sin perder la referencia.
   const [fromPlan, setFromPlan] = useState(false);
-  const [planBaseline, setPlanBaseline] = useState(null); // { calories, protein, carbs, fat, weight } × 1
-  const [portionFactor, setPortionFactor] = useState(1);  // 0.5 | 1 | 1.5
+  // Baseline 1× del plato del plan (antes de cualquier escalado). Incluye
+  // ingredients string para poder reescalarlo también al cambiar factor.
+  const [planBaseline, setPlanBaseline] = useState(null); // { calories, protein, carbs, fat, weight, ingredients } × 1
+  const [portionFactor, setPortionFactor] = useState(1);  // rango continuo 0.5–1.5 (slider)
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -171,13 +174,14 @@ export default function Calculator() {
       notes:     prefill.ingredients || f.notes,
     }));
 
-    // Guardar el baseline 1× para poder escalar con los chips sin perder los originales.
+    // Guardar el baseline 1× para poder escalar con slider sin perder los originales.
     setPlanBaseline({
-      calories: Number(prefill.calories) || 0,
-      protein:  Number(prefill.protein)  || 0,
-      carbs:    Number(prefill.carbs)    || 0,
-      fat:      Number(prefill.fat)      || 0,
-      weight:   Number(prefill.weight)   || 0,
+      calories:    Number(prefill.calories) || 0,
+      protein:     Number(prefill.protein)  || 0,
+      carbs:       Number(prefill.carbs)    || 0,
+      fat:         Number(prefill.fat)      || 0,
+      weight:      Number(prefill.weight)   || 0,
+      ingredients: String(prefill.ingredients || ''),
     });
     setFromPlan(true);
     setPortionFactor(1);
@@ -187,17 +191,23 @@ export default function Calculator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Aplicar factor de porción: escala kcal + macros + peso desde el baseline 1×.
+  // Aplicar factor de porción: escala kcal + macros + peso + STRING de
+  // ingredientes desde el baseline 1×. El notes (ingredients) se re-escribe
+  // con los gramajes nuevos (150g → 225g si factor 1.5) para que queden
+  // coherentes con los macros escalados.
   function applyPortionFactor(factor) {
     if (!planBaseline) return;
-    setPortionFactor(factor);
+    // Clamp rango [0.5, 1.5] y redondeo a 1 decimal.
+    const safe = Math.max(0.5, Math.min(1.5, Math.round(factor * 10) / 10));
+    setPortionFactor(safe);
     setForm(f => ({
       ...f,
-      calories: planBaseline.calories ? String(Math.round(planBaseline.calories * factor)) : f.calories,
-      protein:  planBaseline.protein  ? String(Math.round(planBaseline.protein  * factor)) : f.protein,
-      carbs:    planBaseline.carbs    ? String(Math.round(planBaseline.carbs    * factor)) : f.carbs,
-      fat:      planBaseline.fat      ? String(Math.round(planBaseline.fat     * factor)) : f.fat,
-      weight:   planBaseline.weight   ? String(Math.round(planBaseline.weight   * factor)) : f.weight,
+      calories: planBaseline.calories ? String(Math.round(planBaseline.calories * safe)) : f.calories,
+      protein:  planBaseline.protein  ? String(Math.round(planBaseline.protein  * safe)) : f.protein,
+      carbs:    planBaseline.carbs    ? String(Math.round(planBaseline.carbs    * safe)) : f.carbs,
+      fat:      planBaseline.fat      ? String(Math.round(planBaseline.fat     * safe)) : f.fat,
+      weight:   planBaseline.weight   ? String(Math.round(planBaseline.weight   * safe)) : f.weight,
+      notes:    planBaseline.ingredients ? scaleIngredientsGrams(planBaseline.ingredients, safe) : f.notes,
     }));
   }
 
@@ -812,57 +822,92 @@ export default function Calculator() {
               ))}
             </div>
 
-            {/* Banner + selector de porción cuando el form viene de Chef */}
+            {/* Banner + slider de porción cuando el form viene de Chef.
+                Slider continuo 50%-150% (paso 10%) — el user ajusta al valor
+                real que comió. Label dinámica ("120% del plan") + reset a 1×. */}
             {fromPlan && (
               <div style={{
                 background: 'var(--surface-2)',
                 border: '0.5px solid var(--border)',
                 borderRadius: 'var(--radius-md)',
-                padding: '10px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 10,
-                flexWrap: 'wrap',
+                padding: '12px 14px',
               }}>
                 <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  fontSize: 11, color: 'var(--text-secondary)',
-                  fontFamily: 'var(--font-sans)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 10,
+                  gap: 10,
                 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                       stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                       aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Desde tu plan · ¿Cuánto comiste?</span>
-                </div>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {[0.5, 1, 1.5].map(f => {
-                    const active = Math.abs(portionFactor - f) < 0.01;
-                    return (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: 11, color: 'var(--text-secondary)',
+                    fontFamily: 'var(--font-sans)',
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                         stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                         aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>Desde tu plan · ¿Cuánto comiste?</span>
+                  </div>
+                  <div style={{
+                    display: 'flex', alignItems: 'baseline', gap: 6,
+                    fontFamily: 'var(--font-sans)',
+                  }}>
+                    <span style={{
+                      fontSize: 14, fontWeight: 700,
+                      color: 'var(--accent)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {Math.round(portionFactor * 100)}%
+                    </span>
+                    {Math.abs(portionFactor - 1) > 0.01 && (
                       <button
-                        key={f}
                         type="button"
-                        onClick={() => applyPortionFactor(f)}
+                        onClick={() => applyPortionFactor(1)}
                         style={{
-                          padding: '5px 10px',
-                          minWidth: 40,
-                          background: active ? 'var(--accent)' : 'var(--surface)',
-                          color: active ? '#fff' : 'var(--text-primary)',
-                          border: active ? 'none' : '0.5px solid var(--border)',
-                          borderRadius: 'var(--radius-full)',
-                          fontSize: 11,
-                          fontWeight: 600,
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: 10,
+                          color: 'var(--text-tertiary)',
                           cursor: 'pointer',
-                          fontFamily: 'var(--font-sans)',
-                          transition: 'all 0.15s',
+                          padding: 0,
+                          fontFamily: 'inherit',
+                          textDecoration: 'underline',
                         }}
                       >
-                        {f === 0.5 ? '½' : f === 1 ? '1×' : '1½×'}
+                        reset
                       </button>
-                    );
-                  })}
+                    )}
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.1"
+                  value={portionFactor}
+                  onChange={e => applyPortionFactor(parseFloat(e.target.value))}
+                  aria-label="Factor de porción"
+                  style={{
+                    width: '100%',
+                    accentColor: 'var(--accent)',
+                    cursor: 'pointer',
+                  }}
+                />
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  fontSize: 9, color: 'var(--text-tertiary)',
+                  fontFamily: 'var(--font-sans)',
+                  marginTop: 2,
+                  fontVariantNumeric: 'tabular-nums',
+                }}>
+                  <span>½</span>
+                  <span>¾</span>
+                  <span>1×</span>
+                  <span>1¼</span>
+                  <span>1½</span>
                 </div>
               </div>
             )}
