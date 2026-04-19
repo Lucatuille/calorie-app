@@ -223,7 +223,11 @@ export async function handleAnalyze(request, env, path, ctx) {
       },
       body: JSON.stringify({
         model:      photoModel,
-        max_tokens: 800,
+        // 1200: margen razonable para platos con 5-8 ingredientes detectados
+        // + macros por ítem + total. Subido de 800 tras bug 2026-04-19
+        // (respuestas truncadas con fotos complejas). Coste adicional
+        // marginal (~0,16 €/1000 análisis) vs frustración del user = claro.
+        max_tokens: 1200,
         system:     PHOTO_SYSTEM_PROMPT,
         messages: [{
           role: 'user',
@@ -252,7 +256,7 @@ export async function handleAnalyze(request, env, path, ctx) {
       if (usedSonnet) await rollbackSonnetLimit(env, user.userId);
       return jsonResponse({
         error: 'response_too_large',
-        message: 'La IA no pudo completar el análisis (respuesta demasiado larga). Prueba con una imagen más clara o con menos elementos en el plato.',
+        message: 'La IA ha detectado demasiados elementos para un solo análisis. Prueba a registrar los platos principales por separado, o con una foto más centrada en la comida. Tu análisis no se ha consumido, puedes reintentarlo.',
       }, 422);
     }
 
@@ -394,7 +398,10 @@ export async function handleAnalyzeText(request, env, ctx) {
     },
     body: JSON.stringify({
       model:      'claude-haiku-4-5-20251001',
-      max_tokens: 800,
+      // 1200 tokens = cubre descripciones con hasta ~10-12 alimentos
+      // detectados. Subido de 800 tras bug 2026-04-19 (texto descriptivo
+      // de comidas completas truncaba la respuesta).
+      max_tokens: 1200,
       system:     TEXT_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
     }),
@@ -416,7 +423,7 @@ export async function handleAnalyzeText(request, env, ctx) {
     await rollbackAiLimit(env, user.userId);
     return jsonResponse({
       error: 'response_too_large',
-      message: 'La IA no pudo completar el análisis (respuesta demasiado larga). Intenta con una descripción más corta.',
+      message: 'Has descrito demasiados alimentos para un solo análisis. Prueba a registrar cada comida por separado (tu desayuno, tu comida, tu cena). Tu análisis no se ha consumido, puedes reintentarlo.',
     }, 422);
   }
 
