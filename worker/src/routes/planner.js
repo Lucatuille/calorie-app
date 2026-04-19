@@ -6,7 +6,7 @@
 import { jsonResponse, errorResponse, authenticate, rateLimit } from '../utils.js';
 import { checkAndIncrementPlannerLimit, rollbackPlannerLimit, getPlannerUsage } from '../utils/plannerLimits.js';
 import { savePlannerHistory, getRecentPlannerHistory, extractRecentDishNames } from '../utils/plannerHistory.js';
-import { resolveMealTypesRegistered } from '../utils/mealTypeInfer.js';
+import { resolveMealTypesRegistered, resolveMealItems } from '../utils/mealTypeInfer.js';
 import { calibrateMeals, recomputeTotals } from '../utils/calibratePlan.js';
 import { findCoherenceIssues } from '../utils/validateMealNutrition.js';
 import { SYSTEM_PROMPT, buildDayPlanMessage, parseDayPlanResponse } from '../prompts/chef-day.js';
@@ -129,6 +129,11 @@ export async function handlePlanner(request, env, path, ctx) {
 
       // Meal types already registered today — infiere por hora si meal_type = 'other'
       const mealTypesRegistered = resolveMealTypesRegistered(meals);
+      // Detalle de cada comida registrada (type + nombre normalizado). El cliente
+      // usa esto para marcar "REGISTRADA" sólo los meals del plan cuyo NOMBRE
+      // coincide, evitando el falso positivo cuando el user comió otra cosa
+      // en la misma franja horaria.
+      const mealItemsRegistered = resolveMealItems(meals);
 
       // Build prompt
       const userMessage = buildDayPlanMessage({
@@ -255,6 +260,9 @@ export async function handlePlanner(request, env, path, ctx) {
         // server-side arriba). Devolvemos el set para que el frontend pueda
         // marcar correctamente si el user registra un meal entre recargas.
         registered_meal_types: mealTypesRegistered,
+        // Detalle name+type de cada entry de hoy. Frontend lo usa para
+        // marcar "REGISTRADA" sólo los meals del plan cuyo nombre coincide.
+        registered_meal_items: mealItemsRegistered,
         warnings,
         usage: {
           remaining_day: limitCheck.remainingDay,
@@ -637,17 +645,21 @@ export async function handlePlanner(request, env, path, ctx) {
       fat:     (user?.target_fat      || 0) - consumed.fat,
     };
 
-    // registered_meal_types — para que el frontend marque los meals del plan
-    // cuyo tipo ya está registrado hoy como "✓ Registrado" y evite doble
-    // submission. Usa la misma lógica que la ruta POST (hora-first con
-    // fallback a explícito).
+    // registered_meal_types — tipos ocupados, usado por batch "Registrar
+    // pendientes" para no duplicar slots.
     const registered_meal_types = resolveMealTypesRegistered(entries);
+    // registered_meal_items — detalle {type, name, normalized_name} de cada
+    // entry. El frontend compara por nombre para marcar "REGISTRADA" sólo
+    // el meal del plan que realmente se comió (evita falso positivo si el
+    // user comió otra cosa en la misma franja horaria).
+    const registered_meal_items = resolveMealItems(entries);
 
     return jsonResponse({
       plan,
       target_kcal: user?.target_calories || 0,
       remaining,
       registered_meal_types,
+      registered_meal_items,
       generated_at: row.created_at,
     });
   }

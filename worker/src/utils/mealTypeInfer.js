@@ -100,3 +100,52 @@ export function resolveMealTypesRegistered(entries) {
   }
   return [...out];
 }
+
+/**
+ * Normaliza un nombre de plato para comparaciones tolerantes:
+ * lowercase, sin tildes, espacios colapsados, trim. Empareja
+ * "Tostadas con Tomate " con "tostadas con tomate".
+ *
+ * @param {string|null|undefined} name
+ * @returns {string}
+ */
+export function normalizeDishName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Dadas las entries de hoy, devuelve el detalle de cada comida registrada:
+ * type resuelto + nombre original + nombre normalizado.
+ *
+ * A diferencia de `resolveMealTypesRegistered`, NO deduplica: el cliente
+ * necesita saber qué NOMBRES se registraron para marcar como "REGISTRADA"
+ * solo los meals del plan cuyo nombre coincida. Dos entries del mismo tipo
+ * pero distinto nombre devuelven 2 items (p. ej. user comió 2 snacks).
+ *
+ * Uso principal: el frontend de ChefPlanDay compara
+ *   item.type === meal.type && item.normalized_name === normalize(meal.name)
+ * para evitar el falso positivo "merienda marcada porque el user comió
+ * otra cosa tarde".
+ *
+ * @param {Array<{meal_type?:string, name?:string, created_at?:string|number}>} entries
+ * @returns {Array<{type:string, name:string, normalized_name:string}>}
+ */
+export function resolveMealItems(entries) {
+  const out = [];
+  for (const e of entries || []) {
+    const t = resolveMealType(e);
+    if (!t) continue;
+    const rawName = (e.name || '').trim();
+    if (!rawName) continue;
+    out.push({
+      type: t,
+      name: rawName,
+      normalized_name: normalizeDishName(rawName),
+    });
+  }
+  return out;
+}

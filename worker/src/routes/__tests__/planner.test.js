@@ -739,6 +739,44 @@ describe('GET /api/planner/day/current', () => {
     expect(res.data.registered_meal_types.sort()).toEqual(['comida', 'desayuno']);
   });
 
+  it('devuelve registered_meal_items con nombre normalizado de cada entry', async () => {
+    // Bug 2026-04-19: el frontend debe marcar "REGISTRADA" sólo los meals
+    // del plan cuyo nombre coincide con una entry real, no por tipo suelto.
+    // Caso: user come hamburguesa a las 17h Madrid (meal_type=snack → merienda
+    // por inferencia). El plan tiene "Yogur griego" como merienda. Items debe
+    // devolver la hamburguesa con type=merienda → frontend compara nombres y
+    // no marca el yogur como registrado.
+    const planObj = { meals: [{ name: 'Yogur griego con nueces', kcal: 280 }] };
+    const res = await handlePlanner(
+      makeRequest('GET', '/api/planner/day/current'),
+      makeEnv({
+        userRow: {
+          target_calories: 1800, target_protein: 150,
+          target_carbs: 200, target_fat: 60,
+        },
+        todayEntries: [
+          { calories: 500, protein: 25, carbs: 50, fat: 20, meal_type: 'breakfast', name: 'Tostadas con pavo',  created_at: '2026-04-18 07:00:00' },
+          { calories: 750, protein: 35, carbs: 90, fat: 20, meal_type: 'snack',     name: 'Hamburguesa doble',  created_at: '2026-04-18 15:00:00' },
+        ],
+        historyRows: [{ plan_json: JSON.stringify(planObj), created_at: 1 }],
+      }),
+      '/api/planner/day/current'
+    );
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.data.registered_meal_items)).toBe(true);
+    expect(res.data.registered_meal_items).toHaveLength(2);
+    expect(res.data.registered_meal_items).toContainEqual({
+      type: 'desayuno',
+      name: 'Tostadas con pavo',
+      normalized_name: 'tostadas con pavo',
+    });
+    expect(res.data.registered_meal_items).toContainEqual({
+      type: 'merienda',
+      name: 'Hamburguesa doble',
+      normalized_name: 'hamburguesa doble',
+    });
+  });
+
   it('remaining sin entries = target completo', async () => {
     const res = await handlePlanner(
       makeRequest('GET', '/api/planner/day/current'),

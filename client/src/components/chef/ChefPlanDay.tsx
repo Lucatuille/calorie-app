@@ -50,6 +50,29 @@ function normalizeMealType(raw: string | undefined): string | null {
   return MAP[t] || null;
 }
 
+// Detalle de una entry ya registrada hoy. Paridad con resolveMealItems
+// de worker/src/utils/mealTypeInfer.js. Lo usamos para marcar "REGISTRADA"
+// sólo los meals del plan cuyo NOMBRE coincide con algo ya registrado —
+// no por tipo suelto (bug reportado 2026-04-19: merienda se marcaba por
+// cualquier entry en esa franja horaria, aunque fuese otro plato).
+type RegisteredItem = { type: string; name: string; normalized_name: string };
+
+function normalizeDishName(name: string | undefined): string {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isMealRegistered(meal: Meal, items: RegisteredItem[]): boolean {
+  const mealType = normalizeMealType(meal.type);
+  if (!mealType) return false;
+  const mealName = normalizeDishName(meal.name);
+  if (!mealName) return false;
+  return items.some(it => it.type === mealType && it.normalized_name === mealName);
+}
+
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 const CHEF_BG = 'var(--bg)';
@@ -64,6 +87,7 @@ type CachedPlan = {
   plan: PlanData;
   remaining: Remaining | null;
   registeredTypes: Set<string>;
+  registeredItems: RegisteredItem[];
   status: Status;
 };
 
@@ -77,10 +101,16 @@ function loadCachedPlan(userId: number | string | undefined): CachedPlan | null 
     // Solo válido si es de hoy
     const today = new Date().toLocaleDateString('en-CA');
     if (cached.date !== today || !cached.plan) return null;
+    const itemsRaw = Array.isArray(cached.registered_meal_items) ? cached.registered_meal_items : [];
+    // Tolerante a shape antiguo (sólo types sin items) — items queda vacío
+    // y el backend lo repoblará en el siguiente GET /day/current.
     return {
       plan: cached.plan,
       remaining: cached.remaining || null,
       registeredTypes: new Set(Array.isArray(cached.registered_meal_types) ? cached.registered_meal_types : []),
+      registeredItems: itemsRaw.filter((it: any) =>
+        it && typeof it.type === 'string' && typeof it.normalized_name === 'string'
+      ),
       status: 'ready',
     };
   } catch {
@@ -93,6 +123,7 @@ function savePlanToCache(
   userId: number | string | undefined,
   remaining?: Remaining | null,
   registeredTypes?: Set<string>,
+  registeredItems?: RegisteredItem[],
 ) {
   try {
     const key = storageKey(userId);
@@ -103,6 +134,7 @@ function savePlanToCache(
       plan,
       remaining: remaining || null,
       registered_meal_types: registeredTypes ? Array.from(registeredTypes) : [],
+      registered_meal_items: registeredItems || [],
     }));
   } catch { /* silent — localStorage full or unavailable */ }
 }
@@ -133,10 +165,15 @@ export default function ChefPlanDay() {
   // Carta mostrada durante loading — 1 por petición, random sin repetir las
   // últimas 2 vistas. Cada carta son 3 tips numerados con un tema coherente.
   const [loadingCard, setLoadingCard] = useState<ChefTipCard | null>(null);
-  // Tipos de comida ya registrados hoy (desde el backend). El plan muestra
-  // los meals faltantes, pero si el user registra uno entre recargas, se
-  // marca como ✓ para evitar doble registro.
+  // Tipos de comida ya registrados hoy (desde el backend). Usado por el
+  // batch "Registrar pendientes" para no duplicar slots (si user ya comió
+  // merienda, no registrar la merienda del plan automáticamente).
   const [registeredTypes, setRegisteredTypes] = useState<Set<string>>(cached?.registeredTypes || new Set());
+  // Detalle {type, name, normalized_name} de cada entry ya registrada hoy.
+  // Usado para marcar "REGISTRADA" en la UI sólo los meals del plan cuyo
+  // NOMBRE coincide — evita falso positivo si el user comió otra cosa en
+  // la misma franja horaria (bug 2026-04-19).
+  const [registeredItems, setRegisteredItems] = useState<RegisteredItem[]>(cached?.registeredItems || []);
   // Estado del batch "Registrar todo" — durante la ejecución bloqueamos el
   // botón y mostramos spinner. Si alguno falla, batchMessage lo cuenta abajo.
   const [batching, setBatching] = useState(false);
@@ -172,7 +209,11 @@ export default function ChefPlanDay() {
             ? new Set<string>(planRes.registered_meal_types)
             : new Set<string>();
           setRegisteredTypes(regSet);
-          savePlanToCache(planRes.plan, userId, planRes.remaining, regSet);
+          const regItems: RegisteredItem[] = Array.isArray(planRes.registered_meal_items)
+            ? planRes.registered_meal_items
+            : [];
+          setRegisteredItems(regItems);
+          savePlanToCache(planRes.plan, userId, planRes.remaining, regSet, regItems);
           setStatus('ready');
         } else {
           // Backend confirma que NO hay plan para este user hoy → descartar
@@ -209,7 +250,11 @@ export default function ChefPlanDay() {
           ? new Set<string>(res.registered_meal_types)
           : new Set<string>();
         setRegisteredTypes(regSet);
-        savePlanToCache(res.plan, userId, remaining, regSet);
+        const regItems: RegisteredItem[] = Array.isArray(res.registered_meal_items)
+          ? res.registered_meal_items
+          : [];
+        setRegisteredItems(regItems);
+        savePlanToCache(res.plan, userId, remaining, regSet, regItems);
         if (res.target_kcal) setTargetKcal(res.target_kcal);
         if (typeof res?.usage?.remaining_day === 'number') {
           setRemainingDay(res.usage.remaining_day);
@@ -229,16 +274,32 @@ export default function ChefPlanDay() {
   }
 
   function handleRegister(meal: Meal) {
-    // Marca optimista: agregamos el tipo al set ANTES de navegar a Calculator.
-    // Si el user guarda en Calculator, el backend tendrá la entry y el próximo
-    // mount re-confirmará. Si cancela, próximo mount re-fetchea el estado real
-    // (sin 'cena' porque no llegó a guardar) y corrige.
+    // Marca optimista: agregamos el item (type + name normalizado) Y el tipo
+    // al set ANTES de navegar a Calculator. Si el user guarda en Calculator,
+    // el backend tendrá la entry y el próximo mount re-confirmará. Si cancela,
+    // próximo mount re-fetchea el estado real y corrige.
     const normalized = normalizeMealType(meal.type);
     if (normalized) {
       const nextSet = new Set(registeredTypes);
       nextSet.add(normalized);
       setRegisteredTypes(nextSet);
-      if (plan) savePlanToCache(plan, userId, remainingBudget, nextSet);
+      const normalizedName = normalizeDishName(meal.name);
+      let nextItems = registeredItems;
+      if (normalizedName) {
+        // Dedup: si ya existe un item con mismo type+normalized_name no añadir.
+        const exists = registeredItems.some(it =>
+          it.type === normalized && it.normalized_name === normalizedName
+        );
+        if (!exists) {
+          nextItems = [...registeredItems, {
+            type: normalized,
+            name: meal.name,
+            normalized_name: normalizedName,
+          }];
+          setRegisteredItems(nextItems);
+        }
+      }
+      if (plan) savePlanToCache(plan, userId, remainingBudget, nextSet, nextItems);
     }
     navigate('/calculator', {
       state: {
@@ -270,7 +331,7 @@ export default function ChefPlanDay() {
       totals: recomputeTotals(nextMeals),
     };
     setPlan(nextPlan);
-    savePlanToCache(nextPlan, userId, remainingBudget, registeredTypes);
+    savePlanToCache(nextPlan, userId, remainingBudget, registeredTypes, registeredItems);
     setEditingIdx(null);
     // Persistir en backend (fire-and-forget — UI ya actualizada)
     api.chefSaveDay(nextPlan, token).catch(() => {});
@@ -299,7 +360,8 @@ export default function ChefPlanDay() {
 
     setBatching(true);
     setBatchMessage('');
-    const accumulated = new Set<string>(registeredTypes);
+    const accumulatedTypes = new Set<string>(registeredTypes);
+    const accumulatedItems: RegisteredItem[] = [...registeredItems];
     let successCount = 0;
     let failCount = 0;
 
@@ -319,10 +381,22 @@ export default function ChefPlanDay() {
         }, token);
         successCount++;
         const normType = normalizeMealType(meal.type);
+        const normName = normalizeDishName(meal.name);
         if (normType) {
-          accumulated.add(normType);
-          // Actualización progresiva — el user ve los checks apareciendo.
-          setRegisteredTypes(new Set(accumulated));
+          accumulatedTypes.add(normType);
+          setRegisteredTypes(new Set(accumulatedTypes));
+          if (normName && !accumulatedItems.some(it =>
+            it.type === normType && it.normalized_name === normName
+          )) {
+            accumulatedItems.push({
+              type: normType,
+              name: meal.name,
+              normalized_name: normName,
+            });
+            // Actualización progresiva — el user ve las marcas "REGISTRADA"
+            // apareciendo una a una durante el batch.
+            setRegisteredItems([...accumulatedItems]);
+          }
         }
       } catch {
         failCount++;
@@ -330,7 +404,7 @@ export default function ChefPlanDay() {
       }
     }
 
-    savePlanToCache(plan, userId, remainingBudget, accumulated);
+    savePlanToCache(plan, userId, remainingBudget, accumulatedTypes, accumulatedItems);
     setBatching(false);
 
     if (failCount === 0) {
@@ -715,7 +789,7 @@ export default function ChefPlanDay() {
         </div>
         <button
           type="button"
-          onClick={() => { setPlan(null); clearPlanCache(userId); setBanners([]); setRemainingBudget(null); setRegisteredTypes(new Set()); setStatus('idle'); }}
+          onClick={() => { setPlan(null); clearPlanCache(userId); setBanners([]); setRemainingBudget(null); setRegisteredTypes(new Set()); setRegisteredItems([]); setStatus('idle'); }}
           style={{
             fontSize: 10,
             color: 'var(--text-secondary)',
@@ -742,12 +816,19 @@ export default function ChefPlanDay() {
         </div>
       )}
 
-      {/* Meals */}
-      {plan.meals.map((meal, i) => {
-        const normType = normalizeMealType(meal.type);
-        const mealRegistered = normType ? registeredTypes.has(normType) : false;
+      {/* Meals — ordenados por hora (evita el caso Comida 14h → Desayuno 11h
+          que aparecía cuando Sonnet devolvía el array desordenado). Llevamos
+          originalIdx porque handleSaveEdit indexa sobre plan.meals (no sorted). */}
+      {plan.meals
+        .map((meal, originalIdx) => ({ meal, originalIdx }))
+        .sort((a, b) => (a.meal.time || '').localeCompare(b.meal.time || ''))
+        .map(({ meal, originalIdx }, i, sortedMeals) => {
+        // Match por NOMBRE + tipo (no sólo tipo). Ver isMealRegistered para
+        // el porqué. registeredTypes sigue usándose abajo para el batch
+        // "Registrar pendientes" (invariante: no duplicar slots).
+        const mealRegistered = isMealRegistered(meal, registeredItems);
         return (
-        <div key={i} style={{
+        <div key={originalIdx} style={{
           ...staggerStyle(i),
           opacity: mealRegistered ? 0.55 : 1,
           transition: 'opacity 0.2s',
@@ -820,7 +901,7 @@ export default function ChefPlanDay() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setEditingIdx(i)}
+                  onClick={() => setEditingIdx(originalIdx)}
                   style={{
                     fontSize: 10,
                     color: 'var(--text-tertiary)',
@@ -837,46 +918,40 @@ export default function ChefPlanDay() {
                 </button>
               </div>
 
-              {/* Circular register button — disabled con check si meal_type
-                  ya registrado hoy (evita doble submit accidental) */}
-              {(() => {
-                const normType = normalizeMealType(meal.type);
-                const alreadyRegistered = normType ? registeredTypes.has(normType) : false;
-                return (
-                  <button
-                    type="button"
-                    onClick={() => { if (!alreadyRegistered) handleRegister(meal); }}
-                    disabled={alreadyRegistered}
-                    title={alreadyRegistered ? 'Ya registrada hoy' : 'Registrar esta comida'}
-                    aria-label={alreadyRegistered ? 'Ya registrada hoy' : 'Registrar esta comida'}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      background: alreadyRegistered ? 'var(--surface-2)' : 'var(--accent)',
-                      border: alreadyRegistered ? '0.5px solid var(--border-strong)' : 'none',
-                      cursor: alreadyRegistered ? 'default' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      marginTop: 4,
-                      boxShadow: alreadyRegistered ? 'none' : '0 2px 6px rgba(45,106,79,0.2)',
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke={alreadyRegistered ? 'var(--text-tertiary)' : '#fff'}
-                         strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </button>
-                );
-              })()}
+              {/* Circular register button — disabled con check si este meal
+                  concreto (type+nombre) ya está registrado hoy. */}
+              <button
+                type="button"
+                onClick={() => { if (!mealRegistered) handleRegister(meal); }}
+                disabled={mealRegistered}
+                title={mealRegistered ? 'Ya registrada hoy' : 'Registrar esta comida'}
+                aria-label={mealRegistered ? 'Ya registrada hoy' : 'Registrar esta comida'}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  background: mealRegistered ? 'var(--surface-2)' : 'var(--accent)',
+                  border: mealRegistered ? '0.5px solid var(--border-strong)' : 'none',
+                  cursor: mealRegistered ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 4,
+                  boxShadow: mealRegistered ? 'none' : '0 2px 6px rgba(45,106,79,0.2)',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke={mealRegistered ? 'var(--text-tertiary)' : '#fff'}
+                     strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
             </div>
           </div>
 
           {/* Separator */}
-          {i < plan.meals.length - 1 && (
+          {i < sortedMeals.length - 1 && (
             <div style={{
               height: '0.5px',
               background: 'var(--border)',

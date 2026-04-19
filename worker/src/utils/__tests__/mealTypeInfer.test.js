@@ -4,7 +4,12 @@
 // ============================================================
 
 import { describe, it, expect } from 'vitest';
-import { resolveMealType, resolveMealTypesRegistered } from '../mealTypeInfer.js';
+import {
+  resolveMealType,
+  resolveMealTypesRegistered,
+  resolveMealItems,
+  normalizeDishName,
+} from '../mealTypeInfer.js';
 
 describe('resolveMealType — meal_type explícito', () => {
   it('devuelve español tal cual', () => {
@@ -269,5 +274,100 @@ describe('resolveMealTypesRegistered', () => {
     ];
     const result = resolveMealTypesRegistered(entries);
     expect(result.sort()).toEqual(['comida', 'desayuno']);
+  });
+});
+
+describe('normalizeDishName', () => {
+  it('lowercase + trim', () => {
+    expect(normalizeDishName('  Pollo al Curry  ')).toBe('pollo al curry');
+  });
+
+  it('quita tildes', () => {
+    expect(normalizeDishName('Plátano con Açúcar')).toBe('platano con acucar');
+  });
+
+  it('colapsa espacios múltiples', () => {
+    expect(normalizeDishName('Arroz   con    pollo')).toBe('arroz con pollo');
+  });
+
+  it('valores vacíos → cadena vacía', () => {
+    expect(normalizeDishName(null)).toBe('');
+    expect(normalizeDishName(undefined)).toBe('');
+    expect(normalizeDishName('')).toBe('');
+    expect(normalizeDishName('   ')).toBe('');
+  });
+});
+
+describe('resolveMealItems', () => {
+  it('devuelve array vacío para entradas vacías', () => {
+    expect(resolveMealItems([])).toEqual([]);
+    expect(resolveMealItems(null)).toEqual([]);
+    expect(resolveMealItems(undefined)).toEqual([]);
+  });
+
+  it('incluye type + name + normalized_name', () => {
+    const entries = [
+      { meal_type: 'breakfast', name: '2 Tostadas con Pavo' },
+    ];
+    expect(resolveMealItems(entries)).toEqual([
+      { type: 'desayuno', name: '2 Tostadas con Pavo', normalized_name: '2 tostadas con pavo' },
+    ]);
+  });
+
+  it('NO deduplica — dos entries mismo tipo distinto nombre = 2 items', () => {
+    // Importante: si user comió 2 snacks, ambos aparecen. El frontend
+    // compara por (type + normalized_name) para marcar solo si coincide.
+    const entries = [
+      { meal_type: 'snack', name: 'Manzana', created_at: '2026-04-14 15:00:00' },
+      { meal_type: 'snack', name: 'Almendras', created_at: '2026-04-14 16:00:00' },
+    ];
+    const result = resolveMealItems(entries);
+    expect(result).toHaveLength(2);
+    expect(result[0].normalized_name).toBe('manzana');
+    expect(result[1].normalized_name).toBe('almendras');
+  });
+
+  it('ignora entries sin nombre', () => {
+    const entries = [
+      { meal_type: 'breakfast', name: 'Tostadas' },
+      { meal_type: 'lunch' },              // sin name
+      { meal_type: 'dinner', name: '' },   // name vacío
+      { meal_type: 'snack', name: '   ' }, // solo espacios
+    ];
+    const result = resolveMealItems(entries);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Tostadas');
+  });
+
+  it('ignora entries cuyo tipo no se puede resolver', () => {
+    const entries = [
+      { meal_type: 'other', name: 'Sin hora' },      // sin created_at → null
+      { meal_type: 'breakfast', name: 'Desayuno OK' },
+    ];
+    const result = resolveMealItems(entries);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Desayuno OK');
+  });
+
+  it('caso real — hamburguesa a las 17h inferida como merienda', () => {
+    // Bug reportado 2026-04-19: user come "comida tardía como snack" a las
+    // 17h. resolveMealType infiere 'merienda' por la hora. El frontend NO
+    // debe marcar el Yogur griego del plan como registrado porque el
+    // nombre es distinto (hamburguesa ≠ yogur griego con nueces).
+    const entries = [
+      {
+        meal_type: 'snack',
+        name: 'Hamburguesa doble',
+        created_at: '2026-04-19 15:00:00',  // 17h Madrid verano → merienda
+      },
+    ];
+    const result = resolveMealItems(entries);
+    expect(result).toEqual([
+      {
+        type: 'merienda',
+        name: 'Hamburguesa doble',
+        normalized_name: 'hamburguesa doble',
+      },
+    ]);
   });
 });
