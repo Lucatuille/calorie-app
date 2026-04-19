@@ -260,7 +260,11 @@ export default function Profile() {
 
       {/* ── Upgrade entry (solo Free) ── */}
       {isFree(user?.access_level) && (
-        <Link to="/upgrade" style={{
+        <Link
+          to="/upgrade"
+          data-umami-event="upgrade_cta_profile"
+          onClick={() => api.trackUpgradeEvent('upgrade_cta_profile', token)}
+          style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'linear-gradient(145deg, #1c1c1c, #111111)',
           borderRadius: 'var(--radius-lg)',

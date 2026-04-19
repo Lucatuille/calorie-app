@@ -9,7 +9,10 @@
 //  iconografía de candado y color accent-2 más cálido en el icono.
 // ============================================================
 
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 type Props = {
   /** 'chat' | 'day' | 'week' — ajusta el texto y beneficios listados */
@@ -20,6 +23,17 @@ const CHEF_INK = 'var(--chef-ink)';
 
 export default function ChefFreeLock({ feature }: Props) {
   const navigate = useNavigate();
+  const { token } = useAuth();
+
+  // Impression tracking — mide cuántos Free ven el lock (vs no llegan hasta
+  // aquí). Junto con el click de abajo cerramos el funnel: impressions →
+  // clicks → upgrade_page_view → checkout_start.
+  useEffect(() => {
+    if (!token) return;
+    api.trackUpgradeEvent('chef_lock_shown', token);
+  }, [token, feature]);
+
+  const ctaEvent = `upgrade_cta_chef_lock_${feature}`;
 
   const title =
     feature === 'chat' ? 'Chat con Chef Caliro' :
@@ -170,7 +184,11 @@ export default function ChefFreeLock({ feature }: Props) {
         {/* CTA */}
         <button
           type="button"
-          onClick={() => navigate('/upgrade')}
+          data-umami-event={ctaEvent}
+          onClick={() => {
+            api.trackUpgradeEvent(ctaEvent, token);
+            navigate('/upgrade');
+          }}
           style={{
             width: '100%',
             background: 'var(--accent)',

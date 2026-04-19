@@ -103,6 +103,9 @@ export const api = {
   saveAiCorrection:      (body, token) => request('POST',   '/api/calibration/correction', body, token),
   getCalibrationProfile: (token)       => request('GET',    '/api/calibration/profile',    null, token),
   resetCalibration:      (token)       => request('DELETE', '/api/calibration/profile',    null, token),
+  // Accesible a TODOS los users autenticados (Free + Pro). Los frequents se
+  // acumulan en cada POST /entries independientemente del nivel.
+  getFrequentMeals:      (token)       => request('GET',    '/api/calibration/frequent-meals', null, token),
 
   // Asistente (Pro)
   sendAssistantMessage:      (body, token)    => request('POST', '/api/assistant/chat', body, token),

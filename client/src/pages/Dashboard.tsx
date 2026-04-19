@@ -583,7 +583,13 @@ export default function Dashboard() {
           </button>
         ) : (
           <button
-            onClick={() => { api.trackUpgradeEvent('assistant_lock_click', token); navigate('/upgrade'); }}
+            data-umami-event="upgrade_cta_dashboard_chef"
+            onClick={() => {
+              // Mantenemos el legacy event para no romper dashboards D1 existentes.
+              api.trackUpgradeEvent('assistant_lock_click', token);
+              api.trackUpgradeEvent('upgrade_cta_dashboard_chef', token);
+              navigate('/upgrade');
+            }}
             style={{
               width: '100%',
               background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',

@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
+import { isFree } from '../utils/levels';
 import { calculateTDEE, calculateTargetCalories, calculateMonthsToGoal } from '../utils/tdeeCalculator';
 import { calculateMacros } from '../utils/tdee';
 
@@ -50,7 +52,10 @@ const microLabel = {
 
 export default function Onboarding() {
   const { user, token, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const isFreeUser = isFree(user?.access_level);
+  const TOTAL_STEPS = isFreeUser ? 4 : 3;
   const [data, setData] = useState({
     goal: null,
     gender:     user?.gender || 'male',
@@ -85,7 +90,7 @@ export default function Onboarding() {
     setStep(3);
   }
 
-  async function handleFinish() {
+  async function handleFinish(redirectTo?: string) {
     setSaving(true);
     setSaveError(false);
     try {
@@ -101,11 +106,22 @@ export default function Onboarding() {
         onboarding_completed: 1,
       }, token);
       updateUser({ ...user, age: Number(data.age), weight: Number(data.weight), height: Number(data.height), gender: data.gender, goal_weight: data.goal_weight || null, target_calories: targetCalories, target_protein: macros.protein, target_carbs: macros.carbs, target_fat: macros.fat, onboarding_completed: 1 });
+      // redirectTo solo se pasa desde el step 4 "Explorar Chef Pro". Si no
+      // se pasa, ProtectedRoute detecta onboarding_completed y redirige solo.
+      if (redirectTo) navigate(redirectTo);
     } catch {
       setSaveError(true);
       setSaving(false);
     }
   }
+
+  // Impression del teaser del Chef en step 4 — solo Free (los Pro ya tienen
+  // acceso, nada que teasear). Se dispara 1 vez al entrar en step 4.
+  useEffect(() => {
+    if (step === 4 && token && isFreeUser) {
+      api.trackUpgradeEvent('onboarding_chef_teaser_shown', token);
+    }
+  }, [step, token, isFreeUser]);
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
@@ -119,9 +135,9 @@ export default function Onboarding() {
           Caliro
         </span>
 
-        {/* Barra de progreso */}
+        {/* Barra de progreso — 4 segmentos para Free (incluye teaser Chef), 3 para Pro */}
         <div style={{ display: 'flex', gap: 4, marginTop: 18 }}>
-          {[1, 2, 3].map(i => (
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => (
             <div key={i} style={{
               flex: 1, height: 2, borderRadius: 100,
               background: i <= step ? 'var(--accent)' : 'var(--surface-3)',
@@ -376,16 +392,145 @@ export default function Onboarding() {
                   No se pudo guardar. Comprueba tu conexión e inténtalo de nuevo.
                 </p>
               )}
-              <button onClick={handleFinish} disabled={saving} style={{
-                padding: '13px', width: '100%',
-                background: 'var(--accent)', color: 'white',
-                border: 'none', borderRadius: 'var(--radius-full)',
-                fontSize: 13, fontWeight: 500,
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-sans)', marginTop: 16,
-                opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
+              {/* Botón final: los Free pasan al teaser Chef (step 4), el
+                  resto finaliza directo. */}
+              <button
+                onClick={isFreeUser ? () => setStep(4) : () => handleFinish()}
+                disabled={saving}
+                style={{
+                  padding: '13px', width: '100%',
+                  background: 'var(--accent)', color: 'white',
+                  border: 'none', borderRadius: 'var(--radius-full)',
+                  fontSize: 13, fontWeight: 500,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-sans)', marginTop: 16,
+                  opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
+                }}>
+                {saving ? 'Guardando…' : (isFreeUser ? 'Siguiente →' : 'Empezar a registrar →')}
+              </button>
+            </div>
+          )}
+
+          {/* ── PASO 4 (solo Free): Preview Chef Caliro ── */}
+          {step === 4 && (
+            <div style={{ paddingTop: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <h1 style={{
+                fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+                fontSize: 26, fontWeight: 400, color: 'var(--text-primary)',
+                margin: '0 0 8px', lineHeight: 1.2,
               }}>
-                {saving ? 'Guardando…' : 'Empezar a registrar →'}
+                Chef Caliro puede diseñar tu semana
+              </h1>
+              <p style={{
+                fontSize: 13, color: 'var(--text-secondary)',
+                margin: '0 0 20px', fontFamily: 'var(--font-sans)', lineHeight: 1.5,
+              }}>
+                Con tu objetivo de {targetCalories?.toLocaleString('es')} kcal, puede sugerir platos concretos y ajustarlos a tus preferencias.
+              </p>
+
+              {/* Mock: plan del día editorial */}
+              <div className="card card-padded card-bordered" style={{ marginBottom: 16 }}>
+                <div style={{
+                  fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
+                  color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 10,
+                }}>
+                  Plan del día · muestra
+                </div>
+                {[
+                  { type: 'Desayuno', name: 'Tostadas con pavo y tomate',    kcal: 380 },
+                  { type: 'Comida',   name: 'Arroz con pollo y verduras',     kcal: 620 },
+                  { type: 'Merienda', name: 'Yogur griego con nueces',        kcal: 280 },
+                  { type: 'Cena',     name: 'Pechuga a la plancha con quinoa', kcal: 490 },
+                ].map((m, i) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                    padding: '10px 0',
+                    borderTop: i > 0 ? '0.5px solid var(--border)' : 'none',
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase',
+                        color: 'var(--text-tertiary)', fontWeight: 600,
+                      }}>
+                        {m.type}
+                      </div>
+                      <div style={{
+                        fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+                        fontSize: 15, color: 'var(--text-primary)', lineHeight: 1.3,
+                        marginTop: 2,
+                      }}>
+                        {m.name}
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: 12, fontWeight: 600, color: 'var(--text-primary)',
+                      fontFamily: 'var(--font-sans)', fontVariantNumeric: 'tabular-nums',
+                    }}>
+                      {m.kcal} kcal
+                    </div>
+                  </div>
+                ))}
+                <div style={{
+                  marginTop: 10, paddingTop: 10, borderTop: '0.5px dashed var(--border)',
+                  display: 'flex', justifyContent: 'space-between',
+                  fontSize: 11, color: 'var(--text-tertiary)',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                  <span>Total</span>
+                  <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                    1.770 kcal
+                  </span>
+                </div>
+              </div>
+
+              <p style={{
+                fontSize: 11, color: 'var(--text-tertiary)',
+                fontFamily: 'var(--font-sans)', fontStyle: 'italic',
+                lineHeight: 1.5, margin: '0 4px 16px',
+              }}>
+                Planes del día y semanales son parte de Pro — puedes probarlo cuando quieras.
+              </p>
+
+              {saveError && (
+                <p style={{
+                  fontSize: 12, color: 'var(--accent-2)',
+                  fontFamily: 'var(--font-sans)', textAlign: 'center',
+                  margin: '0 0 12px',
+                }}>
+                  No se pudo guardar. Comprueba tu conexión e inténtalo de nuevo.
+                </p>
+              )}
+
+              <button
+                data-umami-event="upgrade_cta_onboarding_chef"
+                onClick={() => handleFinish('/upgrade')}
+                disabled={saving}
+                style={{
+                  padding: '13px', width: '100%',
+                  background: 'var(--accent)', color: 'white',
+                  border: 'none', borderRadius: 'var(--radius-full)',
+                  fontSize: 13, fontWeight: 500,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
+                }}
+              >
+                {saving ? 'Guardando…' : 'Explorar Chef Pro →'}
+              </button>
+              <button
+                onClick={() => handleFinish()}
+                disabled={saving}
+                style={{
+                  padding: '11px', width: '100%',
+                  background: 'transparent', color: 'var(--text-secondary)',
+                  border: 'none', borderRadius: 'var(--radius-full)',
+                  fontSize: 12, fontWeight: 500,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-sans)', marginTop: 6,
+                  opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
+                }}
+              >
+                Más tarde
               </button>
             </div>
           )}

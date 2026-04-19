@@ -84,7 +84,8 @@ export default function BottomNav() {
             key={to}
             to={to}
             end={end}
-            onClick={locked ? () => api.trackUpgradeEvent('free_chef_nav_click', token) : undefined}
+            data-umami-event={locked ? 'upgrade_cta_nav_chef' : undefined}
+            onClick={locked ? () => api.trackUpgradeEvent('upgrade_cta_nav_chef', token) : undefined}
             className={({ isActive }) => `bottom-nav__item${isActive ? ' bottom-nav__item--active' : ''}`}
             style={locked ? { position: 'relative' } : undefined}
           >

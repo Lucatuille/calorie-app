@@ -2,7 +2,7 @@
 //  CALIBRATION ROUTES — /api/calibration
 // ============================================================
 
-import { jsonResponse, errorResponse, requireProAccess, proAccessDenied, rateLimit } from '../utils.js';
+import { jsonResponse, errorResponse, requireProAccess, proAccessDenied, rateLimit, authenticate } from '../utils.js';
 import { calculateCalibrationProfile, updateFrequentMeals } from '../utils/calibration.js';
 
 export async function handleCalibration(request, env, path) {
@@ -126,6 +126,22 @@ export async function handleCalibration(request, env, path) {
       data_points:    row?.data_points    || 0,
       meal_factors:   JSON.parse(row?.meal_factors   || '{}'),
       food_factors:   JSON.parse(row?.food_factors   || '{}'),
+      frequent_meals: JSON.parse(row?.frequent_meals || '[]'),
+    });
+  }
+
+  // GET /api/calibration/frequent-meals — accesible a TODOS los users
+  // autenticados (Free + Pro). Los frequent_meals se acumulan para todos en
+  // cada POST /entries (ver entries.js), así que gatearlos a Pro era
+  // inconsistente. El motor de calibración completo (bias/factors/
+  // data_points) sigue Pro-only en /api/calibration/profile.
+  if (path === '/api/calibration/frequent-meals' && request.method === 'GET') {
+    const auth = await authenticate(request, env);
+    if (!auth) return errorResponse('No autorizado', 401);
+    const row = await env.DB.prepare(
+      'SELECT frequent_meals FROM user_calibration WHERE user_id = ?'
+    ).bind(auth.userId).first();
+    return jsonResponse({
       frequent_meals: JSON.parse(row?.frequent_meals || '[]'),
     });
   }

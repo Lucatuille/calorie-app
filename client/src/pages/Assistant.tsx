@@ -10,6 +10,78 @@ const ChefPlanDay = lazy(() => import('../components/chef/ChefPlanDay'));
 const ChefPlanWeek = lazy(() => import('../components/chef/ChefPlanWeek'));
 const ChefFreeLock = lazy(() => import('../components/chef/ChefFreeLock'));
 
+// ── Digest teaser (solo Free, encima del ChefFreeLock) ──────
+// Vende el resumen semanal dominical que hoy es invisible para Free
+// (api.getAssistantDigest sólo se llama si Pro). Cambia el "silencio
+// total" a una invitación discreta.
+function DigestTeaser({ token, onNavigate }) {
+  useEffect(() => {
+    if (token) api.trackUpgradeEvent('assistant_digest_teaser_shown', token);
+  }, [token]);
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '0.5px solid var(--border)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '18px 20px',
+      margin: '12px 16px 0',
+      display: 'flex',
+      gap: 14,
+      alignItems: 'flex-start',
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: '50%',
+        background: 'rgba(45,106,79,0.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="4" y="5" width="16" height="14" rx="1" />
+          <line x1="8" y1="9"  x2="16" y2="9"  />
+          <line x1="8" y1="12" x2="16" y2="12" />
+          <line x1="8" y1="15" x2="13" y2="15" />
+        </svg>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+          fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.25,
+          marginBottom: 4,
+        }}>
+          Un resumen de tu semana, los domingos
+        </div>
+        <div style={{
+          fontSize: 12, color: 'var(--text-secondary)',
+          fontFamily: 'var(--font-sans)', lineHeight: 1.5,
+          marginBottom: 10,
+        }}>
+          Adherencia, distribución de macros, tendencia de peso. Te llega cada domingo.
+        </div>
+        <button
+          type="button"
+          data-umami-event="upgrade_cta_assistant_digest"
+          onClick={() => {
+            api.trackUpgradeEvent('upgrade_cta_assistant_digest', token);
+            onNavigate();
+          }}
+          style={{
+            background: 'transparent',
+            color: 'var(--accent)',
+            border: '0.5px solid var(--accent)',
+            borderRadius: 'var(--radius-full)',
+            padding: '7px 14px',
+            fontSize: 12, fontWeight: 600,
+            fontFamily: 'var(--font-sans)', cursor: 'pointer',
+          }}
+        >
+          Activar con Pro
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── ProOnly (dark card) ──────────────────────────────────────
 
 function ProOnlyCard({ onNavigate }) {
@@ -685,11 +757,14 @@ export default function Assistant() {
         {/* ══ MODE: Chat ══ */}
         <div style={{ display: mode === 'chat' ? 'contents' : 'none' }}>
 
-        {/* Free: lock state coherente con Día/Semana */}
+        {/* Free: banner de digest semanal + lock coherente con Día/Semana */}
         {!isPro(user?.access_level) && (
-          <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" style={{ width: 24, height: 24 }} /></div>}>
-            <ChefFreeLock feature="chat" />
-          </Suspense>
+          <>
+            <DigestTeaser token={token} onNavigate={() => navigate('/upgrade')} />
+            <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" style={{ width: 24, height: 24 }} /></div>}>
+              <ChefFreeLock feature="chat" />
+            </Suspense>
+          </>
         )}
 
         {/* Pro: chat completo abajo */}

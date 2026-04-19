@@ -115,7 +115,36 @@ async function handleRequest(request, env, ctx) {
       const user = await authenticate(request, env);
       if (user) {
         const { event } = await request.json();
-        const VALID_EVENTS = ['ai_limit_shown', 'ai_limit_click_pro', 'assistant_lock_click', 'upgrade_page_view'];
+        // Whitelist ampliado 2026-04-19 (Fase 1 funnel audit).
+        // Convención: `upgrade_cta_<lugar>` para clicks; `<feature>_shown` /
+        // `<feature>_teaser_shown` para impresiones; `checkout_start_<plan>`
+        // dispara al pulsar pricing en /upgrade.
+        const VALID_EVENTS = [
+          // Legacy (mantener por compatibilidad)
+          'ai_limit_shown', 'ai_limit_click_pro', 'assistant_lock_click', 'upgrade_page_view',
+          // CTAs a /upgrade
+          'upgrade_cta_profile',
+          'upgrade_cta_dashboard_chef',
+          'upgrade_cta_progress_advanced',
+          'upgrade_cta_calc_ai_limit_badge',
+          'upgrade_cta_calc_ai_limit_modal',
+          'upgrade_cta_chef_lock_chat',
+          'upgrade_cta_chef_lock_day',
+          'upgrade_cta_chef_lock_week',
+          'upgrade_cta_nav_chef',
+          'upgrade_cta_onboarding_chef',
+          'upgrade_cta_calc_frequents',
+          'upgrade_cta_assistant_digest',
+          // Impresiones (CTA visto, no clickeado — distingue "enterrado" vs "no convence")
+          'chef_lock_shown',
+          'advanced_card_shown',
+          'onboarding_chef_teaser_shown',
+          'calc_frequents_teaser_shown',
+          'assistant_digest_teaser_shown',
+          // Checkout (Stripe)
+          'checkout_start_monthly',
+          'checkout_start_yearly',
+        ];
         if (event && VALID_EVENTS.includes(event)) {
           await env.DB.prepare('INSERT INTO upgrade_events (user_id, event) VALUES (?, ?)')
             .bind(user.userId, event).run().catch(() => {});

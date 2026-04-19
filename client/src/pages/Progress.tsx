@@ -105,6 +105,14 @@ export default function Progress() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days, token, retryKey]);
 
+  // Impression tracking: el Advanced card vive al final de /progress, nos
+  // interesa saber si el Free llega a verlo (distingue "enterrado" de
+  // "visto pero no convence").
+  useEffect(() => {
+    if (!token || userIsPro) return;
+    api.trackUpgradeEvent('advanced_card_shown', token);
+  }, [token, userIsPro]);
+
   // Métricas del período
   const periodCalories = data.map(d => d.calories).filter(Boolean);
   const periodWeights  = data.map(d => d.weight).filter(Boolean);
@@ -377,7 +385,12 @@ export default function Progress() {
       {/* ── 5. Análisis profundo — dark card, al final ── */}
       <div style={{ padding: '4px 16px 32px' }}>
         <button
-          onClick={() => userIsPro ? setShowAdvanced(true) : navigate('/upgrade')}
+          data-umami-event={userIsPro ? undefined : 'upgrade_cta_progress_advanced'}
+          onClick={() => {
+            if (userIsPro) return setShowAdvanced(true);
+            api.trackUpgradeEvent('upgrade_cta_progress_advanced', token);
+            navigate('/upgrade');
+          }}
           style={{
             width: '100%',
             background: 'linear-gradient(145deg, #1c1c1c 0%, #111111 100%)',

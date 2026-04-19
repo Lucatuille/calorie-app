@@ -129,15 +129,15 @@ export default function Calculator() {
     api.getTodayEntries(token).then(setEntries).catch(() => {});
     api.getProfile(token).then(setProfile).catch(() => {});
     api.getAiUsage(token).then(setAiUsage).catch(() => {});
-    // Cargar comidas frecuentes (solo Pro — requiere calibración)
-    if (isPro(user?.access_level)) {
-      api.getCalibrationProfile(token).then(data => {
-        const meals = (data?.frequent_meals || [])
-          .filter(m => m.times >= MIN_FREQUENT_TIMES)
-          .slice(0, 6);
-        setFrequentMeals(meals);
-      }).catch(() => {});
-    }
+    // Comidas frecuentes — abierto a Free + Pro (2026-04-19). Los
+    // frequents se acumulan para todos; antes estaba gated a Pro por error.
+    // El motor de calibración completo sigue Pro-only (bias/factors).
+    api.getFrequentMeals(token).then(data => {
+      const meals = (data?.frequent_meals || [])
+        .filter(m => m.times >= MIN_FREQUENT_TIMES)
+        .slice(0, 6);
+      setFrequentMeals(meals);
+    }).catch(() => {});
   }, [token]);
 
   // Consumir prefill desde Chef Caliro (state.prefill pasado por navigate).
@@ -476,7 +476,11 @@ export default function Calculator() {
               {aiUsage.remaining === 0
                 ? <>Sin análisis IA hoy{!isPro(user?.access_level) && <> · <button
                     type="button"
-                    onClick={() => { api.trackUpgradeEvent('ai_limit_badge_click', token); navigate('/upgrade'); }}
+                    data-umami-event="upgrade_cta_calc_ai_limit_badge"
+                    onClick={() => {
+                      api.trackUpgradeEvent('upgrade_cta_calc_ai_limit_badge', token);
+                      navigate('/upgrade');
+                    }}
                     style={{
                       background: 'none', border: 'none', padding: 0,
                       color: 'var(--accent)', cursor: 'pointer',
@@ -958,6 +962,24 @@ export default function Calculator() {
               </div>
             )}
 
+            {/* Caption cuando aún no hay suficientes frequents — evita que el
+                espacio parezca vacío sin razón. Se muestra en empty state del
+                form para usuarios (cualquier nivel) que aún no han alcanzado
+                el umbral de 3 registros por plato. */}
+            {frequentMeals.length < MIN_FREQUENT_SHOW && !form.calories && !photoPreview && !aiResult && entries && entries.length > 0 && (
+              <div style={{
+                fontSize: 11,
+                color: 'var(--text-tertiary)',
+                fontFamily: 'var(--font-sans)',
+                fontStyle: 'italic',
+                marginTop: 4,
+                marginBottom: 4,
+                lineHeight: 1.45,
+              }}>
+                Caliro aprende tus platos habituales a partir de la 3ª vez que los registras.
+              </div>
+            )}
+
             {error && (
               <div style={{
                 background: 'rgba(239,68,68,0.08)', border: '0.5px solid rgba(239,68,68,0.2)',
@@ -1107,7 +1129,14 @@ export default function Calculator() {
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
-                onClick={() => { setAiLimitData(null); api.trackUpgradeEvent('ai_limit_click_pro', token); navigate('/upgrade'); }}
+                data-umami-event="upgrade_cta_calc_ai_limit_modal"
+                onClick={() => {
+                  setAiLimitData(null);
+                  // Legacy event + nuevo con naming consistente.
+                  api.trackUpgradeEvent('ai_limit_click_pro', token);
+                  api.trackUpgradeEvent('upgrade_cta_calc_ai_limit_modal', token);
+                  navigate('/upgrade');
+                }}
                 style={{
                   background: '#111', color: 'white', border: 'none',
                   borderRadius: 'var(--radius-sm)', padding: '8px 16px',

@@ -23,10 +23,11 @@ export default function Upgrade() {
   const [upgrading, setUpgrading] = useState(null); // 'monthly' | 'yearly' | null
   const [error, setError]         = useState('');
 
-  // Track llegada a /upgrade (funnel de conversión)
+  // Track llegada a /upgrade (funnel de conversión). Enviamos el event con
+  // el nombre canónico del whitelist backend: upgrade_page_view.
   useEffect(() => {
     if (token && isFree(user?.access_level)) {
-      api.trackUpgradeEvent('upgrade_view', token);
+      api.trackUpgradeEvent('upgrade_page_view', token);
     }
   }, [token, user?.access_level]);
 
@@ -205,6 +206,7 @@ export default function Upgrade() {
         <div style={{ display: 'flex', gap: 8 }}>
           {/* Yearly — prominent */}
           <button
+            data-umami-event="checkout_start_yearly"
             onClick={() => handleUpgrade('yearly')}
             disabled={upgrading !== null}
             style={{
@@ -237,6 +239,7 @@ export default function Upgrade() {
 
           {/* Monthly — secondary */}
           <button
+            data-umami-event="checkout_start_monthly"
             onClick={() => handleUpgrade('monthly')}
             disabled={upgrading !== null}
             style={{

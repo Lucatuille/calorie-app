@@ -78,8 +78,9 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
           ))}
           <NavLink
             to="/chef"
+            data-umami-event={!isPro(user?.access_level) ? 'upgrade_cta_nav_chef' : undefined}
             onClick={!isPro(user?.access_level)
-              ? () => api.trackUpgradeEvent('free_chef_nav_click', token)
+              ? () => api.trackUpgradeEvent('upgrade_cta_nav_chef', token)
               : undefined}
             style={({ isActive }) => ({
               ...linkStyle({ isActive }),
