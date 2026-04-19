@@ -249,11 +249,18 @@ Si toca el componente Analytics, aprovechar para arreglar:
 - Pantalla de carga con 5 cartas temáticas editoriales (3 pasos cada una).
 - Banners warm palette (ámbar / verde / terracotta) consistentes con el chef.
 
-### Pendientes V1 (acabando en sesión actual)
+### Pendientes V1 — cerrados 2026-04-19 ✅
 
-- **Mark "already registered" meals** — prevenir doble registro.
-- **Register all button** — adoptar plan entero con 1 tap.
-- **Stale plan banner** (opcional) — avisar cuando plan y entries divergen.
+- **Mark "already registered" meals** ✅ — `registered_meal_types` expuesto
+  desde backend (POST + GET /day), frontend marca meals como "REGISTRADA"
+  con opacity 0.55 + botón disabled + check muted. Optimistic cache.
+- **Register all button** ✅ — batch secuencial client-side con feedback
+  progresivo. Botón "Registrar N pendientes" debajo del footer. Mapping
+  ES→EN del meal_type en paridad con Calculator.
+- **Stale plan banner** — retirado del V1. Los meals registrados ya se
+  marcan visualmente (opacity + caption "REGISTRADA") y el user puede
+  regenerar con 1 tap. Un banner extra aportaría ruido sin valor claro.
+  Si la telemetría futura muestra confusión, reconsiderar.
 
 ### Descartadas explícitamente
 
