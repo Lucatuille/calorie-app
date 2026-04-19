@@ -6,14 +6,14 @@ import { useAuth } from '../context/AuthContext';
 import { isFree } from '../utils/levels';
 import { isNative } from '../utils/platform';
 
+// Solo diferenciadores Pro. Historial y CSV se omiten (ambos niveles los
+// tienen) — las filas "✓ / ✓" diluyen el argumento Pro. Nombres en clave
+// benefit, no feature: "Aprende tus porciones" vs "Motor de calibración".
 const FEATURES = [
-  { label: 'Foto IA ilimitada',         free: '3/día',    pro: 'Ilimitada' },
-  { label: 'Análisis por texto',         free: '3/día',    pro: 'Ilimitado' },
-  { label: 'Motor de calibración',       free: false,      pro: true },
-  { label: 'Asistente personal',         free: false,      pro: true },
-  { label: 'Análisis profundo',          free: false,      pro: true },
-  { label: 'Historial completo',         free: true,       pro: true },
-  { label: 'Exportar CSV',              free: true,       pro: true },
+  { label: 'Foto IA',                    free: '3/día',  pro: 'Ilimitada' },
+  { label: 'Aprende tus porciones',      free: false,    pro: true },
+  { label: 'Coach con tu historial',     free: false,    pro: true },
+  { label: 'Tendencias y proyecciones',  free: false,    pro: true },
 ];
 
 export default function Upgrade() {
@@ -132,7 +132,7 @@ export default function Upgrade() {
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8,
           fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}>
-          Sin límites. Sin anuncios. Sin 10€ al mes.
+          Sin límites. Sin anuncios. Sin 8,99€ al mes de MyFitnessPal.
         </p>
       </div>
 
@@ -185,15 +185,17 @@ export default function Upgrade() {
         ))}
       </div>
 
-      {/* Pricing — dark card (the one dark element of this screen) */}
+      {/* Pricing — dark card. El único bloque dark de la página. Contiene:
+          eyebrow + CTAs con verbo + risk reversal visible + anchoring inline
+          con competencia (sustituye a la tabla aparte que tenía antes). */}
       <div style={{
         background: 'linear-gradient(145deg, #1c1c1c, #111111)',
         borderRadius: 18,
         padding: '20px',
-        marginBottom: 12,
+        marginBottom: 14,
       }}>
         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)',
-          fontFamily: 'var(--font-sans)', marginBottom: 16,
+          fontFamily: 'var(--font-sans)', marginBottom: 22,
           textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
           Precio especial de lanzamiento
         </p>
@@ -203,8 +205,8 @@ export default function Upgrade() {
             fontFamily: 'var(--font-sans)' }}>{error}</p>
         )}
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          {/* Yearly — prominent */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          {/* Yearly — prominente con verbo + precio + ahorro absoluto */}
           <button
             data-umami-event="checkout_start_yearly"
             onClick={() => handleUpgrade('yearly')}
@@ -215,7 +217,7 @@ export default function Upgrade() {
               color: 'white',
               border: 'none',
               borderRadius: 12,
-              padding: '14px 8px',
+              padding: '18px 10px 14px',
               cursor: upgrading ? 'not-allowed' : 'pointer',
               opacity: upgrading === 'monthly' ? 0.4 : 1,
               fontFamily: 'var(--font-sans)',
@@ -223,88 +225,95 @@ export default function Upgrade() {
               position: 'relative',
             }}
           >
-            {/* Best value badge */}
+            {/* Badge ahorro — legible (11px en vez de 8px), muestra importe absoluto
+                (más persuasivo que el porcentaje para la mayoría de la gente). */}
             <span style={{
-              position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
-              background: 'white', color: '#22c55e',
-              fontSize: 8, fontWeight: 700, letterSpacing: '0.4px',
-              padding: '2px 7px', borderRadius: 99,
+              position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
+              background: 'white', color: '#15803d',
+              fontSize: 11, fontWeight: 700, letterSpacing: '0.02em',
+              padding: '3px 10px', borderRadius: 99,
               whiteSpace: 'nowrap',
-            }}>AHORRA 37%</span>
-            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
-              {upgrading === 'yearly' ? '…' : '14,99€'}
+              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+            }}>AHORRAS 8,89€</span>
+            <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.1, marginBottom: 4 }}>
+              {upgrading === 'yearly' ? 'Redirigiendo…' : 'Empezar Pro'}
             </div>
-            <div style={{ fontSize: 10, opacity: 0.85, marginTop: 3 }}>al año · 1,25€/mes</div>
+            <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.01em' }}>
+              14,99€<span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}> /año</span>
+            </div>
+            <div style={{ fontSize: 10, opacity: 0.78, marginTop: 4 }}>1,25€ al mes</div>
           </button>
 
-          {/* Monthly — secondary */}
+          {/* Monthly — secundario con mejor contraste (rgba transparent sobre dark
+              en vez de #1a1a1a quasi-idéntico al fondo). */}
           <button
             data-umami-event="checkout_start_monthly"
             onClick={() => handleUpgrade('monthly')}
             disabled={upgrading !== null}
             style={{
               flex: 1,
-              background: '#1a1a1a',
+              background: 'rgba(255,255,255,0.06)',
               color: 'white',
-              border: '0.5px solid rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.22)',
               borderRadius: 12,
-              padding: '14px 8px',
+              padding: '18px 10px 14px',
               cursor: upgrading ? 'not-allowed' : 'pointer',
               opacity: upgrading === 'yearly' ? 0.4 : 1,
               fontFamily: 'var(--font-sans)',
-              transition: 'opacity 0.15s',
+              transition: 'opacity 0.15s, background 0.15s',
             }}
           >
-            <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
-              {upgrading === 'monthly' ? '…' : '1,99€'}
+            <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.1, marginBottom: 4 }}>
+              {upgrading === 'monthly' ? 'Redirigiendo…' : 'Probar un mes'}
             </div>
-            <div style={{ fontSize: 10, opacity: 0.6, marginTop: 3 }}>al mes</div>
+            <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.01em' }}>
+              1,99€<span style={{ fontSize: 11, fontWeight: 400, opacity: 0.65 }}> /mes</span>
+            </div>
+            <div style={{ fontSize: 10, opacity: 0.5, marginTop: 4 }}>Sin compromiso</div>
           </button>
         </div>
 
-        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)',
-          textAlign: 'center', marginTop: 14, fontFamily: 'var(--font-sans)',
-          lineHeight: 1.4 }}>
-          Menos de un café al mes · Cancela cuando quieras
+        {/* Risk reversal — la frase más importante para vencer el "¿y si me
+            arrepiento?". Visible (13px, weight 500) bajo los CTAs. */}
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)',
+          textAlign: 'center', marginTop: 16, fontFamily: 'var(--font-sans)',
+          lineHeight: 1.4, fontWeight: 500 }}>
+          Cancela en 1 tap · Sin permanencia · Activo al instante
         </p>
-      </div>
 
-      {/* Price comparison con competencia */}
-      <div style={{
-        background: 'var(--surface)', borderRadius: 14,
-        border: '0.5px solid var(--border)',
-        padding: '12px 14px', marginBottom: 14,
-      }}>
+        {/* Anchoring inline: competencia como referencia al lado del precio Caliro.
+            Sustituye a la tabla aparte "Comparado con la competencia" — el user
+            necesita la referencia MIENTRAS decide, no después. */}
         <div style={{
-          fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase',
-          color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 8,
+          marginTop: 14,
+          paddingTop: 14,
+          borderTop: '0.5px solid rgba(255,255,255,0.1)',
+          fontSize: 11,
+          color: 'rgba(255,255,255,0.5)',
           fontFamily: 'var(--font-sans)',
+          lineHeight: 1.6,
+          textAlign: 'center',
+          fontVariantNumeric: 'tabular-nums',
         }}>
-          Comparado con la competencia
-        </div>
-        {[
-          { name: 'MyFitnessPal Premium', price: '9,99€/mes' },
-          { name: 'Yazio Pro',             price: '3,99€/mes' },
-          { name: 'Lifesum Premium',       price: '4,99€/mes' },
-          { name: 'Caliro Pro',            price: '1,25€/mes', highlight: true },
-        ].map(row => (
-          <div key={row.name} style={{
-            display: 'flex', justifyContent: 'space-between',
-            padding: '4px 0',
-            fontSize: 12, fontFamily: 'var(--font-sans)',
-            color: row.highlight ? 'var(--accent)' : 'var(--text-secondary)',
-            fontWeight: row.highlight ? 600 : 400,
+          <span style={{
+            display: 'block',
+            fontSize: 9,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.35)',
+            marginBottom: 4,
           }}>
-            <span>{row.name}</span>
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{row.price}</span>
-          </div>
-        ))}
+            Referencia
+          </span>
+          MyFitnessPal 8,99€/mes · Yazio 3,99€/mes · Lifesum 4,99€/mes
+        </div>
       </div>
 
-      {/* Free plan note */}
+      {/* Free plan note — tono cálido, fallback honesto. No empuja, informa. */}
       <p style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center',
-        fontFamily: 'var(--font-sans)', lineHeight: 1.5 }}>
-        El plan gratuito incluye 3 análisis de IA al día<br />y acceso completo al seguimiento manual.
+        fontFamily: 'var(--font-sans)', lineHeight: 1.5, fontStyle: 'italic' }}>
+        Si aún no es el momento, Free tiene lo esencial —<br />siempre gratis, sin tarjeta.
       </p>
 
     </div>
