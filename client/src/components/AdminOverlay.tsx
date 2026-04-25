@@ -790,11 +790,24 @@ export default function AdminOverlay({ isOpen, onClose, forceWhatsNew }) {
     }
   }, [token]);
 
-  // Load active tab when overlay opens or tab changes
+  // Load active tab when overlay opens or tab changes.
+  // Antes: `if (!tabData[activeTab]) fetchTab(...)` — sólo cargaba si no había
+  // cache. Bug: tras registrar 19 usuarios nuevos en una semana, el panel
+  // mostraba sólo los 11 cacheados de la sesión anterior porque tabData ya
+  // tenía valor y la condición lo bloqueaba.
+  // Ahora: siempre refetch al abrir el overlay o al cambiar de tab. Coste
+  // desdeñable (admin endpoint, llamadas raras) y datos siempre frescos.
   useEffect(() => {
     if (!isOpen) return;
-    if (!tabData[activeTab]) fetchTab(activeTab);
+    fetchTab(activeTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, activeTab]);
+
+  // Limpia el cache al cerrar el overlay para que la próxima apertura
+  // arranque con datos frescos, no con los de la sesión anterior.
+  useEffect(() => {
+    if (!isOpen) setTabData({});
+  }, [isOpen]);
 
   // Auto-refresh every 5 minutes when open
   useEffect(() => {
