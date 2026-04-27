@@ -168,3 +168,118 @@ footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 4
   padding: 10px 14px; border-bottom: 1px solid var(--light); vertical-align: top;
 }
 .compare-table tr:last-child td { border-bottom: none; }
+
+/* ── Situation cards (for dish articles) ─────────────────── */
+.situation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 32px 0 18px;
+}
+.sit-card {
+  background: var(--white);
+  border: 1px solid var(--light);
+  border-radius: 14px;
+  padding: 20px 16px 18px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.sit-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--green);
+  box-shadow: 0 6px 20px -8px rgba(31,26,18,0.12);
+}
+.sit-card-icon {
+  font-size: 28px; line-height: 1; margin-bottom: 10px;
+}
+.sit-card-label {
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 600; color: var(--mid); margin-bottom: 8px;
+}
+.sit-card-value {
+  font-family: var(--serif); font-style: italic; font-weight: 400;
+  font-size: 38px; line-height: 1; color: var(--dark);
+  margin-bottom: 4px; letter-spacing: -0.01em;
+}
+.sit-card-unit {
+  font-size: 11px; color: var(--mid); letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+.sit-card-meta {
+  font-size: 11px; color: var(--mid);
+  border-top: 1px solid var(--light); padding-top: 10px; margin-top: 4px;
+}
+@media (max-width: 700px) {
+  .situation-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sit-card-value { font-size: 34px; }
+}
+
+/* ── Range visualization (for dish articles) ─────────────── */
+.range-viz {
+  background: var(--white); border: 1px solid var(--light);
+  border-radius: 14px; padding: 22px 24px; margin: 8px 0 32px;
+}
+.range-viz-title {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.range-viz-title-text { font-size: 13px; font-weight: 500; color: var(--dark); }
+.range-viz-title-spread {
+  font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--green-d);
+}
+.range-bar { position: relative; height: 38px; margin: 18px 0 8px; }
+.range-bar-track {
+  position: absolute; top: 16px; left: 0; right: 0; height: 6px;
+  background: linear-gradient(to right, #bbf7d0 0%, #22c55e 50%, #facc15 75%, #f97316 100%);
+  border-radius: 999px;
+}
+.range-bar-marker {
+  position: absolute; top: 6px; width: 26px; height: 26px;
+  border-radius: 50%; background: var(--dark); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-style: italic; font-size: 13px;
+  transform: translateX(-50%); border: 2px solid var(--white);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.range-bar-marker.active {
+  background: var(--green); width: 32px; height: 32px; top: 3px; font-size: 14px;
+}
+.range-bar-labels {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--mid); margin-top: 6px;
+}
+.range-bar-labels span { text-align: center; flex: 1; }
+.range-viz-note {
+  font-size: 13px; color: var(--mid); font-style: italic;
+  margin-top: 12px; line-height: 1.5;
+}
+
+/* ── Warning box ─────────────────────────────────────────── */
+.warn-box {
+  background: #fef3c7; border: 1px solid #fcd34d;
+  border-radius: 10px; padding: 14px 18px; margin: 22px 0;
+  color: #854d0e;
+}
+.warn-box p { color: #854d0e; margin: 0; font-size: 14px; }
+
+/* ── Nutrition table modifiers (extend existing .nutrition-table) ── */
+.nutrition-table .nt-muted { color: var(--mid); font-size: 12px; font-weight: 400; }
+.nutrition-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.nutrition-table .nt-row-total { background: var(--cream); }
+.nutrition-table .nt-row-total td { font-weight: 500; color: var(--dark); }
+.nutrition-table .nt-bar { background: rgba(220,252,231,0.4); }
+
+/* ── MFP comparison row colors (used inside .nutrition-table) ───── */
+.mfp-bad { color: #b91c1c; font-weight: 600; }
+.mfp-warn { color: #854d0e; }
+.mfp-ok { color: var(--green-d); font-weight: 500; }
+.nutrition-table .mfp-final { background: #dcfce7; }
+.nutrition-table .mfp-final td { color: #166534; font-weight: 500; }
+
+/* ── Disclaimer block (legal/sources) ────────────────────── */
+.disclaimer {
+  font-size: 12px; color: var(--mid); font-style: italic;
+  margin: 24px 0; padding: 14px 0;
+  border-top: 1px solid var(--light); border-bottom: 1px solid var(--light);
+  line-height: 1.6;
+}
