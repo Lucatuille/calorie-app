@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caliro — Tortilla española · Datos verificados BEDCA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f9f7f4;color:#1a1a1a;padding:24px;max-width:860px;margin:0 auto;font-size:14px;line-height:1.6}
+h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.meta{font-size:13px;color:#888;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap}
+.meta span{background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:8px;border:0.5px solid #ccc;font-size:13px;cursor:pointer;background:transparent;color:#666;transition:all .15s}
+.tab.active{background:#f0ede8;color:#1a1a1a;border-color:#888;font-weight:500}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:0.5px solid #e0ddd8;border-radius:12px;padding:16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:10px}
+.warn{background:#FAEEDA;border:0.5px solid #FAC775;border-radius:8px;padding:10px 14px;font-size:13px;color:#854F0B;margin-bottom:12px;line-height:1.5}
+.info{background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:8px;padding:10px 14px;font-size:13px;color:#185FA5;margin-bottom:12px;line-height:1.5}
+.ok{background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:8px;padding:10px 14px;font-size:13px;color:#3B6D11;margin-bottom:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+th{font-size:12px;font-weight:500;color:#666;text-align:left;padding:7px 10px;border-bottom:0.5px solid #e0ddd8;background:#fafaf8}
+td{padding:7px 10px;border-bottom:0.5px solid #f0ede8;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bold{font-weight:500}
+.muted{color:#888;font-size:12px}
+.green{color:#3B6D11;font-weight:500}
+.highlight{background:#f0ede8}
+.badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-gray{background:#f0ede8;color:#555}
+.b-red{background:#FCEBEB;color:#A32D2D}
+code{font-size:12px;background:#f0ede8;padding:2px 6px;border-radius:4px;font-family:monospace}
+.section-title{font-size:16px;font-weight:500;margin-bottom:4px}
+.section-sub{font-size:13px;color:#888;margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+.db-entry{background:#1e1e1e;color:#d4d4d4;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.9;overflow-x:auto;white-space:pre}
+.k{color:#9cdcfe}.v{color:#ce9178}.n{color:#b5cea8}.t{color:#4ec9b0}
+.article-block{background:#fff;border-left:3px solid #22c55e;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:10px;border-top:0.5px solid #e0ddd8;border-right:0.5px solid #e0ddd8;border-bottom:0.5px solid #e0ddd8}
+.article-tag{font-size:11px;color:#888;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.article-content{font-size:13px;color:#333;line-height:1.8}
+.article-content em{color:#888;font-style:italic}
+.divider{border:none;border-top:0.5px solid #e0ddd8;margin:16px 0}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:0.5px solid #e0ddd8;border-radius:10px;padding:12px;text-align:center}
+.kpi-num{font-size:22px;font-weight:500;color:#1a1a1a}
+.kpi-label{font-size:11px;color:#888;margin-top:2px}
+</style>
+</head>
+<body>
+
+<h1>Tortilla española — Datos verificados BEDCA</h1>
+<div class="meta">
+  <span>✓ BEDCA verificado</span>
+  <span>Receta #1</span>
+  <span>Abril 2026</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('datos',this)">Datos BEDCA</button>
+  <button class="tab" onclick="show('calculo',this)">Cálculo completo</button>
+  <button class="tab" onclick="show('porciones',this)">Porciones</button>
+  <button class="tab" onclick="show('db',this)">Base de datos app</button>
+  <button class="tab" onclick="show('articulo',this)">Artículo listo</button>
+</div>
+
+<!-- ===== DATOS BEDCA ===== -->
+<div id="datos" class="section active">
+  <p class="section-title">Datos fuente — BEDCA oficial</p>
+  <p class="section-sub">Valores verificados manualmente en bedca.net. Estos son los únicos números que entran en el cálculo.</p>
+
+  <div class="ok">Todos los ingredientes verificados en BEDCA. Fuente de referencia: Base de Datos Española de Composición de Alimentos (CSIC). Fecha de verificación: abril 2026.</div>
+
+  <div class="card">
+    <table>
+      <tr>
+        <th>Ingrediente</th>
+        <th>Buscado en BEDCA como</th>
+        <th class="num">Kcal</th>
+        <th class="num">Proteína</th>
+        <th class="num">Carbos</th>
+        <th class="num">Grasa</th>
+        <th>Estado</th>
+      </tr>
+      <tr>
+        <td class="bold">Huevo entero</td>
+        <td class="muted">huevo de gallina entero, crudo</td>
+        <td class="num">150</td>
+        <td class="num">12.5g</td>
+        <td class="num">~0g</td>
+        <td class="num">11.1g</td>
+        <td><span class="badge b-green">✓ BEDCA</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Patata pelada</td>
+        <td class="muted">patata, cruda</td>
+        <td class="num">73</td>
+        <td class="num">2.2g</td>
+        <td class="num">15.2g</td>
+        <td class="num">0.2g</td>
+        <td><span class="badge b-green">✓ BEDCA</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Cebolla</td>
+        <td class="muted">cebolla, cruda</td>
+        <td class="num">26</td>
+        <td class="num">1.12g</td>
+        <td class="num">5.3g</td>
+        <td class="num">~0g</td>
+        <td><span class="badge b-green">✓ BEDCA</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Aceite de oliva</td>
+        <td class="muted">aceite de oliva</td>
+        <td class="num">888</td>
+        <td class="num">~0g</td>
+        <td class="num">0g</td>
+        <td class="num">100g</td>
+        <td><span class="badge b-green">✓ BEDCA</span></td>
+      </tr>
+      <tr>
+        <td class="bold">Sal</td>
+        <td class="muted">—</td>
+        <td class="num">0</td>
+        <td class="num">0g</td>
+        <td class="num">0g</td>
+        <td class="num">0g</td>
+        <td><span class="badge b-gray">Negligible</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Nota metodológica — El aceite</div>
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      El aceite de oliva es el ingrediente más crítico y el que más varía. No se mide como "aceite puesto en la sartén" sino como <strong>aceite absorbido por la tortilla</strong>.<br><br>
+      La patata absorbe aproximadamente el <strong>60% del aceite de fritura</strong> más el aceite usado para cuajar el huevo. Esto significa que si usas 80ml para freír, la tortilla absorbe ~48ml de ese aceite. A eso se añaden ~10ml más para cuajar → <strong>~57ml totales en la tortilla estándar</strong>.<br><br>
+      Densidad aceite de oliva: <strong>0.92 g/ml</strong> → 57ml ≈ 52g → usamos <strong>57g como valor central</strong> para la versión estándar.
+    </div>
+  </div>
+</div>
+
+<!-- ===== CÁLCULO ===== -->
+<div id="calculo" class="section">
+  <p class="section-title">Cálculo completo — ingrediente a ingrediente</p>
+  <p class="section-sub">Receta base: tortilla para 4 personas. 6 huevos L, 600g patata, 150g cebolla, aceite variable.</p>
+
+  <div class="card">
+    <div class="card-title">Aportación de cada ingrediente — versión estándar (con cebolla)</div>
+    <table>
+      <tr>
+        <th>Ingrediente</th>
+        <th class="num">Cantidad</th>
+        <th class="num">Kcal</th>
+        <th class="num">Proteína</th>
+        <th class="num">Carbos</th>
+        <th class="num">Grasa</th>
+        <th class="num">% kcal</th>
+      </tr>
+      <tr>
+        <td>Huevos (6 × 60g)</td>
+        <td class="num">360g</td>
+        <td class="num">540</td>
+        <td class="num">45.0g</td>
+        <td class="num">0g</td>
+        <td class="num">40.0g</td>
+        <td class="num">35%</td>
+      </tr>
+      <tr>
+        <td>Patata pelada</td>
+        <td class="num">600g</td>
+        <td class="num">438</td>
+        <td class="num">13.2g</td>
+        <td class="num">91.2g</td>
+        <td class="num">1.2g</td>
+        <td class="num">29%</td>
+      </tr>
+      <tr>
+        <td>Cebolla</td>
+        <td class="num">150g</td>
+        <td class="num">39</td>
+        <td class="num">1.7g</td>
+        <td class="num">8.0g</td>
+        <td class="num">0g</td>
+        <td class="num">3%</td>
+      </tr>
+      <tr style="background:#fff8f0">
+        <td><strong>Aceite absorbido</strong> <span class="muted">(estándar)</span></td>
+        <td class="num">57g</td>
+        <td class="num bold" style="color:#854F0B">506</td>
+        <td class="num">0g</td>
+        <td class="num">0g</td>
+        <td class="num bold" style="color:#854F0B">57.0g</td>
+        <td class="num bold" style="color:#854F0B">33%</td>
+      </tr>
+      <tr class="highlight">
+        <td class="bold">TOTAL tortilla entera</td>
+        <td class="num muted">~1.050g cocida</td>
+        <td class="num bold">1.523</td>
+        <td class="num bold">59.9g</td>
+        <td class="num bold">99.2g</td>
+        <td class="num bold">98.2g</td>
+        <td class="num">100%</td>
+      </tr>
+      <tr style="background:#f0ede8">
+        <td class="bold">Por ración (÷4, ~262g)</td>
+        <td class="num">~262g</td>
+        <td class="num bold green">381 kcal</td>
+        <td class="num bold">15.0g</td>
+        <td class="num bold">24.8g</td>
+        <td class="num bold">24.6g</td>
+        <td></td>
+      </tr>
+    </table>
+    <p class="muted" style="margin-top:8px;padding:0 4px">El aceite representa el 33% de las calorías totales — el ingrediente más calórico de la tortilla. Este es el argumento del artículo.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Impacto del aceite — los tres escenarios</div>
+    <table>
+      <tr>
+        <th>Escenario</th>
+        <th class="num">Aceite absorbido</th>
+        <th class="num">Kcal totales</th>
+        <th class="num">Kcal/ración</th>
+        <th class="num">Prot/ración</th>
+        <th class="num">Carb/ración</th>
+        <th class="num">Grasa/ración</th>
+      </tr>
+      <tr>
+        <td>🟢 Ligera (poco aceite)</td>
+        <td class="num">38g</td>
+        <td class="num">1.354</td>
+        <td class="num bold">339</td>
+        <td class="num">15.0g</td>
+        <td class="num">24.8g</td>
+        <td class="num">19.8g</td>
+      </tr>
+      <tr class="highlight">
+        <td>🟡 Estándar <span class="muted">(referencia)</span></td>
+        <td class="num">57g</td>
+        <td class="num">1.523</td>
+        <td class="num bold green">381</td>
+        <td class="num">15.0g</td>
+        <td class="num">24.8g</td>
+        <td class="num">24.6g</td>
+      </tr>
+      <tr>
+        <td>🔴 Abundante / bar</td>
+        <td class="num">82g</td>
+        <td class="num">1.745</td>
+        <td class="num bold">436</td>
+        <td class="num">15.0g</td>
+        <td class="num">24.8g</td>
+        <td class="num">30.8g</td>
+      </tr>
+    </table>
+    <p class="muted" style="margin-top:8px;padding:0 4px">Diferencia entre versión ligera y abundante: <strong>+97 kcal por ración</strong> — solo por el aceite. Misma tortilla, mismo tamaño.</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Con cebolla vs sin cebolla</div>
+      <table>
+        <tr><th></th><th class="num">Kcal/ración</th><th class="num">Diferencia</th></tr>
+        <tr><td>Con cebolla</td><td class="num bold">381</td><td class="num">—</td></tr>
+        <tr><td>Sin cebolla</td><td class="num bold">371</td><td class="num muted">−10 kcal</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">La cebolla aporta solo 39 kcal al total. La diferencia por ración es irrelevante (~10 kcal). El mito de la cebolla tiene poco fundamento calórico.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Densidad calórica</div>
+      <table>
+        <tr><th>Versión</th><th class="num">Kcal/100g</th></tr>
+        <tr><td>Ligera</td><td class="num">129</td></tr>
+        <tr class="highlight"><td>Estándar</td><td class="num bold">145</td></tr>
+        <tr><td>Abundante</td><td class="num">166</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">Útil para cuando alguien registra la tortilla por peso en la app sin saber la variante.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PORCIONES ===== -->
+<div id="porciones" class="section">
+  <p class="section-title">Porciones y situaciones reales</p>
+  <p class="section-sub">Una entrada por situación en la base de datos. Cada una con su rango honesto.</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-num">381</div><div class="kpi-label">kcal ración casera</div></div>
+    <div class="kpi"><div class="kpi-num">150</div><div class="kpi-label">kcal trozo de bar</div></div>
+    <div class="kpi"><div class="kpi-num">189</div><div class="kpi-label">kcal porción menú</div></div>
+    <div class="kpi"><div class="kpi-num">145</div><div class="kpi-label">kcal bocadillo (solo tortilla)</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tabla maestra de situaciones — valores BEDCA verificados</div>
+    <table>
+      <tr>
+        <th>Situación</th>
+        <th class="num">Peso ref.</th>
+        <th class="num">Kcal</th>
+        <th class="num">Rango</th>
+        <th class="num">Prot</th>
+        <th class="num">Carb</th>
+        <th class="num">Grasa</th>
+        <th>Confianza</th>
+      </tr>
+      <tr>
+        <td><strong>Ración casera con cebolla</strong><br><span class="muted">1/4 tortilla estándar</span></td>
+        <td class="num">262g</td>
+        <td class="num bold">381</td>
+        <td class="num muted">339–436</td>
+        <td class="num">15.0g</td>
+        <td class="num">24.8g</td>
+        <td class="num">24.6g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Ración casera sin cebolla</strong><br><span class="muted">1/4 tortilla sin cebolla</span></td>
+        <td class="num">252g</td>
+        <td class="num bold">371</td>
+        <td class="num muted">329–427</td>
+        <td class="num">14.6g</td>
+        <td class="num">22.8g</td>
+        <td class="num">24.6g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Trozo de bar / pintxo</strong><br><span class="muted">Porción pequeña, más aceite</span></td>
+        <td class="num">~90g</td>
+        <td class="num bold">150</td>
+        <td class="num muted">127–172</td>
+        <td class="num">5.1g</td>
+        <td class="num">8.5g</td>
+        <td class="num">10.6g</td>
+        <td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Porción de menú del día</strong><br><span class="muted">Primer plato / guarnición</span></td>
+        <td class="num">~130g</td>
+        <td class="num bold">189</td>
+        <td class="num muted">160–217</td>
+        <td class="num">7.4g</td>
+        <td class="num">12.3g</td>
+        <td class="num">12.2g</td>
+        <td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Bocadillo de tortilla</strong><br><span class="muted">Solo la tortilla, sin pan</span></td>
+        <td class="num">~100g</td>
+        <td class="num bold">145</td>
+        <td class="num muted">123–167</td>
+        <td class="num">5.7g</td>
+        <td class="num">9.4g</td>
+        <td class="num">9.4g</td>
+        <td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Tortilla envasada (marca)</strong><br><span class="muted">Mercadona, Casa Tarradellas…</span></td>
+        <td class="num">Ver etiqueta</td>
+        <td class="num bold">—</td>
+        <td class="num muted">—</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td><span class="badge b-blue">Etiqueta</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Referencias visuales sin báscula</div>
+    <div style="font-size:13px;color:#555;line-height:1.9">
+      <div style="margin-bottom:8px"><strong>Tortilla entera (4 rac.):</strong> tamaño de un plato llano estándar, 2–3 cm de grosor. Peso ~1.050g cocida.</div>
+      <div style="margin-bottom:8px"><strong>Ración casera:</strong> un cuarto de la tortilla. Tamaño de la palma de la mano sin dedos, 2–3 cm de grosor. Aproximadamente 250–270g.</div>
+      <div style="margin-bottom:8px"><strong>Trozo de bar / pintxo:</strong> tamaño de una caja de cerillas grande o algo menor que la palma. Las tortillas de bar suelen ser más finas (1–1.5 cm). Unos 80–100g.</div>
+      <div style="margin-bottom:8px"><strong>Porción de menú:</strong> similar a la casera pero normalmente algo más pequeña. Equivale a 1/5 de una tortilla grande de restaurante.</div>
+      <div><strong>Bocadillo:</strong> la capa de tortilla dentro de la barra suele medir 1–2 cm. En un bocadillo de barra de 20 cm hay aproximadamente 90–110g de tortilla.</div>
+    </div>
+  </div>
+
+  <div class="warn">Las porciones de bar y restaurante tienen confianza media porque la cantidad de aceite varía mucho más que en casa. El rango amplio es deliberado — es más honesto que un número único falso.</div>
+</div>
+
+<!-- ===== BASE DE DATOS ===== -->
+<div id="db" class="section">
+  <p class="section-title">Entradas para la base de datos de la app</p>
+  <p class="section-sub">JSON listo para copiar. Valores reales BEDCA. Activar después de publicar el artículo.</p>
+
+  <div class="ok">Valores verificados BEDCA. Activar en producción sincronizando con la publicación del artículo del blog.</div>
+
+  <div class="card">
+    <div class="card-title">Entrada principal — ración casera con cebolla</div>
+    <div class="db-entry"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"tortilla_espanola_casera_cebolla"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Tortilla española con cebolla"</span>,
+  <span class="k">"nombre_busqueda"</span>: [<span class="v">"tortilla española"</span>, <span class="v">"tortilla de patata"</span>, <span class="v">"tortilla patata cebolla"</span>],
+  <span class="k">"categoria"</span>: <span class="v">"platos_principales"</span>,
+  <span class="k">"tags"</span>: [<span class="v">"tortilla"</span>, <span class="v">"huevo"</span>, <span class="v">"patata"</span>, <span class="v">"española"</span>, <span class="v">"casera"</span>],
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">262</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">381</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">339</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">436</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">15.0</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">24.8</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">24.6</span>
+  <span class="t">}</span>,
+  <span class="k">"macros_por_100g"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">145</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">5.7</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">9.4</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">9.4</span>
+  <span class="t">}</span>,
+  <span class="k">"fuente"</span>: <span class="v">"BEDCA — cálculo por ingredientes verificado abril 2026"</span>,
+  <span class="k">"confianza"</span>: <span class="v">"alta"</span>,
+  <span class="k">"variabilidad_nota"</span>: <span class="v">"El aceite absorbido es el factor principal de variación. Rango ±15% según receta."</span>,
+  <span class="k">"exclusion_tokens"</span>: [<span class="v">"francesa"</span>, <span class="v">"mexicana"</span>, <span class="v">"wrap"</span>, <span class="v">"crepe"</span>],
+  <span class="k">"variantes_ids"</span>: [
+    <span class="v">"tortilla_espanola_casera_sin_cebolla"</span>,
+    <span class="v">"tortilla_espanola_trozo_bar"</span>,
+    <span class="v">"tortilla_espanola_porcion_menu"</span>,
+    <span class="v">"tortilla_espanola_bocadillo"</span>
+  ],
+  <span class="k">"articulo_blog"</span>: <span class="v">"/blog/calorias-tortilla-espanola"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Variante: sin cebolla</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"tortilla_espanola_casera_sin_cebolla"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Tortilla española sin cebolla"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">252</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">371</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">329</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">427</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">14.6</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">22.8</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">24.6</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"alta"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Variante: trozo de bar</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"tortilla_espanola_trozo_bar"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Tortilla española (trozo de bar)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">90</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">150</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">127</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">172</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">5.1</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">8.5</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">10.6</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Variante: porción menú</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"tortilla_espanola_porcion_menu"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Tortilla española (menú del día)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">130</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">189</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">160</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">217</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">7.4</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">12.3</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">12.2</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Variante: bocadillo</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"tortilla_espanola_bocadillo"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Bocadillo de tortilla española (solo tortilla)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">100</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">145</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">123</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">167</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">5.7</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">9.4</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">9.4</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARTÍCULO ===== -->
+<div id="articulo" class="section">
+  <p class="section-title">Artículo — Texto completo listo para publicar</p>
+  <p class="section-sub">Desarrolla los bloques marcados en cursiva. El resto es texto final.</p>
+
+  <div class="article-block" style="border-left-color:#888">
+    <div class="article-tag">Meta SEO</div>
+    <div class="article-content">
+      <strong>Title:</strong> Calorías de la tortilla española: con cebolla, sin cebolla y en el bar<br>
+      <strong>Meta description:</strong> Cuántas calorías tiene la tortilla española según la receta y la porción. Datos calculados desde BEDCA con rangos reales — no estimaciones genéricas de apps americanas.<br>
+      <strong>URL slug:</strong> /blog/calorias-tortilla-espanola<br>
+      <strong>Keyword principal:</strong> calorías tortilla española<br>
+      <strong>Secundarias:</strong> tortilla española calorías con cebolla, tortilla española macros, cuántas calorías tiene la tortilla de patata
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H1</div>
+    <div class="article-content" style="font-size:16px;font-weight:500">
+      Calorías de la tortilla española: con cebolla, sin cebolla y cuántas tiene en el bar
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Introducción</div>
+    <div class="article-content">
+      Buscas las calorías de la tortilla española y cada app te da un número diferente. El motivo no es que alguna esté desactualizada — es que no existe una sola tortilla española. La cantidad de aceite, el tamaño de la porción y si estás en casa o en un bar pueden cambiar el resultado en más de 90 calorías por ración.<br><br>
+      Hemos calculado los valores ingrediente a ingrediente usando BEDCA, la base de datos oficial española de composición de alimentos validada por el CSIC. Aquí tienes los datos reales con sus rangos honestos.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Tabla principal — va aquí, antes de cualquier explicación</div>
+    <div class="article-content">
+      <table style="margin-bottom:8px">
+        <tr>
+          <th>Situación</th>
+          <th class="num">Peso</th>
+          <th class="num">Kcal</th>
+          <th class="num">Rango</th>
+          <th class="num">Proteína</th>
+          <th class="num">Carbos</th>
+          <th class="num">Grasa</th>
+        </tr>
+        <tr><td>Ración casera con cebolla</td><td class="num">262g</td><td class="num bold">381</td><td class="num muted">339–436</td><td class="num">15g</td><td class="num">24.8g</td><td class="num">24.6g</td></tr>
+        <tr><td>Ración casera sin cebolla</td><td class="num">252g</td><td class="num bold">371</td><td class="num muted">329–427</td><td class="num">14.6g</td><td class="num">22.8g</td><td class="num">24.6g</td></tr>
+        <tr><td>Trozo de bar / pintxo</td><td class="num">~90g</td><td class="num bold">150</td><td class="num muted">127–172</td><td class="num">5.1g</td><td class="num">8.5g</td><td class="num">10.6g</td></tr>
+        <tr><td>Porción de menú del día</td><td class="num">~130g</td><td class="num bold">189</td><td class="num muted">160–217</td><td class="num">7.4g</td><td class="num">12.3g</td><td class="num">12.2g</td></tr>
+        <tr><td>Bocadillo (solo tortilla)</td><td class="num">~100g</td><td class="num bold">145</td><td class="num muted">123–167</td><td class="num">5.7g</td><td class="num">9.4g</td><td class="num">9.4g</td></tr>
+      </table>
+      <span class="muted">Fuente: calculado ingrediente a ingrediente desde BEDCA (CSIC). Valores orientativos — variabilidad real ±15% según la receta y el aceite utilizado.</span>
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2</div>
+    <div class="article-content">
+      <strong>Cómo hemos calculado estos números</strong><br><br>
+      La receta de referencia es una tortilla estándar para cuatro personas: seis huevos talla L (360g), 600g de patata pelada cruda, 150g de cebolla y aceite de oliva. Los valores nutricionales de cada ingrediente provienen de BEDCA, la base de datos española de composición de alimentos del CSIC.<br><br>
+      El cálculo más delicado es el del aceite. No contamos el aceite que se pone en la sartén, sino el que realmente absorbe la tortilla: aproximadamente el 60% del aceite de fritura más el que se usa para cuajar el huevo. En la versión estándar, eso son unos 57g de aceite en la tortilla final — el equivalente a casi cuatro cucharadas soperas.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — El argumento diferenciador</div>
+    <div class="article-content">
+      <strong>Por qué el aceite lo cambia todo — y por qué las apps no lo modelan bien</strong><br><br>
+      Una tortilla española con poco aceite tiene unas 339 kcal por ración. La misma tortilla hecha en un bar, donde el aceite suele ser más generoso, puede llegar a 436 kcal. Son 97 calorías de diferencia — solo por el aceite. La proteína, los carbohidratos y el tamaño de la ración son idénticos.<br><br>
+      Este es exactamente el problema de las apps de nutrición americanas. MyFitnessPal tiene docenas de entradas para "tortilla española", la mayoría creadas por usuarios, y muy pocas modelan el aceite de fritura correctamente. El resultado es que puedes registrar la misma tortilla y obtener valores que difieren en más de 100 kcal dependiendo de qué entrada elijas.<br><br>
+      La diferencia entre tortilla con cebolla y sin cebolla, en cambio, es casi irrelevante: apenas 10 kcal por ración. La cebolla aporta 39 kcal al total de la tortilla entera — mucho menos de lo que la gente asume.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2</div>
+    <div class="article-content">
+      <strong>Cómo estimar la tortilla sin báscula</strong><br><br>
+      <strong>Ración casera:</strong> un cuarto de la tortilla. Tamaño de la palma de la mano sin los dedos, con 2–3 cm de grosor. Si la coges con dos dedos y te llena la mano, estás en torno a 250–270g.<br><br>
+      <strong>Trozo de bar o pintxo:</strong> algo menor que la palma. Las tortillas de bar suelen ser más finas, entre 1 y 1.5 cm de grosor. Unos 80–100g, que equivale aproximadamente a un tercio de una ración casera.<br><br>
+      <strong>Porción de menú del día:</strong> similar a la casera pero normalmente algo más pequeña. Equivale a un quinto de una tortilla grande de restaurante.<br><br>
+      <strong>En un bocadillo:</strong> la capa de tortilla dentro de la barra suele medir 1–2 cm. En un bocadillo de barra de 20 cm hay aproximadamente 90–110g de tortilla, sin contar el pan.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — FAQ (implementar FAQPage schema en JSON-LD)</div>
+    <div class="article-content">
+      <strong>¿La tortilla sin cebolla tiene menos calorías?</strong><br>
+      Muy pocas. La cebolla aporta unas 39 kcal al total de la tortilla para cuatro personas — unos 10 kcal por ración. La diferencia es prácticamente insignificante. El factor determinante es la cantidad de aceite, no la cebolla.<br><br>
+
+      <strong>¿Cuántas calorías tiene un trozo de tortilla en un bar?</strong><br>
+      Entre 127 y 172 kcal por trozo de unos 90g. Las tortillas de bar suelen llevar más aceite que las caseras, pero la porción es más pequeña. El resultado final es comparable a un tercio de una ración casera.<br><br>
+
+      <strong>¿Cuántas calorías tiene la tortilla de patata por 100g?</strong><br>
+      En la versión estándar, aproximadamente 145 kcal por 100g. La versión ligera (poco aceite) baja a unos 129 kcal/100g, y la versión más aceitosa puede llegar a 166 kcal/100g.<br><br>
+
+      <strong>¿Cómo registro la tortilla española en una app de calorías?</strong><br>
+      Si usas Caliro, puedes fotografiarla directamente y el sistema estima la porción teniendo en cuenta las variantes reales de la tortilla española. Si corriges el resultado, la app aprende tu versión específica para las próximas veces.
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#185FA5">
+    <div class="article-tag">CTA final</div>
+    <div class="article-content">
+      Si quieres registrar la tortilla española sin buscar entre decenas de entradas genéricas, Caliro identifica el plato por foto y aplica los rangos reales de la cocina española. Gratis, sin anuncios, y con un motor que aprende cómo comes tú.<br><br>
+      <strong>→ Probar Caliro gratis</strong>
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#aaa">
+    <div class="article-tag">Byline + Disclaimer (pie del artículo)</div>
+    <div class="article-content">
+      <em>Escrito por Luca — Desarrollador de Caliro. Los datos nutricionales de este artículo han sido calculados ingrediente a ingrediente desde BEDCA (Base de Datos Española de Composición de Alimentos, CSIC). Última actualización: abril 2026.</em><br><br>
+      <em>Los valores son estimaciones orientativas. La composición real varía según la receta, los ingredientes y las cantidades utilizadas. Esta información no sustituye el asesoramiento de un dietista-nutricionista colegiado.</em>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
