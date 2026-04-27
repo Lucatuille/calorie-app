@@ -174,14 +174,29 @@
 
   <div class="article-body">
 
-    <!-- ═══ 1. Hero visual: 4 situaciones más comunes ═══ -->
+    <!-- ═══ 1. Hero visual: 4 situaciones más comunes ═══
+         Orden narrativo: estándar casero → ración con hambre → restaurante → bar -->
     <div class="situation-grid">
       <div class="sit-card">
         <div class="sit-card-icon">🏠</div>
         <div class="sit-card-label">En casa</div>
         <div class="sit-card-value">381<span class="sit-card-value-unit">kcal</span></div>
         <div class="sit-card-portion">por ración (262g)</div>
-        <div class="sit-card-meta">Receta tradicional con cebolla</div>
+        <div class="sit-card-meta">1/4 de tortilla casera con cebolla</div>
+      </div>
+      <div class="sit-card">
+        <div class="sit-card-icon">🍴</div>
+        <div class="sit-card-label">Plato principal</div>
+        <div class="sit-card-value">508<span class="sit-card-value-unit">kcal</span></div>
+        <div class="sit-card-portion">por porción (~350g)</div>
+        <div class="sit-card-meta">1/3 de tortilla — comida o cena con hambre</div>
+      </div>
+      <div class="sit-card">
+        <div class="sit-card-icon">🍽</div>
+        <div class="sit-card-label">Menú del día</div>
+        <div class="sit-card-value">189<span class="sit-card-value-unit">kcal</span></div>
+        <div class="sit-card-portion">por porción (~130g)</div>
+        <div class="sit-card-meta">Primer plato típico de restaurante</div>
       </div>
       <div class="sit-card">
         <div class="sit-card-icon">🍻</div>
@@ -189,20 +204,6 @@
         <div class="sit-card-value">150<span class="sit-card-value-unit">kcal</span></div>
         <div class="sit-card-portion">por trozo (~90g)</div>
         <div class="sit-card-meta">Pintxo, porción pequeña</div>
-      </div>
-      <div class="sit-card">
-        <div class="sit-card-icon">🍽</div>
-        <div class="sit-card-label">Menú del día</div>
-        <div class="sit-card-value">189<span class="sit-card-value-unit">kcal</span></div>
-        <div class="sit-card-portion">por porción (~130g)</div>
-        <div class="sit-card-meta">Primer plato típico</div>
-      </div>
-      <div class="sit-card">
-        <div class="sit-card-icon">🥪</div>
-        <div class="sit-card-label">Bocadillo</div>
-        <div class="sit-card-value">145<span class="sit-card-value-unit">kcal</span></div>
-        <div class="sit-card-portion">por ~100g de tortilla</div>
-        <div class="sit-card-meta">Solo la tortilla, sin pan</div>
       </div>
     </div>
 
@@ -332,9 +333,10 @@
     </p>
     <ul>
       <li><strong>Tortilla entera (4 raciones):</strong> el tamaño de un plato llano estándar, 2-3 cm de grosor. Peso aproximado: 1.050g cocida.</li>
-      <li><strong>Ración casera:</strong> un cuarto de la tortilla. Tamaño de la palma de la mano sin los dedos, 2-3 cm de grosor. Aproximadamente 250-270g.</li>
-      <li><strong>Trozo de bar o pintxo:</strong> algo menor que la palma. Las tortillas de bar suelen ser más finas (1-1.5 cm). Unos 80-100g.</li>
+      <li><strong>Plato principal (1/3 de tortilla):</strong> cuando la tortilla es la comida principal. Algo más grande que la palma de la mano completa, dedos incluidos. Aproximadamente 320-380g.</li>
+      <li><strong>Ración casera (1/4 de tortilla):</strong> el reparto típico para 4 personas. Tamaño de la palma de la mano sin los dedos, 2-3 cm de grosor. Aproximadamente 250-270g.</li>
       <li><strong>Porción de menú del día:</strong> similar a la casera pero normalmente algo más pequeña — 120-140g.</li>
+      <li><strong>Trozo de bar o pintxo:</strong> algo menor que la palma. Las tortillas de bar suelen ser más finas (1-1.5 cm). Unos 80-100g.</li>
       <li><strong>Bocadillo:</strong> la capa de tortilla dentro de la barra suele medir 1-2 cm. En un bocadillo de 20 cm hay aproximadamente 90-110g de tortilla, sin contar el pan.</li>
     </ul>
 
@@ -429,6 +431,15 @@
       </thead>
       <tbody>
         <tr>
+          <td>Plato principal (1/3 de tortilla)</td>
+          <td class="num">~350g</td>
+          <td class="num nt-highlight">508</td>
+          <td class="num nt-muted">451–582</td>
+          <td class="num">20g</td>
+          <td class="num">33.1g</td>
+          <td class="num">32.7g</td>
+        </tr>
+        <tr>
           <td>Ración casera con cebolla</td>
           <td class="num">262g</td>
           <td class="num nt-highlight">381</td>
@@ -447,15 +458,6 @@
           <td class="num">24.6g</td>
         </tr>
         <tr>
-          <td>Trozo de bar / pintxo</td>
-          <td class="num">~90g</td>
-          <td class="num nt-highlight">150</td>
-          <td class="num nt-muted">127–172</td>
-          <td class="num">5.1g</td>
-          <td class="num">8.5g</td>
-          <td class="num">10.6g</td>
-        </tr>
-        <tr>
           <td>Porción de menú del día</td>
           <td class="num">~130g</td>
           <td class="num nt-highlight">189</td>
@@ -463,6 +465,15 @@
           <td class="num">7.4g</td>
           <td class="num">12.3g</td>
           <td class="num">12.2g</td>
+        </tr>
+        <tr>
+          <td>Trozo de bar / pintxo</td>
+          <td class="num">~90g</td>
+          <td class="num nt-highlight">150</td>
+          <td class="num nt-muted">127–172</td>
+          <td class="num">5.1g</td>
+          <td class="num">8.5g</td>
+          <td class="num">10.6g</td>
         </tr>
         <tr>
           <td>Bocadillo (solo tortilla)</td>
