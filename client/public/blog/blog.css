@@ -108,6 +108,23 @@ nav {
 .nutrition-table tr:last-child td { border-bottom: none; }
 .nutrition-table .nt-highlight { font-weight: 600; color: var(--dark); }
 
+/* Wrapper para tablas que deben hacer scroll horizontal en mobile.
+   Uso: <div class="table-scroll"><table class="nutrition-table">...</table></div> */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 24px 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.table-scroll .nutrition-table {
+  margin: 0;
+  min-width: 560px;
+  box-shadow: none;
+}
+.table-scroll::-webkit-scrollbar { height: 6px; }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--light); border-radius: 3px; }
+
 /* ── Quick stat callout (for dish articles) ──────────────── */
 .quick-stat {
   background: var(--dark); border-radius: 16px; padding: 28px; margin: 32px 0;
@@ -198,20 +215,32 @@ footer { background: var(--dark); border-top: 1px solid #1e1e1e; padding: 28px 4
 }
 .sit-card-value {
   font-family: var(--serif); font-style: italic; font-weight: 400;
-  font-size: 38px; line-height: 1; color: var(--dark);
-  margin-bottom: 4px; letter-spacing: -0.01em;
+  font-size: 42px; line-height: 1; color: var(--dark);
+  margin-bottom: 2px; letter-spacing: -0.01em;
 }
-.sit-card-unit {
-  font-size: 11px; color: var(--mid); letter-spacing: 0.04em;
-  margin-bottom: 10px;
+.sit-card-value-unit {
+  display: inline-block; font-family: var(--sans); font-style: normal;
+  font-size: 14px; color: var(--mid); margin-left: 3px; font-weight: 400;
+  letter-spacing: 0;
+}
+.sit-card-portion {
+  font-size: 12px; color: var(--mid); margin-bottom: 12px;
 }
 .sit-card-meta {
   font-size: 11px; color: var(--mid);
   border-top: 1px solid var(--light); padding-top: 10px; margin-top: 4px;
+  line-height: 1.4;
 }
 @media (max-width: 700px) {
   .situation-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sit-card-value { font-size: 34px; }
+  .sit-card { padding: 16px 12px 14px; }
+  .sit-card-icon { font-size: 24px; margin-bottom: 8px; }
+  .sit-card-value { font-size: 36px; }
+  .sit-card-value-unit { font-size: 12px; }
+  .sit-card-meta { font-size: 10px; padding-top: 8px; }
+}
+@media (max-width: 380px) {
+  .situation-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Range visualization (for dish articles) ─────────────── */
