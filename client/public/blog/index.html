@@ -59,7 +59,7 @@ nav {
 }
 
 .blog-header {
-  margin-bottom: 56px;
+  margin-bottom: 48px;
 }
 .blog-label {
   font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
@@ -71,14 +71,129 @@ nav {
   line-height: 1.08;
 }
 
-/* ARTICLES */
+/* SECTIONS */
+.blog-section { margin-top: 64px; }
+.blog-section:first-of-type { margin-top: 0; }
+
+.section-header {
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--light);
+}
+.section-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  line-height: 1.2;
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+.section-desc {
+  font-size: 14px;
+  color: var(--mid);
+  font-weight: 300;
+  line-height: 1.6;
+  max-width: 540px;
+}
+
+/* PINNED CARD (Calculadora TDEE) */
+.pinned-card {
+  display: block;
+  background: var(--white);
+  border: 1px solid var(--light);
+  border-left: 3px solid var(--green);
+  padding: 24px 28px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s;
+}
+.pinned-card:hover { border-color: var(--green); }
+.pinned-card .card-meta { margin-bottom: 12px; }
+.pinned-card .card-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.pinned-card .card-desc {
+  font-size: 14px;
+  color: var(--mid);
+  line-height: 1.6;
+  font-weight: 300;
+  margin-bottom: 10px;
+}
+.pinned-card .card-cta {
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+/* SCIENCE GRID — Calorías de platos (2-col cards) */
+.science-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid var(--light);
+  border-bottom: 1px solid var(--light);
+}
+.science-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s;
+}
+.science-card:nth-child(odd) {
+  border-right: 1px solid var(--light);
+}
+.science-card:hover { background: var(--white); }
+.science-card .card-date {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mid);
+}
+.science-card .card-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--dark);
+  font-weight: 400;
+}
+.science-card .card-desc {
+  font-size: 13px;
+  color: var(--mid);
+  line-height: 1.6;
+  font-weight: 300;
+  flex-grow: 1;
+}
+.science-card .card-cta {
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .science-grid { grid-template-columns: 1fr; }
+  .science-card:nth-child(odd) { border-right: none; border-bottom: 1px solid var(--light); }
+}
+
+/* ARTICLES LIST (vertical, opinión + guías) */
 .articles { display: flex; flex-direction: column; gap: 2px; }
 
 .article-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 28px 0;
+  padding: 24px 0;
   border-bottom: 1px solid var(--light);
   text-decoration: none;
   color: inherit;
@@ -105,6 +220,7 @@ nav {
   font-size: clamp(20px, 3vw, 26px);
   line-height: 1.2;
   color: var(--dark);
+  font-weight: 400;
 }
 
 .card-desc {
@@ -154,68 +270,81 @@ footer {
     <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
   </div>
 
-  <div class="articles">
+  <!-- ═══ Featured tool: Calculadora TDEE ═══ -->
+  <a href="/blog/calculadora-tdee" class="pinned-card">
+    <div class="card-meta">
+      <span class="card-tag" style="background: var(--green); color: white; border-color: var(--green);">Herramienta gratuita</span>
+    </div>
+    <div class="card-title">Calculadora TDEE — Calcula tus calorías diarias</div>
+    <div class="card-desc">Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados, proyección de peso. Sin registro.</div>
+    <div class="card-cta">Usar calculadora →</div>
+  </a>
 
-    <a href="/blog/calculadora-tdee" class="article-card" style="border-left: 3px solid var(--green); padding-left: 28px;">
-      <div class="card-meta">
-        <span class="card-tag" style="background: var(--green); color: white; border-color: var(--green);">Herramienta</span>
-      </div>
-      <div class="card-title">Calculadora TDEE — Calcula tus calorías diarias</div>
-      <div class="card-desc">Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados, proyección de peso. Gratis y sin registro.</div>
-      <div class="card-cta">Usar calculadora &rarr;</div>
-    </a>
+  <!-- ═══ Sección: Calorías de platos (datos científicos) ═══ -->
+  <section class="blog-section">
+    <div class="section-header">
+      <div class="section-eyebrow">Datos verificados</div>
+      <h2 class="section-title">Calorías de platos</h2>
+      <p class="section-desc">Calorías calculadas ingrediente a ingrediente desde BEDCA, con rangos reales. Sin estimaciones genéricas de apps americanas.</p>
+    </div>
 
-    <a href="/blog/calorias-croquetas" class="article-card">
-      <div class="card-meta">
-        <span class="card-tag">Calorías de platos</span>
+    <div class="science-grid">
+      <a href="/blog/calorias-croquetas" class="science-card">
         <span class="card-date">Abril 2026 · 7 min</span>
-      </div>
-      <div class="card-title">Calorías de las croquetas: caseras, de bar y por qué el relleno importa menos</div>
-      <div class="card-desc">155 kcal por croqueta casera, 664 una ración de bar (3 uds.) — más que una paella. El aceite del rebozado pesa más que cualquier relleno. Cálculo desde BEDCA.</div>
-      <div class="card-cta">Leer artículo →</div>
-    </a>
+        <div class="card-title">Calorías de las croquetas</div>
+        <div class="card-desc">155 kcal por croqueta casera, 664 una ración de bar — más que una paella. El aceite del rebozado pesa más que cualquier relleno.</div>
+        <span class="card-cta">Leer artículo →</span>
+      </a>
 
-    <a href="/blog/calorias-tortilla-espanola" class="article-card">
-      <div class="card-meta">
-        <span class="card-tag">Calorías de platos</span>
+      <a href="/blog/calorias-tortilla-espanola" class="science-card">
         <span class="card-date">Abril 2026 · 7 min</span>
-      </div>
-      <div class="card-title">Calorías de la tortilla española: con cebolla, sin cebolla y en el bar</div>
-      <div class="card-desc">381 kcal por ración casera, 150 por trozo de bar. Cálculo verificado desde BEDCA. El factor que cambia todo es el aceite absorbido — y casi ninguna app lo modela bien.</div>
-      <div class="card-cta">Leer artículo →</div>
-    </a>
+        <div class="card-title">Calorías de la tortilla española</div>
+        <div class="card-desc">381 kcal por ración casera, 150 por trozo de bar. El aceite absorbido es el factor que cambia todo — y casi ninguna app lo modela bien.</div>
+        <span class="card-cta">Leer artículo →</span>
+      </a>
+    </div>
+  </section>
 
-    <a href="/blog/cal-ai-2026-opinion" class="article-card">
-      <div class="card-meta">
-        <span class="card-tag">Comparativas</span>
-        <span class="card-date">Abril 2026 · 5 min</span>
-      </div>
-      <div class="card-title">Cal AI en 2026: opinión honesta después de usarla un mes</div>
-      <div class="card-desc">Cal AI es la app de calorías más descargada del momento. La usé un mes. Esto es lo que funciona, lo que no, y por qué cambié.</div>
-      <div class="card-cta">Leer artículo →</div>
-    </a>
+  <!-- ═══ Sección: Artículos y guías ═══ -->
+  <section class="blog-section">
+    <div class="section-header">
+      <div class="section-eyebrow">Lectura</div>
+      <h2 class="section-title">Artículos y guías</h2>
+      <p class="section-desc">Opinión, comparativas y guías sobre apps de nutrición y cómo contar calorías sin volverse loco.</p>
+    </div>
 
-    <a href="/blog/contar-calorias-ia" class="article-card">
-      <div class="card-meta">
-        <span class="card-tag">Guías</span>
-        <span class="card-date">Abril 2026 · 6 min</span>
-      </div>
-      <div class="card-title">Cómo contar calorías con IA en 2026</div>
-      <div class="card-desc">Foto, voz o texto — la IA calcula las calorías en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona de verdad.</div>
-      <div class="card-cta">Leer artículo →</div>
-    </a>
+    <div class="articles">
+      <a href="/blog/cal-ai-2026-opinion" class="article-card">
+        <div class="card-meta">
+          <span class="card-tag">Comparativas</span>
+          <span class="card-date">Abril 2026 · 5 min</span>
+        </div>
+        <div class="card-title">Cal AI en 2026: opinión honesta después de usarla un mes</div>
+        <div class="card-desc">Cal AI es la app de calorías más descargada del momento. La usé un mes. Esto es lo que funciona, lo que no, y por qué cambié.</div>
+        <div class="card-cta">Leer artículo →</div>
+      </a>
 
-    <a href="/blog/alternativa-myfitnesspal-espana" class="article-card">
-      <div class="card-meta">
-        <span class="card-tag">Herramientas</span>
-        <span class="card-date">Marzo 2026 · 5 min</span>
-      </div>
-      <div class="card-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
-      <div class="card-desc">MyFitnessPal tiene 11 millones de alimentos y no sabe lo que es un bocadillo de lomo. Cuento qué pasó y qué cambié.</div>
-      <div class="card-cta">Leer artículo →</div>
-    </a>
+      <a href="/blog/contar-calorias-ia" class="article-card">
+        <div class="card-meta">
+          <span class="card-tag">Guías</span>
+          <span class="card-date">Abril 2026 · 6 min</span>
+        </div>
+        <div class="card-title">Cómo contar calorías con IA en 2026</div>
+        <div class="card-desc">Foto, voz o texto — la IA calcula las calorías en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona de verdad.</div>
+        <div class="card-cta">Leer artículo →</div>
+      </a>
 
-  </div>
+      <a href="/blog/alternativa-myfitnesspal-espana" class="article-card">
+        <div class="card-meta">
+          <span class="card-tag">Herramientas</span>
+          <span class="card-date">Marzo 2026 · 5 min</span>
+        </div>
+        <div class="card-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
+        <div class="card-desc">MyFitnessPal tiene 11 millones de alimentos y no sabe lo que es un bocadillo de lomo. Cuento qué pasó y qué cambié.</div>
+        <div class="card-cta">Leer artículo →</div>
+      </a>
+    </div>
+  </section>
 
 </main>
 
