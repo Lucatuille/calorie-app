@@ -73,10 +73,62 @@ nav {
   padding-bottom: 14px;
   border-bottom: 1px solid var(--dark);
   margin-bottom: 36px;
+  gap: 20px;
 }
 .blog-masthead-name {
   color: var(--dark);
   font-weight: 500;
+  white-space: nowrap;
+}
+.blog-masthead-nav {
+  display: flex;
+  list-style: none;
+  gap: 28px;
+  margin: 0 auto;
+}
+.blog-masthead-nav a {
+  text-decoration: none;
+  color: var(--mid);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  position: relative;
+}
+.blog-masthead-nav a::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.blog-masthead-nav a:hover {
+  color: var(--dark);
+}
+.blog-masthead-nav a:hover::before { opacity: 1; }
+.blog-masthead-date {
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .blog-masthead {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .blog-masthead-nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    justify-content: flex-start;
+    gap: 18px;
+    padding-top: 8px;
+    border-top: 1px solid var(--light);
+  }
 }
 .blog-title {
   font-family: var(--serif);
@@ -96,7 +148,7 @@ nav {
 }
 
 /* SECTION DIVIDERS — masthead con dot verde */
-.blog-section { margin-top: 56px; }
+.blog-section { margin-top: 56px; scroll-margin-top: 100px; }
 .blog-section:first-of-type { margin-top: 0; }
 
 .section-divider {
@@ -373,7 +425,12 @@ footer {
   <div class="blog-header">
     <div class="blog-masthead">
       <span class="blog-masthead-name">Caliro Blog</span>
-      <span>Abril 2026</span>
+      <ul class="blog-masthead-nav">
+        <li><a href="#datos">Datos</a></li>
+        <li><a href="#herramientas">Herramientas</a></li>
+        <li><a href="#lectura">Lectura</a></li>
+      </ul>
+      <span class="blog-masthead-date">Abril 2026</span>
     </div>
     <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
     <p class="blog-tagline">Datos calculados desde BEDCA, herramientas gratuitas y opinión honesta sobre apps de nutrición.</p>
@@ -394,7 +451,7 @@ footer {
   </a>
 
   <!-- ═══ Sección: Datos (compact list con kcal markers) ═══ -->
-  <section class="blog-section">
+  <section class="blog-section" id="datos">
     <div class="section-divider">
       <span class="section-label">Datos</span>
       <span class="section-meta">2 artículos · Verificados BEDCA</span>
@@ -426,7 +483,7 @@ footer {
   </section>
 
   <!-- ═══ Sección: Herramientas (compact list con tool name marker) ═══ -->
-  <section class="blog-section">
+  <section class="blog-section" id="herramientas">
     <div class="section-divider">
       <span class="section-label">Herramientas</span>
       <span class="section-meta">1 herramienta · Gratis</span>
@@ -447,7 +504,7 @@ footer {
   </section>
 
   <!-- ═══ Sección: Lectura (compact list numerada 01/02/03) ═══ -->
-  <section class="blog-section">
+  <section class="blog-section" id="lectura">
     <div class="section-divider">
       <span class="section-label">Lectura</span>
       <span class="section-meta">3 artículos · Opinión y guías</span>
