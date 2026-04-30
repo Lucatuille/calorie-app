@@ -38,7 +38,7 @@
     "logo": { "@type": "ImageObject", "url": "https://caliro.dev/og-image.png" }
   },
   "datePublished": "2026-04-26T10:00:00+02:00",
-  "dateModified": "2026-04-27T12:00:00+02:00",
+  "dateModified": "2026-04-30T18:00:00+02:00",
   "mainEntityOfPage": "https://caliro.dev/blog/calorias-tortilla-espanola"
 }
 </script>
@@ -178,7 +178,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/blog/blog.css">
+<link rel="stylesheet" href="/blog/blog-data.css">
 </head>
 <body>
 
@@ -195,14 +195,15 @@
 
   <div class="article-meta">
     <span class="meta-tag">Calorías de platos</span>
-    <span class="meta-date">Abril 2026</span>
-    <span class="meta-read">· 7 min de lectura</span>
+    <span>Abril 2026 · 7 min</span>
   </div>
 
   <h1 class="article-title">
-    Calorías de la tortilla española:<br>
-    con cebolla, sin cebolla y <em>cuántas tiene en el bar</em>
+    Calorías de la tortilla española
   </h1>
+  <p class="article-subtitle">
+    Con cebolla, sin cebolla y cuántas tiene en el bar — calculadas desde BEDCA.
+  </p>
 
   <p class="article-lead">
     La tortilla del bar tiene casi 100 calorías más que la que te haces en casa, aunque parezcan iguales. La diferencia se llama <strong>aceite absorbido</strong> — y casi ninguna app de nutrición sabe medirlo bien.
@@ -210,67 +211,64 @@
 
   <div class="article-body">
 
-    <!-- ═══ 1. Hero visual: 4 situaciones más comunes ═══
-         Orden narrativo: estándar casero → ración con hambre → restaurante → bar -->
-    <div class="situation-grid">
-      <div class="sit-card">
-        <div class="sit-card-icon">🏠</div>
-        <div class="sit-card-label">En casa</div>
-        <div class="sit-card-value">381<span class="sit-card-value-unit">kcal</span></div>
-        <div class="sit-card-portion">por ración (262g)</div>
-        <div class="sit-card-meta">1/4 de tortilla casera con cebolla</div>
+    <!-- ═══ Hero — 4 situaciones ═══ -->
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">En casa</div>
+        <div class="card-num">381<span class="card-num-unit">kcal</span></div>
+        <div class="card-portion">Por ración · 262 g</div>
+        <div class="card-meta">1/4 de tortilla casera con cebolla</div>
       </div>
-      <div class="sit-card">
-        <div class="sit-card-icon">🍴</div>
-        <div class="sit-card-label">Plato principal</div>
-        <div class="sit-card-value">508<span class="sit-card-value-unit">kcal</span></div>
-        <div class="sit-card-portion">por porción (~350g)</div>
-        <div class="sit-card-meta">1/3 de tortilla — comida o cena con hambre</div>
+      <div class="card">
+        <div class="card-label">Plato principal</div>
+        <div class="card-num">508<span class="card-num-unit">kcal</span></div>
+        <div class="card-portion">Por porción · ~350 g</div>
+        <div class="card-meta">1/3 de tortilla — comida o cena con hambre</div>
       </div>
-      <div class="sit-card">
-        <div class="sit-card-icon">🍽</div>
-        <div class="sit-card-label">Menú del día</div>
-        <div class="sit-card-value">189<span class="sit-card-value-unit">kcal</span></div>
-        <div class="sit-card-portion">por porción (~130g)</div>
-        <div class="sit-card-meta">Primer plato típico de restaurante</div>
+      <div class="card">
+        <div class="card-label">Menú del día</div>
+        <div class="card-num">189<span class="card-num-unit">kcal</span></div>
+        <div class="card-portion">Por porción · ~130 g</div>
+        <div class="card-meta">Primer plato típico de restaurante</div>
       </div>
-      <div class="sit-card">
-        <div class="sit-card-icon">🍻</div>
-        <div class="sit-card-label">En el bar</div>
-        <div class="sit-card-value">150<span class="sit-card-value-unit">kcal</span></div>
-        <div class="sit-card-portion">por trozo (~90g)</div>
-        <div class="sit-card-meta">Pintxo, porción pequeña</div>
+      <div class="card">
+        <div class="card-label">En el bar</div>
+        <div class="card-num">150<span class="card-num-unit">kcal</span></div>
+        <div class="card-portion">Por trozo · ~90 g</div>
+        <div class="card-meta">Pintxo, porción pequeña</div>
       </div>
     </div>
 
-    <!-- Range visualization: el aceite cambia 100 kcal -->
-    <div class="range-viz">
-      <div class="range-viz-title">
-        <span class="range-viz-title-text">El rango de la ración casera según el aceite</span>
-        <span class="range-viz-title-spread">+97 kcal de diferencia</span>
+    <!-- ═══ Range visualization ═══ -->
+    <div class="range">
+      <div class="range-title">
+        <span>Rango de la ración casera según el aceite</span>
+        <span class="range-title-spread">+97 kcal de diferencia</span>
       </div>
       <div class="range-bar">
-        <div class="range-bar-track"></div>
-        <div class="range-bar-marker" style="left: 0%;" title="Versión ligera">339</div>
-        <div class="range-bar-marker active" style="left: 43%;" title="Versión estándar">381</div>
-        <div class="range-bar-marker" style="left: 100%;" title="Versión abundante">436</div>
+        <div class="range-dot" style="left: 0%;"></div>
+        <div class="range-num" style="left: 0%;">339</div>
+        <div class="range-dot active" style="left: 43%;"></div>
+        <div class="range-num active" style="left: 43%;">381</div>
+        <div class="range-dot" style="left: 100%;"></div>
+        <div class="range-num" style="left: 100%;">436</div>
       </div>
-      <div class="range-bar-labels">
-        <span>poco aceite (38g)</span>
-        <span>estándar (57g)</span>
-        <span>abundante / bar (82g)</span>
+      <div class="range-labels">
+        <span>Poco aceite (38 g)</span>
+        <span>Estándar (57 g)</span>
+        <span>Abundante / bar (82 g)</span>
       </div>
-      <p class="range-viz-note">
-        La misma tortilla — mismo tamaño, mismos huevos, misma patata — varía casi 100 kcal solo por el aceite que absorbe. Es el ingrediente más calórico (33% del total) y el más difícil de estimar a ojo.
+      <p class="range-note">
+        La misma tortilla — mismo tamaño, mismos huevos, misma patata — varía casi 100 kcal solo por el aceite que absorbe. Es el ingrediente más calórico (33 % del total) y el más difícil de estimar a ojo.
       </p>
     </div>
 
     <p>
-      Hemos calculado los valores ingrediente a ingrediente usando <strong>BEDCA</strong>, la base de datos oficial española de composición de alimentos validada por el CSIC. El resto del artículo explica de dónde sale cada número, por qué el aceite es el factor que más cambia el resultado y cómo estimar la tortilla sin báscula. Si buscas la <a href="#tabla-completa">tabla nutricional completa</a> con todos los macros, está al final del artículo.
+      Los valores se han calculado ingrediente a ingrediente usando <strong>BEDCA</strong>, la base de datos oficial española de composición de alimentos validada por el CSIC. La <a href="#tabla-completa">tabla nutricional completa</a> con todos los macros está al final del artículo.
     </p>
 
-    <!-- ═══ 2. Metodología ═══ -->
-    <h2>De dónde salen estas calorías</h2>
+    <!-- ═══ Metodología ═══ -->
+    <h2 id="metodologia">De dónde salen estas calorías</h2>
     <p>
       La receta de referencia es una tortilla estándar para cuatro personas: <strong>seis huevos talla L (360g), 600g de patata pelada cruda, 150g de cebolla y aceite de oliva</strong>. Los valores nutricionales de cada ingrediente provienen de BEDCA.
     </p>
@@ -278,8 +276,8 @@
       El cálculo más delicado es el del aceite. No contamos el que se pone en la sartén, sino el que <strong>realmente absorbe la tortilla</strong>: aproximadamente el 60% del aceite de fritura más el que se usa para cuajar el huevo. En la versión estándar son unos 57g — el equivalente a casi cuatro cucharadas soperas en la tortilla final.
     </p>
 
-    <div class="table-scroll">
-    <table class="nutrition-table">
+    <div class="table-wrap">
+    <table class="data">
       <thead>
         <tr>
           <th>Ingrediente</th>
@@ -289,39 +287,39 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td>Huevos (6 × 60g)</td><td class="num">360g</td><td class="num">540</td><td class="num">35%</td></tr>
-        <tr><td>Patata pelada</td><td class="num">600g</td><td class="num">438</td><td class="num">29%</td></tr>
-        <tr><td>Cebolla</td><td class="num">150g</td><td class="num">39</td><td class="num">3%</td></tr>
-        <tr class="nt-bar"><td><strong>Aceite absorbido</strong></td><td class="num">57g</td><td class="num nt-highlight">506</td><td class="num nt-highlight">33%</td></tr>
-        <tr class="nt-row-total"><td><strong>Total tortilla entera</strong></td><td class="num">~1.050g</td><td class="num"><strong>1.523</strong></td><td class="num">100%</td></tr>
+        <tr><td>Huevos (6 × 60 g)</td><td class="num">360 g</td><td class="num">540</td><td class="num">35 %</td></tr>
+        <tr><td>Patata pelada</td><td class="num">600 g</td><td class="num">438</td><td class="num">29 %</td></tr>
+        <tr><td>Cebolla</td><td class="num">150 g</td><td class="num">39</td><td class="num">3 %</td></tr>
+        <tr class="highlight"><td>Aceite absorbido</td><td class="num">57 g</td><td class="num">506</td><td class="num">33 %</td></tr>
+        <tr class="total"><td>Total tortilla entera</td><td class="num">~1.050 g</td><td class="num">1.523</td><td class="num">100 %</td></tr>
       </tbody>
     </table>
     </div>
 
-    <div class="callout">
-      <p>El <strong>aceite representa el 33% de las calorías totales</strong>. Es el ingrediente más calórico de la tortilla — más que los huevos, más que la patata. Y es también el más variable.</p>
+    <div class="note">
+      El <strong>aceite representa el 33 % de las calorías totales</strong>. Es el ingrediente más calórico de la tortilla — más que los huevos, más que la patata. Y es también el más variable.
     </div>
 
-    <!-- ═══ 3. Argumento del aceite ═══ -->
-    <h2>El factor aceite: por qué la misma tortilla puede tener 100 kcal más</h2>
+    <!-- ═══ Aceite ═══ -->
+    <h2 id="aceite">El factor aceite: por qué la misma tortilla puede tener 100 kcal más</h2>
     <p>
       Una tortilla hecha en casa con poco aceite tiene unas <strong>339 kcal por ración</strong>. La misma tortilla en un bar, donde el aceite suele ser más generoso, puede llegar a <strong>436 kcal</strong>. <strong>Son 97 calorías de diferencia — solo por el aceite</strong>. La proteína, los carbohidratos y el tamaño de la ración son idénticos.
     </p>
 
-    <div class="table-scroll">
-    <table class="nutrition-table">
+    <div class="table-wrap">
+    <table class="data">
       <thead>
         <tr>
           <th>Versión</th>
           <th class="num">Aceite absorbido</th>
           <th class="num">Kcal/ración</th>
-          <th class="num">Densidad (kcal/100g)</th>
+          <th class="num">Densidad (kcal/100 g)</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>Ligera (poco aceite)</td><td class="num">38g</td><td class="num"><strong>339</strong></td><td class="num">131</td></tr>
-        <tr class="nt-bar"><td>Estándar <span class="nt-muted">— referencia</span></td><td class="num">57g</td><td class="num nt-highlight">381</td><td class="num">145</td></tr>
-        <tr><td>Abundante / bar</td><td class="num">82g</td><td class="num"><strong>436</strong></td><td class="num">162</td></tr>
+        <tr><td>Ligera (poco aceite)</td><td class="num">38 g</td><td class="num">339</td><td class="num">131</td></tr>
+        <tr class="highlight"><td>Estándar — referencia</td><td class="num">57 g</td><td class="num">381</td><td class="num">145</td></tr>
+        <tr><td>Abundante / bar</td><td class="num">82 g</td><td class="num">436</td><td class="num">162</td></tr>
       </tbody>
     </table>
     </div>
@@ -331,30 +329,30 @@
       Buscar "tortilla española" en una app de nutrición americana es una lotería. La mayoría de las entradas son creadas por usuarios y pocas distinguen entre el aceite que se pone en la sartén y el que realmente absorbe la tortilla. El resultado: puedes registrar la misma tortilla y obtener cifras que difieren en más de 100 kcal según la entrada que elijas.
     </p>
 
-    <div class="table-scroll">
-    <table class="nutrition-table">
+    <div class="table-wrap">
+    <table class="data">
       <thead>
         <tr>
-          <th>Resultados al buscar "tortilla española" en MyFitnessPal</th>
+          <th>Resultado al buscar "tortilla española" en MyFitnessPal</th>
           <th class="num">Kcal</th>
-          <th>Comentario</th>
+          <th>Lectura</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>"Spanish Omelette" — 1 serving</td><td class="num mfp-bad">87</td><td><span class="mfp-bad">Irreal</span> · porción no definida</td></tr>
-        <tr><td>"Tortilla de patata" — 100g</td><td class="num mfp-warn">220</td><td><span class="mfp-warn">Aceite sobreestimado</span></td></tr>
-        <tr><td>"Tortilla española home" — 1 portion</td><td class="num mfp-ok">145</td><td><span class="mfp-ok">Cerca del rango real</span></td></tr>
-        <tr><td>"Spanish potato omelette" — 1 serving</td><td class="num mfp-bad">580</td><td><span class="mfp-bad">Porción gigante</span> · ración no estándar</td></tr>
-        <tr class="mfp-final"><td><strong>Caliro — rango real BEDCA</strong></td><td class="num"><strong>131–162 / 100g</strong></td><td>Según receta, calculado por ingredientes</td></tr>
+        <tr><td>"Spanish Omelette" — 1 serving</td><td class="num">87</td><td><span class="tag-text">Irreal, porción no definida</span></td></tr>
+        <tr><td>"Tortilla de patata" — 100 g</td><td class="num">220</td><td><span class="tag-text">Aceite sobreestimado</span></td></tr>
+        <tr><td>"Tortilla española home" — 1 portion</td><td class="num">145</td><td><span class="tag-text">Cerca del rango real</span></td></tr>
+        <tr><td>"Spanish potato omelette" — 1 serving</td><td class="num">580</td><td><span class="tag-text">Porción gigante, ración no estándar</span></td></tr>
+        <tr class="caliro"><td>Caliro — rango real BEDCA</td><td class="num">131–162 / 100 g</td><td>Según receta, calculado por ingredientes</td></tr>
       </tbody>
     </table>
     </div>
-    <p style="font-size: 13px; color: var(--mid); margin-top: -12px; margin-bottom: 32px;">
-      Ejemplos representativos de la variabilidad en MyFitnessPal abril 2026. Los nombres son aproximados; las cifras reflejan el rango real que encuentras al buscar.
+    <p class="table-source">
+      Ejemplos representativos de la variabilidad en MyFitnessPal abril 2026. Los nombres son aproximados; las cifras reflejan el rango real al buscar.
     </p>
 
-    <!-- ═══ 4. Con vs sin cebolla ═══ -->
-    <h2>Con cebolla vs sin cebolla: el mito de las calorías</h2>
+    <!-- ═══ Con vs sin cebolla ═══ -->
+    <h2 id="cebolla">Con cebolla vs sin cebolla: el mito de las calorías</h2>
     <p>
       La diferencia entre tortilla con cebolla y sin cebolla en términos calóricos es <strong>casi irrelevante</strong>: apenas <strong>10 kcal por ración</strong>. La cebolla aporta 39 kcal al total de la tortilla entera, repartidas entre cuatro personas.
     </p>
@@ -362,26 +360,39 @@
       El debate cebollistas-vs-anticebollistas tiene su sitio en el sabor y la textura, pero no en las calorías. Si te preocupan las kcal, mira el aceite, no la cebolla.
     </p>
 
-    <!-- ═══ 5. Estimar sin báscula ═══ -->
-    <h2>Cómo estimar la tortilla sin báscula</h2>
+    <!-- ═══ Estimar sin báscula ═══ -->
+    <h2 id="estimar">Cómo estimar la tortilla sin báscula</h2>
     <p>
-      No siempre tienes una báscula a mano. Estas son referencias visuales razonables:
+      Sin báscula a mano, estas referencias visuales son razonables:
     </p>
-    <ul>
-      <li><strong>Tortilla entera (4 raciones):</strong> el tamaño de un plato llano estándar, 2-3 cm de grosor. Peso aproximado: 1.050g cocida.</li>
-      <li><strong>Plato principal (1/3 de tortilla):</strong> cuando la tortilla es la comida principal. Algo más grande que la palma de la mano completa, dedos incluidos. Aproximadamente 320-380g.</li>
-      <li><strong>Ración casera (1/4 de tortilla):</strong> el reparto típico para 4 personas. Tamaño de la palma de la mano sin los dedos, 2-3 cm de grosor. Aproximadamente 250-270g.</li>
-      <li><strong>Porción de menú del día:</strong> similar a la casera pero normalmente algo más pequeña — 120-140g.</li>
-      <li><strong>Trozo de bar o pintxo:</strong> algo menor que la palma. Las tortillas de bar suelen ser más finas (1-1.5 cm). Unos 80-100g.</li>
-      <li><strong>Bocadillo:</strong> la capa de tortilla dentro de la barra suele medir 1-2 cm. En un bocadillo de 20 cm hay aproximadamente 90-110g de tortilla, sin contar el pan.</li>
-    </ul>
 
-    <div class="warn-box">
-      <p>Las porciones de bar y restaurante tienen un margen de error mayor que las caseras. La cantidad de aceite varía mucho de un sitio a otro, y el rango ±15% que ves en la tabla es deliberado: es más honesto que un número único falso.</p>
+    <div class="table-wrap estimate-table">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Situación</th>
+          <th>Referencia visual</th>
+          <th class="num">Peso</th>
+          <th class="num">Kcal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Tortilla entera (4 raciones)</td><td>Plato llano, 2-3 cm de grosor</td><td class="num">~1.050 g</td><td class="num">1.523</td></tr>
+        <tr><td>Plato principal (1/3)</td><td>Más que palma con dedos</td><td class="num">~350 g</td><td class="num">508</td></tr>
+        <tr><td>Ración casera (1/4)</td><td>Palma sin dedos, 2-3 cm</td><td class="num">~262 g</td><td class="num">381</td></tr>
+        <tr><td>Menú del día</td><td>Similar a casera, más fina</td><td class="num">~130 g</td><td class="num">189</td></tr>
+        <tr><td>Trozo de bar / pintxo</td><td>Menor que la palma, 1-1,5 cm</td><td class="num">~90 g</td><td class="num">150</td></tr>
+        <tr><td>Bocadillo (solo tortilla)</td><td>Capa 1-2 cm en barra de 20 cm</td><td class="num">~100 g</td><td class="num">145</td></tr>
+      </tbody>
+    </table>
     </div>
 
-    <!-- ═══ 6. Cómo registrarla con precisión ═══ -->
-    <h2>Cómo registrar la tortilla con precisión en una app</h2>
+    <div class="note">
+      Las porciones de bar y restaurante tienen mayor margen de error que las caseras. La cantidad de aceite varía mucho de un sitio a otro, y el rango ±15 % que ves en la tabla es deliberado: es más honesto que un número único falso.
+    </div>
+
+    <!-- ═══ Cómo registrarla con precisión ═══ -->
+    <h2 id="registrar">Cómo registrar la tortilla con precisión en una app</h2>
     <p>
       Tres opciones cuando registras tortilla española en una app de calorías:
     </p>
@@ -391,69 +402,71 @@
       <li><strong>Texto descriptivo</strong> — describe "tortilla española casera, ración" o "trozo de tortilla del bar" y la app calcula desde el contexto, no desde un genérico.</li>
     </ul>
 
-    <div class="tip-box">
-      <div class="tip-label">Consejo</div>
-      <p>Si haces tortilla en casa habitualmente, anota mentalmente cuánto aceite usas en tu receta. Una tortilla con 50ml de aceite total (~38g absorbidos) tiene 339 kcal/ración. Una con 100ml tiene 436. Tu receta probablemente está en algún punto intermedio.</p>
+    <div class="note">
+      Si haces tortilla en casa habitualmente, anota mentalmente cuánto aceite usas en tu receta. Una tortilla con 50 ml de aceite total (~38 g absorbidos) tiene 339 kcal/ración. Una con 100 ml tiene 436. Tu receta probablemente está en algún punto intermedio.
     </div>
 
-    <!-- ═══ 7. FAQ ═══ -->
-    <h2>Preguntas frecuentes</h2>
+    <!-- ═══ FAQ — accordion nativo <details> ═══ -->
+    <h2 id="faq">Preguntas frecuentes</h2>
 
-    <h3>¿La tortilla española engorda?</h3>
-    <p>
-      Una ración casera aporta unas <strong>381 kcal</strong> — similar a un plato de pasta con tomate o un bocadillo de jamón serrano. No engorda por sí sola; depende del total de calorías diarias y del resto de tu dieta. Si controlas el aceite, puede formar parte de una dieta de pérdida de peso sin problemas.
-    </p>
+    <div class="faq-list">
+      <details>
+        <summary>¿La tortilla española engorda?</summary>
+        <p>Una ración casera aporta unas <strong>381 kcal</strong> — similar a un plato de pasta con tomate o un bocadillo de jamón serrano. No engorda por sí sola; depende del total de calorías diarias y del resto de tu dieta. Si controlas el aceite, puede formar parte de una dieta de pérdida de peso sin problemas.</p>
+      </details>
 
-    <h3>¿La tortilla sin cebolla tiene menos calorías?</h3>
-    <p>
-      Muy pocas. La cebolla aporta unas 39 kcal al total de la tortilla para cuatro personas — unos 10 kcal por ración. La diferencia es prácticamente insignificante. El factor determinante es la cantidad de aceite, no la cebolla.
-    </p>
+      <details>
+        <summary>¿La tortilla sin cebolla tiene menos calorías?</summary>
+        <p>Muy pocas. La cebolla aporta unas 39 kcal al total de la tortilla para cuatro personas — unos 10 kcal por ración. La diferencia es prácticamente insignificante. El factor determinante es la cantidad de aceite, no la cebolla.</p>
+      </details>
 
-    <h3>¿Cuántas calorías tiene un trozo de tortilla en un bar?</h3>
-    <p>
-      Entre <strong>127 y 172 kcal por trozo de unos 90g</strong>. Las tortillas de bar suelen llevar más aceite que las caseras, pero la porción es más pequeña. El resultado final es comparable a un tercio de una ración casera.
-    </p>
+      <details>
+        <summary>¿Cuántas calorías tiene un trozo de tortilla en un bar?</summary>
+        <p>Entre <strong>127 y 172 kcal por trozo de unos 90 g</strong>. Las tortillas de bar suelen llevar más aceite que las caseras, pero la porción es más pequeña. El resultado final es comparable a un tercio de una ración casera.</p>
+      </details>
 
-    <h3>¿Cuántas calorías tiene la tortilla de patata por 100g?</h3>
-    <p>
-      En la versión estándar, aproximadamente <strong>145 kcal por 100g</strong>. La versión ligera (poco aceite) baja a unos 131 kcal/100g, y la versión más aceitosa puede llegar a 162 kcal/100g.
-    </p>
+      <details>
+        <summary>¿Cuántas calorías tiene la tortilla de patata por 100 g?</summary>
+        <p>En la versión estándar, aproximadamente <strong>145 kcal por 100 g</strong>. La versión ligera (poco aceite) baja a unos 131 kcal/100 g, y la versión más aceitosa puede llegar a 162 kcal/100 g.</p>
+      </details>
 
-    <h3>¿Cómo se diferencia la tortilla española de la francesa en calorías?</h3>
-    <p>
-      Una tortilla francesa de 2 huevos aporta unas <strong>200-250 kcal</strong> según el aceite que uses. La española tiene más calorías por ración porque suma la patata, el aceite absorbido en la fritura y, si la incluyes, la cebolla. Una ración casera de española tiene entre 339 y 436 kcal.
-    </p>
+      <details>
+        <summary>¿Cómo se diferencia la tortilla española de la francesa en calorías?</summary>
+        <p>Una tortilla francesa de 2 huevos aporta unas <strong>200-250 kcal</strong> según el aceite que uses. La española tiene más calorías por ración porque suma la patata, el aceite absorbido en la fritura y, si la incluyes, la cebolla. Una ración casera de española tiene entre 339 y 436 kcal.</p>
+      </details>
 
-    <h3>¿Cómo reducir las calorías de la tortilla sin perder sabor?</h3>
-    <p>
-      Tres palancas reales:
-    </p>
-    <ul>
-      <li><strong>Patatas al horno o microondas en lugar de fritas</strong> — recortes ~150 kcal por ración.</li>
-      <li><strong>Mitad huevos enteros y mitad claras</strong> — recortes ~80 kcal por ración.</li>
-      <li><strong>Secar bien las patatas tras escurrirlas</strong> — recortes ~50 kcal por absorber menos aceite.</li>
-    </ul>
-    <p>
-      El cambio más grande es siempre el aceite — reducirlo a la mitad puede bajar la ración a 339 kcal sin tocar el resto.
-    </p>
+      <details>
+        <summary>¿Cómo reducir las calorías de la tortilla sin perder sabor?</summary>
+        <ul>
+          <li><strong>Patatas al horno o microondas en lugar de fritas</strong> — recortes ~150 kcal por ración.</li>
+          <li><strong>Mitad huevos enteros y mitad claras</strong> — recortes ~80 kcal por ración.</li>
+          <li><strong>Secar bien las patatas tras escurrirlas</strong> — recortes ~50 kcal por absorber menos aceite.</li>
+        </ul>
+        <p>El cambio más grande es siempre el aceite — reducirlo a la mitad puede bajar la ración a 339 kcal sin tocar el resto.</p>
+      </details>
 
-    <h3>¿Es buena la tortilla española para perder peso?</h3>
-    <p>
-      Tiene <strong>15g de proteína por ración</strong>, lo que la hace saciante y útil para mantener masa muscular en déficit calórico. Si la haces ligera (~339 kcal/ración) y la combinas con ensalada, encaja bien en una dieta hipocalórica. El error común es comerla en un bocadillo grande o con pan abundante: ahí el total se dispara fácilmente a 600-800 kcal.
-    </p>
+      <details>
+        <summary>¿Es buena la tortilla española para perder peso?</summary>
+        <p>Tiene <strong>15 g de proteína por ración</strong>, lo que la hace saciante y útil para mantener masa muscular en déficit calórico. Si la haces ligera (~339 kcal/ración) y la combinas con ensalada, encaja bien en una dieta hipocalórica. El error común es comerla en un bocadillo grande o con pan abundante: ahí el total se dispara fácilmente a 600-800 kcal.</p>
+      </details>
 
-    <h3>¿Cómo registro la tortilla española en una app de calorías?</h3>
-    <p>
-      Si usas <a href="/">Caliro</a>, puedes fotografiarla directamente y el sistema estima la porción teniendo en cuenta las variantes reales. Si corriges el resultado, la app aprende tu versión específica para las próximas veces. Si quieres calcular tu necesidad calórica diaria, también tenemos una <a href="/blog/calculadora-tdee">calculadora de TDEE gratuita</a>.
-    </p>
+      <details>
+        <summary>¿Cómo registro la tortilla española en una app de calorías?</summary>
+        <p>Si usas <a href="/">Caliro</a>, puedes fotografiarla directamente y el sistema estima la porción teniendo en cuenta las variantes reales. Si corriges el resultado, la app aprende tu versión específica para las próximas veces. Si quieres calcular tu necesidad calórica diaria, también tenemos una <a href="/blog/calculadora-tdee">calculadora de TDEE gratuita</a>.</p>
+      </details>
+    </div>
 
-    <!-- ═══ 8. Tabla técnica completa (referencia, al final) ═══ -->
+    <!-- ═══ Tabla técnica completa ═══ -->
     <h2 id="tabla-completa">Tabla nutricional completa por situación</h2>
     <p>
       Datos finos para quien necesita los macros exactos. Misma información que las cards de arriba, ampliada con proteína, carbohidratos, grasa y rango de variabilidad.
     </p>
-    <div class="table-scroll">
-    <table class="nutrition-table">
+    <p>
+      Datos finos para quien necesita los macros exactos. Misma información que las cards de arriba, ampliada con proteína, carbohidratos, grasa y rango de variabilidad.
+    </p>
+
+    <div class="table-wrap">
+    <table class="data">
       <thead>
         <tr>
           <th>Situación</th>
@@ -466,81 +479,33 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Plato principal (1/3 de tortilla)</td>
-          <td class="num">~350g</td>
-          <td class="num nt-highlight">508</td>
-          <td class="num nt-muted">451–582</td>
-          <td class="num">20g</td>
-          <td class="num">33.1g</td>
-          <td class="num">32.7g</td>
-        </tr>
-        <tr>
-          <td>Ración casera con cebolla</td>
-          <td class="num">262g</td>
-          <td class="num nt-highlight">381</td>
-          <td class="num nt-muted">339–436</td>
-          <td class="num">15g</td>
-          <td class="num">24.8g</td>
-          <td class="num">24.6g</td>
-        </tr>
-        <tr>
-          <td>Ración casera sin cebolla</td>
-          <td class="num">252g</td>
-          <td class="num nt-highlight">371</td>
-          <td class="num nt-muted">329–427</td>
-          <td class="num">14.6g</td>
-          <td class="num">22.8g</td>
-          <td class="num">24.6g</td>
-        </tr>
-        <tr>
-          <td>Porción de menú del día</td>
-          <td class="num">~130g</td>
-          <td class="num nt-highlight">189</td>
-          <td class="num nt-muted">160–217</td>
-          <td class="num">7.4g</td>
-          <td class="num">12.3g</td>
-          <td class="num">12.2g</td>
-        </tr>
-        <tr>
-          <td>Trozo de bar / pintxo</td>
-          <td class="num">~90g</td>
-          <td class="num nt-highlight">150</td>
-          <td class="num nt-muted">127–172</td>
-          <td class="num">5.1g</td>
-          <td class="num">8.5g</td>
-          <td class="num">10.6g</td>
-        </tr>
-        <tr>
-          <td>Bocadillo (solo tortilla)</td>
-          <td class="num">~100g</td>
-          <td class="num nt-highlight">145</td>
-          <td class="num nt-muted">123–167</td>
-          <td class="num">5.7g</td>
-          <td class="num">9.4g</td>
-          <td class="num">9.4g</td>
-        </tr>
+        <tr><td>Plato principal (1/3 de tortilla)</td><td class="num">~350 g</td><td class="num">508</td><td class="num">451–582</td><td class="num">20 g</td><td class="num">33,1 g</td><td class="num">32,7 g</td></tr>
+        <tr class="highlight"><td>Ración casera con cebolla</td><td class="num">262 g</td><td class="num">381</td><td class="num">339–436</td><td class="num">15 g</td><td class="num">24,8 g</td><td class="num">24,6 g</td></tr>
+        <tr><td>Ración casera sin cebolla</td><td class="num">252 g</td><td class="num">371</td><td class="num">329–427</td><td class="num">14,6 g</td><td class="num">22,8 g</td><td class="num">24,6 g</td></tr>
+        <tr><td>Porción de menú del día</td><td class="num">~130 g</td><td class="num">189</td><td class="num">160–217</td><td class="num">7,4 g</td><td class="num">12,3 g</td><td class="num">12,2 g</td></tr>
+        <tr><td>Trozo de bar / pintxo</td><td class="num">~90 g</td><td class="num">150</td><td class="num">127–172</td><td class="num">5,1 g</td><td class="num">8,5 g</td><td class="num">10,6 g</td></tr>
+        <tr><td>Bocadillo (solo tortilla)</td><td class="num">~100 g</td><td class="num">145</td><td class="num">123–167</td><td class="num">5,7 g</td><td class="num">9,4 g</td><td class="num">9,4 g</td></tr>
       </tbody>
     </table>
     </div>
-    <p style="font-size: 13px; color: var(--mid); margin-top: 8px; margin-bottom: 32px; font-style: italic;">
-      Fuente: cálculo ingrediente a ingrediente desde BEDCA (CSIC). Valores orientativos — variabilidad real ±15% según receta y aceite. <span style="display: block; margin-top: 4px; color: var(--mid);">📱 En mobile, desliza la tabla horizontalmente para ver todos los macros.</span>
+    <p class="table-source">
+      Fuente: cálculo ingrediente a ingrediente desde BEDCA (CSIC). Valores orientativos — variabilidad real ±15 % según receta y aceite. En móvil, desliza la tabla horizontalmente para ver todos los macros.
     </p>
 
     <!-- ═══ CTA ═══ -->
-    <div class="article-cta">
+    <div class="cta-block">
       <h3>Registra la tortilla española sin buscar entre 50 entradas</h3>
-      <p>Caliro identifica el plato por foto y aplica los rangos reales de la cocina española. Gratis, sin anuncios, con un motor que aprende cómo comes tú.</p>
-      <a href="/app/register">Probar Caliro gratis →</a>
+      <p>Caliro identifica el plato por foto y aplica los rangos reales de la cocina española. Gratis, sin anuncios.</p>
+      <a href="/app/register" class="cta-btn">Probar Caliro gratis →</a>
     </div>
 
     <!-- ═══ Disclaimer ═══ -->
-    <div class="disclaimer">
+    <p class="disclaimer">
       Los valores son estimaciones orientativas calculadas desde BEDCA (Base de Datos Española de Composición de Alimentos, CSIC). La composición real varía según la receta, los ingredientes y las cantidades utilizadas. Esta información no sustituye el asesoramiento de un dietista-nutricionista colegiado.
-    </div>
+    </p>
 
     <!-- ═══ Autor ═══ -->
-    <div class="article-author">
+    <div class="author">
       <div class="author-avatar">L</div>
       <div>
         <div class="author-name">Luca</div>
@@ -548,17 +513,17 @@
       </div>
     </div>
 
-    <!-- ═══ Artículos relacionados ═══ -->
+    <!-- ═══ Relacionados ═══ -->
     <div class="related">
       <div class="related-label">También te puede interesar</div>
       <div class="related-grid">
+        <a href="/blog/calorias-croquetas" class="related-card">
+          <div class="related-tag">Calorías de platos</div>
+          <div class="related-title">Calorías de las croquetas</div>
+        </a>
         <a href="/blog/contar-calorias-ia" class="related-card">
           <div class="related-tag">Guía</div>
           <div class="related-title">Cómo contar calorías con IA en 2026</div>
-        </a>
-        <a href="/blog/alternativa-myfitnesspal-espana" class="related-card">
-          <div class="related-tag">Comparativa</div>
-          <div class="related-title">Por qué dejé MyFitnessPal</div>
         </a>
         <a href="/blog/calculadora-tdee" class="related-card">
           <div class="related-tag">Herramienta</div>
