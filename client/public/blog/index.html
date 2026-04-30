@@ -183,11 +183,35 @@ nav {
   max-width: 600px;
 }
 
-/* SCIENCE GRID — 2-col, mismo card style con divisor central */
+/* ─────────────────────────────────────────────────────────────
+   3 IDIOMAS VISUALES — un por sección
+   1. Tools    -> bg blanco + green-left accent (look actionable)
+   2. Datos    -> kcal grande tipográfico (look data-driven)
+   3. Lectura  -> numeración 01/02/03 (look magazine TOC)
+   ───────────────────────────────────────────────────────────── */
+
+/* IDIOMA 1: TOOLS — card con bg blanco + green-left accent */
+.blog-section--tools .article-card {
+  background: var(--white);
+  padding: 32px 32px 28px;
+  border: 1px solid var(--light);
+  border-left: 3px solid var(--green);
+  border-bottom: 1px solid var(--light);
+  margin-top: 8px;
+  transition: padding 0.25s ease, border-color 0.25s ease;
+}
+.blog-section--tools .article-card:hover {
+  padding-left: 38px;
+  border-color: var(--green);
+}
+.blog-section--tools .article-card:hover .card-title { color: var(--dark); }
+
+/* IDIOMA 2: DATOS — Big kcal number (data-forward) */
 .science-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
+  margin-top: 8px;
 }
 .science-grid .article-card {
   padding: 28px 28px 28px 0;
@@ -197,16 +221,41 @@ nav {
   padding-left: 28px;
   border-left: 1px solid var(--light);
 }
-/* En el grid el "featured" es solo la primera, ambas iguales por simetría */
-.science-grid .article-card:first-of-type .card-title,
+.kcal-feature {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--dark);
+  margin-bottom: 4px;
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: -0.02em;
+  transition: color 0.2s ease;
+}
+.kcal-feature-unit {
+  font-family: var(--sans);
+  font-style: normal;
+  font-size: 14px;
+  color: var(--mid);
+  margin-left: 4px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+.kcal-context {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mid);
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+.science-grid .article-card:hover .kcal-feature { color: var(--green); }
+.science-grid .article-card:hover .card-title { color: var(--dark); }
 .science-grid .article-card .card-title {
-  font-size: clamp(22px, 2.4vw, 26px);
+  font-size: clamp(20px, 2.2vw, 24px);
   line-height: 1.2;
 }
-.science-grid .article-card:first-of-type .card-desc,
-.science-grid .article-card .card-desc {
-  font-size: 14px;
-}
+.science-grid .article-card .card-desc { font-size: 13.5px; max-width: 100%; }
 .science-grid .article-card:hover { padding-left: 0; }
 .science-grid .article-card:nth-child(even):hover { padding-left: 28px; }
 @media (max-width: 600px) {
@@ -217,9 +266,43 @@ nav {
     border-left: none;
   }
   .science-grid .article-card:nth-child(even):hover { padding-left: 8px; }
+  .kcal-feature { font-size: 44px; }
 }
 
-/* ARTICLES LIST */
+/* IDIOMA 3: LECTURA — Numeración magazine TOC */
+.articles--numbered {
+  display: flex;
+  flex-direction: column;
+  counter-reset: art;
+  margin-top: 8px;
+}
+.articles--numbered .article-card {
+  counter-increment: art;
+  padding: 28px 0 28px 64px;
+  position: relative;
+}
+.articles--numbered .article-card::before {
+  content: counter(art, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 28px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--mid);
+  line-height: 1;
+  font-variant-numeric: oldstyle-nums;
+  transition: color 0.25s ease;
+}
+.articles--numbered .article-card:hover::before { color: var(--green); }
+.articles--numbered .article-card:hover { padding-left: 72px; }
+@media (max-width: 600px) {
+  .articles--numbered .article-card { padding-left: 48px; }
+  .articles--numbered .article-card::before { font-size: 18px; }
+  .articles--numbered .article-card:hover { padding-left: 56px; }
+}
+
+/* ARTICLES LIST (legacy fallback) */
 .articles { display: flex; flex-direction: column; }
 
 /* FOOTER */
@@ -255,8 +338,8 @@ footer {
     <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
   </div>
 
-  <!-- ═══ Sección: Herramientas ═══ -->
-  <section class="blog-section">
+  <!-- ═══ IDIOMA 1: Herramientas (look actionable, white-card) ═══ -->
+  <section class="blog-section blog-section--tools">
     <div class="section-divider">
       <span class="section-label">Herramientas</span>
       <span class="section-meta">Gratis · Sin registro</span>
@@ -271,7 +354,7 @@ footer {
     </a>
   </section>
 
-  <!-- ═══ Sección: Calorías de platos (datos científicos) ═══ -->
+  <!-- ═══ IDIOMA 2: Calorías de platos (look data-forward, kcal grande) ═══ -->
   <section class="blog-section">
     <div class="section-divider">
       <span class="section-label">Calorías de platos</span>
@@ -279,18 +362,16 @@ footer {
     </div>
     <div class="science-grid">
       <a href="/blog/calorias-croquetas" class="article-card">
-        <div class="card-meta">
-          <span class="card-date">Abril 2026 · 7 min</span>
-        </div>
+        <div class="kcal-feature">155<span class="kcal-feature-unit">kcal</span></div>
+        <div class="kcal-context">Por croqueta casera · Abril 2026 · 7 min</div>
         <div class="card-title">Calorías de las croquetas</div>
         <div class="card-desc">155 kcal por croqueta casera, 664 una ración de bar — más que una paella. El aceite del rebozado pesa más que cualquier relleno.</div>
         <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
       </a>
 
       <a href="/blog/calorias-tortilla-espanola" class="article-card">
-        <div class="card-meta">
-          <span class="card-date">Abril 2026 · 7 min</span>
-        </div>
+        <div class="kcal-feature">381<span class="kcal-feature-unit">kcal</span></div>
+        <div class="kcal-context">Por ración casera · Abril 2026 · 7 min</div>
         <div class="card-title">Calorías de la tortilla española</div>
         <div class="card-desc">381 kcal por ración casera, 150 por trozo de bar. El aceite absorbido es el factor que cambia todo — y casi ninguna app lo modela bien.</div>
         <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
@@ -298,13 +379,13 @@ footer {
     </div>
   </section>
 
-  <!-- ═══ Sección: Artículos y guías ═══ -->
+  <!-- ═══ IDIOMA 3: Artículos y guías (look magazine TOC, numerados) ═══ -->
   <section class="blog-section">
     <div class="section-divider">
       <span class="section-label">Artículos y guías</span>
       <span class="section-meta">Opinión · Comparativas</span>
     </div>
-    <div class="articles">
+    <div class="articles--numbered">
       <a href="/blog/cal-ai-2026-opinion" class="article-card">
         <div class="card-meta">
           <span class="card-tag">Comparativas</span>
