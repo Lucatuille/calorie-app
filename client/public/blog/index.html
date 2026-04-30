@@ -59,7 +59,7 @@ nav {
 }
 
 .blog-header {
-  margin-bottom: 48px;
+  margin-bottom: 64px;
 }
 .blog-label {
   font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
@@ -71,157 +71,83 @@ nav {
   line-height: 1.08;
 }
 
-/* SECTIONS */
+/* SECTION DIVIDERS — masthead style con dot accent */
 .blog-section { margin-top: 64px; }
 .blog-section:first-of-type { margin-top: 0; }
 
-.section-header {
-  margin-bottom: 20px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--light);
-}
-.section-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--green);
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-.section-title {
-  font-family: var(--serif);
-  font-size: 28px;
-  line-height: 1.2;
-  margin-bottom: 6px;
-  font-weight: 400;
-}
-.section-desc {
-  font-size: 14px;
-  color: var(--mid);
-  font-weight: 300;
-  line-height: 1.6;
-  max-width: 540px;
-}
-
-/* PINNED CARD (Calculadora TDEE) */
-.pinned-card {
-  display: block;
-  background: var(--white);
-  border: 1px solid var(--light);
-  border-left: 3px solid var(--green);
-  padding: 24px 28px;
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 0.2s;
-}
-.pinned-card:hover { border-color: var(--green); }
-.pinned-card .card-meta { margin-bottom: 12px; }
-.pinned-card .card-title {
-  font-family: var(--serif);
-  font-size: 24px;
-  line-height: 1.25;
+.section-divider {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--dark);
   margin-bottom: 8px;
 }
-.pinned-card .card-desc {
-  font-size: 14px;
-  color: var(--mid);
-  line-height: 1.6;
-  font-weight: 300;
-  margin-bottom: 10px;
-}
-.pinned-card .card-cta {
-  font-size: 13px;
-  color: var(--green);
-  font-weight: 500;
-}
-
-/* SCIENCE GRID — Calorías de platos (2-col cards) */
-.science-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  border-top: 1px solid var(--light);
-  border-bottom: 1px solid var(--light);
-}
-.science-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 24px;
-  text-decoration: none;
-  color: inherit;
-  transition: background 0.2s;
-}
-.science-card:nth-child(odd) {
-  border-right: 1px solid var(--light);
-}
-.science-card:hover { background: var(--white); }
-.science-card .card-date {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--mid);
-}
-.science-card .card-title {
+.section-label {
   font-family: var(--serif);
-  font-size: 22px;
-  line-height: 1.25;
-  color: var(--dark);
+  font-size: clamp(22px, 2.4vw, 28px);
   font-weight: 400;
+  line-height: 1;
+  color: var(--dark);
+  position: relative;
+  padding-left: 22px;
 }
-.science-card .card-desc {
-  font-size: 13px;
+.section-label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  background: var(--green);
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+.section-meta {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--mid);
-  line-height: 1.6;
-  font-weight: 300;
-  flex-grow: 1;
-}
-.science-card .card-cta {
-  font-size: 13px;
-  color: var(--green);
   font-weight: 500;
 }
-@media (max-width: 600px) {
-  .science-grid { grid-template-columns: 1fr; }
-  .science-card:nth-child(odd) { border-right: none; border-bottom: 1px solid var(--light); }
-}
 
-/* ARTICLES LIST (vertical, opinión + guías) */
-.articles { display: flex; flex-direction: column; gap: 2px; }
-
+/* CARD BASE — usado en todas las secciones */
 .article-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 24px 0;
+  padding: 28px 0;
   border-bottom: 1px solid var(--light);
   text-decoration: none;
   color: inherit;
-  transition: opacity 0.2s;
+  transition: padding 0.25s ease;
 }
-.article-card:first-child { border-top: 1px solid var(--light); }
-.article-card:hover { opacity: 0.72; }
+.article-card:last-child { border-bottom: none; }
+.article-card:hover { padding-left: 8px; }
 
 .card-meta {
-  display: flex; align-items: center; gap: 10px;
-}
-.card-tag {
-  background: var(--white);
-  border: 1px solid var(--light);
-  border-radius: 100px;
-  padding: 3px 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--mid);
+  font-weight: 500;
 }
-.card-date { font-size: 12px; color: var(--mid); }
+.card-tag { color: var(--mid); }
+.card-date { color: var(--mid); }
 
 .card-title {
   font-family: var(--serif);
-  font-size: clamp(20px, 3vw, 26px);
+  font-size: clamp(22px, 2.6vw, 28px);
   line-height: 1.2;
   color: var(--dark);
   font-weight: 400;
+  transition: color 0.2s ease;
 }
+.article-card:hover .card-title { color: var(--green); }
 
 .card-desc {
   font-size: 14px;
@@ -235,7 +161,66 @@ nav {
   font-size: 13px;
   color: var(--green);
   font-weight: 500;
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
+.cta-arrow {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+.article-card:hover .cta-arrow { transform: translateX(4px); }
+
+/* FEATURED — primera card de cada sección con jerarquía mayor */
+.blog-section .article-card:first-of-type .card-title {
+  font-size: clamp(26px, 3.2vw, 34px);
+  line-height: 1.15;
+}
+.blog-section .article-card:first-of-type .card-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+/* SCIENCE GRID — 2-col, mismo card style con divisor central */
+.science-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.science-grid .article-card {
+  padding: 28px 28px 28px 0;
+  border-bottom: 1px solid var(--light);
+}
+.science-grid .article-card:nth-child(even) {
+  padding-left: 28px;
+  border-left: 1px solid var(--light);
+}
+/* En el grid el "featured" es solo la primera, ambas iguales por simetría */
+.science-grid .article-card:first-of-type .card-title,
+.science-grid .article-card .card-title {
+  font-size: clamp(22px, 2.4vw, 26px);
+  line-height: 1.2;
+}
+.science-grid .article-card:first-of-type .card-desc,
+.science-grid .article-card .card-desc {
+  font-size: 14px;
+}
+.science-grid .article-card:hover { padding-left: 0; }
+.science-grid .article-card:nth-child(even):hover { padding-left: 28px; }
+@media (max-width: 600px) {
+  .science-grid { grid-template-columns: 1fr; }
+  .science-grid .article-card { padding: 24px 0; }
+  .science-grid .article-card:nth-child(even) {
+    padding-left: 0;
+    border-left: none;
+  }
+  .science-grid .article-card:nth-child(even):hover { padding-left: 8px; }
+}
+
+/* ARTICLES LIST */
+.articles { display: flex; flex-direction: column; }
 
 /* FOOTER */
 footer {
@@ -270,49 +255,55 @@ footer {
     <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
   </div>
 
-  <!-- ═══ Featured tool: Calculadora TDEE ═══ -->
-  <a href="/blog/calculadora-tdee" class="pinned-card">
-    <div class="card-meta">
-      <span class="card-tag" style="background: var(--green); color: white; border-color: var(--green);">Herramienta gratuita</span>
+  <!-- ═══ Sección: Herramientas ═══ -->
+  <section class="blog-section">
+    <div class="section-divider">
+      <span class="section-label">Herramientas</span>
+      <span class="section-meta">Gratis · Sin registro</span>
     </div>
-    <div class="card-title">Calculadora TDEE — Calcula tus calorías diarias</div>
-    <div class="card-desc">Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados, proyección de peso. Sin registro.</div>
-    <div class="card-cta">Usar calculadora →</div>
-  </a>
+    <a href="/blog/calculadora-tdee" class="article-card">
+      <div class="card-meta">
+        <span class="card-tag">Calculadora</span>
+      </div>
+      <div class="card-title">Calculadora TDEE — Calcula tus calorías diarias</div>
+      <div class="card-desc">Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados, proyección de peso.</div>
+      <span class="card-cta">Usar calculadora <span class="cta-arrow">→</span></span>
+    </a>
+  </section>
 
   <!-- ═══ Sección: Calorías de platos (datos científicos) ═══ -->
   <section class="blog-section">
-    <div class="section-header">
-      <div class="section-eyebrow">Datos verificados</div>
-      <h2 class="section-title">Calorías de platos</h2>
-      <p class="section-desc">Calorías calculadas ingrediente a ingrediente desde BEDCA, con rangos reales. Sin estimaciones genéricas de apps americanas.</p>
+    <div class="section-divider">
+      <span class="section-label">Calorías de platos</span>
+      <span class="section-meta">Datos verificados BEDCA</span>
     </div>
-
     <div class="science-grid">
-      <a href="/blog/calorias-croquetas" class="science-card">
-        <span class="card-date">Abril 2026 · 7 min</span>
+      <a href="/blog/calorias-croquetas" class="article-card">
+        <div class="card-meta">
+          <span class="card-date">Abril 2026 · 7 min</span>
+        </div>
         <div class="card-title">Calorías de las croquetas</div>
         <div class="card-desc">155 kcal por croqueta casera, 664 una ración de bar — más que una paella. El aceite del rebozado pesa más que cualquier relleno.</div>
-        <span class="card-cta">Leer artículo →</span>
+        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
       </a>
 
-      <a href="/blog/calorias-tortilla-espanola" class="science-card">
-        <span class="card-date">Abril 2026 · 7 min</span>
+      <a href="/blog/calorias-tortilla-espanola" class="article-card">
+        <div class="card-meta">
+          <span class="card-date">Abril 2026 · 7 min</span>
+        </div>
         <div class="card-title">Calorías de la tortilla española</div>
         <div class="card-desc">381 kcal por ración casera, 150 por trozo de bar. El aceite absorbido es el factor que cambia todo — y casi ninguna app lo modela bien.</div>
-        <span class="card-cta">Leer artículo →</span>
+        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
       </a>
     </div>
   </section>
 
   <!-- ═══ Sección: Artículos y guías ═══ -->
   <section class="blog-section">
-    <div class="section-header">
-      <div class="section-eyebrow">Lectura</div>
-      <h2 class="section-title">Artículos y guías</h2>
-      <p class="section-desc">Opinión, comparativas y guías sobre apps de nutrición y cómo contar calorías sin volverse loco.</p>
+    <div class="section-divider">
+      <span class="section-label">Artículos y guías</span>
+      <span class="section-meta">Opinión · Comparativas</span>
     </div>
-
     <div class="articles">
       <a href="/blog/cal-ai-2026-opinion" class="article-card">
         <div class="card-meta">
@@ -321,7 +312,7 @@ footer {
         </div>
         <div class="card-title">Cal AI en 2026: opinión honesta después de usarla un mes</div>
         <div class="card-desc">Cal AI es la app de calorías más descargada del momento. La usé un mes. Esto es lo que funciona, lo que no, y por qué cambié.</div>
-        <div class="card-cta">Leer artículo →</div>
+        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
       </a>
 
       <a href="/blog/contar-calorias-ia" class="article-card">
@@ -331,7 +322,7 @@ footer {
         </div>
         <div class="card-title">Cómo contar calorías con IA en 2026</div>
         <div class="card-desc">Foto, voz o texto — la IA calcula las calorías en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona de verdad.</div>
-        <div class="card-cta">Leer artículo →</div>
+        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
       </a>
 
       <a href="/blog/alternativa-myfitnesspal-espana" class="article-card">
@@ -341,7 +332,7 @@ footer {
         </div>
         <div class="card-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
         <div class="card-desc">MyFitnessPal tiene 11 millones de alimentos y no sabe lo que es un bocadillo de lomo. Cuento qué pasó y qué cambié.</div>
-        <div class="card-cta">Leer artículo →</div>
+        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
       </a>
     </div>
   </section>
