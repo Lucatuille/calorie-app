@@ -71,21 +71,21 @@ nav {
   line-height: 1.08;
 }
 
-/* SECTION DIVIDERS — masthead style con dot accent */
-.blog-section { margin-top: 64px; }
+/* SECTION DIVIDERS — masthead con dot verde */
+.blog-section { margin-top: 56px; }
 .blog-section:first-of-type { margin-top: 0; }
 
 .section-divider {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding-bottom: 16px;
-  border-bottom: 1.5px solid var(--dark);
-  margin-bottom: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dark);
+  margin-bottom: 4px;
 }
 .section-label {
   font-family: var(--serif);
-  font-size: clamp(22px, 2.4vw, 28px);
+  font-size: clamp(24px, 2.6vw, 30px);
   font-weight: 400;
   line-height: 1;
   color: var(--dark);
@@ -111,57 +111,89 @@ nav {
   font-weight: 500;
 }
 
-/* CARD BASE — usado en todas las secciones */
-.article-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 28px 0;
-  border-bottom: 1px solid var(--light);
+/* FEATURED — Hero del index, articulo mas reciente */
+.featured {
+  display: block;
+  background: var(--white);
+  border: 1px solid var(--light);
+  border-left: 3px solid var(--green);
+  padding: 36px 40px 30px;
   text-decoration: none;
   color: inherit;
-  transition: padding 0.25s ease;
+  margin-bottom: 64px;
+  transition: padding 0.3s ease, border-color 0.3s ease;
 }
-.article-card:last-child { border-bottom: none; }
-.article-card:hover { padding-left: 8px; }
-
-.card-meta {
+.featured:hover {
+  padding-left: 48px;
+  border-color: var(--green);
+}
+.featured-meta {
   display: flex;
+  justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
   font-size: 11px;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--mid);
+  font-weight: 500;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--light);
+}
+.featured-eyebrow {
+  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.featured-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.featured-title {
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.6vw, 42px);
+  line-height: 1.08;
+  font-weight: 400;
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+.featured:hover .featured-title { color: var(--green); }
+.featured-desc {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--mid);
+  font-weight: 300;
+  margin-bottom: 22px;
+  max-width: 640px;
+}
+.featured-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--mid);
   font-weight: 500;
 }
-.card-tag { color: var(--mid); }
-.card-date { color: var(--mid); }
-
-.card-title {
-  font-family: var(--serif);
-  font-size: clamp(22px, 2.6vw, 28px);
-  line-height: 1.2;
-  color: var(--dark);
-  font-weight: 400;
-  transition: color 0.2s ease;
-}
-.article-card:hover .card-title { color: var(--green); }
-
-.card-desc {
-  font-size: 14px;
-  color: var(--mid);
-  line-height: 1.65;
-  font-weight: 300;
-  max-width: 560px;
-}
-
-.card-cta {
+.featured-cta {
+  font-family: var(--sans);
   font-size: 13px;
   color: var(--green);
   font-weight: 500;
-  margin-top: 4px;
+  letter-spacing: normal;
+  text-transform: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -170,140 +202,102 @@ nav {
   display: inline-block;
   transition: transform 0.25s ease;
 }
-.article-card:hover .cta-arrow { transform: translateX(4px); }
+.featured:hover .cta-arrow { transform: translateX(4px); }
 
-/* FEATURED — primera card de cada sección con jerarquía mayor */
-.blog-section .article-card:first-of-type .card-title {
-  font-size: clamp(26px, 3.2vw, 34px);
-  line-height: 1.15;
-}
-.blog-section .article-card:first-of-type .card-desc {
-  font-size: 15px;
-  line-height: 1.6;
-  max-width: 600px;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   3 IDIOMAS VISUALES — un por sección
-   1. Tools    -> bg blanco + green-left accent (look actionable)
-   2. Datos    -> kcal grande tipográfico (look data-driven)
-   3. Lectura  -> numeración 01/02/03 (look magazine TOC)
-   ───────────────────────────────────────────────────────────── */
-
-/* IDIOMA 1: TOOLS — card con bg blanco + green-left accent */
-.blog-section--tools .article-card {
-  background: var(--white);
-  padding: 32px 32px 28px;
-  border: 1px solid var(--light);
-  border-left: 3px solid var(--green);
-  border-bottom: 1px solid var(--light);
-  margin-top: 8px;
-  transition: padding 0.25s ease, border-color 0.25s ease;
-}
-.blog-section--tools .article-card:hover {
-  padding-left: 38px;
-  border-color: var(--green);
-}
-.blog-section--tools .article-card:hover .card-title { color: var(--dark); }
-
-/* IDIOMA 2: DATOS — Big kcal number (data-forward) */
-.science-grid {
+/* COMPACT LIST — todas las secciones la usan, marker+title+meta */
+.compact-list { margin-top: 4px; }
+.compact-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  margin-top: 8px;
-}
-.science-grid .article-card {
-  padding: 28px 28px 28px 0;
+  grid-template-columns: 110px 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 22px 0;
   border-bottom: 1px solid var(--light);
+  text-decoration: none;
+  color: inherit;
+  transition: padding 0.25s ease, background 0.2s ease;
 }
-.science-grid .article-card:nth-child(even) {
-  padding-left: 28px;
-  border-left: 1px solid var(--light);
+.compact-row:last-child { border-bottom: none; }
+.compact-row:hover {
+  padding-left: 12px;
+  padding-right: 12px;
+  background: rgba(255,255,255,0.5);
 }
-.kcal-feature {
+
+.row-marker {
   font-family: var(--serif);
   font-style: italic;
-  font-size: 56px;
+  font-size: 24px;
+  color: var(--mid);
   line-height: 1;
-  color: var(--dark);
-  margin-bottom: 4px;
   font-variant-numeric: oldstyle-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
   transition: color 0.2s ease;
 }
-.kcal-feature-unit {
+.row-marker-unit {
   font-family: var(--sans);
   font-style: normal;
-  font-size: 14px;
-  color: var(--mid);
-  margin-left: 4px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-}
-.kcal-context {
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--mid);
-  margin-bottom: 18px;
-  font-weight: 500;
+  margin-left: 3px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
 }
-.science-grid .article-card:hover .kcal-feature { color: var(--green); }
-.science-grid .article-card:hover .card-title { color: var(--dark); }
-.science-grid .article-card .card-title {
-  font-size: clamp(20px, 2.2vw, 24px);
-  line-height: 1.2;
-}
-.science-grid .article-card .card-desc { font-size: 13.5px; max-width: 100%; }
-.science-grid .article-card:hover { padding-left: 0; }
-.science-grid .article-card:nth-child(even):hover { padding-left: 28px; }
-@media (max-width: 600px) {
-  .science-grid { grid-template-columns: 1fr; }
-  .science-grid .article-card { padding: 24px 0; }
-  .science-grid .article-card:nth-child(even) {
-    padding-left: 0;
-    border-left: none;
-  }
-  .science-grid .article-card:nth-child(even):hover { padding-left: 8px; }
-  .kcal-feature { font-size: 44px; }
-}
+.compact-row:hover .row-marker { color: var(--green); }
 
-/* IDIOMA 3: LECTURA — Numeración magazine TOC */
-.articles--numbered {
-  display: flex;
-  flex-direction: column;
-  counter-reset: art;
-  margin-top: 8px;
-}
-.articles--numbered .article-card {
-  counter-increment: art;
-  padding: 28px 0 28px 64px;
-  position: relative;
-}
-.articles--numbered .article-card::before {
-  content: counter(art, decimal-leading-zero);
-  position: absolute;
-  left: 0;
-  top: 28px;
+.row-title {
   font-family: var(--serif);
-  font-style: italic;
-  font-size: 22px;
-  color: var(--mid);
-  line-height: 1;
-  font-variant-numeric: oldstyle-nums;
-  transition: color 0.25s ease;
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.25;
+  color: var(--dark);
+  font-weight: 400;
+  transition: color 0.2s ease;
 }
-.articles--numbered .article-card:hover::before { color: var(--green); }
-.articles--numbered .article-card:hover { padding-left: 72px; }
-@media (max-width: 600px) {
-  .articles--numbered .article-card { padding-left: 48px; }
-  .articles--numbered .article-card::before { font-size: 18px; }
-  .articles--numbered .article-card:hover { padding-left: 56px; }
-}
+.compact-row:hover .row-title { color: var(--green); }
 
-/* ARTICLES LIST (legacy fallback) */
-.articles { display: flex; flex-direction: column; }
+.row-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mid);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.row-arrow {
+  display: inline-block;
+  color: var(--green);
+  font-size: 14px;
+  letter-spacing: 0;
+  transition: transform 0.25s ease;
+}
+.compact-row:hover .row-arrow { transform: translateX(4px); }
+
+@media (max-width: 600px) {
+  .compact-row {
+    grid-template-columns: 70px 1fr;
+    gap: 16px;
+    padding: 18px 0;
+  }
+  .compact-row:hover { padding-left: 4px; padding-right: 0; }
+  .row-meta { display: none; }
+  .row-marker { font-size: 20px; }
+  .featured { padding: 28px 24px; }
+  .featured:hover { padding-left: 32px; }
+  .featured-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .featured-foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
 
 /* FOOTER */
 footer {
@@ -338,82 +332,94 @@ footer {
     <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
   </div>
 
-  <!-- ═══ IDIOMA 1: Herramientas (look actionable, white-card) ═══ -->
-  <section class="blog-section blog-section--tools">
+  <!-- ═══ FEATURED — Hero del index, articulo más reciente ═══ -->
+  <a href="/blog/calorias-croquetas" class="featured">
+    <div class="featured-meta">
+      <span class="featured-eyebrow">Más reciente</span>
+      <span>Datos · Abril 2026 · 7 min</span>
+    </div>
+    <h2 class="featured-title">Calorías de las croquetas: por qué el aceite del rebozado pesa más que el relleno</h2>
+    <p class="featured-desc">Una ración de tres croquetas grandes en un bar tiene casi 700 calorías — más que una paella o un bocadillo de jamón. La mayoría de la gente las estima en la mitad porque cada croqueta parece pequeña. El motivo real no es el relleno: es el aceite que absorbe el rebozado.</p>
+    <div class="featured-foot">
+      <span>Calculado desde BEDCA</span>
+      <span class="featured-cta">Leer artículo <span class="cta-arrow">→</span></span>
+    </div>
+  </a>
+
+  <!-- ═══ Sección: Datos (compact list con kcal markers) ═══ -->
+  <section class="blog-section">
+    <div class="section-divider">
+      <span class="section-label">Datos</span>
+      <span class="section-meta">2 artículos · Verificados BEDCA</span>
+    </div>
+    <div class="compact-list">
+      <a class="compact-row" href="/blog/calorias-croquetas">
+        <span class="row-marker">155<span class="row-marker-unit">kcal</span></span>
+        <span class="row-title">Calorías de las croquetas</span>
+        <span class="row-meta">
+          <span>7 min</span>
+          <span class="row-arrow">→</span>
+        </span>
+      </a>
+      <a class="compact-row" href="/blog/calorias-tortilla-espanola">
+        <span class="row-marker">381<span class="row-marker-unit">kcal</span></span>
+        <span class="row-title">Calorías de la tortilla española</span>
+        <span class="row-meta">
+          <span>7 min</span>
+          <span class="row-arrow">→</span>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ Sección: Herramientas (compact list con tool name marker) ═══ -->
+  <section class="blog-section">
     <div class="section-divider">
       <span class="section-label">Herramientas</span>
-      <span class="section-meta">Gratis · Sin registro</span>
+      <span class="section-meta">1 herramienta · Gratis</span>
     </div>
-    <a href="/blog/calculadora-tdee" class="article-card">
-      <div class="card-meta">
-        <span class="card-tag">Calculadora</span>
-      </div>
-      <div class="card-title">Calculadora TDEE — Calcula tus calorías diarias</div>
-      <div class="card-desc">Fórmulas Mifflin-St Jeor y Katch-McArdle, macros personalizados, proyección de peso.</div>
-      <span class="card-cta">Usar calculadora <span class="cta-arrow">→</span></span>
-    </a>
-  </section>
-
-  <!-- ═══ IDIOMA 2: Calorías de platos (look data-forward, kcal grande) ═══ -->
-  <section class="blog-section">
-    <div class="section-divider">
-      <span class="section-label">Calorías de platos</span>
-      <span class="section-meta">Datos verificados BEDCA</span>
-    </div>
-    <div class="science-grid">
-      <a href="/blog/calorias-croquetas" class="article-card">
-        <div class="kcal-feature">155<span class="kcal-feature-unit">kcal</span></div>
-        <div class="kcal-context">Por croqueta casera · Abril 2026 · 7 min</div>
-        <div class="card-title">Calorías de las croquetas</div>
-        <div class="card-desc">155 kcal por croqueta casera, 664 una ración de bar — más que una paella. El aceite del rebozado pesa más que cualquier relleno.</div>
-        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
-      </a>
-
-      <a href="/blog/calorias-tortilla-espanola" class="article-card">
-        <div class="kcal-feature">381<span class="kcal-feature-unit">kcal</span></div>
-        <div class="kcal-context">Por ración casera · Abril 2026 · 7 min</div>
-        <div class="card-title">Calorías de la tortilla española</div>
-        <div class="card-desc">381 kcal por ración casera, 150 por trozo de bar. El aceite absorbido es el factor que cambia todo — y casi ninguna app lo modela bien.</div>
-        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
+    <div class="compact-list">
+      <a class="compact-row" href="/blog/calculadora-tdee">
+        <span class="row-marker">TDEE</span>
+        <span class="row-title">Calculadora — Calcula tus calorías diarias</span>
+        <span class="row-meta">
+          <span>Sin registro</span>
+          <span class="row-arrow">→</span>
+        </span>
       </a>
     </div>
   </section>
 
-  <!-- ═══ IDIOMA 3: Artículos y guías (look magazine TOC, numerados) ═══ -->
+  <!-- ═══ Sección: Lectura (compact list numerada 01/02/03) ═══ -->
   <section class="blog-section">
     <div class="section-divider">
-      <span class="section-label">Artículos y guías</span>
-      <span class="section-meta">Opinión · Comparativas</span>
+      <span class="section-label">Lectura</span>
+      <span class="section-meta">3 artículos · Opinión y guías</span>
     </div>
-    <div class="articles--numbered">
-      <a href="/blog/cal-ai-2026-opinion" class="article-card">
-        <div class="card-meta">
-          <span class="card-tag">Comparativas</span>
-          <span class="card-date">Abril 2026 · 5 min</span>
-        </div>
-        <div class="card-title">Cal AI en 2026: opinión honesta después de usarla un mes</div>
-        <div class="card-desc">Cal AI es la app de calorías más descargada del momento. La usé un mes. Esto es lo que funciona, lo que no, y por qué cambié.</div>
-        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
+    <div class="compact-list">
+      <a class="compact-row" href="/blog/cal-ai-2026-opinion">
+        <span class="row-marker">01</span>
+        <span class="row-title">Cal AI en 2026: opinión honesta tras un mes</span>
+        <span class="row-meta">
+          <span>5 min · Comparativa</span>
+          <span class="row-arrow">→</span>
+        </span>
       </a>
-
-      <a href="/blog/contar-calorias-ia" class="article-card">
-        <div class="card-meta">
-          <span class="card-tag">Guías</span>
-          <span class="card-date">Abril 2026 · 6 min</span>
-        </div>
-        <div class="card-title">Cómo contar calorías con IA en 2026</div>
-        <div class="card-desc">Foto, voz o texto — la IA calcula las calorías en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona de verdad.</div>
-        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
+      <a class="compact-row" href="/blog/contar-calorias-ia">
+        <span class="row-marker">02</span>
+        <span class="row-title">Cómo contar calorías con IA en 2026</span>
+        <span class="row-meta">
+          <span>6 min · Guía</span>
+          <span class="row-arrow">→</span>
+        </span>
       </a>
-
-      <a href="/blog/alternativa-myfitnesspal-espana" class="article-card">
-        <div class="card-meta">
-          <span class="card-tag">Herramientas</span>
-          <span class="card-date">Marzo 2026 · 5 min</span>
-        </div>
-        <div class="card-title">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
-        <div class="card-desc">MyFitnessPal tiene 11 millones de alimentos y no sabe lo que es un bocadillo de lomo. Cuento qué pasó y qué cambié.</div>
-        <span class="card-cta">Leer artículo <span class="cta-arrow">→</span></span>
+      <a class="compact-row" href="/blog/alternativa-myfitnesspal-espana">
+        <span class="row-marker">03</span>
+        <span class="row-title">Por qué dejé MyFitnessPal (y qué uso ahora)</span>
+        <span class="row-meta">
+          <span>5 min · Opinión</span>
+          <span class="row-arrow">→</span>
+        </span>
       </a>
     </div>
   </section>
