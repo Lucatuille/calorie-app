@@ -59,16 +59,40 @@ nav {
 }
 
 .blog-header {
-  margin-bottom: 64px;
+  margin-bottom: 56px;
 }
-.blog-label {
-  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
-  color: var(--mid); margin-bottom: 14px;
+.blog-masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mid);
+  font-weight: 500;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dark);
+  margin-bottom: 36px;
+}
+.blog-masthead-name {
+  color: var(--dark);
+  font-weight: 500;
 }
 .blog-title {
   font-family: var(--serif);
-  font-size: clamp(36px, 5vw, 56px);
-  line-height: 1.08;
+  font-size: clamp(40px, 5.4vw, 60px);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+}
+.blog-tagline {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(18px, 1.9vw, 22px);
+  color: var(--mid);
+  line-height: 1.4;
+  margin-top: 22px;
+  max-width: 540px;
+  font-weight: 400;
 }
 
 /* SECTION DIVIDERS — masthead con dot verde */
@@ -117,15 +141,18 @@ nav {
   background: var(--white);
   border: 1px solid var(--light);
   border-left: 3px solid var(--green);
+  border-radius: 6px;
   padding: 36px 40px 30px;
   text-decoration: none;
   color: inherit;
   margin-bottom: 64px;
-  transition: padding 0.3s ease, border-color 0.3s ease;
+  transition: padding 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
 }
 .featured:hover {
   padding-left: 48px;
   border-color: var(--green);
+  box-shadow: 0 8px 24px -8px rgba(34, 197, 94, 0.15), 0 1px 0 rgba(0,0,0,0.02);
 }
 .featured-meta {
   display: flex;
@@ -344,8 +371,12 @@ footer {
 <main class="blog-wrap">
 
   <div class="blog-header">
-    <div class="blog-label">Blog</div>
+    <div class="blog-masthead">
+      <span class="blog-masthead-name">Caliro Blog</span>
+      <span>Abril 2026</span>
+    </div>
     <h1 class="blog-title">Nutrición sin<br><em style="font-style:italic;color:var(--green);">complicaciones</em></h1>
+    <p class="blog-tagline">Datos calculados desde BEDCA, herramientas gratuitas y opinión honesta sobre apps de nutrición.</p>
   </div>
 
   <!-- ═══ FEATURED — Hero del index, articulo más reciente ═══ -->
