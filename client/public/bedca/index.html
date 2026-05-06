@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+<title>BEDCA Database — Caliro (privado)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+<style>
+/* ============================================================
+   BEDCA database — herramienta personal de Luca para acumular
+   ingredientes verificados al escribir artículos del blog.
+   100% local (localStorage). No public-facing.
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --paper:      #FAFAF7;
+  --paper-soft: #F5F3EC;
+  --ink:        #1a1a1a;
+  --ink-soft:   #2a2a2a;
+  --gray:       #6b6b6b;
+  --gray-light: #989898;
+  --rule:       #e0ddd5;
+  --rule-soft:  #efece5;
+  --highlight:  #f0ede2;
+  --green:      #16a34a;
+  --green-bg:   #dcfce7;
+  --green-fg:   #15803d;
+  --amber:      #f59e0b;
+  --amber-bg:   #fef3c7;
+  --amber-fg:   #92400e;
+  --red:        #dc2626;
+  --red-bg:     #fee2e2;
+  --red-fg:     #991b1b;
+  --blue:       #3b82f6;
+  --blue-bg:    #dbeafe;
+  --blue-fg:    #1e40af;
+  --serif:      'Instrument Serif', Georgia, serif;
+  --sans:       'DM Sans', -apple-system, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
+  min-height: 100vh;
+}
+
+/* ── HEADER ────────────────────────────────────────────────── */
+.app-header {
+  border-bottom: 1px solid var(--rule);
+  padding: 24px 32px 20px;
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.app-title {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.app-title-accent { color: var(--green); font-style: italic; }
+.app-tagline {
+  font-size: 12px;
+  color: var(--gray);
+  letter-spacing: 0.02em;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.private-badge {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gray);
+  font-weight: 500;
+  border: 1px solid var(--rule);
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+
+/* ── COUNTERS ──────────────────────────────────────────────── */
+.counters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 24px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.counter {
+  background: white;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.counter-num {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.counter-num.green { color: var(--green); }
+.counter-num.amber { color: var(--amber); }
+.counter-num.blue  { color: var(--blue); }
+.counter-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+/* ── TOOLBAR ───────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 0 32px 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.search-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 14px;
+  background: white;
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.search-input:focus { outline: none; border-color: var(--green); }
+.filter-select {
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  background: white;
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 160px;
+}
+.filter-select:focus { outline: none; border-color: var(--green); }
+.btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--rule);
+  background: white;
+  color: var(--ink);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--paper-soft); }
+.btn-primary {
+  background: var(--green);
+  color: white;
+  border-color: var(--green);
+}
+.btn-primary:hover { background: var(--green-fg); border-color: var(--green-fg); }
+.btn-danger {
+  background: white;
+  color: var(--red);
+  border-color: var(--rule);
+}
+.btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
+
+/* ── TABLE ─────────────────────────────────────────────────── */
+.table-wrap {
+  background: white;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  margin: 0 32px 32px;
+  overflow: hidden;
+  max-width: calc(1280px - 0px);
+  margin-left: auto;
+  margin-right: auto;
+}
+.table-wrap-inner {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-soft);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+thead th.sortable { cursor: pointer; }
+thead th.sortable:hover { color: var(--ink); }
+thead th .sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  opacity: 0.4;
+  font-size: 9px;
+  color: var(--gray);
+}
+thead th.sorted .sort-arrow { opacity: 1; color: var(--green); }
+tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: middle;
+  color: var(--ink-soft);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--paper-soft); }
+.col-num { text-align: right; }
+.col-name {
+  font-weight: 500;
+  color: var(--ink);
+  min-width: 180px;
+}
+.col-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Status pills */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.pill-verified { background: var(--green-bg); color: var(--green-fg); }
+.pill-pending  { background: var(--amber-bg); color: var(--amber-fg); }
+.pill-estimate { background: var(--blue-bg);  color: var(--blue-fg); }
+
+/* Recipe tags */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tag {
+  background: var(--paper-soft);
+  border: 1px solid var(--rule);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.notes {
+  font-size: 12px;
+  color: var(--gray);
+  line-height: 1.4;
+  max-width: 200px;
+}
+
+/* Action icon buttons */
+.icon-btn {
+  background: none;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray);
+  transition: all 0.15s;
+}
+.icon-btn:hover { background: var(--paper-soft); color: var(--ink); }
+.icon-btn.icon-btn-danger:hover { background: var(--red-bg); color: var(--red); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+/* Empty state */
+.empty-state {
+  padding: 80px 32px;
+  text-align: center;
+  color: var(--gray);
+}
+.empty-state-icon {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 48px;
+  color: var(--gray-light);
+  margin-bottom: 12px;
+}
+.empty-state-msg {
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+.empty-state-sub {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+/* ── MODAL ─────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+}
+.modal-header {
+  padding: 24px 28px 16px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.modal-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--gray);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.modal-close:hover { background: var(--paper-soft); color: var(--ink); }
+.modal-body { padding: 24px 28px; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-grid-full { grid-column: 1 / -1; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray);
+  font-weight: 500;
+}
+.form-label-required::after { content: " *"; color: var(--red); }
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 14px;
+  background: white;
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus { outline: none; border-color: var(--green); }
+.form-textarea { resize: vertical; min-height: 60px; font-family: var(--sans); }
+.form-hint { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.modal-footer {
+  padding: 16px 28px 24px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.modal-footer-actions { display: flex; gap: 8px; }
+
+/* ── TOAST ─────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: var(--ink);
+  color: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  animation: toast-in 0.25s ease;
+}
+.toast.success { background: var(--green-fg); }
+.toast.error { background: var(--red); }
+@keyframes toast-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ── MOBILE ────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-header { padding: 18px 20px 14px; }
+  .app-title { font-size: 24px; }
+  .counters { grid-template-columns: 1fr 1fr; padding: 18px 20px; gap: 12px; }
+  .counter { padding: 14px 16px; }
+  .counter-num { font-size: 28px; }
+  .toolbar { padding: 0 20px 16px; }
+  .search-input, .filter-select { width: 100%; min-width: 0; }
+  .filter-select { min-width: 0; }
+  .table-wrap { margin: 0 20px 24px; }
+  thead th { font-size: 10px; padding: 10px 12px; }
+  tbody td { padding: 10px 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .modal { max-height: 95vh; border-radius: 12px 12px 0 0; }
+  .modal-header { padding: 18px 20px 12px; }
+  .modal-body { padding: 18px 20px; }
+  .modal-footer { padding: 14px 20px 18px; flex-direction: column-reverse; }
+  .modal-footer-actions { width: 100%; }
+  .modal-footer-actions .btn { flex: 1; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-row">
+    <h1 class="app-title">Base de datos <span class="app-title-accent">BEDCA</span></h1>
+    <span class="private-badge">Privado · Local</span>
+  </div>
+  <p class="app-tagline">Ingredientes verificados personalmente en bedca.net · Acumula al añadir cada receta nueva del blog</p>
+</header>
+
+<section class="counters">
+  <div class="counter">
+    <div class="counter-num" id="counter-total">0</div>
+    <div class="counter-label">Ingredientes</div>
+  </div>
+  <div class="counter">
+    <div class="counter-num green" id="counter-verified">0</div>
+    <div class="counter-label">Verificados BEDCA</div>
+  </div>
+  <div class="counter">
+    <div class="counter-num amber" id="counter-pending">0</div>
+    <div class="counter-label">Pendientes</div>
+  </div>
+  <div class="counter">
+    <div class="counter-num blue" id="counter-recipes">0</div>
+    <div class="counter-label">Recetas cubiertas</div>
+  </div>
+</section>
+
+<section class="toolbar">
+  <input type="search" class="search-input" id="search" placeholder="Buscar ingrediente…" autocomplete="off">
+  <select class="filter-select" id="filter-status">
+    <option value="">Todos los estados</option>
+    <option value="verificado">Solo verificados</option>
+    <option value="pendiente">Solo pendientes</option>
+    <option value="estimado">Solo estimados</option>
+  </select>
+  <select class="filter-select" id="filter-category">
+    <option value="">Todas las categorías</option>
+  </select>
+  <select class="filter-select" id="filter-recipe">
+    <option value="">Todas las recetas</option>
+  </select>
+  <button class="btn" id="btn-export-json" title="Descargar JSON con toda la base">Export JSON</button>
+  <button class="btn" id="btn-export-sql" title="Descargar .sql con CREATE + INSERTs (para D1)">Export SQL</button>
+  <button class="btn" id="btn-import-json" title="Importar desde JSON (reemplaza la base actual)">Import</button>
+  <input type="file" id="file-input" accept=".json" style="display:none">
+  <button class="btn btn-primary" id="btn-add">+ Añadir ingrediente</button>
+</section>
+
+<div class="table-wrap">
+  <div class="table-wrap-inner">
+    <table id="table">
+      <thead>
+        <tr>
+          <th class="sortable" data-sort="nombre">Ingrediente <span class="sort-arrow">▼</span></th>
+          <th class="sortable" data-sort="categoria">Categoría <span class="sort-arrow">▼</span></th>
+          <th class="col-num sortable" data-sort="kcal_100g">Kcal/100g <span class="sort-arrow">▼</span></th>
+          <th class="col-num">Prot</th>
+          <th class="col-num">Carb</th>
+          <th class="col-num">Grasa</th>
+          <th>Estado</th>
+          <th>Recetas</th>
+          <th>Notas</th>
+          <th class="col-actions"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ Modal ═══ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">Añadir ingrediente</h2>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <form id="form" class="modal-body">
+      <input type="hidden" id="f-id">
+      <div class="form-grid">
+        <div class="form-field form-grid-full">
+          <label class="form-label form-label-required" for="f-nombre">Nombre</label>
+          <input type="text" class="form-input" id="f-nombre" required placeholder="ej. Aceite de oliva virgen extra">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="f-bedca-id">BEDCA ID</label>
+          <input type="text" class="form-input" id="f-bedca-id" placeholder="opcional, ej. F012345">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label form-label-required" for="f-categoria">Categoría</label>
+          <select class="form-select" id="f-categoria" required>
+            <option value="">— elegir —</option>
+            <option value="proteina_animal">Proteína animal</option>
+            <option value="pescado">Pescado</option>
+            <option value="lacteo">Lácteo</option>
+            <option value="huevo">Huevo</option>
+            <option value="cereal">Cereal/pan</option>
+            <option value="verdura">Verdura</option>
+            <option value="fruta">Fruta</option>
+            <option value="legumbre">Legumbre</option>
+            <option value="grasa">Grasa/aceite</option>
+            <option value="condimento">Condimento</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label form-label-required" for="f-estado">Estado</label>
+          <select class="form-select" id="f-estado" required>
+            <option value="pendiente">Pendiente</option>
+            <option value="verificado">✓ Verificado BEDCA</option>
+            <option value="estimado">~ Estimado</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="f-kcal">Kcal/100g</label>
+          <input type="number" step="any" class="form-input" id="f-kcal" placeholder="0">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="f-prot">Proteína g/100g</label>
+          <input type="number" step="any" class="form-input" id="f-prot" placeholder="0">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="f-carb">Carbohidratos g/100g</label>
+          <input type="number" step="any" class="form-input" id="f-carb" placeholder="0">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="f-grasa">Grasa g/100g</label>
+          <input type="number" step="any" class="form-input" id="f-grasa" placeholder="0">
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="f-fibra">Fibra g/100g</label>
+          <input type="number" step="any" class="form-input" id="f-fibra" placeholder="opcional">
+        </div>
+
+        <div class="form-field form-grid-full">
+          <label class="form-label" for="f-recetas">Recetas (separadas por coma)</label>
+          <input type="text" class="form-input" id="f-recetas" placeholder="ej. tortilla, croquetas, paella">
+          <span class="form-hint">Lower-case, sin tildes. Las recetas son tags simples.</span>
+        </div>
+
+        <div class="form-field form-grid-full">
+          <label class="form-label" for="f-notas">Notas</label>
+          <textarea class="form-textarea" id="f-notas" rows="2" placeholder="ej. Densidad 0.92 g/ml · Búsqueda BEDCA: 'aceite oliva' · Notas técnicas"></textarea>
+        </div>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-delete" style="display:none">Eliminar</button>
+      <div class="modal-footer-actions" style="margin-left:auto">
+        <button class="btn" id="btn-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+/* ============================================================
+   STATE — localStorage with versioned schema
+   ============================================================ */
+const STORAGE_KEY = 'caliro_bedca_db_v1';
+const SCHEMA_VERSION = 1;
+
+const CATEGORY_LABELS = {
+  proteina_animal: 'Proteína animal',
+  pescado: 'Pescado',
+  lacteo: 'Lácteo',
+  huevo: 'Huevo',
+  cereal: 'Cereal/pan',
+  verdura: 'Verdura',
+  fruta: 'Fruta',
+  legumbre: 'Legumbre',
+  grasa: 'Grasa/aceite',
+  condimento: 'Condimento',
+  otro: 'Otro',
+};
+
+let db = {
+  version: SCHEMA_VERSION,
+  ingredients: [],
+  lastModified: null,
+};
+let sortBy = 'nombre';
+let sortDir = 'asc';
+
+/* ── Seed inicial — solo si la DB está vacía ───────────────── */
+const SEED = [
+  { nombre: 'Aceite de oliva', categoria: 'grasa',
+    kcal_100g: 888, prot_g_100g: 0, carb_g_100g: 0, grasa_g_100g: 100,
+    estado: 'verificado', recetas: ['tortilla','croquetas','canelones'],
+    notas: 'Densidad 0.92 g/ml' },
+  { nombre: 'Cebolla cruda', categoria: 'verdura',
+    kcal_100g: 26, prot_g_100g: 1.12, carb_g_100g: 5.3, grasa_g_100g: 0,
+    estado: 'verificado', recetas: ['tortilla','croquetas','canelones'],
+    notas: 'Grasa = trace (0)' },
+  { nombre: 'Harina de trigo', categoria: 'cereal',
+    kcal_100g: 333, prot_g_100g: 10, carb_g_100g: 71.5, grasa_g_100g: 0,
+    estado: 'verificado', recetas: ['croquetas','canelones'],
+    notas: 'Grasa = trace (0)' },
+  { nombre: 'Huevo de gallina entero, crudo', categoria: 'huevo',
+    kcal_100g: 150, prot_g_100g: 12.5, carb_g_100g: 0, grasa_g_100g: 11.1,
+    estado: 'verificado', recetas: ['tortilla','croquetas'],
+    notas: 'Carbos = trace (negligible). 1 huevo M ≈ 60g, 1 huevo L ≈ 65-70g' },
+  { nombre: 'Jamón serrano', categoria: 'proteina_animal',
+    kcal_100g: 319, prot_g_100g: 28.8, carb_g_100g: 0.2, grasa_g_100g: 22.6,
+    estado: 'verificado', recetas: ['croquetas'],
+    notas: '' },
+  { nombre: 'Ajo crudo', categoria: 'verdura',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "ajo, crudo"' },
+  { nombre: 'Carne picada de cerdo', categoria: 'proteina_animal',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "carne picada de cerdo"' },
+  { nombre: 'Carne picada de ternera', categoria: 'proteina_animal',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "carne picada de vacuno"' },
+  { nombre: 'Espinacas frescas, crudas', categoria: 'verdura',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "espinacas, crudas"' },
+];
+
+/* ── Helpers ───────────────────────────────────────────────── */
+function uuid() {
+  return 'i_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+}
+
+function load() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.version === SCHEMA_VERSION && Array.isArray(parsed.ingredients)) {
+        db = parsed;
+        return;
+      }
+    } catch (e) { console.warn('localStorage parse failed', e); }
+  }
+  // Seed inicial
+  db.ingredients = SEED.map(seed => ({
+    id: uuid(),
+    nombre: seed.nombre,
+    bedca_id: '',
+    categoria: seed.categoria,
+    kcal_100g: seed.kcal_100g ?? null,
+    prot_g_100g: seed.prot_g_100g ?? null,
+    carb_g_100g: seed.carb_g_100g ?? null,
+    grasa_g_100g: seed.grasa_g_100g ?? null,
+    fibra_g_100g: null,
+    estado: seed.estado,
+    recetas: seed.recetas || [],
+    notas: seed.notas || '',
+    fecha_verificacion: seed.estado === 'verificado' ? new Date().toISOString().slice(0,10) : null,
+    ultima_edicion: new Date().toISOString(),
+  }));
+  save();
+}
+
+function save() {
+  db.lastModified = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+}
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+/* ── Render ─────────────────────────────────────────────────── */
+function getFilteredIngredients() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const fStatus = document.getElementById('filter-status').value;
+  const fCategoria = document.getElementById('filter-category').value;
+  const fRecipe = document.getElementById('filter-recipe').value;
+
+  let list = db.ingredients.filter(ing => {
+    if (q && !ing.nombre.toLowerCase().includes(q) && !ing.notas.toLowerCase().includes(q)) return false;
+    if (fStatus && ing.estado !== fStatus) return false;
+    if (fCategoria && ing.categoria !== fCategoria) return false;
+    if (fRecipe && !ing.recetas.includes(fRecipe)) return false;
+    return true;
+  });
+
+  list.sort((a, b) => {
+    let av = a[sortBy], bv = b[sortBy];
+    if (av == null) av = '';
+    if (bv == null) bv = '';
+    if (typeof av === 'string') {
+      av = av.toLowerCase(); bv = String(bv).toLowerCase();
+      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    return sortDir === 'asc' ? av - bv : bv - av;
+  });
+
+  return list;
+}
+
+function renderTable() {
+  const list = getFilteredIngredients();
+  const tbody = document.getElementById('tbody');
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10">
+      <div class="empty-state">
+        <div class="empty-state-icon">∅</div>
+        <div class="empty-state-msg">${db.ingredients.length === 0 ? 'No hay ingredientes todavía' : 'No hay coincidencias'}</div>
+        <div class="empty-state-sub">${db.ingredients.length === 0 ? 'Pulsa "+ Añadir ingrediente" para empezar.' : 'Prueba a quitar filtros o borrar la búsqueda.'}</div>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(ing => {
+    const num = (v) => v == null || v === '' ? '<span style="color:var(--gray-light)">—</span>' : v + 'g';
+    const kcal = ing.kcal_100g == null ? '<span style="color:var(--gray-light)">—</span>' : ing.kcal_100g;
+    const pillClass = ing.estado === 'verificado' ? 'pill-verified'
+                    : ing.estado === 'pendiente'  ? 'pill-pending'
+                    : 'pill-estimate';
+    const pillIcon = ing.estado === 'verificado' ? '✓' : ing.estado === 'pendiente' ? '○' : '~';
+    const pillText = ing.estado === 'verificado' ? 'BEDCA' : ing.estado === 'pendiente' ? 'Pendiente' : 'Estimado';
+    const tags = ing.recetas.map(r => `<span class="tag">${escapeHtml(r)}</span>`).join('');
+    return `<tr>
+      <td class="col-name">${escapeHtml(ing.nombre)}</td>
+      <td>${CATEGORY_LABELS[ing.categoria] || ing.categoria || '—'}</td>
+      <td class="col-num">${kcal}</td>
+      <td class="col-num">${num(ing.prot_g_100g)}</td>
+      <td class="col-num">${num(ing.carb_g_100g)}</td>
+      <td class="col-num">${num(ing.grasa_g_100g)}</td>
+      <td><span class="pill ${pillClass}">${pillIcon} ${pillText}</span></td>
+      <td><div class="tags">${tags || '<span style="color:var(--gray-light)">—</span>'}</div></td>
+      <td><div class="notes">${escapeHtml(ing.notas || '')}</div></td>
+      <td class="col-actions">
+        <button class="icon-btn" data-action="edit" data-id="${ing.id}" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn icon-btn-danger" data-action="delete" data-id="${ing.id}" title="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderCounters() {
+  const ings = db.ingredients;
+  document.getElementById('counter-total').textContent = ings.length;
+  document.getElementById('counter-verified').textContent = ings.filter(i => i.estado === 'verificado').length;
+  document.getElementById('counter-pending').textContent = ings.filter(i => i.estado === 'pendiente').length;
+  const recipes = new Set();
+  ings.forEach(i => (i.recetas || []).forEach(r => recipes.add(r)));
+  document.getElementById('counter-recipes').textContent = recipes.size;
+}
+
+function renderRecipeFilter() {
+  const recipes = new Set();
+  db.ingredients.forEach(i => (i.recetas || []).forEach(r => recipes.add(r)));
+  const sel = document.getElementById('filter-recipe');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todas las recetas</option>' +
+    [...recipes].sort().map(r => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+  if (current && recipes.has(current)) sel.value = current;
+}
+
+function renderCategoryFilter() {
+  const sel = document.getElementById('filter-category');
+  const current = sel.value;
+  const options = '<option value="">Todas las categorías</option>' +
+    Object.entries(CATEGORY_LABELS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  sel.innerHTML = options;
+  if (current) sel.value = current;
+}
+
+function renderAll() {
+  renderCategoryFilter();
+  renderRecipeFilter();
+  renderCounters();
+  renderTable();
+}
+
+/* ── Modal ─────────────────────────────────────────────────── */
+function openModal(ingredient = null) {
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-title').textContent = ingredient ? 'Editar ingrediente' : 'Añadir ingrediente';
+  document.getElementById('btn-delete').style.display = ingredient ? '' : 'none';
+  document.getElementById('f-id').value = ingredient?.id || '';
+  document.getElementById('f-nombre').value = ingredient?.nombre || '';
+  document.getElementById('f-bedca-id').value = ingredient?.bedca_id || '';
+  document.getElementById('f-categoria').value = ingredient?.categoria || '';
+  document.getElementById('f-estado').value = ingredient?.estado || 'pendiente';
+  document.getElementById('f-kcal').value = ingredient?.kcal_100g ?? '';
+  document.getElementById('f-prot').value = ingredient?.prot_g_100g ?? '';
+  document.getElementById('f-carb').value = ingredient?.carb_g_100g ?? '';
+  document.getElementById('f-grasa').value = ingredient?.grasa_g_100g ?? '';
+  document.getElementById('f-fibra').value = ingredient?.fibra_g_100g ?? '';
+  document.getElementById('f-recetas').value = (ingredient?.recetas || []).join(', ');
+  document.getElementById('f-notas').value = ingredient?.notas || '';
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('f-nombre').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function saveFromForm() {
+  const id = document.getElementById('f-id').value;
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if (!nombre) { toast('Nombre obligatorio', 'error'); return; }
+  const categoria = document.getElementById('f-categoria').value;
+  if (!categoria) { toast('Categoría obligatoria', 'error'); return; }
+  const estado = document.getElementById('f-estado').value;
+
+  const numOrNull = v => { const x = parseFloat(v); return isNaN(x) ? null : x; };
+
+  const recetas = document.getElementById('f-recetas').value
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  const data = {
+    nombre,
+    bedca_id: document.getElementById('f-bedca-id').value.trim(),
+    categoria,
+    estado,
+    kcal_100g: numOrNull(document.getElementById('f-kcal').value),
+    prot_g_100g: numOrNull(document.getElementById('f-prot').value),
+    carb_g_100g: numOrNull(document.getElementById('f-carb').value),
+    grasa_g_100g: numOrNull(document.getElementById('f-grasa').value),
+    fibra_g_100g: numOrNull(document.getElementById('f-fibra').value),
+    recetas,
+    notas: document.getElementById('f-notas').value.trim(),
+    ultima_edicion: new Date().toISOString(),
+  };
+
+  if (id) {
+    const idx = db.ingredients.findIndex(i => i.id === id);
+    if (idx >= 0) {
+      db.ingredients[idx] = { ...db.ingredients[idx], ...data };
+      if (estado === 'verificado' && !db.ingredients[idx].fecha_verificacion) {
+        db.ingredients[idx].fecha_verificacion = new Date().toISOString().slice(0,10);
+      }
+    }
+    toast('Actualizado');
+  } else {
+    db.ingredients.push({
+      id: uuid(),
+      ...data,
+      fecha_verificacion: estado === 'verificado' ? new Date().toISOString().slice(0,10) : null,
+    });
+    toast('Añadido');
+  }
+
+  save();
+  renderAll();
+  closeModal();
+}
+
+function deleteCurrent() {
+  const id = document.getElementById('f-id').value;
+  if (!id) return;
+  const ing = db.ingredients.find(i => i.id === id);
+  if (!confirm(`¿Eliminar "${ing?.nombre || 'este ingrediente'}"? No se puede deshacer.`)) return;
+  db.ingredients = db.ingredients.filter(i => i.id !== id);
+  save();
+  renderAll();
+  closeModal();
+  toast('Eliminado');
+}
+
+/* ── Export / Import ───────────────────────────────────────── */
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportJSON() {
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadFile(JSON.stringify(db, null, 2), `caliro-bedca-${stamp}.json`, 'application/json');
+  toast('JSON descargado');
+}
+
+function exportSQL() {
+  const stamp = new Date().toISOString().slice(0,10);
+  let sql = `-- Caliro BEDCA database export · ${new Date().toISOString()}\n`;
+  sql += `-- Schema version: ${SCHEMA_VERSION}\n\n`;
+  sql += `CREATE TABLE IF NOT EXISTS bedca_ingredients (\n`;
+  sql += `  id TEXT PRIMARY KEY,\n`;
+  sql += `  nombre TEXT NOT NULL,\n`;
+  sql += `  bedca_id TEXT,\n`;
+  sql += `  categoria TEXT,\n`;
+  sql += `  kcal_100g REAL,\n`;
+  sql += `  prot_g_100g REAL,\n`;
+  sql += `  carb_g_100g REAL,\n`;
+  sql += `  grasa_g_100g REAL,\n`;
+  sql += `  fibra_g_100g REAL,\n`;
+  sql += `  estado TEXT,\n`;
+  sql += `  recetas TEXT,\n`;
+  sql += `  notas TEXT,\n`;
+  sql += `  fecha_verificacion TEXT,\n`;
+  sql += `  ultima_edicion TEXT\n`;
+  sql += `);\n\n`;
+
+  const escSQL = v => {
+    if (v == null) return 'NULL';
+    if (typeof v === 'number') return String(v);
+    return "'" + String(v).replace(/'/g, "''") + "'";
+  };
+
+  db.ingredients.forEach(i => {
+    sql += `INSERT INTO bedca_ingredients (id, nombre, bedca_id, categoria, kcal_100g, prot_g_100g, carb_g_100g, grasa_g_100g, fibra_g_100g, estado, recetas, notas, fecha_verificacion, ultima_edicion) VALUES (`;
+    sql += [
+      escSQL(i.id), escSQL(i.nombre), escSQL(i.bedca_id), escSQL(i.categoria),
+      escSQL(i.kcal_100g), escSQL(i.prot_g_100g), escSQL(i.carb_g_100g), escSQL(i.grasa_g_100g),
+      escSQL(i.fibra_g_100g), escSQL(i.estado),
+      escSQL(JSON.stringify(i.recetas || [])),
+      escSQL(i.notas), escSQL(i.fecha_verificacion), escSQL(i.ultima_edicion),
+    ].join(', ');
+    sql += `);\n`;
+  });
+
+  downloadFile(sql, `caliro-bedca-${stamp}.sql`, 'text/plain');
+  toast('SQL descargado');
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.ingredients || !Array.isArray(parsed.ingredients)) {
+        toast('JSON inválido: falta "ingredients"', 'error');
+        return;
+      }
+      if (!confirm(`¿Reemplazar la base actual (${db.ingredients.length} ingredientes) por la importada (${parsed.ingredients.length})?`)) return;
+      db = { version: SCHEMA_VERSION, ingredients: parsed.ingredients, lastModified: new Date().toISOString() };
+      save();
+      renderAll();
+      toast(`Importados ${db.ingredients.length} ingredientes`);
+    } catch (err) {
+      toast('Error al parsear JSON', 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ── Sorting ───────────────────────────────────────────────── */
+function setSort(key) {
+  if (sortBy === key) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy = key;
+    sortDir = 'asc';
+  }
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.sort === sortBy);
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = sortBy === th.dataset.sort ? (sortDir === 'asc' ? '▲' : '▼') : '▼';
+  });
+  renderTable();
+}
+
+/* ── Event listeners ───────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  load();
+  renderAll();
+
+  document.getElementById('btn-add').addEventListener('click', () => openModal(null));
+  document.getElementById('btn-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('btn-save').addEventListener('click', saveFromForm);
+  document.getElementById('btn-delete').addEventListener('click', deleteCurrent);
+
+  document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+  document.getElementById('btn-export-sql').addEventListener('click', exportSQL);
+  document.getElementById('btn-import-json').addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) importJSON(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  document.getElementById('search').addEventListener('input', renderTable);
+  document.getElementById('filter-status').addEventListener('change', renderTable);
+  document.getElementById('filter-category').addEventListener('change', renderTable);
+  document.getElementById('filter-recipe').addEventListener('change', renderTable);
+
+  // Sort headers
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.addEventListener('click', () => setSort(th.dataset.sort));
+  });
+
+  // Action buttons in table (event delegation)
+  document.getElementById('tbody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const ing = db.ingredients.find(i => i.id === id);
+    if (btn.dataset.action === 'edit') openModal(ing);
+    else if (btn.dataset.action === 'delete') {
+      if (confirm(`¿Eliminar "${ing?.nombre}"?`)) {
+        db.ingredients = db.ingredients.filter(i => i.id !== id);
+        save();
+        renderAll();
+        toast('Eliminado');
+      }
+    }
+  });
+
+  // Modal: close on overlay click + Esc
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target.id === 'modal') closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    // Cmd/Ctrl + N para añadir nuevo
+    if ((e.metaKey || e.ctrlKey) && e.key === 'n' && !document.getElementById('modal').classList.contains('open')) {
+      e.preventDefault();
+      openModal(null);
+    }
+  });
+
+  // Form submit (Enter en cualquier input lo dispara)
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault();
+    saveFromForm();
+  });
+});
+</script>
+</body>
+</html>

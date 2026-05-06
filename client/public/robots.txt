@@ -1,5 +1,7 @@
 User-agent: *
 Disallow: /app
 Disallow: /app/
+Disallow: /bedca
+Disallow: /bedca/
 Allow: /
 Sitemap: https://caliro.dev/sitemap.xml
