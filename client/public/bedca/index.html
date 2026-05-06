@@ -201,6 +201,37 @@ body {
 }
 .btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
 
+/* ── SELECTION BAR (aparece cuando hay seleccionados) ─────── */
+.selection-bar {
+  background: white;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin: 0 32px 16px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 12px -4px rgba(22,163,74,0.18);
+}
+.selection-bar.visible { display: flex; }
+.selection-info {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.selection-info-count {
+  color: var(--green);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  margin-right: 4px;
+}
+.selection-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 /* ── TABLE ─────────────────────────────────────────────────── */
 .table-wrap {
   background: white;
@@ -264,6 +295,18 @@ tbody tr:hover td { background: var(--paper-soft); }
   text-align: right;
   white-space: nowrap;
 }
+.col-select {
+  width: 36px;
+  padding-right: 0 !important;
+}
+.col-select input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--green);
+}
+tbody tr.selected td { background: rgba(22,163,74,0.05); }
+tbody tr.selected:hover td { background: rgba(22,163,74,0.08); }
 
 /* Status pills */
 .pill {
@@ -539,11 +582,25 @@ tbody tr:hover td { background: var(--paper-soft); }
   <button class="btn btn-primary" id="btn-add">+ Añadir ingrediente</button>
 </section>
 
+<div class="selection-bar" id="selection-bar">
+  <div class="selection-info">
+    <span class="selection-info-count" id="selection-count">0</span>
+    <span>ingredientes seleccionados</span>
+  </div>
+  <div class="selection-actions">
+    <button class="btn" id="btn-copy-selection" title="Copia el JSON al portapapeles para pegar en otro sitio">📋 Copiar JSON</button>
+    <button class="btn" id="btn-download-selection" title="Descarga el JSON como archivo">⬇ Descargar JSON</button>
+    <button class="btn" id="btn-view-selection" title="Ver el JSON antes de exportarlo">👁 Ver</button>
+    <button class="btn" id="btn-clear-selection" title="Deseleccionar todo">Limpiar</button>
+  </div>
+</div>
+
 <div class="table-wrap">
   <div class="table-wrap-inner">
     <table id="table">
       <thead>
         <tr>
+          <th class="col-select"><input type="checkbox" id="check-all" title="Seleccionar todos los visibles"></th>
           <th class="sortable" data-sort="nombre">Ingrediente <span class="sort-arrow">▼</span></th>
           <th class="sortable" data-sort="categoria">Categoría <span class="sort-arrow">▼</span></th>
           <th class="col-num sortable" data-sort="kcal_100g">Kcal/100g <span class="sort-arrow">▼</span></th>
@@ -655,6 +712,26 @@ tbody tr:hover td { background: var(--paper-soft); }
   </div>
 </div>
 
+<!-- ═══ Modal: Ver JSON de selección ═══ -->
+<div class="modal-overlay" id="modal-json">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-header">
+      <h2 class="modal-title">JSON de selección</h2>
+      <button class="modal-close" id="modal-json-close">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="json-output" readonly style="width: 100%; min-height: 360px; padding: 14px; border: 1px solid var(--rule); border-radius: 6px; font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; font-size: 12px; line-height: 1.5; color: var(--ink); background: var(--paper-soft); resize: vertical;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-actions" style="margin-left:auto">
+        <button class="btn" id="btn-copy-from-modal">📋 Copiar</button>
+        <button class="btn" id="btn-download-from-modal">⬇ Descargar</button>
+        <button class="btn" id="btn-close-modal-json">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toasts"></div>
 
 <script>
@@ -685,6 +762,7 @@ let db = {
 };
 let sortBy = 'nombre';
 let sortDir = 'asc';
+let selectedIds = new Set();
 
 /* ── Seed inicial — los 20 ingredientes del HTML original ──── */
 const SEED = [
@@ -845,7 +923,7 @@ function renderTable() {
   const tbody = document.getElementById('tbody');
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10">
+    tbody.innerHTML = `<tr><td colspan="11">
       <div class="empty-state">
         <div class="empty-state-icon">∅</div>
         <div class="empty-state-msg">${db.ingredients.length === 0 ? 'No hay ingredientes todavía' : 'No hay coincidencias'}</div>
@@ -864,7 +942,9 @@ function renderTable() {
     const pillIcon = ing.estado === 'verificado' ? '✓' : ing.estado === 'pendiente' ? '○' : '~';
     const pillText = ing.estado === 'verificado' ? 'BEDCA' : ing.estado === 'pendiente' ? 'Pendiente' : 'Estimado';
     const tags = ing.recetas.map(r => `<span class="tag">${escapeHtml(r)}</span>`).join('');
-    return `<tr>
+    const isSelected = selectedIds.has(ing.id);
+    return `<tr class="${isSelected ? 'selected' : ''}" data-id="${ing.id}">
+      <td class="col-select"><input type="checkbox" data-action="select" data-id="${ing.id}" ${isSelected ? 'checked' : ''}></td>
       <td class="col-name">${escapeHtml(ing.nombre)}</td>
       <td>${CATEGORY_LABELS[ing.categoria] || ing.categoria || '—'}</td>
       <td class="col-num">${kcal}</td>
@@ -924,6 +1004,7 @@ function renderAll() {
   renderRecipeFilter();
   renderCounters();
   renderTable();
+  updateSelectionUI();
 }
 
 /* ── Modal ─────────────────────────────────────────────────── */
@@ -1100,6 +1181,109 @@ function importJSON(file) {
   reader.readAsText(file);
 }
 
+/* ── Selection — multi-select y export ─────────────────────── */
+function toggleSelect(id, checked) {
+  if (checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  updateSelectionUI();
+  // marcar fila visualmente sin re-render completo
+  const row = document.querySelector(`tbody tr[data-id="${id}"]`);
+  if (row) row.classList.toggle('selected', checked);
+}
+
+function selectAllVisible(checked) {
+  const visible = getFilteredIngredients();
+  if (checked) visible.forEach(ing => selectedIds.add(ing.id));
+  else visible.forEach(ing => selectedIds.delete(ing.id));
+  renderTable();
+  updateSelectionUI();
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  renderTable();
+  updateSelectionUI();
+}
+
+function updateSelectionUI() {
+  const n = selectedIds.size;
+  document.getElementById('selection-count').textContent = n;
+  document.getElementById('selection-bar').classList.toggle('visible', n > 0);
+
+  // Actualiza el "select all" del header
+  const visible = getFilteredIngredients();
+  const allChecked = visible.length > 0 && visible.every(i => selectedIds.has(i.id));
+  const someChecked = visible.some(i => selectedIds.has(i.id));
+  const checkAll = document.getElementById('check-all');
+  if (checkAll) {
+    checkAll.checked = allChecked;
+    checkAll.indeterminate = !allChecked && someChecked;
+  }
+}
+
+function getSelectionJSON() {
+  // Obtener ingredientes seleccionados, ordenados alfabéticamente
+  const selected = db.ingredients
+    .filter(i => selectedIds.has(i.id))
+    .map(i => ({
+      nombre: i.nombre,
+      categoria: i.categoria,
+      estado: i.estado,
+      kcal_100g: i.kcal_100g,
+      prot_g_100g: i.prot_g_100g,
+      carb_g_100g: i.carb_g_100g,
+      grasa_g_100g: i.grasa_g_100g,
+      fibra_g_100g: i.fibra_g_100g,
+      recetas: i.recetas || [],
+      notas: i.notas || '',
+    }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+
+  return {
+    exportado: new Date().toISOString(),
+    fuente: 'BEDCA · Caliro database',
+    total_ingredientes: selected.length,
+    ingredientes: selected,
+  };
+}
+
+function copySelectionToClipboard() {
+  if (selectedIds.size === 0) { toast('Nada seleccionado', 'error'); return; }
+  const json = JSON.stringify(getSelectionJSON(), null, 2);
+  navigator.clipboard.writeText(json).then(
+    () => toast(`JSON copiado (${selectedIds.size} ingredientes)`),
+    () => {
+      // Fallback para navegadores sin clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = json;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); toast(`JSON copiado (${selectedIds.size} ingredientes)`); }
+      catch { toast('No se pudo copiar', 'error'); }
+      ta.remove();
+    }
+  );
+}
+
+function downloadSelectionJSON() {
+  if (selectedIds.size === 0) { toast('Nada seleccionado', 'error'); return; }
+  const stamp = new Date().toISOString().slice(0,10);
+  const json = JSON.stringify(getSelectionJSON(), null, 2);
+  downloadFile(json, `caliro-bedca-seleccion-${selectedIds.size}ing-${stamp}.json`, 'application/json');
+  toast(`Descargado (${selectedIds.size} ingredientes)`);
+}
+
+function viewSelectionJSON() {
+  if (selectedIds.size === 0) { toast('Nada seleccionado', 'error'); return; }
+  const json = JSON.stringify(getSelectionJSON(), null, 2);
+  document.getElementById('json-output').value = json;
+  document.getElementById('modal-json').classList.add('open');
+}
+
+function closeJSONModal() {
+  document.getElementById('modal-json').classList.remove('open');
+}
+
 /* ── Sorting ───────────────────────────────────────────────── */
 function setSort(key) {
   if (sortBy === key) {
@@ -1159,10 +1343,11 @@ document.addEventListener('DOMContentLoaded', () => {
     toast(`Cargados ${db.ingredients.length} ingredientes iniciales`);
   });
 
-  document.getElementById('search').addEventListener('input', renderTable);
-  document.getElementById('filter-status').addEventListener('change', renderTable);
-  document.getElementById('filter-category').addEventListener('change', renderTable);
-  document.getElementById('filter-recipe').addEventListener('change', renderTable);
+  const refreshTable = () => { renderTable(); updateSelectionUI(); };
+  document.getElementById('search').addEventListener('input', refreshTable);
+  document.getElementById('filter-status').addEventListener('change', refreshTable);
+  document.getElementById('filter-category').addEventListener('change', refreshTable);
+  document.getElementById('filter-recipe').addEventListener('change', refreshTable);
 
   // Sort headers
   document.querySelectorAll('thead th.sortable').forEach(th => {
@@ -1183,7 +1368,40 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAll();
         toast('Eliminado');
       }
+    } else if (btn.dataset.action === 'select') {
+      toggleSelect(id, btn.checked);
     }
+  });
+
+  // Select-all en el header
+  document.getElementById('check-all').addEventListener('change', e => {
+    selectAllVisible(e.target.checked);
+  });
+
+  // Selection bar buttons
+  document.getElementById('btn-copy-selection').addEventListener('click', copySelectionToClipboard);
+  document.getElementById('btn-download-selection').addEventListener('click', downloadSelectionJSON);
+  document.getElementById('btn-view-selection').addEventListener('click', viewSelectionJSON);
+  document.getElementById('btn-clear-selection').addEventListener('click', clearSelection);
+
+  // Modal de JSON
+  document.getElementById('modal-json-close').addEventListener('click', closeJSONModal);
+  document.getElementById('btn-close-modal-json').addEventListener('click', closeJSONModal);
+  document.getElementById('btn-copy-from-modal').addEventListener('click', () => {
+    const ta = document.getElementById('json-output');
+    ta.select();
+    navigator.clipboard.writeText(ta.value).then(
+      () => toast('JSON copiado'),
+      () => { document.execCommand('copy'); toast('JSON copiado'); }
+    );
+  });
+  document.getElementById('btn-download-from-modal').addEventListener('click', () => {
+    const stamp = new Date().toISOString().slice(0,10);
+    downloadFile(document.getElementById('json-output').value, `caliro-bedca-seleccion-${selectedIds.size}ing-${stamp}.json`, 'application/json');
+    toast('Descargado');
+  });
+  document.getElementById('modal-json').addEventListener('click', e => {
+    if (e.target.id === 'modal-json') closeJSONModal();
   });
 
   // Modal: close on overlay click + Esc
@@ -1191,7 +1409,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.id === 'modal') closeModal();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeModal();
+      closeJSONModal();
+    }
     // Cmd/Ctrl + N para añadir nuevo
     if ((e.metaKey || e.ctrlKey) && e.key === 'n' && !document.getElementById('modal').classList.contains('open')) {
       e.preventDefault();
