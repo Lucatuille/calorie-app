@@ -201,6 +201,44 @@ body {
 }
 .btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
 
+/* ── FILTER BAR (aviso cuando hay filtros activos) ────────── */
+.filter-bar {
+  background: var(--blue-bg);
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin: 0 32px 12px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.filter-bar.visible { display: flex; }
+.filter-bar-text {
+  font-size: 13px;
+  color: var(--blue-fg);
+}
+.filter-bar-count {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+}
+.filter-bar-clear {
+  background: transparent;
+  color: var(--blue-fg);
+  border: 1px solid var(--blue);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-bar-clear:hover { background: var(--blue); color: white; }
+
 /* ── SELECTION BAR (aparece cuando hay seleccionados) ─────── */
 .selection-bar {
   background: white;
@@ -581,6 +619,13 @@ tbody tr.selected:hover td { background: rgba(22,163,74,0.08); }
   <input type="file" id="file-input" accept=".json" style="display:none">
   <button class="btn btn-primary" id="btn-add">+ Añadir ingrediente</button>
 </section>
+
+<div class="filter-bar" id="filter-bar">
+  <div class="filter-bar-text" id="filter-bar-text">
+    <!-- Texto generado dinámicamente -->
+  </div>
+  <button class="filter-bar-clear" id="btn-clear-filters">Limpiar filtros</button>
+</div>
 
 <div class="selection-bar" id="selection-bar">
   <div class="selection-info">
@@ -999,11 +1044,45 @@ function renderCategoryFilter() {
   if (current) sel.value = current;
 }
 
+function renderFilterBar() {
+  const q = document.getElementById('search').value.trim();
+  const fStatus = document.getElementById('filter-status').value;
+  const fCategoria = document.getElementById('filter-category').value;
+  const fRecipe = document.getElementById('filter-recipe').value;
+  const total = db.ingredients.length;
+  const visible = getFilteredIngredients().length;
+  const hasFilter = q || fStatus || fCategoria || fRecipe;
+
+  const bar = document.getElementById('filter-bar');
+  if (!hasFilter) { bar.classList.remove('visible'); return; }
+
+  const labels = [];
+  if (q) labels.push(`búsqueda: "${q}"`);
+  if (fStatus) labels.push(`estado: ${fStatus}`);
+  if (fCategoria) labels.push(`categoría: ${CATEGORY_LABELS[fCategoria] || fCategoria}`);
+  if (fRecipe) labels.push(`receta: ${fRecipe}`);
+
+  document.getElementById('filter-bar-text').innerHTML =
+    `<span class="filter-bar-count">${visible}</span> de ${total} ingredientes visibles · Filtros activos: ${labels.join(' · ')}`;
+  bar.classList.add('visible');
+}
+
+function clearAllFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-category').value = '';
+  document.getElementById('filter-recipe').value = '';
+  renderTable();
+  renderFilterBar();
+  updateSelectionUI();
+}
+
 function renderAll() {
   renderCategoryFilter();
   renderRecipeFilter();
   renderCounters();
   renderTable();
+  renderFilterBar();
   updateSelectionUI();
 }
 
@@ -1343,11 +1422,12 @@ document.addEventListener('DOMContentLoaded', () => {
     toast(`Cargados ${db.ingredients.length} ingredientes iniciales`);
   });
 
-  const refreshTable = () => { renderTable(); updateSelectionUI(); };
+  const refreshTable = () => { renderTable(); renderFilterBar(); updateSelectionUI(); };
   document.getElementById('search').addEventListener('input', refreshTable);
   document.getElementById('filter-status').addEventListener('change', refreshTable);
   document.getElementById('filter-category').addEventListener('change', refreshTable);
   document.getElementById('filter-recipe').addEventListener('change', refreshTable);
+  document.getElementById('btn-clear-filters').addEventListener('click', clearAllFilters);
 
   // Sort headers
   document.querySelectorAll('thead th.sortable').forEach(th => {
