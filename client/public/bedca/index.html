@@ -534,6 +534,7 @@ tbody tr:hover td { background: var(--paper-soft); }
   <button class="btn" id="btn-export-json" title="Descargar JSON con toda la base">Export JSON</button>
   <button class="btn" id="btn-export-sql" title="Descargar .sql con CREATE + INSERTs (para D1)">Export SQL</button>
   <button class="btn" id="btn-import-json" title="Importar desde JSON (reemplaza la base actual)">Import</button>
+  <button class="btn" id="btn-reseed" title="Cargar/recargar los 20 ingredientes iniciales del HTML (sobrescribe lo actual)">↻ Seed</button>
   <input type="file" id="file-input" accept=".json" style="display:none">
   <button class="btn btn-primary" id="btn-add">+ Añadir ingrediente</button>
 </section>
@@ -685,40 +686,80 @@ let db = {
 let sortBy = 'nombre';
 let sortDir = 'asc';
 
-/* ── Seed inicial — solo si la DB está vacía ───────────────── */
+/* ── Seed inicial — los 20 ingredientes del HTML original ──── */
 const SEED = [
+  // === BEDCA verificados (9) ===
+  { nombre: 'Huevo de gallina, entero, crudo', categoria: 'huevo',
+    kcal_100g: 150, prot_g_100g: 12.5, carb_g_100g: 0, grasa_g_100g: 11.1,
+    estado: 'verificado', recetas: ['tortilla','croquetas'],
+    notas: 'Carbos = trace (negligible). 1 huevo M ≈ 60g, 1 huevo L ≈ 65-70g' },
+  { nombre: 'Patata, cruda, pelada', categoria: 'verdura',
+    kcal_100g: 73, prot_g_100g: 2.2, carb_g_100g: 15.2, grasa_g_100g: 0.2,
+    estado: 'verificado', recetas: ['tortilla'],
+    notas: '' },
+  { nombre: 'Cebolla, cruda', categoria: 'verdura',
+    kcal_100g: 26, prot_g_100g: 1.12, carb_g_100g: 5.3, grasa_g_100g: 0,
+    estado: 'verificado', recetas: ['tortilla','croquetas','canelones'],
+    notas: 'Grasa = trace (0)' },
   { nombre: 'Aceite de oliva', categoria: 'grasa',
     kcal_100g: 888, prot_g_100g: 0, carb_g_100g: 0, grasa_g_100g: 100,
     estado: 'verificado', recetas: ['tortilla','croquetas','canelones'],
     notas: 'Densidad 0.92 g/ml' },
-  { nombre: 'Cebolla cruda', categoria: 'verdura',
-    kcal_100g: 26, prot_g_100g: 1.12, carb_g_100g: 5.3, grasa_g_100g: 0,
-    estado: 'verificado', recetas: ['tortilla','croquetas','canelones'],
-    notas: 'Grasa = trace (0)' },
+  { nombre: 'Jamón serrano curado', categoria: 'proteina_animal',
+    kcal_100g: 319, prot_g_100g: 28.8, carb_g_100g: 0.2, grasa_g_100g: 22.6,
+    estado: 'verificado', recetas: ['croquetas'],
+    notas: '' },
+  { nombre: 'Leche entera de vaca', categoria: 'lacteo',
+    kcal_100g: 65, prot_g_100g: 3.06, carb_g_100g: 4.7, grasa_g_100g: 3.8,
+    estado: 'verificado', recetas: ['croquetas','canelones'],
+    notas: 'Carb (lactosa) confirmado BEDCA abril 2026' },
   { nombre: 'Harina de trigo', categoria: 'cereal',
     kcal_100g: 333, prot_g_100g: 10, carb_g_100g: 71.5, grasa_g_100g: 0,
     estado: 'verificado', recetas: ['croquetas','canelones'],
     notas: 'Grasa = trace (0)' },
-  { nombre: 'Huevo de gallina entero, crudo', categoria: 'huevo',
-    kcal_100g: 150, prot_g_100g: 12.5, carb_g_100g: 0, grasa_g_100g: 11.1,
-    estado: 'verificado', recetas: ['tortilla','croquetas'],
-    notas: 'Carbos = trace (negligible). 1 huevo M ≈ 60g, 1 huevo L ≈ 65-70g' },
-  { nombre: 'Jamón serrano', categoria: 'proteina_animal',
-    kcal_100g: 319, prot_g_100g: 28.8, carb_g_100g: 0.2, grasa_g_100g: 22.6,
+  { nombre: 'Mantequilla', categoria: 'lacteo',
+    kcal_100g: 733, prot_g_100g: 0.7, carb_g_100g: 0.5, grasa_g_100g: 82.0,
+    estado: 'verificado', recetas: ['croquetas','canelones'],
+    notas: '' },
+  { nombre: 'Pan rallado', categoria: 'cereal',
+    kcal_100g: 259, prot_g_100g: 8.47, carb_g_100g: 51.5, grasa_g_100g: 1.6,
     estado: 'verificado', recetas: ['croquetas'],
     notas: '' },
-  { nombre: 'Ajo crudo', categoria: 'verdura',
+
+  // === Pendientes para canelones (11) ===
+  { nombre: 'Pasta alimenticia seca (láminas canelones)', categoria: 'cereal',
     estado: 'pendiente', recetas: ['canelones'],
-    notas: 'Buscar en BEDCA: "ajo, crudo"' },
-  { nombre: 'Carne picada de cerdo', categoria: 'proteina_animal',
-    estado: 'pendiente', recetas: ['canelones'],
-    notas: 'Buscar en BEDCA: "carne picada de cerdo"' },
+    notas: 'Buscar en BEDCA: "pasta alimenticia, seca"' },
   { nombre: 'Carne picada de ternera', categoria: 'proteina_animal',
     estado: 'pendiente', recetas: ['canelones'],
     notas: 'Buscar en BEDCA: "carne picada de vacuno"' },
+  { nombre: 'Carne picada de cerdo', categoria: 'proteina_animal',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "carne picada de cerdo"' },
+  { nombre: 'Tomate frito', categoria: 'verdura',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "tomate frito" o "salsa de tomate"' },
+  { nombre: 'Queso emmental rallado', categoria: 'lacteo',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "queso emmental"' },
+  { nombre: 'Ajo, crudo', categoria: 'verdura',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "ajo, crudo"' },
+  { nombre: 'Queso ricotta', categoria: 'lacteo',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Puede no estar en BEDCA — usar USDA si falta' },
   { nombre: 'Espinacas frescas, crudas', categoria: 'verdura',
     estado: 'pendiente', recetas: ['canelones'],
     notas: 'Buscar en BEDCA: "espinacas, crudas"' },
+  { nombre: 'Queso parmesano', categoria: 'lacteo',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "queso parmesano"' },
+  { nombre: 'Paté de hígado de cerdo', categoria: 'proteina_animal',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "paté de hígado". Opcional pero presente en 80% recetas catalanas' },
+  { nombre: 'Zanahoria, cruda', categoria: 'verdura',
+    estado: 'pendiente', recetas: ['canelones'],
+    notas: 'Buscar en BEDCA: "zanahoria, cruda"' },
 ];
 
 /* ── Helpers ───────────────────────────────────────────────── */
@@ -1092,6 +1133,30 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('file-input').addEventListener('change', e => {
     if (e.target.files[0]) importJSON(e.target.files[0]);
     e.target.value = '';
+  });
+  document.getElementById('btn-reseed').addEventListener('click', () => {
+    const cur = db.ingredients.length;
+    if (!confirm(`¿Cargar los 20 ingredientes iniciales del HTML?\n\nSe REEMPLAZAN los ${cur} actuales (no recuperable). Solo úsalo si quieres empezar limpio o aún no has añadido datos propios.`)) return;
+    db = { version: SCHEMA_VERSION, ingredients: [], lastModified: new Date().toISOString() };
+    db.ingredients = SEED.map(seed => ({
+      id: uuid(),
+      nombre: seed.nombre,
+      bedca_id: '',
+      categoria: seed.categoria,
+      kcal_100g: seed.kcal_100g ?? null,
+      prot_g_100g: seed.prot_g_100g ?? null,
+      carb_g_100g: seed.carb_g_100g ?? null,
+      grasa_g_100g: seed.grasa_g_100g ?? null,
+      fibra_g_100g: null,
+      estado: seed.estado,
+      recetas: seed.recetas || [],
+      notas: seed.notas || '',
+      fecha_verificacion: seed.estado === 'verificado' ? new Date().toISOString().slice(0,10) : null,
+      ultima_edicion: new Date().toISOString(),
+    }));
+    save();
+    renderAll();
+    toast(`Cargados ${db.ingredients.length} ingredientes iniciales`);
   });
 
   document.getElementById('search').addEventListener('input', renderTable);
