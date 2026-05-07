@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caliro — Base de datos BEDCA personal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#f9f7f4;color:#1a1a1a;padding:24px;max-width:1000px;margin:0 auto;font-size:14px}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.meta{font-size:13px;color:#888;margin-bottom:20px}
+.controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+input[type=text]{padding:7px 12px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;font-family:inherit;width:220px}
+select{padding:7px 12px;border:0.5px solid #ccc;border-radius:8px;font-size:13px;font-family:inherit;background:white}
+.count{font-size:12px;color:#888;margin-left:auto}
+table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;border:0.5px solid #e0ddd8}
+th{font-size:12px;font-weight:600;color:#666;text-align:left;padding:10px 12px;border-bottom:0.5px solid #e0ddd8;background:#fafaf8;cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{background:#f0ede8}
+th.sorted{color:#1a1a1a}
+th .arrow{margin-left:4px;opacity:.4}
+th.sorted .arrow{opacity:1}
+td{padding:9px 12px;border-bottom:0.5px solid #f0ede8;vertical-align:middle;font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fdfcfa}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bold{font-weight:600}
+.badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-red{background:#FCEBEB;color:#A32D2D}
+.b-gray{background:#f0ede8;color:#555}
+.receta-tag{font-size:11px;background:#f0ede8;color:#555;padding:2px 6px;border-radius:4px;margin-right:3px;display:inline-block;margin-bottom:2px}
+.add-form{background:white;border:0.5px solid #e0ddd8;border-radius:12px;padding:16px;margin-bottom:16px;display:none}
+.add-form.open{display:block}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.form-group label{font-size:12px;color:#888;display:block;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:6px 10px;border:0.5px solid #ccc;border-radius:6px;font-size:13px;font-family:inherit}
+.btn{padding:7px 16px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-green{background:#22c55e;color:white}
+.btn-gray{background:#f0ede8;color:#555}
+.btn-outline{background:transparent;border:0.5px solid #ccc;color:#555}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:white;border:0.5px solid #e0ddd8;border-radius:10px;padding:12px;text-align:center}
+.stat-num{font-size:22px;font-weight:700}
+.stat-label{font-size:11px;color:#888;margin-top:2px}
+.empty{text-align:center;padding:40px;color:#888;font-size:13px}
+</style>
+</head>
+<body>
+
+<h1>Base de datos BEDCA — Caliro</h1>
+<p class="meta">Ingredientes verificados personalmente en bedca.net · Actualiza al añadir cada receta nueva</p>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">Ingredientes</div></div>
+  <div class="stat"><div class="stat-num" id="verified-count">0</div><div class="stat-label">Verificados BEDCA</div></div>
+  <div class="stat"><div class="stat-num" id="estimated-count">0</div><div class="stat-label">Estimados</div></div>
+  <div class="stat"><div class="stat-num" id="recipe-count">0</div><div class="stat-label">Recetas cubiertas</div></div>
+</div>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Buscar ingrediente..." oninput="renderTable()">
+  <select id="filter-estado" onchange="renderTable()">
+    <option value="">Todos los estados</option>
+    <option value="BEDCA">✓ BEDCA</option>
+    <option value="Estimado">Estimado</option>
+    <option value="Pendiente">Pendiente</option>
+  </select>
+  <select id="filter-receta" onchange="renderTable()">
+    <option value="">Todas las recetas</option>
+    <option value="tortilla">Tortilla española</option>
+    <option value="croquetas">Croquetas</option>
+    <option value="canelones">Canelones</option>
+  </select>
+  <button class="btn btn-green" onclick="toggleForm()">+ Añadir ingrediente</button>
+  <span class="count" id="showing-count"></span>
+</div>
+
+<div class="add-form" id="add-form">
+  <div class="form-grid">
+    <div class="form-group" style="grid-column:span 2">
+      <label>Nombre en BEDCA</label>
+      <input type="text" id="f-nombre" placeholder="ej. huevo de gallina, entero, crudo">
+    </div>
+    <div class="form-group">
+      <label>Kcal / 100g</label>
+      <input type="number" id="f-kcal" step="0.1">
+    </div>
+    <div class="form-group">
+      <label>Proteína (g/100g)</label>
+      <input type="number" id="f-prot" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Carbos (g/100g)</label>
+      <input type="number" id="f-carb" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Grasa (g/100g)</label>
+      <input type="number" id="f-grasa" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select id="f-estado">
+        <option value="BEDCA">✓ BEDCA</option>
+        <option value="Estimado">Estimado</option>
+        <option value="Pendiente">Pendiente</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Receta(s)</label>
+      <input type="text" id="f-recetas" placeholder="ej. tortilla, croquetas">
+    </div>
+    <div class="form-group" style="grid-column:span 2">
+      <label>Notas</label>
+      <input type="text" id="f-notas" placeholder="ej. carbos = lactosa, valor estándar">
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-green" onclick="addIngrediente()">Guardar</button>
+    <button class="btn btn-gray" onclick="toggleForm()">Cancelar</button>
+    <button class="btn btn-outline" onclick="exportCSV()" style="margin-left:auto">Exportar CSV</button>
+  </div>
+</div>
+
+<table id="tabla">
+  <thead>
+    <tr>
+      <th onclick="sortBy('nombre')">Ingrediente <span class="arrow">↕</span></th>
+      <th onclick="sortBy('kcal')" class="num">Kcal/100g <span class="arrow">↕</span></th>
+      <th onclick="sortBy('prot')" class="num">Prot <span class="arrow">↕</span></th>
+      <th onclick="sortBy('carb')" class="num">Carb <span class="arrow">↕</span></th>
+      <th onclick="sortBy('grasa')" class="num">Grasa <span class="arrow">↕</span></th>
+      <th>Estado</th>
+      <th>Recetas</th>
+      <th>Notas</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<script>
+// ============================================================
+// DATOS INICIALES — todos los ingredientes verificados hasta ahora
+// ============================================================
+let data = [
+  {
+    id: 1,
+    nombre: "Huevo de gallina, entero, crudo",
+    kcal: 150, prot: 12.5, carb: 0.0, grasa: 11.1,
+    estado: "BEDCA",
+    recetas: ["tortilla", "croquetas"],
+    notas: "Carbos = trace (negligible)"
+  },
+  {
+    id: 2,
+    nombre: "Patata, cruda, pelada",
+    kcal: 73, prot: 2.2, carb: 15.2, grasa: 0.2,
+    estado: "BEDCA",
+    recetas: ["tortilla"],
+    notas: ""
+  },
+  {
+    id: 3,
+    nombre: "Cebolla, cruda",
+    kcal: 26, prot: 1.12, carb: 5.3, grasa: 0.0,
+    estado: "BEDCA",
+    recetas: ["tortilla", "croquetas", "canelones"],
+    notas: "Grasa = trace (0)"
+  },
+  {
+    id: 4,
+    nombre: "Aceite de oliva",
+    kcal: 888, prot: 0.0, carb: 0.0, grasa: 100.0,
+    estado: "BEDCA",
+    recetas: ["tortilla", "croquetas", "canelones"],
+    notas: "Densidad 0.92g/ml"
+  },
+  {
+    id: 5,
+    nombre: "Jamón serrano curado",
+    kcal: 319, prot: 28.8, carb: 0.2, grasa: 22.6,
+    estado: "BEDCA",
+    recetas: ["croquetas"],
+    notas: ""
+  },
+  {
+    id: 6,
+    nombre: "Leche entera de vaca",
+    kcal: 65, prot: 3.06, carb: 4.7, grasa: 3.8,
+    estado: "BEDCA",
+    recetas: ["croquetas", "canelones"],
+    notas: "Carb (lactosa) confirmado BEDCA abril 2026"
+  },
+  {
+    id: 7,
+    nombre: "Harina de trigo",
+    kcal: 333, prot: 10.0, carb: 71.5, grasa: 0.0,
+    estado: "BEDCA",
+    recetas: ["croquetas", "canelones"],
+    notas: "Grasa = trace (0)"
+  },
+  {
+    id: 8,
+    nombre: "Mantequilla",
+    kcal: 733, prot: 0.7, carb: 0.5, grasa: 82.0,
+    estado: "BEDCA",
+    recetas: ["croquetas", "canelones"],
+    notas: ""
+  },
+  {
+    id: 9,
+    nombre: "Pan rallado",
+    kcal: 259, prot: 8.47, carb: 51.5, grasa: 1.6,
+    estado: "BEDCA",
+    recetas: ["croquetas"],
+    notas: ""
+  },
+  // Pendientes para canelones
+  {
+    id: 10,
+    nombre: "Pasta alimenticia seca (láminas canelones)",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'pasta alimenticia, seca'"
+  },
+  {
+    id: 11,
+    nombre: "Carne picada de ternera",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'carne picada de vacuno'"
+  },
+  {
+    id: 12,
+    nombre: "Carne picada de cerdo",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'carne picada de cerdo'"
+  },
+  {
+    id: 13,
+    nombre: "Tomate frito",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'tomate frito' o 'salsa de tomate'"
+  },
+  {
+    id: 14,
+    nombre: "Queso emmental rallado",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'queso emmental'"
+  },
+  {
+    id: 15,
+    nombre: "Ajo, crudo",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'ajo, crudo'"
+  },
+  {
+    id: 16,
+    nombre: "Queso ricotta",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Puede no estar en BEDCA — usar USDA si falta"
+  },
+  {
+    id: 17,
+    nombre: "Espinacas frescas, crudas",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'espinacas, crudas'"
+  },
+  {
+    id: 18,
+    nombre: "Queso parmesano",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'queso parmesano'"
+  },
+  {
+    id: 19,
+    nombre: "Paté de hígado de cerdo",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'paté de hígado'. Opcional pero presente en 80% recetas catalanas"
+  },
+  {
+    id: 20,
+    nombre: "Zanahoria, cruda",
+    kcal: null, prot: null, carb: null, grasa: null,
+    estado: "Pendiente",
+    recetas: ["canelones"],
+    notas: "Buscar en BEDCA: 'zanahoria, cruda'"
+  }
+];
+
+let sortKey = 'nombre';
+let sortDir = 1;
+let nextId = 21;
+
+function renderTable() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const filterEstado = document.getElementById('filter-estado').value;
+  const filterReceta = document.getElementById('filter-receta').value;
+
+  let filtered = data.filter(d => {
+    const matchSearch = d.nombre.toLowerCase().includes(search) || (d.notas||'').toLowerCase().includes(search);
+    const matchEstado = !filterEstado || d.estado === filterEstado;
+    const matchReceta = !filterReceta || d.recetas.includes(filterReceta);
+    return matchSearch && matchEstado && matchReceta;
+  });
+
+  filtered.sort((a,b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if(av === null) return 1;
+    if(bv === null) return -1;
+    if(typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+
+  const tbody = document.getElementById('tbody');
+  if(filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">No hay ingredientes que coincidan</td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map(d => `
+      <tr>
+        <td class="bold">${d.nombre}</td>
+        <td class="num">${d.kcal !== null ? d.kcal : '<span style="color:#ccc">—</span>'}</td>
+        <td class="num">${d.prot !== null ? d.prot+'g' : '<span style="color:#ccc">—</span>'}</td>
+        <td class="num">${d.carb !== null ? d.carb+'g' : '<span style="color:#ccc">—</span>'}</td>
+        <td class="num">${d.grasa !== null ? d.grasa+'g' : '<span style="color:#ccc">—</span>'}</td>
+        <td>${estadoBadge(d.estado)}</td>
+        <td>${d.recetas.map(r => `<span class="receta-tag">${r}</span>`).join('')}</td>
+        <td style="font-size:12px;color:#888;max-width:200px">${d.notas||''}</td>
+        <td><button class="btn btn-gray" style="padding:3px 10px;font-size:11px" onclick="deleteRow(${d.id})">×</button></td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('showing-count').textContent = `${filtered.length} de ${data.length}`;
+  updateStats();
+}
+
+function estadoBadge(e) {
+  if(e === 'BEDCA') return '<span class="badge b-green">✓ BEDCA</span>';
+  if(e === 'Estimado') return '<span class="badge b-amber">Estimado</span>';
+  return '<span class="badge b-red">Pendiente</span>';
+}
+
+function updateStats() {
+  document.getElementById('total-count').textContent = data.length;
+  document.getElementById('verified-count').textContent = data.filter(d=>d.estado==='BEDCA').length;
+  document.getElementById('estimated-count').textContent = data.filter(d=>d.estado==='Estimado').length;
+  const recetas = new Set(data.flatMap(d=>d.recetas));
+  document.getElementById('recipe-count').textContent = recetas.size;
+}
+
+function sortBy(key) {
+  if(sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  renderTable();
+}
+
+function toggleForm() {
+  const f = document.getElementById('add-form');
+  f.classList.toggle('open');
+}
+
+function addIngrediente() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if(!nombre) { alert('El nombre es obligatorio'); return; }
+  const recetasRaw = document.getElementById('f-recetas').value;
+  const recetas = recetasRaw ? recetasRaw.split(',').map(r=>r.trim()).filter(Boolean) : [];
+
+  data.push({
+    id: nextId++,
+    nombre,
+    kcal: parseFloat(document.getElementById('f-kcal').value) || null,
+    prot: parseFloat(document.getElementById('f-prot').value) || null,
+    carb: parseFloat(document.getElementById('f-carb').value) || null,
+    grasa: parseFloat(document.getElementById('f-grasa').value) || null,
+    estado: document.getElementById('f-estado').value,
+    recetas,
+    notas: document.getElementById('f-notas').value.trim()
+  });
+
+  // Reset form
+  ['f-nombre','f-kcal','f-prot','f-carb','f-grasa','f-recetas','f-notas'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  toggleForm();
+  renderTable();
+}
+
+function deleteRow(id) {
+  if(confirm('¿Eliminar este ingrediente?')) {
+    data = data.filter(d => d.id !== id);
+    renderTable();
+  }
+}
+
+function exportCSV() {
+  const headers = ['Nombre','Kcal/100g','Proteína','Carbos','Grasa','Estado','Recetas','Notas'];
+  const rows = data.map(d => [
+    `"${d.nombre}"`,
+    d.kcal??'',
+    d.prot??'',
+    d.carb??'',
+    d.grasa??'',
+    d.estado,
+    `"${d.recetas.join(', ')}"`,
+    `"${d.notas||''}"`
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'caliro_bedca.csv';
+  a.click();
+}
+
+renderTable();
+</script>
+</body>
+</html>

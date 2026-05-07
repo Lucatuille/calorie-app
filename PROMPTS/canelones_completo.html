@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caliro — Canelones · Datos verificados BEDCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#f9f7f4;color:#1a1a1a;padding:24px;max-width:900px;margin:0 auto;font-size:14px;line-height:1.6}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.meta{font-size:13px;color:#888;margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap}
+.meta span{padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500}
+.m-green{background:#EAF3DE;color:#3B6D11}
+.m-amber{background:#FAEEDA;color:#854F0B}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:8px;border:0.5px solid #ccc;font-size:13px;cursor:pointer;background:transparent;color:#666;transition:all .15s;font-family:inherit}
+.tab.active{background:#f0ede8;color:#1a1a1a;border-color:#888;font-weight:600}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:0.5px solid #e0ddd8;border-radius:12px;padding:16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:10px}
+.warn{background:#FAEEDA;border:0.5px solid #FAC775;border-radius:8px;padding:10px 14px;font-size:13px;color:#854F0B;margin-bottom:12px;line-height:1.5}
+.info{background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:8px;padding:10px 14px;font-size:13px;color:#185FA5;margin-bottom:12px;line-height:1.5}
+.ok{background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:8px;padding:10px 14px;font-size:13px;color:#3B6D11;margin-bottom:12px;line-height:1.5}
+.red{background:#FCEBEB;border:0.5px solid #F7C1C1;border-radius:8px;padding:10px 14px;font-size:13px;color:#A32D2D;margin-bottom:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+th{font-size:12px;font-weight:600;color:#666;text-align:left;padding:7px 10px;border-bottom:0.5px solid #e0ddd8;background:#fafaf8}
+td{padding:7px 10px;border-bottom:0.5px solid #f0ede8;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fdfcfa}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bold{font-weight:600}
+.muted{color:#888;font-size:12px}
+.accent{color:#22c55e;font-weight:600}
+.orange{color:#854F0B;font-weight:600}
+.red-text{color:#A32D2D;font-weight:600}
+.hl{background:#f0ede8}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-gray{background:#f0ede8;color:#555}
+.b-red{background:#FCEBEB;color:#A32D2D}
+.b-purple{background:#EEEDFE;color:#534AB7}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:600px){.two-col,.three-col{grid-template-columns:1fr}}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:0.5px solid #e0ddd8;border-radius:10px;padding:12px;text-align:center}
+.kpi-num{font-size:22px;font-weight:700}
+.kpi-label{font-size:11px;color:#888;margin-top:2px}
+.section-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:13px;color:#888;margin-bottom:14px}
+.db-entry{background:#1e1e1e;color:#d4d4d4;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.9;overflow-x:auto;white-space:pre}
+.k{color:#9cdcfe}.v{color:#ce9178}.n{color:#b5cea8}.t{color:#4ec9b0}
+.article-block{background:#fff;border-left:3px solid #22c55e;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:10px;border-top:0.5px solid #e0ddd8;border-right:0.5px solid #e0ddd8;border-bottom:0.5px solid #e0ddd8}
+.article-tag{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.article-content{font-size:13px;color:#333;line-height:1.8}
+.hallazgo{background:#1a1a1a;color:#f0ede8;border-radius:12px;padding:16px;margin-bottom:12px}
+.hallazgo-title{font-size:13px;font-weight:600;color:#22c55e;margin-bottom:8px}
+.hallazgo-body{font-size:13px;line-height:1.7}
+.bar-container{margin-bottom:8px}
+.bar-label{font-size:12px;color:#555;margin-bottom:3px;display:flex;justify-content:space-between}
+.bar-track{height:8px;background:#f0ede8;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:#22c55e}
+</style>
+</head>
+<body>
+
+<h1>Canelones — Datos verificados BEDCA</h1>
+<div class="meta">
+  <span class="m-green">✓ BEDCA verificado</span>
+  <span class="m-green">✓ USDA complementario</span>
+  <span class="m-green">Receta #3</span>
+  <span class="m-amber">3 versiones calculadas</span>
+  <span class="m-amber">Mayo 2026</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('hallazgos',this)">Hallazgos clave</button>
+  <button class="tab" onclick="show('calculo',this)">Cálculo</button>
+  <button class="tab" onclick="show('versiones',this)">3 versiones</button>
+  <button class="tab" onclick="show('porciones',this)">Porciones</button>
+  <button class="tab" onclick="show('db',this)">Base de datos app</button>
+  <button class="tab" onclick="show('articulo',this)">Artículo listo</button>
+</div>
+
+<!-- HALLAZGOS -->
+<div id="hallazgos" class="section active">
+  <p class="section-title">Los tres hallazgos del cálculo</p>
+  <p class="section-sub">Estos son el núcleo editorial del artículo — datos contraintuitivos que ninguna app española tiene bien calculados.</p>
+
+  <div class="hallazgo">
+    <div class="hallazgo-title">Hallazgo 1 — Una ración son 811 kcal</div>
+    <div class="hallazgo-body">Una ración estándar de canelones de carne caseros (3 unidades) tiene <strong>811 kcal</strong>. Es el plato de pasta más calórico de la cocina española habitual — más que una paella, más que un plato de fabada. La mayoría de la gente los estima en 400-500 kcal porque cada canelón parece pequeño. La bechamel y el queso gratinado son los responsables invisibles.</div>
+  </div>
+
+  <div class="hallazgo">
+    <div class="hallazgo-title">Hallazgo 2 — Los catalanes con paté tienen MENOS calorías que los de carne pura</div>
+    <div class="hallazgo-body">Canelón de carne pura (ternera + cerdo): <strong>270 kcal</strong>. Canelón catalán (ternera + cerdo + pollo + paté): <strong>267 kcal</strong>. Prácticamente idénticos. El pollo de muslo es magro, el paté sustituye parte de la carne, y el volumen total se mantiene. El mito de que los catalanes "son más pesados" no tiene fundamento calórico.</div>
+  </div>
+
+  <div class="hallazgo">
+    <div class="hallazgo-title">Hallazgo 3 — Los de espinacas tienen solo un 25% menos que los de carne</div>
+    <div class="hallazgo-body">Canelón de espinacas y ricotta: <strong>217 kcal</strong> vs canelón de carne: <strong>270 kcal</strong>. La diferencia es de 53 kcal por unidad — un 25% menos, no la mitad ni un tercio. Por ración: 650 kcal (espinacas) vs 811 kcal (carne). El motivo es que la bechamel y el queso gratinado son iguales en ambas versiones, y son los que más aportan. El relleno tiene menos impacto del esperado.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Aportación de la bechamel + queso (el factor invisible)</div>
+    <div class="bar-container">
+      <div class="bar-label"><span>Bechamel (leche + harina + mantequilla)</span><span>26%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:26%"></div></div>
+    </div>
+    <div class="bar-container">
+      <div class="bar-label"><span>Queso gratinado (emmental)</span><span>9%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:9%;background:#854F0B"></div></div>
+    </div>
+    <div class="bar-container">
+      <div class="bar-label"><span>Carne (ternera + cerdo)</span><span>39%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:39%;background:#555"></div></div>
+    </div>
+    <div class="bar-container">
+      <div class="bar-label"><span>Pasta</span><span>13%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:13%;background:#9cdcfe"></div></div>
+    </div>
+    <div class="bar-container">
+      <div class="bar-label"><span>Resto (tomate, cebolla, paté, aceite sofrito)</span><span>13%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:13%;background:#ccc"></div></div>
+    </div>
+    <p class="muted" style="margin-top:8px">La bechamel + queso suman el 35% de las calorías totales — más que la pasta (13%). Cambia el relleno de carne por espinacas y ahorras ~160 kcal por ración. Cambia la bechamel por una versión ligera y ahorras 300+ kcal.</p>
+  </div>
+</div>
+
+<!-- CÁLCULO -->
+<div id="calculo" class="section">
+  <p class="section-title">Cálculo ingrediente a ingrediente</p>
+  <p class="section-sub">Receta base: 12 canelones para 4 personas. Fuentes: BEDCA + USDA para carne picada de cerdo.</p>
+
+  <div class="warn">Carne picada de cerdo: no encontrada como entrada específica en BEDCA. Se ha usado USDA (263 kcal, 18g prot, 12g grasa). BEDCA solo tiene "carne picada" genérica — marcado en la base de datos.</div>
+
+  <div class="warn">Pasta: los 353 kcal/100g son en seco. La pasta cocida pesa ~el doble (absorbe agua). Kcal/100g cocida ≈ 176. Para el cálculo de receta se usan las kcal totales del peso seco, que son las mismas que en el plato final.</div>
+
+  <div class="card">
+    <div class="card-title">Aportación por ingrediente — Canelones de carne (receta base)</div>
+    <table>
+      <tr><th>Ingrediente</th><th class="num">Cantidad</th><th class="num">Kcal</th><th class="num">Proteína</th><th class="num">Carbos</th><th class="num">Grasa</th><th class="num">% kcal</th></tr>
+      <tr><td>Pasta seca (láminas)</td><td class="num">120g</td><td class="num">424</td><td class="num">15.0g</td><td class="num">85.1g</td><td class="num">1.7g</td><td class="num">13%</td></tr>
+      <tr><td>Ternera picada</td><td class="num">250g</td><td class="num">610</td><td class="num">38.1g</td><td class="num">0g</td><td class="num">51.3g</td><td class="num">19%</td></tr>
+      <tr><td>Cerdo picado</td><td class="num">250g</td><td class="num">658</td><td class="num">45.0g</td><td class="num">0g</td><td class="num">30.0g</td><td class="num">20%</td></tr>
+      <tr><td>Cebolla</td><td class="num">100g</td><td class="num">26</td><td class="num">1.1g</td><td class="num">5.3g</td><td class="num">0g</td><td class="num">1%</td></tr>
+      <tr><td>Ajo</td><td class="num">10g</td><td class="num">12</td><td class="num">0.4g</td><td class="num">2.4g</td><td class="num">0.1g</td><td class="num">0%</td></tr>
+      <tr><td>Tomate frito</td><td class="num">100g</td><td class="num">84</td><td class="num">1.5g</td><td class="num">5.2g</td><td class="num">6.4g</td><td class="num">3%</td></tr>
+      <tr><td>Paté de hígado</td><td class="num">30g</td><td class="num">102</td><td class="num">4.2g</td><td class="num">1.5g</td><td class="num">8.9g</td><td class="num">3%</td></tr>
+      <tr><td>Aceite (sofrito)</td><td class="num">20g</td><td class="num">178</td><td class="num">0g</td><td class="num">0g</td><td class="num">20.0g</td><td class="num">5%</td></tr>
+      <tr style="background:#fff8f0"><td class="bold">Leche entera</td><td class="num">500g</td><td class="num bold" style="color:#854F0B">325</td><td class="num">15.3g</td><td class="num">23.5g</td><td class="num">19.0g</td><td class="num bold" style="color:#854F0B">10%</td></tr>
+      <tr style="background:#fff8f0"><td class="bold">Harina de trigo</td><td class="num">50g</td><td class="num bold" style="color:#854F0B">167</td><td class="num">5.0g</td><td class="num">35.8g</td><td class="num">0g</td><td class="num bold" style="color:#854F0B">5%</td></tr>
+      <tr style="background:#fff8f0"><td class="bold">Mantequilla</td><td class="num">50g</td><td class="num bold" style="color:#854F0B">367</td><td class="num">0.4g</td><td class="num">0.3g</td><td class="num bold" style="color:#854F0B">41.0g</td><td class="num bold" style="color:#854F0B">11%</td></tr>
+      <tr><td>Queso emmental</td><td class="num">80g</td><td class="num">294</td><td class="num">21.8g</td><td class="num">0g</td><td class="num">23.0g</td><td class="num">9%</td></tr>
+      <tr class="hl"><td class="bold">TOTAL 12 canelones</td><td class="num muted">~1.015g cocido</td><td class="num bold">3.244</td><td class="num bold">147.8g</td><td class="num bold">159.0g</td><td class="num bold">201.3g</td><td></td></tr>
+      <tr style="background:#f0ede8"><td class="bold">Por canelón (1 ud)</td><td class="num">~85g</td><td class="num bold accent">270 kcal</td><td class="num bold">12.3g</td><td class="num bold">13.2g</td><td class="num bold">16.8g</td><td></td></tr>
+      <tr style="background:#f0ede8"><td class="bold">Por ración (3 uds)</td><td class="num">~255g</td><td class="num bold red-text">811 kcal</td><td class="num bold">37.0g</td><td class="num bold">39.8g</td><td class="num bold">50.3g</td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Densidad calórica (plato cocido)</div>
+    <table>
+      <tr><th>Versión</th><th class="num">Kcal/100g cocido</th></tr>
+      <tr><td>Canelones de carne</td><td class="num bold">~320</td></tr>
+      <tr><td>Canelones catalanes</td><td class="num bold">~316</td></tr>
+      <tr><td>Canelones espinacas-ricotta</td><td class="num bold">~256</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- VERSIONES -->
+<div id="versiones" class="section">
+  <p class="section-title">Las tres versiones — comparativa directa</p>
+
+  <div class="three-col">
+    <div class="card">
+      <div class="card-title">🥩 Carne clásica</div>
+      <table>
+        <tr><th></th><th class="num">1 ud</th><th class="num">Ración (3)</th></tr>
+        <tr><td>Kcal</td><td class="num bold accent">270</td><td class="num bold red-text">811</td></tr>
+        <tr><td>Proteína</td><td class="num">12.3g</td><td class="num">37.0g</td></tr>
+        <tr><td>Carbos</td><td class="num">13.2g</td><td class="num">39.8g</td></tr>
+        <tr><td>Grasa</td><td class="num">16.8g</td><td class="num">50.3g</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">Ternera + cerdo 50/50. Con paté opcional.</p>
+    </div>
+    <div class="card" style="border-color:#e8d5b7">
+      <div class="card-title">🏛️ Catalanes (Sant Esteve)</div>
+      <table>
+        <tr><th></th><th class="num">1 ud</th><th class="num">Ración (3)</th></tr>
+        <tr><td>Kcal</td><td class="num bold accent">267</td><td class="num bold orange">802</td></tr>
+        <tr><td>Proteína</td><td class="num">13.6g</td><td class="num">40.7g</td></tr>
+        <tr><td>Carbos</td><td class="num">13.2g</td><td class="num">39.8g</td></tr>
+        <tr><td>Grasa</td><td class="num">16.2g</td><td class="num">48.7g</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">Ternera + cerdo + pollo + paté. Sorpresa: menos kcal que la versión simple.</p>
+    </div>
+    <div class="card" style="border-color:#c0dd97">
+      <div class="card-title">🥬 Espinacas y ricotta</div>
+      <table>
+        <tr><th></th><th class="num">1 ud</th><th class="num">Ración (3)</th></tr>
+        <tr><td>Kcal</td><td class="num bold accent">217</td><td class="num bold">650</td></tr>
+        <tr><td>Proteína</td><td class="num">10.3g</td><td class="num">31.0g</td></tr>
+        <tr><td>Carbos</td><td class="num">13.0g</td><td class="num">39.0g</td></tr>
+        <tr><td>Grasa</td><td class="num">13.7g</td><td class="num">41.0g</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">Vegetariano. 25% menos kcal que carne — no la mitad.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="card-title">¿Por qué los catalanes tienen menos kcal que los de carne pura?</div>
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      La receta catalana usa <strong>150g de pollo de muslo</strong> (110 kcal/100g) en lugar de más ternera o cerdo. El pollo de muslo es más magro que el cerdo picado, y al repartir el volumen del relleno entre tres tipos de carne, la densidad calórica baja. El paté añade solo 30-50g al total. El resultado neto es una carne mixta más magra por kilogramo que la mezcla ternera-cerdo pura. Contraintuitivo pero matemáticamente correcto.
+    </div>
+  </div>
+</div>
+
+<!-- PORCIONES -->
+<div id="porciones" class="section">
+  <p class="section-title">Porciones y situaciones reales</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-num accent">270</div><div class="kpi-label">kcal / canelón carne</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#A32D2D">811</div><div class="kpi-label">kcal ración carne (3 uds)</div></div>
+    <div class="kpi"><div class="kpi-num accent">217</div><div class="kpi-label">kcal / canelón espinacas</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#854F0B">650</div><div class="kpi-label">kcal ración espinacas (3 uds)</div></div>
+  </div>
+
+  <div class="red">Una ración de canelones de carne (3 uds, 811 kcal) equivale a una comida completa de menú del día. Es el plato de pasta más calórico de la cocina española habitual. El problema no es el relleno — es la bechamel y el queso que nadie cuenta.</div>
+
+  <div class="card">
+    <div class="card-title">Tabla maestra de situaciones</div>
+    <table>
+      <tr><th>Situación</th><th class="num">Kcal</th><th class="num">Rango</th><th class="num">Prot</th><th class="num">Carb</th><th class="num">Grasa</th><th>Confianza</th></tr>
+      <tr>
+        <td><strong>1 canelón de carne casero</strong><br><span class="muted">Tamaño estándar ~85g</span></td>
+        <td class="num bold accent">270</td><td class="num muted">230–311</td><td class="num">12.3g</td><td class="num">13.2g</td><td class="num">16.8g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr class="hl">
+        <td><strong>Ración de carne (3 uds)</strong><br><span class="muted">Plato completo estándar</span></td>
+        <td class="num bold red-text">811</td><td class="num muted">689–933</td><td class="num">37.0g</td><td class="num">39.8g</td><td class="num">50.3g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>1 canelón catalán</strong><br><span class="muted">Con paté y pollo, Sant Esteve</span></td>
+        <td class="num bold accent">267</td><td class="num muted">227–307</td><td class="num">13.6g</td><td class="num">13.2g</td><td class="num">16.2g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Ración catalana (3 uds)</strong><br><span class="muted">Sant Esteve, 26 de diciembre</span></td>
+        <td class="num bold orange">802</td><td class="num muted">681–922</td><td class="num">40.7g</td><td class="num">39.8g</td><td class="num">48.7g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>1 canelón espinacas-ricotta</strong><br><span class="muted">Versión vegetariana</span></td>
+        <td class="num bold accent">217</td><td class="num muted">184–249</td><td class="num">10.3g</td><td class="num">13.0g</td><td class="num">13.7g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Ración espinacas-ricotta (3 uds)</strong></td>
+        <td class="num bold">650</td><td class="num muted">552–747</td><td class="num">31.0g</td><td class="num">39.0g</td><td class="num">41.0g</td>
+        <td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Canelón de restaurante</strong><br><span class="muted">Más bechamel, más queso</span></td>
+        <td class="num bold">290–320</td><td class="num muted">amplio</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>
+        <td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Canelones congelados (marca)</strong><br><span class="muted">Findus, La Cocinera…</span></td>
+        <td class="num bold">—</td><td class="num muted">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>
+        <td><span class="badge b-blue">Etiqueta</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Referencias visuales sin báscula</div>
+    <div style="font-size:13px;color:#555;line-height:1.9">
+      <div style="margin-bottom:8px"><strong>1 canelón estándar (~85g):</strong> tamaño de un rollo de papel de cocina en miniatura. Longitud de unos 10 cm, diámetro de 3-4 cm. Si cabe en la palma sin desbordarse, estás en el rango correcto.</div>
+      <div style="margin-bottom:8px"><strong>Ración estándar (3 uds):</strong> los tres canelones en fila ocupan un plato llano completo. Es lo habitual como plato único o primer plato abundante.</div>
+      <div style="margin-bottom:8px"><strong>Ración de restaurante:</strong> normalmente 2-3 canelones pero más grandes y con más bechamel. Estima 300-350 kcal por canelón en restaurante.</div>
+      <div><strong>Canelones de Navidad / Sant Esteve:</strong> la tradición es servir 3-4 por persona. Con 4 canelones catalanes: ~1.068 kcal. Una comida entera de las festivas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BASE DE DATOS -->
+<div id="db" class="section">
+  <p class="section-title">Entradas para la base de datos de la app</p>
+  <p class="section-sub">JSON listo para copiar. Activar al publicar el artículo.</p>
+
+  <div class="ok">Valores verificados BEDCA + USDA. Carne picada de cerdo marcada como USDA — añadir nota en la app si se muestra la fuente.</div>
+
+  <div class="card">
+    <div class="card-title">Entrada principal — canelón de carne casero</div>
+    <div class="db-entry"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"canelon_carne_casero"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Canelón de carne casero"</span>,
+  <span class="k">"nombre_busqueda"</span>: [<span class="v">"canelones"</span>, <span class="v">"canelón"</span>, <span class="v">"canelones de carne"</span>, <span class="v">"canelones caseros"</span>],
+  <span class="k">"categoria"</span>: <span class="v">"pasta_platos_principales"</span>,
+  <span class="k">"tags"</span>: [<span class="v">"pasta"</span>, <span class="v">"carne"</span>, <span class="v">"bechamel"</span>, <span class="v">"horno"</span>, <span class="v">"español"</span>],
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">85</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">270</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">230</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">311</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">12.3</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">13.2</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">16.8</span>
+  <span class="t">}</span>,
+  <span class="k">"macros_por_100g"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">320</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">14.6</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">15.7</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">19.8</span>
+  <span class="t">}</span>,
+  <span class="k">"fuente"</span>: <span class="v">"BEDCA + USDA (cerdo) — cálculo por ingredientes mayo 2026"</span>,
+  <span class="k">"confianza"</span>: <span class="v">"alta"</span>,
+  <span class="k">"variabilidad_nota"</span>: <span class="v">"Bechamel y queso son los factores principales. Rango ±15% según cantidad de bechamel y queso."</span>,
+  <span class="k">"exclusion_tokens"</span>: [<span class="v">"lasaña"</span>, <span class="v">"macarrones"</span>, <span class="v">"pasta italiana"</span>],
+  <span class="k">"variantes_ids"</span>: [
+    <span class="v">"canelon_catalan"</span>,
+    <span class="v">"canelon_espinacas_ricotta"</span>,
+    <span class="v">"racion_canelones_carne"</span>,
+    <span class="v">"racion_canelones_espinacas"</span>
+  ],
+  <span class="k">"articulo_blog"</span>: <span class="v">"/blog/calorias-canelones"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Ración de carne (3 uds)</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"racion_canelones_carne"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Canelones de carne (ración, 3 uds)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">255</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">811</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">689</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">933</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">37.0</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">39.8</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">50.3</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"alta"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ración espinacas-ricotta (3 uds)</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"racion_canelones_espinacas"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Canelones espinacas y ricotta (ración, 3 uds)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">255</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">650</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">552</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">747</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">31.0</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">39.0</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">41.0</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"alta"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTÍCULO -->
+<div id="articulo" class="section">
+  <p class="section-title">Artículo — Texto completo listo para publicar</p>
+
+  <div class="article-block" style="border-left-color:#888">
+    <div class="article-tag">Meta SEO</div>
+    <div class="article-content">
+      <strong>Title:</strong> Calorías de los canelones: de carne, catalanes y de espinacas — y por qué son más de lo que piensas<br>
+      <strong>Meta description:</strong> Cuántas calorías tienen los canelones según el relleno y la ración. Una ración de carne son 811 kcal. Datos calculados desde BEDCA con las tres versiones más comunes en España.<br>
+      <strong>URL slug:</strong> /blog/calorias-canelones<br>
+      <strong>Keyword principal:</strong> calorías canelones<br>
+      <strong>Secundarias:</strong> canelones de carne calorías, canelones espinacas ricotta calorías, cuántas calorías tienen los canelones, canelones macros
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H1</div>
+    <div class="article-content" style="font-size:16px;font-weight:700">
+      Calorías de los canelones: de carne, catalanes y de espinacas — y por qué son más de lo que piensas
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Intro + dato de gancho</div>
+    <div class="article-content">
+      Una ración de canelones de carne caseros — tres unidades — tiene 811 calorías. Es el plato de pasta más calórico de la cocina española habitual, por encima de la paella y comparable a un cocido. La mayoría de la gente los estima en la mitad porque cada canelón parece pequeño.<br><br>
+      El problema no es el relleno. Es la bechamel y el queso gratinado, que nadie cuenta y que suman el 35% de las calorías totales. Y hay otro dato que sorprende aún más: los canelones de espinacas y ricotta tienen solo un 25% menos calorías que los de carne — no la mitad, no un tercio, un 25%.<br><br>
+      Hemos calculado las tres versiones más comunes ingrediente a ingrediente usando BEDCA, la base de datos oficial española de composición de alimentos del CSIC.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Tabla principal — va aquí primero</div>
+    <div class="article-content">
+      <table style="margin-bottom:8px">
+        <tr><th>Situación</th><th class="num">1 canelón</th><th class="num">Ración (3 uds)</th><th class="num">Rango ración</th></tr>
+        <tr><td><strong>De carne (ternera + cerdo)</strong></td><td class="num bold">270 kcal</td><td class="num bold" style="color:#A32D2D">811 kcal</td><td class="num muted">689–933</td></tr>
+        <tr><td>Catalanes (+ pollo + paté)</td><td class="num bold">267 kcal</td><td class="num bold" style="color:#854F0B">802 kcal</td><td class="num muted">681–922</td></tr>
+        <tr><td>Espinacas y ricotta</td><td class="num bold">217 kcal</td><td class="num bold">650 kcal</td><td class="num muted">552–747</td></tr>
+        <tr><td>Restaurante (estimado)</td><td class="num bold">290–320</td><td class="num bold">870–960</td><td class="num muted">amplio</td></tr>
+      </table>
+      <span class="muted">Fuente: calculado ingrediente a ingrediente desde BEDCA (CSIC) + USDA. Valores orientativos — variabilidad real ±15% según cantidad de bechamel y queso.</span>
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — El argumento central</div>
+    <div class="article-content">
+      <strong>El ingrediente que nadie cuenta: la bechamel</strong><br><br>
+      En una receta estándar de 12 canelones, la bechamel (leche + harina + mantequilla) aporta 858 kcal — el 26% del total. El queso emmental del gratinado añade 294 más — otro 9%. Juntos suman el 35% de las calorías del plato sin que nadie los mencione en la conversación sobre "¿los de carne o los de espinacas?".<br><br>
+      Cambia el relleno de carne por espinacas y ricotta: ahorras 161 kcal por ración. Cambia la bechamel estándar por una versión con leche desnatada y la mitad de mantequilla: ahorras más de 200 kcal por ración. El relleno importa menos de lo que parece. La bechamel importa mucho más.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — El dato que más sorprende</div>
+    <div class="article-content">
+      <strong>Los canelones catalanes tienen menos calorías que los de carne pura</strong><br><br>
+      Canelón de carne pura (ternera + cerdo): 270 kcal. Canelón catalán de Sant Esteve (ternera + cerdo + pollo de muslo + paté): 267 kcal. Prácticamente idénticos.<br><br>
+      El motivo es matemático: el pollo de muslo tiene 110 kcal/100g, menos que la mezcla ternera-cerdo. Al añadir pollo y repartir el volumen del relleno entre más tipos de carne, la densidad calórica media del relleno baja. El paté aporta sabor con solo 30g de cantidad. El resultado neto es un relleno más magro por kilogramo que la versión simple.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2</div>
+    <div class="article-content">
+      <strong>Cómo estimar los canelones sin báscula</strong><br><br>
+      <strong>1 canelón estándar (~85g):</strong> tamaño aproximado de un rollo de papel de cocina en miniatura. Longitud de unos 10 cm, diámetro de 3-4 cm. Pesa entre 75 y 95g dependiendo del relleno y la bechamel.<br><br>
+      <strong>Ración estándar (3 uds):</strong> los tres canelones en fila ocupan un plato llano completo. Es el formato habitual como plato único.<br><br>
+      <strong>En restaurante:</strong> las raciones suelen ser más generosas en bechamel y queso. Estima 290-320 kcal por canelón como mínimo.<br><br>
+      <strong>Canelones de Navidad / Sant Esteve:</strong> la tradición es servir 3-4 por persona como primer plato de una comida larga. Con 4 unidades catalanas: ~1.068 kcal solo en los canelones.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — FAQ</div>
+    <div class="article-content">
+      <strong>¿Cuántas calorías tienen los canelones de espinacas respecto a los de carne?</strong><br>
+      Un 25% menos. Un canelón de espinacas y ricotta tiene 217 kcal frente a 270 kcal del de carne. Por ración: 650 vs 811 kcal. La diferencia existe pero es menor de lo que la mayoría asume, porque la bechamel y el queso son iguales en ambas versiones.<br><br>
+
+      <strong>¿Los canelones catalanes tienen más calorías por el paté?</strong><br>
+      No. Tienen ligeramente menos (267 kcal) que los de carne pura (270 kcal) porque incorporan pollo de muslo, que es más magro que el cerdo picado. El paté añade sabor pero solo se usa 30-50g en la receta completa.<br><br>
+
+      <strong>¿Cuántas calorías tienen los canelones congelados?</strong><br>
+      Depende de la marca — usa siempre la etiqueta del producto. Las versiones industriales suelen tener menos bechamel y relleno más magro que los caseros, por lo que pueden estar entre 180-230 kcal por unidad.<br><br>
+
+      <strong>¿Cómo registro los canelones en una app de calorías?</strong><br>
+      Si usas Caliro, fotografía el plato y selecciona la versión más cercana. El sistema aplica los rangos reales calculados desde BEDCA. Si corriges la estimación, aprende para la próxima vez.
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#185FA5">
+    <div class="article-tag">CTA final</div>
+    <div class="article-content">
+      Si quieres registrar los canelones sin buscar entre entradas genéricas que no distinguen caseros de restaurante ni versiones con bechamel real, Caliro identifica el plato por foto y aplica los rangos reales. Gratis, sin anuncios.<br><br>
+      <strong>→ Probar Caliro gratis</strong>
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#aaa">
+    <div class="article-tag">Byline + Disclaimer</div>
+    <div class="article-content">
+      <em>Escrito por Luca — Desarrollador de Caliro. Datos calculados ingrediente a ingrediente desde BEDCA (CSIC) y USDA FoodData Central. Última actualización: mayo 2026.</em><br><br>
+      <em>Los valores son estimaciones orientativas. La composición real varía según la receta, los ingredientes y las cantidades utilizadas. Esta información no sustituye el asesoramiento de un dietista-nutricionista colegiado.</em>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

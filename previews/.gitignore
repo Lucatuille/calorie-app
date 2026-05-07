@@ -1,0 +1,5 @@
+# Excluir todo el contenido del directorio
+*
+# Excepto el .gitignore mismo y el README
+!.gitignore
+!README.md

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caliro — Croquetas · Datos verificados BEDCA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f9f7f4;color:#1a1a1a;padding:24px;max-width:860px;margin:0 auto;font-size:14px;line-height:1.6}
+h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.meta{font-size:13px;color:#888;margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap}
+.meta span{background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500}
+.meta span.warn{background:#FAEEDA;color:#854F0B}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:8px;border:0.5px solid #ccc;font-size:13px;cursor:pointer;background:transparent;color:#666;transition:all .15s}
+.tab.active{background:#f0ede8;color:#1a1a1a;border-color:#888;font-weight:500}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:0.5px solid #e0ddd8;border-radius:12px;padding:16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:10px}
+.warn-box{background:#FAEEDA;border:0.5px solid #FAC775;border-radius:8px;padding:10px 14px;font-size:13px;color:#854F0B;margin-bottom:12px;line-height:1.5}
+.info-box{background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:8px;padding:10px 14px;font-size:13px;color:#185FA5;margin-bottom:12px;line-height:1.5}
+.ok-box{background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:8px;padding:10px 14px;font-size:13px;color:#3B6D11;margin-bottom:12px;line-height:1.5}
+.red-box{background:#FCEBEB;border:0.5px solid #F7C1C1;border-radius:8px;padding:10px 14px;font-size:13px;color:#A32D2D;margin-bottom:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+th{font-size:12px;font-weight:500;color:#666;text-align:left;padding:7px 10px;border-bottom:0.5px solid #e0ddd8;background:#fafaf8}
+td{padding:7px 10px;border-bottom:0.5px solid #f0ede8;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fdfcfa}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bold{font-weight:500}
+.muted{color:#888;font-size:12px}
+.green{color:#3B6D11;font-weight:500}
+.orange{color:#854F0B;font-weight:500}
+.red{color:#A32D2D;font-weight:500}
+.hl{background:#f0ede8}
+.badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-gray{background:#f0ede8;color:#555}
+.b-red{background:#FCEBEB;color:#A32D2D}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:0.5px solid #e0ddd8;border-radius:10px;padding:12px;text-align:center}
+.kpi-num{font-size:22px;font-weight:500}
+.kpi-label{font-size:11px;color:#888;margin-top:2px}
+.section-title{font-size:16px;font-weight:500;margin-bottom:4px}
+.section-sub{font-size:13px;color:#888;margin-bottom:14px}
+.db-entry{background:#1e1e1e;color:#d4d4d4;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.9;overflow-x:auto;white-space:pre}
+.k{color:#9cdcfe}.v{color:#ce9178}.n{color:#b5cea8}.t{color:#4ec9b0}
+.article-block{background:#fff;border-left:3px solid #22c55e;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:10px;border-top:0.5px solid #e0ddd8;border-right:0.5px solid #e0ddd8;border-bottom:0.5px solid #e0ddd8}
+.article-tag{font-size:11px;color:#888;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.article-content{font-size:13px;color:#333;line-height:1.8}
+</style>
+</head>
+<body>
+
+<h1>Croquetas — Datos verificados BEDCA</h1>
+<div class="meta">
+  <span>✓ BEDCA verificado</span>
+  <span>Receta #2</span>
+  <span>Abril 2026</span>
+  <span class="warn">⚠ Leche: carbos estimación estándar (4.7g/100g)</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('datos',this)">Datos BEDCA</button>
+  <button class="tab" onclick="show('calculo',this)">Cálculo</button>
+  <button class="tab" onclick="show('rellenos',this)">Variantes relleno</button>
+  <button class="tab" onclick="show('porciones',this)">Porciones</button>
+  <button class="tab" onclick="show('db',this)">Base de datos app</button>
+  <button class="tab" onclick="show('articulo',this)">Artículo listo</button>
+</div>
+
+<!-- DATOS BEDCA -->
+<div id="datos" class="section active">
+  <p class="section-title">Datos fuente — BEDCA oficial</p>
+  <p class="section-sub">Todos los ingredientes verificados manualmente en bedca.net salvo indicación.</p>
+
+  <div class="warn-box">La leche entera no tenía carbohidratos en los datos que me pasaste. He usado 4.7g/100g (lactosa), valor estándar ampliamente documentado para leche entera. Impacto bajo — la leche solo aporta el 10% de las calorías totales.</div>
+
+  <div class="card">
+    <table>
+      <tr><th>Ingrediente</th><th>En BEDCA como</th><th class="num">Kcal</th><th class="num">Prot</th><th class="num">Carb</th><th class="num">Grasa</th><th>Estado</th></tr>
+      <tr><td class="bold">Jamón serrano</td><td class="muted">jamón serrano curado</td><td class="num">319</td><td class="num">28.8g</td><td class="num">0.2g</td><td class="num">22.6g</td><td><span class="badge b-green">✓ BEDCA</span></td></tr>
+      <tr><td class="bold">Leche entera</td><td class="muted">leche entera de vaca</td><td class="num">65</td><td class="num">3.06g</td><td class="num">4.7g*</td><td class="num">3.8g</td><td><span class="badge b-amber">✓ BEDCA + estimación carb</span></td></tr>
+      <tr><td class="bold">Harina de trigo</td><td class="muted">harina de trigo</td><td class="num">333</td><td class="num">10.0g</td><td class="num">71.5g</td><td class="num">~0g</td><td><span class="badge b-green">✓ BEDCA</span></td></tr>
+      <tr><td class="bold">Mantequilla</td><td class="muted">mantequilla</td><td class="num">733</td><td class="num">0.7g</td><td class="num">0.5g</td><td class="num">82.0g</td><td><span class="badge b-green">✓ BEDCA</span></td></tr>
+      <tr><td class="bold">Pan rallado</td><td class="muted">pan rallado</td><td class="num">259</td><td class="num">8.47g</td><td class="num">51.5g</td><td class="num">1.6g</td><td><span class="badge b-green">✓ BEDCA</span></td></tr>
+      <tr><td class="bold">Huevo entero</td><td class="muted">huevo de gallina entero</td><td class="num">150</td><td class="num">12.5g</td><td class="num">~0g</td><td class="num">11.1g</td><td><span class="badge b-green">✓ BEDCA (tortilla)</span></td></tr>
+      <tr><td class="bold">Aceite de oliva</td><td class="muted">aceite de oliva</td><td class="num">888</td><td class="num">~0g</td><td class="num">0g</td><td class="num">100g</td><td><span class="badge b-green">✓ BEDCA (tortilla)</span></td></tr>
+    </table>
+    <p class="muted" style="margin-top:8px;padding:0 4px">* Leche: carbohidratos (lactosa) no presentes en el extracto de BEDCA recibido. Se usa valor estándar 4.7g/100g.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Nota metodológica — Absorción de aceite en fritura</div>
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      Las croquetas rebozadas absorben aproximadamente el <strong>15–20% de su peso en aceite</strong> durante la fritura. Es el porcentaje más alto de todos los platos fritos españoles — mayor que la tortilla — porque el pan rallado actúa como esponja.<br><br>
+      Para la receta de 20 croquetas (~35g c/u cocida), se estima una absorción media del <strong>18%</strong>: 20 × 35g × 18% = <strong>~126g de aceite absorbido total</strong>. Este factor es el mayor generador de variabilidad en los resultados.<br><br>
+      <strong>Congeladas vs caseras:</strong> las croquetas industriales (Mercadona, Casa Tarradellas) suelen tener <em>menos aceite absorbido</em> porque se fríen en condiciones controladas y se venden prefritas. Sus etiquetas reflejan esto: 230–270 kcal/100g vs las ~443 kcal/100g de las caseras fritas en casa. Para congeladas, usa siempre la etiqueta del producto.
+    </div>
+  </div>
+</div>
+
+<!-- CÁLCULO -->
+<div id="calculo" class="section">
+  <p class="section-title">Cálculo completo — 20 croquetas de jamón caseras</p>
+  <p class="section-sub">Receta base: 500ml leche, 60g harina, 60g mantequilla, 150g jamón, 2 huevos, 100g pan rallado.</p>
+
+  <div class="red-box">El aceite absorbido representa el <strong>39% de las calorías totales</strong> de las croquetas — más que cualquier otro ingrediente individual, incluyendo el jamón. Es el factor más determinante y el más ignorado.</div>
+
+  <div class="card">
+    <div class="card-title">Aportación de cada ingrediente — 20 croquetas</div>
+    <table>
+      <tr><th>Ingrediente</th><th class="num">Cantidad</th><th class="num">Kcal</th><th class="num">Proteína</th><th class="num">Carbos</th><th class="num">Grasa</th><th class="num">% kcal</th></tr>
+      <tr><td>Leche entera</td><td class="num">500g</td><td class="num">325</td><td class="num">15.3g</td><td class="num">23.5g</td><td class="num">19.0g</td><td class="num">10%</td></tr>
+      <tr><td>Harina de trigo</td><td class="num">60g</td><td class="num">200</td><td class="num">6.0g</td><td class="num">42.9g</td><td class="num">0g</td><td class="num">6%</td></tr>
+      <tr><td>Mantequilla</td><td class="num">60g</td><td class="num">440</td><td class="num">0.4g</td><td class="num">0.3g</td><td class="num">49.2g</td><td class="num">14%</td></tr>
+      <tr><td>Jamón serrano</td><td class="num">150g</td><td class="num">479</td><td class="num">43.2g</td><td class="num">0.3g</td><td class="num">33.9g</td><td class="num">15%</td></tr>
+      <tr><td>Huevo (rebozado)</td><td class="num">120g</td><td class="num">180</td><td class="num">15.0g</td><td class="num">0g</td><td class="num">13.3g</td><td class="num">6%</td></tr>
+      <tr><td>Pan rallado</td><td class="num">100g</td><td class="num">259</td><td class="num">8.5g</td><td class="num">51.5g</td><td class="num">1.6g</td><td class="num">8%</td></tr>
+      <tr style="background:#fff8f0"><td class="bold">Aceite absorbido</td><td class="num">137g</td><td class="num bold" style="color:#854F0B">1.217</td><td class="num">0g</td><td class="num">0g</td><td class="num bold" style="color:#854F0B">137g</td><td class="num bold" style="color:#854F0B">39%</td></tr>
+      <tr class="hl"><td class="bold">TOTAL 20 croquetas</td><td class="num muted">~700g</td><td class="num bold">3.099</td><td class="num bold">88.4g</td><td class="num bold">118.5g</td><td class="num bold">254.0g</td><td class="num">100%</td></tr>
+      <tr style="background:#f0ede8"><td class="bold">Por croqueta (~35g)</td><td class="num">35g</td><td class="num bold green">155 kcal</td><td class="num bold">4.4g</td><td class="num bold">5.9g</td><td class="num bold">12.7g</td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Densidad calórica</div>
+      <table>
+        <tr><th>Versión</th><th class="num">Kcal/100g</th></tr>
+        <tr><td>Casera (absorción estándar)</td><td class="num bold">443</td></tr>
+        <tr><td>Casera (absorción baja)</td><td class="num">375</td></tr>
+        <tr><td>Congeladas (etiqueta)</td><td class="num">230–270</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">La diferencia entre caseras y congeladas es enorme — las industriales tienen control de fritura y rebozado más fino.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Impacto del aceite</div>
+      <table>
+        <tr><th>Absorción</th><th class="num">Aceite total</th><th class="num">Kcal/croqueta</th></tr>
+        <tr><td>Baja (12%)</td><td class="num">84g</td><td class="num bold">131</td></tr>
+        <tr class="hl"><td>Estándar (18%)</td><td class="num">137g</td><td class="num bold green">155</td></tr>
+        <tr><td>Alta (25%)</td><td class="num">175g</td><td class="num bold">175</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">Temperatura del aceite, grosor del rebozado y tiempo de fritura determinan la absorción.</p>
+    </div>
+  </div>
+</div>
+
+<!-- RELLENOS -->
+<div id="rellenos" class="section">
+  <p class="section-title">Variantes por relleno</p>
+  <p class="section-sub">Misma base (bechamel + rebozado + aceite = 131 kcal/croqueta). Solo cambia el relleno (7.5g por croqueta en receta de 20 uds).</p>
+
+  <div class="info-box">El relleno aporta relativamente poco al total calórico porque la cantidad por croqueta es pequeña (~7.5g). La base de bechamel, rebozado y aceite domina. Esto explica por qué una croqueta de bacalao y una de jamón tienen calorías similares.</div>
+
+  <div class="card">
+    <table>
+      <tr><th>Relleno</th><th class="num">Kcal relleno/croqueta</th><th class="num">Kcal total/croqueta</th><th class="num">Prot</th><th class="num">Carb</th><th class="num">Grasa</th><th>Fuente</th></tr>
+      <tr class="hl"><td class="bold">Jamón serrano</td><td class="num">24</td><td class="num bold green">155</td><td class="num">4.5g</td><td class="num">5.9g</td><td class="num">12.7g</td><td><span class="badge b-green">BEDCA</span></td></tr>
+      <tr><td>Pollo cocido</td><td class="num">12</td><td class="num bold">143</td><td class="num">4.2g</td><td class="num">5.9g</td><td class="num">11.5g</td><td><span class="badge b-amber">Estimación</span></td></tr>
+      <tr><td>Bacalao desalado</td><td class="num">6</td><td class="num bold">138</td><td class="num">3.8g</td><td class="num">5.9g</td><td class="num">11.0g</td><td><span class="badge b-amber">Estimación</span></td></tr>
+      <tr><td>Setas / boletus</td><td class="num">3</td><td class="num bold">134</td><td class="num">2.5g</td><td class="num">6.3g</td><td class="num">11.0g</td><td><span class="badge b-amber">Estimación</span></td></tr>
+      <tr><td>Queso manchego</td><td class="num">29</td><td class="num bold">160</td><td class="num">4.1g</td><td class="num">6.0g</td><td class="num">13.4g</td><td><span class="badge b-amber">Estimación</span></td></tr>
+    </table>
+    <p class="muted" style="margin-top:8px;padding:0 4px">Rellenos distintos a jamón: valores estimados, no verificados en BEDCA. Marcar como confianza media en la app.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">La sorpresa del relleno — por qué la variación es pequeña</div>
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      La diferencia entre la croqueta más calórica (queso, 160 kcal) y la menos (setas, 134 kcal) es solo <strong>26 kcal por croqueta</strong>. Esto es contraintuitivo — la gente asume que "de jamón" engorda mucho más que "de verduras". La realidad es que el relleno representa solo el 3–16% de las calorías totales. Lo que engorda la croqueta es la <strong>base de bechamel con mantequilla + el aceite del rebozado</strong>, no el relleno.<br><br>
+      Este es el argumento editorial más potente del artículo.
+    </div>
+  </div>
+</div>
+
+<!-- PORCIONES -->
+<div id="porciones" class="section">
+  <p class="section-title">Porciones y situaciones reales</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-num" style="color:#3B6D11">155</div><div class="kpi-label">kcal croqueta casera (35g)</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#854F0B">221</div><div class="kpi-label">kcal croqueta bar (50g)</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#A32D2D">664</div><div class="kpi-label">kcal ración bar (3 grandes)</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#3B6D11">620</div><div class="kpi-label">kcal ración casera (4 uds)</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tabla maestra de situaciones</div>
+    <table>
+      <tr><th>Situación</th><th class="num">Peso ref.</th><th class="num">Kcal</th><th class="num">Rango</th><th class="num">Prot</th><th class="num">Carb</th><th class="num">Grasa</th><th>Confianza</th></tr>
+      <tr>
+        <td><strong>Croqueta casera pequeña</strong><br><span class="muted">Estilo casero, tamaño corcho</span></td>
+        <td class="num">~25g</td><td class="num bold">111</td><td class="num muted">94–128</td><td class="num">3.2g</td><td class="num">4.2g</td><td class="num">9.1g</td><td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr class="hl">
+        <td><strong>Croqueta casera estándar</strong><br><span class="muted">Tamaño medio, referencia</span></td>
+        <td class="num">~35g</td><td class="num bold green">155</td><td class="num muted">132–178</td><td class="num">4.4g</td><td class="num">5.9g</td><td class="num">12.7g</td><td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Croqueta de bar grande</strong><br><span class="muted">Bares de tapas, más grande y aceitosa</span></td>
+        <td class="num">~50g</td><td class="num bold orange">221</td><td class="num muted">177–265</td><td class="num">6.3g</td><td class="num">8.5g</td><td class="num">18.1g</td><td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Ración de bar (3 croquetas grandes)</strong><br><span class="muted">Tapa estándar en bar</span></td>
+        <td class="num">~150g</td><td class="num bold red">664</td><td class="num muted">530–795</td><td class="num">18.9g</td><td class="num">25.4g</td><td class="num">54.4g</td><td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Ración casera (4 croquetas medianas)</strong><br><span class="muted">Primer plato típico en casa</span></td>
+        <td class="num">~140g</td><td class="num bold">620</td><td class="num muted">527–713</td><td class="num">17.7g</td><td class="num">23.7g</td><td class="num">50.8g</td><td><span class="badge b-green">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Tapa (2 croquetas pequeñas)</strong><br><span class="muted">Tapa o aperitivo</span></td>
+        <td class="num">~50g</td><td class="num bold">221</td><td class="num muted">188–254</td><td class="num">6.3g</td><td class="num">8.5g</td><td class="num">18.1g</td><td><span class="badge b-amber">Media</span></td>
+      </tr>
+      <tr>
+        <td><strong>Croquetas congeladas (marca)</strong><br><span class="muted">Mercadona, Casa Tarradellas…</span></td>
+        <td class="num">Ver etiqueta</td><td class="num bold">—</td><td class="num muted">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="badge b-blue">Etiqueta</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Referencias visuales sin báscula</div>
+    <div style="font-size:13px;color:#555;line-height:1.9">
+      <div style="margin-bottom:8px"><strong>Croqueta pequeña (~25g):</strong> tamaño de un corcho de vino. Las caseras antiguas que hacían las abuelas.</div>
+      <div style="margin-bottom:8px"><strong>Croqueta estándar (~35g):</strong> tamaño de un huevo de gallina pequeño. Es el tamaño de referencia más habitual en casa.</div>
+      <div style="margin-bottom:8px"><strong>Croqueta de bar grande (~50g):</strong> tamaño de un huevo L. Las croquetas de tapas suelen ser notablemente más grandes que las caseras — y más aceitosas porque se fríen en aceite más frío o más usado.</div>
+      <div><strong>Ración de bar (3 grandes):</strong> 664 kcal equivale a un menú del día completo. Muchos bares sirven 3-4 croquetas como tapa — es uno de los aperitivos más calóricos de la cocina española.</div>
+    </div>
+  </div>
+
+  <div class="red-box"><strong>El dato que sorprende:</strong> una ración de bar de 3 croquetas grandes (~150g) tiene 664 kcal — más que una ración de paella, más que un bocadillo de jamón completo, y comparable a una comida entera de menú del día. Casi nadie lo estima correctamente porque cada croqueta parece pequeña.</div>
+</div>
+
+<!-- BASE DE DATOS -->
+<div id="db" class="section">
+  <p class="section-title">Entradas para la base de datos de la app</p>
+  <p class="section-sub">JSON listo para copiar. Activar al publicar el artículo.</p>
+
+  <div class="card">
+    <div class="card-title">Entrada principal — croqueta casera de jamón</div>
+    <div class="db-entry"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"croqueta_jamon_casera"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Croqueta de jamón casera"</span>,
+  <span class="k">"nombre_busqueda"</span>: [<span class="v">"croqueta"</span>, <span class="v">"croquetas"</span>, <span class="v">"croqueta de jamón"</span>, <span class="v">"croqueta jamón serrano"</span>],
+  <span class="k">"categoria"</span>: <span class="v">"tapas_aperitivos"</span>,
+  <span class="k">"tags"</span>: [<span class="v">"croqueta"</span>, <span class="v">"jamón"</span>, <span class="v">"frita"</span>, <span class="v">"bechamel"</span>, <span class="v">"tapa"</span>],
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">35</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">155</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">132</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">178</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">4.4</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">5.9</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">12.7</span>
+  <span class="t">}</span>,
+  <span class="k">"macros_por_100g"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">443</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">12.6</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">16.9</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">36.3</span>
+  <span class="t">}</span>,
+  <span class="k">"fuente"</span>: <span class="v">"BEDCA — cálculo por ingredientes verificado abril 2026"</span>,
+  <span class="k">"confianza"</span>: <span class="v">"alta"</span>,
+  <span class="k">"variabilidad_nota"</span>: <span class="v">"Absorción de aceite (15-20% peso) es el factor principal. Rango ±15%. Congeladas tienen valores muy distintos — usar etiqueta."</span>,
+  <span class="k">"exclusion_tokens"</span>: [<span class="v">"francesa"</span>, <span class="v">"congelada"</span>, <span class="v">"al horno"</span>],
+  <span class="k">"variantes_ids"</span>: [
+    <span class="v">"croqueta_jamon_bar"</span>,
+    <span class="v">"croqueta_pollo_casera"</span>,
+    <span class="v">"croqueta_bacalao_casera"</span>,
+    <span class="v">"racion_croquetas_bar"</span>,
+    <span class="v">"racion_croquetas_casera"</span>
+  ],
+  <span class="k">"articulo_blog"</span>: <span class="v">"/blog/calorias-croquetas"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Variante: croqueta de bar</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"croqueta_jamon_bar"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Croqueta de jamón (bar)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">50</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">221</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">177</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">265</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">6.3</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">8.5</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">18.1</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Variante: ración de bar (3 uds)</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"racion_croquetas_bar"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Ración de croquetas (bar, 3 uds)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">150</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">664</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">530</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">795</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">18.9</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">25.4</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">54.4</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTÍCULO -->
+<div id="articulo" class="section">
+  <p class="section-title">Artículo — Estructura completa lista para redactar</p>
+
+  <div class="article-block" style="border-left-color:#888">
+    <div class="article-tag">Meta SEO</div>
+    <div class="article-content">
+      <strong>Title:</strong> Calorías de las croquetas: caseras, de bar y por qué el relleno importa menos de lo que crees<br>
+      <strong>Meta description:</strong> Cuántas calorías tienen las croquetas según el tamaño y dónde las comes. Una ración de bar puede llegar a 664 kcal. Datos calculados desde BEDCA con rangos reales.<br>
+      <strong>URL slug:</strong> /blog/calorias-croquetas<br>
+      <strong>Keyword principal:</strong> calorías croquetas<br>
+      <strong>Secundarias:</strong> croquetas de jamón calorías, cuántas calorías tienen las croquetas, croquetas macros, croquetas caseras calorías
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H1</div>
+    <div class="article-content" style="font-size:16px;font-weight:500">
+      Calorías de las croquetas: caseras, de bar y por qué el relleno importa menos de lo que crees
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Intro + dato de gancho</div>
+    <div class="article-content">
+      Una ración de croquetas en un bar — tres unidades grandes — tiene aproximadamente 664 calorías. Más que una paella, más que un bocadillo de jamón completo. La mayoría de la gente las estima en la mitad porque cada croqueta parece pequeña.<br><br>
+      El motivo por el que las croquetas son tan difíciles de calcular no es el relleno — es el aceite que absorbe el rebozado durante la fritura, que representa casi el 40% de las calorías totales. Y la diferencia entre una croqueta casera y una de bar puede superar los 60 kcal por unidad.<br><br>
+      Hemos calculado los valores ingrediente a ingrediente usando BEDCA, la base de datos oficial española de composición de alimentos validada por el CSIC.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Tabla principal — va aquí primero</div>
+    <div class="article-content">
+      <table style="margin-bottom:8px">
+        <tr><th>Situación</th><th class="num">Peso</th><th class="num">Kcal</th><th class="num">Rango</th><th class="num">Prot</th><th class="num">Carb</th><th class="num">Grasa</th></tr>
+        <tr><td>Croqueta casera pequeña</td><td class="num">~25g</td><td class="num bold">111</td><td class="num muted">94–128</td><td class="num">3.2g</td><td class="num">4.2g</td><td class="num">9.1g</td></tr>
+        <tr class="hl"><td><strong>Croqueta casera estándar</strong></td><td class="num">~35g</td><td class="num bold">155</td><td class="num muted">132–178</td><td class="num">4.4g</td><td class="num">5.9g</td><td class="num">12.7g</td></tr>
+        <tr><td>Croqueta de bar grande</td><td class="num">~50g</td><td class="num bold">221</td><td class="num muted">177–265</td><td class="num">6.3g</td><td class="num">8.5g</td><td class="num">18.1g</td></tr>
+        <tr><td>Tapa (2 pequeñas)</td><td class="num">~50g</td><td class="num bold">221</td><td class="num muted">188–254</td><td class="num">6.3g</td><td class="num">8.5g</td><td class="num">18.1g</td></tr>
+        <tr><td>Ración casera (4 medianas)</td><td class="num">~140g</td><td class="num bold">620</td><td class="num muted">527–713</td><td class="num">17.7g</td><td class="num">23.7g</td><td class="num">50.8g</td></tr>
+        <tr><td><strong>Ración de bar (3 grandes)</strong></td><td class="num">~150g</td><td class="num bold red">664</td><td class="num muted">530–795</td><td class="num">18.9g</td><td class="num">25.4g</td><td class="num">54.4g</td></tr>
+      </table>
+      <span class="muted">Fuente: calculado ingrediente a ingrediente desde BEDCA (CSIC). Relleno: jamón serrano. Variabilidad real ±15–30% según aceite y tamaño.</span>
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — El argumento central</div>
+    <div class="article-content">
+      <strong>El aceite del rebozado: el ingrediente que nadie cuenta</strong><br><br>
+      En una receta estándar de 20 croquetas, el aceite absorbido durante la fritura aporta 1.217 kcal — el 39% del total. Más que el jamón (15%), más que la mantequilla de la bechamel (14%), más que cualquier otro ingrediente individual.<br><br>
+      El rebozado de pan rallado actúa como esponja. Las croquetas absorben entre el 15 y el 20% de su propio peso en aceite, dependiendo de la temperatura del aceite, el grosor del rebozado y el tiempo de fritura. Una croqueta casera con absorción controlada (12%) tiene 131 kcal. La misma croqueta con aceite frío o muy usado (25% absorción) llega a 175 kcal. <strong>44 kcal de diferencia por croqueta, solo por el aceite.</strong>
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — El mito del relleno</div>
+    <div class="article-content">
+      <strong>¿De jamón o de bacalao? La diferencia es de 17 calorías</strong><br><br>
+      La croqueta de jamón tiene 155 kcal. La de bacalao tiene 138 kcal. La de queso, 160 kcal. La diferencia entre la más calórica y la menos calórica es de 26 kcal por croqueta — menos de lo que varía por el aceite en una misma fritura.<br><br>
+      El motivo es simple: el relleno representa solo 7.5g por croqueta en una receta estándar. A esa cantidad, incluso un relleno tan calórico como el queso manchego aporta apenas 29 kcal a la croqueta final. La base de bechamel con mantequilla y el rebozado frito dominan completamente el perfil calórico.<br><br>
+      Lo que determina las calorías de una croqueta no es lo que llevan dentro — es cómo están fritas.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2</div>
+    <div class="article-content">
+      <strong>Cómo estimar las croquetas sin báscula</strong><br><br>
+      <strong>Croqueta pequeña (~25g):</strong> tamaño de un corcho de vino. 111 kcal.<br>
+      <strong>Croqueta estándar (~35g):</strong> tamaño de un huevo de gallina pequeño. 155 kcal.<br>
+      <strong>Croqueta de bar grande (~50g):</strong> tamaño de un huevo L. Las de bar suelen ser notablemente más grandes. 221 kcal.<br>
+      <strong>Ración de bar (3 grandes):</strong> si caben en la palma de la mano apiladas, estás en el rango de 150g, unos 664 kcal.<br><br>
+      Si no sabes si son caseras o de bar, usa el rango medio y redondea hacia arriba — las croquetas suelen sorprender por exceso.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — FAQ</div>
+    <div class="article-content">
+      <strong>¿Cuántas calorías tiene una croqueta casera?</strong><br>
+      Una croqueta casera de tamaño estándar (~35g) tiene entre 132 y 178 kcal. El valor central calculado desde BEDCA es 155 kcal. El factor que más varía es el aceite absorbido durante la fritura.<br><br>
+      <strong>¿Las croquetas de bacalao tienen menos calorías que las de jamón?</strong><br>
+      Solo 17 kcal menos por croqueta (138 vs 155 kcal). La diferencia es prácticamente irrelevante. Lo que determina las calorías es el aceite de fritura y el tamaño, no el relleno.<br><br>
+      <strong>¿Cuántas calorías tienen las croquetas congeladas de Mercadona?</strong><br>
+      Las croquetas industriales tienen 230–270 kcal/100g según la etiqueta — bastante menos que las caseras fritas (~443 kcal/100g). Se elaboran en condiciones controladas con menos absorción de aceite. Para cualquier marca específica, usa siempre la etiqueta del producto.<br><br>
+      <strong>¿Cómo registro las croquetas en una app de calorías?</strong><br>
+      Si usas Caliro, fotografía el plato y selecciona si son caseras o de bar. El sistema aplica los rangos reales según el tipo. Si las corriges, aprende para la próxima vez.
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#185FA5">
+    <div class="article-tag">CTA final</div>
+    <div class="article-content">
+      Si quieres registrar las croquetas sin buscar entre entradas genéricas que no distinguen caseras de bar, Caliro identifica el plato por foto y aplica los rangos reales. Gratis, sin anuncios.<br><br>
+      <strong>→ Probar Caliro gratis</strong>
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#aaa">
+    <div class="article-tag">Byline + Disclaimer</div>
+    <div class="article-content">
+      <em>Escrito por Luca — Desarrollador de Caliro. Datos calculados ingrediente a ingrediente desde BEDCA (CSIC). Última actualización: abril 2026.</em><br><br>
+      <em>Los valores son estimaciones orientativas. La composición real varía según la receta, los ingredientes y las cantidades utilizadas. Esta información no sustituye el asesoramiento de un dietista-nutricionista colegiado.</em>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
