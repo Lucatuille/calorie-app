@@ -41,9 +41,9 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
   // Onboarding silencioso — pulse del "?" hasta que el user lo abra una vez.
   const showHelpPulse = !user?.onboarding_state?.help_modal_seen;
   // Dot del tab Chef desktop — solo Pro y solo si hay digest no leído.
+  // La pista textual "Tu primer resumen semanal está listo" se muestra dentro
+  // del DigestSheet (banner top), no aquí — eso evita texto plano en el nav.
   const showChefDot = !!(user?.has_unread_digest && isPro(user?.access_level));
-  // Línea contextual one-shot junto al tab Chef la primera vez que aparece el dot.
-  const showFirstDigestHint = showChefDot && !user?.onboarding_state?.first_digest_seen_at;
 
   async function handleHelpClick() {
     if (showHelpPulse && token && user) {
@@ -125,16 +125,6 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
                     }} />
             )}
           </NavLink>
-          {showFirstDigestHint && (
-            <span style={{
-              fontSize: 11, color: 'var(--accent)', fontStyle: 'italic',
-              marginLeft: -16,
-              fontFamily: 'var(--font-serif)',
-              whiteSpace: 'nowrap',
-            }}>
-              Tu primer resumen semanal está listo
-            </span>
-          )}
         </div>
 
         {/* Right side */}

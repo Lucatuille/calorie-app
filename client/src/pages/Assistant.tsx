@@ -372,7 +372,7 @@ function ConversationHistory({ conversations, onSelect, onClose }) {
 
 // ── Resumen semanal — bottom sheet (se muestra una vez por semana) ────
 
-function DigestSheet({ digest, onClose }) {
+function DigestSheet({ digest, onClose, showFirstTimeIntro }) {
   const dateStr = new Date(digest.generated_at).toLocaleDateString('es-ES', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
@@ -398,6 +398,24 @@ function DigestSheet({ digest, onClose }) {
       >
         {/* Handle */}
         <div style={{ width: 36, height: 3, background: 'var(--border)', borderRadius: 99, margin: '0 auto 20px' }} />
+
+        {/* Banner one-shot solo la primera vez. Coherente con el TipStrip
+            del HelpModal: callout sutil con borde izquierdo verde. */}
+        {showFirstTimeIntro && (
+          <div style={{
+            background: 'var(--accent-light, #f0fdf4)',
+            borderLeft: '3px solid var(--accent)',
+            borderRadius: '0 8px 8px 0',
+            padding: '10px 14px',
+            marginBottom: 18,
+            fontSize: 12,
+            lineHeight: 1.55,
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-sans)',
+          }}>
+            Tu primer resumen semanal. A partir de ahora te aparecerá cada domingo.
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
@@ -919,7 +937,10 @@ export default function Assistant() {
       )}
 
       {digest && !digestDismissed && (
-        <DigestSheet digest={digest} onClose={() => {
+        <DigestSheet
+          digest={digest}
+          showFirstTimeIntro={!user?.onboarding_state?.first_digest_seen_at}
+          onClose={() => {
           setDigestDismissed(true);
           const now = new Date();
           const day = now.getDay();
