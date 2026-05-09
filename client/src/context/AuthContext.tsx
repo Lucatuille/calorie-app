@@ -6,6 +6,12 @@ import { calculateMacros } from '../utils/tdee';
 const BASE = import.meta.env.VITE_API_URL || 'https://calorie-app-api.lucatuille.workers.dev';
 
 // ── Types ──────────────────────────────────────────────────
+export interface OnboardingState {
+  help_modal_seen?: boolean;
+  first_digest_seen_at?: string;
+  history_tooltip_seen?: boolean;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -23,6 +29,8 @@ export interface User {
   target_fat?: number | null;
   goal_weight?: number | null;
   tdee?: number | null;
+  onboarding_state?: OnboardingState;
+  has_unread_digest?: boolean;
 }
 
 interface AuthContextValue {

@@ -63,7 +63,7 @@ export async function handleAuth(request, env, path) {
       } catch { /* silent — don't fail registration if email fails */ }
     }
 
-    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0, age: age||null, weight: weight||null, height: height||null, gender: gender||null } }, 201);
+    return jsonResponse({ token, user: { id: userId, name, email, is_admin: 0, access_level: 3, onboarding_completed: 0, age: age||null, weight: weight||null, height: height||null, gender: gender||null, onboarding_state: {}, has_unread_digest: false } }, 201);
   }
 
   // POST /api/auth/login
@@ -107,9 +107,13 @@ export async function handleAuth(request, env, path) {
 
     await env.DB.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").bind(user.id).run();
 
+    let onboardingState = {};
+    try { onboardingState = JSON.parse(user.onboarding_state || '{}'); } catch {}
+    const has_unread_digest = await computeHasUnreadDigest(user.id, accessLevel, onboardingState, env);
+
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1, age: user.age, weight: user.weight, height: user.height, gender: user.gender, target_calories: user.target_calories, target_protein: user.target_protein, target_carbs: user.target_carbs, target_fat: user.target_fat }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1, age: user.age, weight: user.weight, height: user.height, gender: user.gender, target_calories: user.target_calories, target_protein: user.target_protein, target_carbs: user.target_carbs, target_fat: user.target_fat, onboarding_state: onboardingState, has_unread_digest }
     });
   }
 
@@ -123,7 +127,7 @@ export async function handleAuth(request, env, path) {
     if (!payload) return errorResponse('Token inválido o expirado', 401);
 
     const user = await env.DB.prepare(
-      'SELECT id, name, email, is_admin, access_level, onboarding_completed, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat FROM users WHERE id = ?'
+      'SELECT id, name, email, is_admin, access_level, onboarding_completed, age, weight, height, gender, target_calories, target_protein, target_carbs, target_fat, onboarding_state FROM users WHERE id = ?'
     ).bind(payload.userId).first();
 
     if (!user) return errorResponse('Usuario no encontrado', 404);
@@ -137,9 +141,13 @@ export async function handleAuth(request, env, path) {
 
     await env.DB.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").bind(user.id).run();
 
+    let onboardingState = {};
+    try { onboardingState = JSON.parse(user.onboarding_state || '{}'); } catch {}
+    const has_unread_digest = await computeHasUnreadDigest(user.id, accessLevel, onboardingState, env);
+
     return jsonResponse({
       token,
-      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1, age: user.age, weight: user.weight, height: user.height, gender: user.gender, target_calories: user.target_calories, target_protein: user.target_protein, target_carbs: user.target_carbs, target_fat: user.target_fat }
+      user: { id: user.id, name: user.name, email: user.email, is_admin: isAdmin, access_level: accessLevel, onboarding_completed: user.onboarding_completed ?? 1, age: user.age, weight: user.weight, height: user.height, gender: user.gender, target_calories: user.target_calories, target_protein: user.target_protein, target_carbs: user.target_carbs, target_fat: user.target_fat, onboarding_state: onboardingState, has_unread_digest }
     });
   }
 
@@ -245,6 +253,32 @@ export async function handleAuth(request, env, path) {
 }
 
 // ── Helpers ─────────────────────────────────────────────────
+
+// Calcula si el user tiene digest semanal generado pero aún no visto.
+// Solo Pro/Founder/Admin (1, 2, 99) tienen digest. Free → siempre false.
+async function computeHasUnreadDigest(userId, accessLevel, onboardingState, env) {
+  if (![1, 2, 99].includes(accessLevel)) return false;
+
+  // Lunes de esta semana en YYYY-MM-DD (UTC simple, coherente con assistant.js)
+  const now = new Date();
+  const dow = now.getDay();
+  const offset = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(now);
+  monday.setDate(monday.getDate() + offset);
+  const weekStart = monday.toISOString().split('T')[0];
+
+  const exists = await env.DB.prepare(
+    'SELECT 1 FROM assistant_digests WHERE user_id = ? AND week_start = ? LIMIT 1'
+  ).bind(userId, weekStart).first().catch(() => null);
+
+  if (!exists) return false;
+
+  const seenAt = onboardingState?.first_digest_seen_at;
+  if (!seenAt) return true; // nunca visto
+
+  // Si lo vio antes del lunes de esta semana, hay uno nuevo no visto
+  return new Date(seenAt) < new Date(weekStart + 'T00:00:00Z');
+}
 
 async function sha256(text) {
   const data = new TextEncoder().encode(text);

@@ -451,7 +451,7 @@ type ChefMode = 'chat' | 'day' | 'week';
 
 export default function Assistant() {
   usePageTitle('Chef Caliro');
-  const { user, token } = useAuth();
+  const { user, token, updateUser } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<ChefMode>('chat');
   const [messages, setMessages]             = useState([]);
@@ -927,6 +927,19 @@ export default function Assistant() {
           const mon = new Date(now);
           mon.setDate(mon.getDate() + diff);
           localStorage.setItem('digest_dismissed_week', mon.toISOString().split('T')[0]);
+
+          // Onboarding silencioso: marcar el digest como visto. Apaga el dot
+          // del tab Chef al instante (state global) y persiste en DB para
+          // que el next refresh devuelva has_unread_digest=false.
+          if (user && token) {
+            const seenAt = now.toISOString();
+            api.updateOnboardingState('first_digest_seen_at', seenAt, token).catch(() => {});
+            updateUser({
+              ...user,
+              has_unread_digest: false,
+              onboarding_state: { ...(user.onboarding_state || {}), first_digest_seen_at: seenAt },
+            });
+          }
         }} />
       )}
     </>

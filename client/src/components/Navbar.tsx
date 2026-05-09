@@ -33,10 +33,29 @@ const linkStyle = ({ isActive }) => ({
 });
 
 export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
-  const { logout, user, token } = useAuth();
+  const { logout, user, token, updateUser } = useAuth();
   const navigate = useNavigate();
   const [theme, toggleTheme] = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Onboarding silencioso — pulse del "?" hasta que el user lo abra una vez.
+  const showHelpPulse = !user?.onboarding_state?.help_modal_seen;
+  // Dot del tab Chef desktop — solo Pro y solo si hay digest no leído.
+  const showChefDot = !!(user?.has_unread_digest && isPro(user?.access_level));
+  // Línea contextual one-shot junto al tab Chef la primera vez que aparece el dot.
+  const showFirstDigestHint = showChefDot && !user?.onboarding_state?.first_digest_seen_at;
+
+  async function handleHelpClick() {
+    if (showHelpPulse && token && user) {
+      // Fire-and-forget: no bloqueamos la apertura del modal por la persistencia.
+      api.updateOnboardingState('help_modal_seen', true, token).catch(() => {});
+      updateUser({
+        ...user,
+        onboarding_state: { ...(user.onboarding_state || {}), help_modal_seen: true },
+      });
+    }
+    onHelpOpen?.();
+  }
 
   function handleLogout() {
     logout();
@@ -97,7 +116,25 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
                 <path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" stroke="currentColor" strokeWidth="1" fill="none" />
               </svg>
             )}
+            {showChefDot && (
+              <span aria-label="Resumen semanal disponible"
+                    style={{
+                      width: 6, height: 6, borderRadius: '50%',
+                      background: 'var(--accent)', display: 'inline-block',
+                      marginLeft: 1,
+                    }} />
+            )}
           </NavLink>
+          {showFirstDigestHint && (
+            <span style={{
+              fontSize: 11, color: 'var(--accent)', fontStyle: 'italic',
+              marginLeft: -16,
+              fontFamily: 'var(--font-serif)',
+              whiteSpace: 'nowrap',
+            }}>
+              Tu primer resumen semanal está listo
+            </span>
+          )}
         </div>
 
         {/* Right side */}
@@ -109,12 +146,14 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
           {/* Help */}
           {onHelpOpen && (
             <button
-              onClick={onHelpOpen}
+              onClick={handleHelpClick}
               aria-label="Abrir guía de Caliro"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 14, color: 'var(--text-secondary)', padding: '4px',
+                fontSize: 14, color: showHelpPulse ? 'var(--accent)' : 'var(--text-secondary)',
+                padding: '4px',
                 lineHeight: 1,
+                animation: showHelpPulse ? 'helpPulse 1.6s ease-in-out infinite' : undefined,
               }}
             >?</button>
           )}
@@ -166,6 +205,14 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
           <button onClick={handleLogout}>Salir</button>
         </div>
       )}
+
+      {/* Keyframes para el pulse del icono "?" — onboarding silencioso */}
+      <style>{`
+        @keyframes helpPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.45; transform: scale(1.18); }
+        }
+      `}</style>
     </nav>
   );
 }

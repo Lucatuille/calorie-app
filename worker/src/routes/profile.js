@@ -17,6 +17,7 @@ export async function handleProfile(request, env, path) {
                 target_calories, target_protein, target_carbs, target_fat,
                 goal_weight, tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
                 dietary_preferences,
+                onboarding_state,
                 created_at
          FROM users WHERE id = ?`
       ).bind(user.userId).first();
@@ -54,6 +55,18 @@ export async function handleProfile(request, env, path) {
       }
     } else {
       profile.dietary_preferences = null;
+    }
+
+    // Parse onboarding_state JSON → object (vacío si null/inválido).
+    // Si la columna no existe (entornos legacy con SELECT fallback) → undefined → {}.
+    if (profile.onboarding_state) {
+      try {
+        profile.onboarding_state = JSON.parse(profile.onboarding_state);
+      } catch {
+        profile.onboarding_state = {};
+      }
+    } else {
+      profile.onboarding_state = {};
     }
 
     // Silent macro backfill for users who completed onboarding before macros were saved
@@ -212,6 +225,31 @@ export async function handleProfile(request, env, path) {
     }
 
     return jsonResponse({ ok: true });
+  }
+
+  // PATCH /api/profile/onboarding-state — actualizar flag individual del onboarding silencioso.
+  // Whitelist estricta de claves (anti-abuse: nadie escribe campos arbitrarios al JSON).
+  if (path === '/api/profile/onboarding-state' && request.method === 'PATCH') {
+    const rl = await rateLimit(env, request, `onboarding-state:${user.userId}`, 30, 60);
+    if (rl) return rl;
+
+    const { key, value } = await request.json().catch(() => ({}));
+    const VALID_KEYS = ['help_modal_seen', 'first_digest_seen_at', 'history_tooltip_seen'];
+    if (!VALID_KEYS.includes(key)) return errorResponse('Clave de onboarding inválida');
+
+    const row = await env.DB.prepare(
+      'SELECT onboarding_state FROM users WHERE id = ?'
+    ).bind(user.userId).first();
+
+    let state = {};
+    try { state = JSON.parse(row?.onboarding_state || '{}'); } catch {}
+    state[key] = value;
+
+    await env.DB.prepare(
+      'UPDATE users SET onboarding_state = ? WHERE id = ?'
+    ).bind(JSON.stringify(state), user.userId).run();
+
+    return jsonResponse({ ok: true, onboarding_state: state });
   }
 
   // PUT /api/profile

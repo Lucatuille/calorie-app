@@ -72,6 +72,17 @@ const LockDot = () => (
   </svg>
 );
 
+// Dot verde — señal de digest semanal no leído (solo Pro). Misma posición
+// que el LockDot para coherencia visual.
+const UnreadDot = () => (
+  <span aria-label="Resumen semanal disponible"
+        style={{
+          position: 'absolute', top: 4, right: 'calc(50% - 14px)',
+          width: 6, height: 6, borderRadius: '50%',
+          background: 'var(--accent)',
+        }} />
+);
+
 export default function BottomNav() {
   const { user, token } = useAuth();
   const userIsPro = isPro(user?.access_level);
@@ -79,6 +90,8 @@ export default function BottomNav() {
     <nav className="bottom-nav">
       {BASE_ITEMS.map(({ to, label, end, Icon, proOnly }) => {
         const locked = proOnly && !userIsPro;
+        const showUnread = to === '/chef' && userIsPro && !!user?.has_unread_digest;
+        const needsRelative = locked || showUnread;
         return (
           <NavLink
             key={to}
@@ -87,10 +100,11 @@ export default function BottomNav() {
             data-umami-event={locked ? 'upgrade_cta_nav_chef' : undefined}
             onClick={locked ? () => api.trackUpgradeEvent('upgrade_cta_nav_chef', token) : undefined}
             className={({ isActive }) => `bottom-nav__item${isActive ? ' bottom-nav__item--active' : ''}`}
-            style={locked ? { position: 'relative' } : undefined}
+            style={needsRelative ? { position: 'relative' } : undefined}
           >
             <Icon />
             {locked && <LockDot />}
+            {showUnread && <UnreadDot />}
             <span className="bottom-nav__label">{label}</span>
           </NavLink>
         );
