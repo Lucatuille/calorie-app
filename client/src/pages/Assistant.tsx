@@ -954,7 +954,8 @@ export default function Assistant() {
           // que el next refresh devuelva has_unread_digest=false.
           if (user && token) {
             const seenAt = now.toISOString();
-            api.updateOnboardingState('first_digest_seen_at', seenAt, token).catch(() => {});
+            api.updateOnboardingState('first_digest_seen_at', seenAt, token)
+              .catch(err => console.warn('[onboarding] first_digest_seen_at persist failed:', err));
             updateUser({
               ...user,
               has_unread_digest: false,

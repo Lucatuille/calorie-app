@@ -48,7 +48,9 @@ export default function Navbar({ onHelpOpen }: { onHelpOpen?: () => void }) {
   async function handleHelpClick() {
     if (showHelpPulse && token && user) {
       // Fire-and-forget: no bloqueamos la apertura del modal por la persistencia.
-      api.updateOnboardingState('help_modal_seen', true, token).catch(() => {});
+      // Log el error si falla para detectar issues (CORS, 4xx, etc.).
+      api.updateOnboardingState('help_modal_seen', true, token)
+        .catch(err => console.warn('[onboarding] help_modal_seen persist failed:', err));
       updateUser({
         ...user,
         onboarding_state: { ...(user.onboarding_state || {}), help_modal_seen: true },
