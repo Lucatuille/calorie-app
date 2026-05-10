@@ -936,7 +936,10 @@ export default function Assistant() {
         />
       )}
 
-      {digest && !digestDismissed && (
+      {/* Auto-show del sheet: si el backend dice has_unread_digest=true, override
+          localStorage. Esto cura users en estado pre-fix-CORS donde localStorage
+          se setteo pero la PATCH del flag DB fallo, resultando en dot persistente. */}
+      {digest && (user?.has_unread_digest || !digestDismissed) && (
         <DigestSheet
           digest={digest}
           showFirstTimeIntro={!user?.onboarding_state?.first_digest_seen_at}
