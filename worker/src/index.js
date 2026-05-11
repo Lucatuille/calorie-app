@@ -11,6 +11,7 @@ import { handleAnalyze, handleAnalyzeText } from './routes/analyze.js';
 import { handleSupplements } from './routes/supplements.js';
 import { handleAdmin } from './routes/admin.js';
 import { handleCalibration } from './routes/calibration.js';
+import { handleBedca } from './routes/bedca.js';
 import { handleProducts } from './routes/products.js';
 import { handleAssistant } from './routes/assistant.js';
 import { handlePlanner } from './routes/planner.js';
@@ -85,6 +86,10 @@ async function handleRequest(request, env, ctx) {
 
     if (path.startsWith('/api/calibration')) {
       return await handleCalibration(request, env, path);
+    }
+
+    if (path.startsWith('/api/bedca')) {
+      return await handleBedca(request, env, path);
     }
 
     if (path.startsWith('/api/products')) {

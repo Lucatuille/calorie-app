@@ -100,6 +100,18 @@ body {
   padding: 3px 8px;
   border-radius: 100px;
 }
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sync-status {
+  font-size: 11px;
+  color: var(--gray);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
 
 /* ── COUNTERS ──────────────────────────────────────────────── */
 .counters {
@@ -574,7 +586,10 @@ tbody tr.selected:hover td { background: rgba(22,163,74,0.08); }
 <header class="app-header">
   <div class="header-row">
     <h1 class="app-title">Base de datos <span class="app-title-accent">BEDCA</span></h1>
-    <span class="private-badge">Privado · Local</span>
+    <div class="header-right">
+      <span class="private-badge">Privado</span>
+      <span class="sync-status" id="sync-status" title="Estado de sincronización con D1">●</span>
+    </div>
   </div>
   <p class="app-tagline">Ingredientes verificados personalmente en bedca.net · Acumula al añadir cada receta nueva del blog</p>
 </header>
@@ -786,6 +801,85 @@ tbody tr.selected:hover td { background: rgba(22,163,74,0.08); }
 const STORAGE_KEY = 'caliro_bedca_db_v1';
 const SCHEMA_VERSION = 1;
 
+/* ============================================================
+   SYNC — admin-only sync with D1 via /api/bedca/data
+   ============================================================ */
+const API_BASE = 'https://calorie-app-api.lucatuille.workers.dev';
+const SYNC_DEBOUNCE_MS = 2000;
+
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+async function syncPull() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_BASE}/api/bedca/data`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      if (res.status === 403) setSyncStatus('unauthorized');
+      else if (res.status === 401) setSyncStatus('local');
+      else setSyncStatus('error');
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn('[bedca-sync] pull failed:', err);
+    setSyncStatus('error');
+    return null;
+  }
+}
+
+let syncTimer = null;
+function scheduleSync() {
+  const token = getToken();
+  if (!token) { setSyncStatus('local'); return; }
+  setSyncStatus('pending');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncPush, SYNC_DEBOUNCE_MS);
+}
+
+async function syncPush() {
+  const token = getToken();
+  if (!token) return;
+  setSyncStatus('syncing');
+  try {
+    const res = await fetch(`${API_BASE}/api/bedca/data`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ snapshot: db }),
+    });
+    if (res.ok) setSyncStatus('synced');
+    else if (res.status === 403) setSyncStatus('unauthorized');
+    else if (res.status === 401) setSyncStatus('local');
+    else setSyncStatus('error');
+  } catch (err) {
+    console.warn('[bedca-sync] push failed:', err);
+    setSyncStatus('error');
+  }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const map = {
+    pending:      { text: '● Sin sincronizar', color: '#9ca3af' },
+    syncing:      { text: '◐ Sincronizando…',  color: '#3b82f6' },
+    synced:       { text: '✓ Sincronizado',    color: '#22c55e' },
+    error:        { text: '⚠ Error sync',      color: '#f59e0b' },
+    unauthorized: { text: '🔒 Sin permisos',    color: '#9ca3af' },
+    local:        { text: '● Solo local',       color: '#9ca3af' },
+  };
+  const conf = map[status] || map.error;
+  el.textContent = conf.text;
+  el.style.color = conf.color;
+}
+
 const CATEGORY_LABELS = {
   proteina_animal: 'Proteína animal',
   pescado: 'Pescado',
@@ -890,18 +984,30 @@ function uuid() {
   return 'i_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
 }
 
-function load() {
+async function load() {
+  // 1. localStorage — fuente principal si existe snapshot valido
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
       if (parsed.version === SCHEMA_VERSION && Array.isArray(parsed.ingredients)) {
         db = parsed;
+        setSyncStatus(getToken() ? 'synced' : 'local');
         return;
       }
     } catch (e) { console.warn('localStorage parse failed', e); }
   }
-  // Seed inicial
+
+  // 2. Fallback a backend D1 — solo si user esta logueado como admin
+  const remote = await syncPull();
+  if (remote?.snapshot?.version === SCHEMA_VERSION && Array.isArray(remote.snapshot.ingredients)) {
+    db = remote.snapshot;
+    saveLocal(); // cache en localStorage sin disparar sync
+    setSyncStatus('synced');
+    return;
+  }
+
+  // 3. Seed inicial — no backend data, no local data
   db.ingredients = SEED.map(seed => ({
     id: uuid(),
     nombre: seed.nombre,
@@ -918,12 +1024,17 @@ function load() {
     fecha_verificacion: seed.estado === 'verificado' ? new Date().toISOString().slice(0,10) : null,
     ultima_edicion: new Date().toISOString(),
   }));
-  save();
+  save(); // primer save propaga al backend
+}
+
+function saveLocal() {
+  db.lastModified = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
 }
 
 function save() {
-  db.lastModified = new Date().toISOString();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  saveLocal();
+  scheduleSync();
 }
 
 function toast(msg, type = 'success') {
@@ -1380,8 +1491,8 @@ function setSort(key) {
 }
 
 /* ── Event listeners ───────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  load();
+document.addEventListener('DOMContentLoaded', async () => {
+  await load();
   renderAll();
 
   document.getElementById('btn-add').addEventListener('click', () => openModal(null));
