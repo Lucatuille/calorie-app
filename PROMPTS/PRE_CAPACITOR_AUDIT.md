@@ -13,9 +13,12 @@
 
 ## SPRINT 0 — URGENTE HOY (esta sesión o mañana)
 
+**Estado: 4/5 completados** — solo Stripe live pendiente (esperando gestor).
+**Fecha de cierre parcial: 2026-05-11**
+
 Cinco items que están sangrando ahora mismo. Hacerlos en orden, todos hoy si es posible.
 
-### 0.1 ⚠️ Activar Stripe en modo live
+### 0.1 ⏳ ⚠️ Activar Stripe en modo live — PENDIENTE (gestor)
 
 - **Qué:** cambiar claves test por live en código + Cloudflare Workers secrets
 - **Por qué:** 5 personas intentaron pagar hoy y no pudieron. Cada día = ingresos reales perdidos
@@ -31,7 +34,7 @@ Cinco items que están sangrando ahora mismo. Hacerlos en orden, todos hoy si es
 - **Riesgo:** alto — un error y pagos siguen fallando o se cobran mal. Validar test con compra real
 - **Bloqueante iOS:** sí (para IAP via StoreKit necesitas Stripe customer migration)
 
-### 0.2 ⚡⚠️ Landing: "Hoy somos 9 personas" → 47
+### 0.2 ✅ Landing: "Hoy somos 9 personas" → 52 (commit `85e8f5a`, 2026-05-11)
 
 - **Qué:** actualizar la sección de la landing al número real, o reformular
 - **Por qué:** cualquier visitante nuevo lo lee, ve "9 personas" para una app real, desconfía
@@ -43,7 +46,7 @@ Cinco items que están sangrando ahora mismo. Hacerlos en orden, todos hoy si es
 - **Decisión:** A o C ahora, B en otro sprint
 - **Bloqueante iOS:** no, pero credibilidad cuenta para reviews
 
-### 0.3 ⚡ Tu nombre: "Lucas" → "Luca"
+### 0.3 ✅ Tu nombre: "Lucas" → "Luca" (commit `85e8f5a`, 2026-05-11)
 
 - **Qué:** sección "Quién está detrás" en la landing
 - **Por qué:** error factual visible para cualquiera que te busque
@@ -51,7 +54,8 @@ Cinco items que están sangrando ahora mismo. Hacerlos en orden, todos hoy si es
 - **Coste:** 2 min
 - **Bloqueante iOS:** no, pero es trivial
 
-### 0.4 ⚡⚠️ Configurar DMARC en Cloudflare DNS
+### 0.4 ✅ Configurar DMARC en Cloudflare DNS (2026-05-11)
+**Configurado:** `v=DMARC1; p=none; rua=mailto:contacto@caliro.dev`. Verificado vía Google DNS. Setup completo de email: SPF (CF + Amazon SES), DKIM (CF + Resend), DMARC. Próximo paso a futuro: subir a `p=quarantine` tras 1-2 meses de monitoring si reportes están limpios.
 
 - **Qué:** registro TXT en Cloudflare DNS
 - **Por qué:** sin DMARC los emails de "Bienvenido a Caliro" caen en spam → users registrados no llegan a confirmarse
@@ -63,17 +67,9 @@ Cinco items que están sangrando ahora mismo. Hacerlos en orden, todos hoy si es
 - **Bonus relacionado:** verificar también que SPF y DKIM están bien configurados para Resend
 - **Bloqueante iOS:** no
 
-### 0.5 ⚠️ Activar email de día 3 en Resend Automations
+### 0.5 ✅ Email día 3 automatizado (commit `cb546ed`, 2026-05-11)
 
-- **Qué:** activar el email automático ya diseñado
-- **Por qué:** 6 registros hoy, ninguno recibe follow-up. Los users que más valen son los que se quedan después del primer uso
-- **Cómo:**
-  1. Resend Dashboard → Automations
-  2. Localizar la sequence diseñada (día 3)
-  3. Toggle de activado
-  4. Test con un user de prueba
-- **Coste:** 15-30 min (depende de cómo está el template)
-- **Bloqueante iOS:** no, pero retention afecta a métricas que Apple mira
+**Implementación:** descubierto que Resend NO tiene "Automations" de drip nativo. Reimplementado como worker scheduled cron (cohabita con backup daily 03:00 UTC). Migración D1 ejecutada (`day3_email_sent_at`), helper HTML (`day3EmailHTML(name)` en auth.js), runner (`runDay3Emails(env)` en scheduled.js) con manejo de errores 4xx/5xx, anti-mass-send guard (`DAY3_MIN_REGISTRATION_DATE = '2026-05-08'`). Próximo cron: 03:00 UTC mañana. Preview HTML del email guardado en `previews/email-day3-preview.html`.
 
 ---
 
@@ -704,4 +700,12 @@ Si paralelizas o saltas algún sprint no-bloqueante: **4-5 semanas viables.**
 
 ## Cerrado
 
-_(items con ✅ se mueven aquí cuando se completen)_
+### 2026-05-11 — Sprint 0 (4 de 5)
+
+- ✅ **0.2** Landing "9 → 52" — commit `85e8f5a`
+- ✅ **0.3** "Lucas → Luca" — commit `85e8f5a`
+- ✅ **0.4** DMARC configurado y propagado — `p=none; rua=mailto:contacto@caliro.dev`
+- ✅ **0.5** Email día 3 vía worker scheduled — commit `cb546ed`. Migración D1 + helper email + runner cron + anti-mass-send guard. Próxima ejecución cron 03:00 UTC.
+- ⏳ **0.1** Stripe live mode — pendiente (esperando gestor)
+
+**Hallazgo del Sprint 0:** Resend NO tiene "Automations" como drip campaigns nativas. Reimplementado como worker scheduled cron. Patrón documentado para futuras automations (welcome day N, etc.).
