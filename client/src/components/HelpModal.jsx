@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 
 /* ─── Shared sub-components ─── */
 
-function HeroBanner({ num, title, subtitle, color, textColor }) {
+function HeroBanner({ num, title, subtitle, color, numColor }) {
   return (
     <div style={{
       background: color,
@@ -16,19 +16,32 @@ function HeroBanner({ num, title, subtitle, color, textColor }) {
       textAlign: 'center',
       borderRadius: 14,
       margin: '14px 18px',
+      position: 'relative',
     }}>
+      {num && (
+        <span style={{
+          position: 'absolute',
+          top: 8,
+          left: 14,
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: '0.18em',
+          color: numColor,
+          opacity: 0.5,
+        }}>{num}</span>
+      )}
       <span style={{
         fontFamily: "'Instrument Serif', Georgia, serif",
         fontSize: 26,
-        color: textColor,
+        color: '#1a1a1a',
         lineHeight: 1.15,
         marginBottom: 4,
       }}>{title}</span>
       <span style={{
         fontFamily: "'DM Sans', sans-serif",
         fontSize: 13,
-        color: textColor,
-        opacity: 0.65,
+        color: '#6b7280',
         marginTop: 0,
       }}>{subtitle}</span>
     </div>
@@ -121,7 +134,7 @@ function Page1() {
   const [openTip, setOpenTip] = useState(-1);
 
   const methods = [
-    { icon: '📷', label: 'Foto IA' },
+    { icon: '📷', label: 'Foto' },
     { icon: '≡', label: 'Escanear' },
     { icon: '✏', label: 'Describir' },
   ];
@@ -134,12 +147,8 @@ function Page1() {
 
   const proTips = [
     {
-      title: '📷 Foto IA: más contexto = más precisión',
-      body: 'Combina la foto con una descripción de texto. Por ejemplo, si fotografías un plato de pasta, añade «pasta con salsa boloñesa casera, unos 300g». La IA combina ambas fuentes y la estimación mejora significativamente.',
-    },
-    {
-      title: '✏ Descripción: sé específico',
-      body: '«Ensalada» puede ser 150 o 600 kcal. «Ensalada mixta grande con atún, maíz, aceite de oliva y pan» le da a la IA toda la información que necesita. Incluye cantidades aproximadas y métodos de cocción cuando puedas.',
+      title: 'Cómo mejorar la precisión',
+      body: 'Cuanto más contexto le des a la IA, más precisa la estimación. En foto, combínala con una descripción («pasta con boloñesa casera, ~300g»). En texto, sé específico con cantidades y método de cocción («ensalada mixta grande con atún, maíz, aceite de oliva y pan»). Una descripción detallada puede ahorrarte la corrección manual.',
     },
     {
       title: '≡ Envasados: siempre el escáner',
@@ -149,7 +158,7 @@ function Page1() {
 
   return (
     <>
-      <HeroBanner num="01" title="Registrar" subtitle="Foto, escáner o texto libre" color="#dcfce7" textColor="#15803d" />
+      <HeroBanner num="01" title="Registrar" subtitle="Foto, escáner o texto libre" color="#dcfce7" numColor="#166534" />
       <IntroText text="Tres formas de añadir lo que comes. Cada una tiene su caso de uso ideal. Toca cada método para ver cuándo usarlo." />
       <DemoBox>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -193,7 +202,7 @@ function Page1() {
 
       <div style={{ margin: '14px 16px 0' }}>
         {proTips.map((tip, i) => (
-          <div key={i} style={{ borderBottom: i < 2 ? '0.5px solid var(--border)' : 'none' }}>
+          <div key={i} style={{ borderBottom: i < proTips.length - 1 ? '0.5px solid var(--border)' : 'none' }}>
             <button
               onClick={() => setOpenTip(openTip === i ? -1 : i)}
               style={{
@@ -233,6 +242,38 @@ function Page1() {
         ))}
       </div>
 
+      {/* Sub-bloque: comidas frecuentes — accelerador del registro */}
+      <div style={{ margin: '18px 16px 0' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)', marginBottom: 2 }}>
+          Tus comidas habituales aparecen como sugerencias
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.55 }}>
+          Tras registrar varias veces, los platos que más comes salen como chips rápidos al iniciar un registro. Un toque y listo.
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            { name: 'Avena con plátano', kcal: 412 },
+            { name: 'Pollo con arroz', kcal: 580 },
+            { name: 'Tostada con AOVE', kcal: 180 },
+          ].map((meal, i) => (
+            <div key={i} style={{
+              padding: '5px 10px',
+              borderRadius: 100,
+              border: '0.5px solid var(--border)',
+              background: 'var(--surface-2)',
+              fontSize: 11,
+              color: 'var(--text-1, #111)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <span>{meal.name}</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{meal.kcal} kcal</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <TipStrip text="Corrige las estimaciones si no son exactas — el motor de calibración aprende de cada corrección que hagas y mejora con el tiempo." />
     </>
   );
@@ -256,7 +297,7 @@ function Page2() {
 
   return (
     <>
-      <HeroBanner num="02" title="Calibración" subtitle="La IA que aprende cómo comes tú" color="#ede9fe" textColor="#5b21b6" />
+      <HeroBanner num="02" title="Calibración" subtitle="Aprende de tus correcciones" color="#dcfce7" numColor="#166534" />
       <IntroText text="La IA aprende de cada corrección que haces. Arrastra el slider para ver cómo mejora la precisión del motor a medida que lo usas." />
       <DemoBox>
         <div style={{ marginBottom: 14 }}>
@@ -367,8 +408,8 @@ function Page3() {
         num="03"
         title="Chef Caliro"
         subtitle="Tres herramientas en una"
-        color="#fef3c7"
-        textColor="#92400e"
+        color="#dcfce7"
+        numColor="#166534"
       />
       <IntroText text="El Chef conoce tus datos: peso, objetivo, comidas frecuentes, preferencias. Toca cada modo para ver qué hace con ellos." />
 
@@ -414,6 +455,33 @@ function Page3() {
         {mode === 'chat'  && <ChatDemo />}
         {mode === 'day'   && <DayDemo />}
         {mode === 'week'  && <WeekDemo />}
+      </div>
+
+      {/* Bloque bonus: resumen semanal automático */}
+      <div style={{
+        margin: '20px 16px 0',
+        padding: '14px 16px',
+        background: '#fdf9ed',
+        border: '0.5px solid rgba(31,26,18,0.08)',
+        borderRadius: 12,
+      }}>
+        <div style={{
+          fontSize: 9,
+          letterSpacing: '0.2em',
+          color: '#1f1a12',
+          fontWeight: 700,
+          marginBottom: 6,
+        }}>ADEMÁS · CADA DOMINGO</div>
+        <div style={{
+          fontFamily: "'Instrument Serif', Georgia, serif",
+          fontStyle: 'italic',
+          fontSize: 16,
+          color: '#1f1a12',
+          marginBottom: 6,
+        }}>Resumen semanal</div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+          El Chef te envía un análisis de tu semana cada domingo: adherencia, patrones detectados, comparativa finde vs semana, áreas de mejora. Sin metáforas, solo datos. <em>"Esta semana cubriste el target 5 de 7 días. Patrón finde: +320 kcal de media vs entre semana."</em>
+        </div>
       </div>
 
       <TipStrip text="El Chef se alimenta de tu historial. Cuanto más consistente registras, mejores recomendaciones. Las preferencias dietéticas (alergias, vegano, etc.) son reglas duras que nunca rompe." />
@@ -669,114 +737,6 @@ function WeekDemo() {
 }
 
 function Page4() {
-  const [toast, setToast] = useState(null);
-
-  const days = [
-    { label: 'Hoy · Viernes', kcal: 620, target: 1812, foods: 'Arroz japonés · Sopa miso', over: false },
-    { label: 'Ayer · Jueves', kcal: 1654, target: 1812, foods: 'Pollo · Ensalada · Bocadillo', over: false },
-    { label: 'Miércoles', kcal: 1820, target: 1812, foods: 'Tortilla · Pasta · Plátano', over: true },
-  ];
-
-  const handleAdd = (dayLabel) => {
-    setToast(`Añadiendo comida para ${dayLabel}...`);
-    setTimeout(() => setToast(null), 2000);
-  };
-
-  return (
-    <>
-      <HeroBanner num="04" title="Historial" subtitle="Edita cualquier día anterior" color="#fce7f3" textColor="#9d174d" />
-      <IntroText text="Añade comidas a días anteriores o edita entradas existentes. Toca el «+» de cualquier día para probarlo." />
-      <DemoBox>
-        {days.map((day, i) => {
-          const pct = Math.min(100, Math.round((day.kcal / day.target) * 100));
-          const barColor = day.over ? '#ef4444' : '#22c55e';
-          return (
-            <div key={i} style={{
-              padding: '10px 0',
-              borderBottom: i < days.length - 1 ? '0.5px solid var(--border)' : 'none',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)' }}>{day.label}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, color: day.over ? '#ef4444' : 'var(--text-secondary)' }}>
-                    {day.kcal}/{day.target} kcal
-                  </span>
-                  <button
-                    onClick={() => handleAdd(day.label)}
-                    style={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: '#22c55e',
-                      color: '#fff',
-                      fontSize: 16,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: 1,
-                    }}
-                  >+</button>
-                </div>
-              </div>
-              <div style={{ height: 4, borderRadius: 2, background: '#e5e7eb', marginBottom: 4 }}>
-                <div style={{ height: '100%', borderRadius: 2, background: barColor, width: `${pct}%`, transition: 'width 0.3s' }} />
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{day.foods}</div>
-            </div>
-          );
-        })}
-      </DemoBox>
-
-      {toast && (
-        <div style={{
-          position: 'fixed',
-          bottom: 100,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#15803d',
-          color: '#fff',
-          padding: '8px 16px',
-          borderRadius: 100,
-          fontSize: 13,
-          fontWeight: 500,
-          zIndex: 200,
-          whiteSpace: 'nowrap',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        }}>
-          {toast}
-        </div>
-      )}
-
-      <div style={{
-        margin: '14px 16px 0',
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border)',
-        borderRadius: 12,
-        padding: '12px 14px',
-        display: 'flex',
-        gap: 10,
-        alignItems: 'flex-start',
-      }}>
-        <span style={{ fontSize: 20, flexShrink: 0 }}>🍽</span>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)', marginBottom: 2 }}>
-            ¿Comiste fuera sin el móvil?
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Puedes registrar esa comida después. Entra en el día correspondiente y añádela con foto, descripción o escáner. Tu historial queda completo y el Chef tiene toda la información.
-          </div>
-        </div>
-      </div>
-
-      <TipStrip text="Puedes añadir comidas a cualquier día de los últimos 30 días. Cuanto más completo sea tu historial, mejores las recomendaciones del Chef." />
-    </>
-  );
-}
-
-function Page5() {
   const weights = [70.8, 70.5, 70.7, 70.4, 70.2, 70.0, 69.8];
   const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
   const minW = 69.5;
@@ -796,7 +756,7 @@ function Page5() {
 
   return (
     <>
-      <HeroBanner num="05" title="Progreso" subtitle="Tu evolución real" color="#e0f2fe" textColor="#0369a1" />
+      <HeroBanner num="04" title="Progreso" subtitle="Tu evolución real" color="#faf4e6" numColor="#1f1a12" />
       <IntroText text="Visualiza tu adherencia, proyección de peso y tendencia corporal. Los datos son más útiles cuanto más consistente sea tu registro diario." />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 14px' }}>
@@ -848,7 +808,7 @@ function Page5() {
         </svg>
       </DemoBox>
 
-      <div style={{ margin: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ margin: '14px 16px 0' }}>
         <div style={{
           background: 'var(--surface-2)',
           border: '1px solid var(--border)',
@@ -861,29 +821,10 @@ function Page5() {
           <span style={{ fontSize: 20, flexShrink: 0 }}>📊</span>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)', marginBottom: 2 }}>
-              ¿Por qué la proyección fluctúa?
+              Cómo leer la proyección
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              La retención de agua, la sal, las hormonas y el contenido intestinal causan variaciones diarias de hasta 1-2 kg. La proyección usa la media móvil de 7 días para filtrar ese ruido y mostrarte la tendencia real.
-            </div>
-          </div>
-        </div>
-        <div style={{
-          background: 'var(--surface-2)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          padding: '12px 14px',
-          display: 'flex',
-          gap: 10,
-          alignItems: 'flex-start',
-        }}>
-          <span style={{ fontSize: 20, flexShrink: 0 }}>⚖</span>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)', marginBottom: 2 }}>
-              Registrar peso cada mañana
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Pésate en ayunas después de ir al baño. No te fijes en el número del día — mira la tendencia semanal. Toca la pastilla de peso en la pantalla principal para registrarlo rápidamente.
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+              El peso fluctúa diariamente 1-2 kg por agua, sal y hormonas — es ruido normal. La proyección filtra eso con media móvil de 7 días. Pésate en ayunas cada mañana para alimentar bien el modelo; no mires el número del día, mira la tendencia semanal.
             </div>
           </div>
         </div>
@@ -894,100 +835,67 @@ function Page5() {
   );
 }
 
-function Page6() {
-  const [taken, setTaken] = useState([false, false, false]);
-
-  const supplements = [
-    { icon: '💪', name: 'Creatina' },
-    { icon: '🐟', name: 'Omega 3' },
-    { icon: '☀️', name: 'Vitamina D' },
-  ];
-
-  const toggle = (i) => {
-    setTaken(prev => {
-      const next = [...prev];
-      next[i] = !next[i];
-      return next;
-    });
-  };
-
-  const count = taken.filter(Boolean).length;
+function Page5() {
+  // Bloque visual reutilizable para cada apartado del perfil
+  const Block = ({ icon, title, body }) => (
+    <div style={{
+      background: 'var(--surface-2)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      padding: '12px 14px',
+      display: 'flex',
+      gap: 10,
+      alignItems: 'flex-start',
+    }}>
+      <span style={{ fontSize: 20, flexShrink: 0 }}>{icon}</span>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)', marginBottom: 2 }}>
+          {title}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+          {body}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      <HeroBanner num="06" title="Suplementos" subtitle="Seguimiento diario automático" color="#f0fdf4" textColor="#166534" />
-      <IntroText text="Añádelos una vez en el Perfil y aparecen solos cada día. Toca cada uno para marcarlo como tomado — el Chef tiene ese contexto." />
-      <DemoBox>
-        <div style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: 'var(--text-1, #111)',
-          marginBottom: 12,
-          textAlign: 'center',
-        }}>
-          {count}/3 tomados hoy
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {supplements.map((sup, i) => (
-            <button
-              key={i}
-              onClick={() => toggle(i)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '12px 8px',
-                borderRadius: 12,
-                border: taken[i] ? '1.5px solid #22c55e' : '1.5px solid transparent',
-                background: taken[i] ? '#dcfce7' : '#F5F2EE',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              <span style={{ fontSize: 28, marginBottom: 6 }}>{sup.icon}</span>
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' }}>{sup.name}</span>
-            </button>
-          ))}
-        </div>
-      </DemoBox>
+      <HeroBanner num="05" title="Tu perfil" subtitle="Adapta Caliro a ti" color="#faf4e6" numColor="#1f1a12" />
+      <IntroText text="Caliro funciona mejor cuanto más sabe de ti. Estos son los datos que te conviene tener al día — todos se configuran en la página de Perfil." />
 
-      <div style={{
-        margin: '14px 16px 0',
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border)',
-        borderRadius: 12,
-        padding: '12px 14px',
-        display: 'flex',
-        gap: 10,
-        alignItems: 'flex-start',
-      }}>
-        <span style={{ fontSize: 20, flexShrink: 0 }}>⚙</span>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1, #111)', marginBottom: 2 }}>
-            Añádelos una vez, aparecen solos
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Configura tus suplementos en Perfil y cada día aparecerán automáticamente para que los marques. No tienes que recordar añadirlos — el sistema lo hace por ti.
-          </div>
-        </div>
+      <div style={{ margin: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Block
+          icon="🎯"
+          title="Targets calóricos y de macros"
+          body="Calorías diarias, proteína, carbos, grasa y peso objetivo. Caliro los calcula en el alta a partir de tu edad, peso, altura y nivel de actividad — pero puedes ajustarlos cuando quieras. Cuanto más realistas, mejor el feedback del Chef y la barra de adherencia."
+        />
+        <Block
+          icon="🥗"
+          title="Preferencias dietéticas"
+          body="Tipo de dieta (omnívoro, vegetariano, vegano, pescetariano), alergias e intolerancias, y disgustos personales (texto libre). El Chef respeta estas reglas como duras — nunca te va a sugerir nada que tengas marcado como alergia."
+        />
+        <Block
+          icon="💊"
+          title="Suplementos diarios"
+          body="Configúralos una vez en Perfil (ej. creatina, omega 3, vitamina D) y cada día aparecen automáticamente en el dashboard para que los marques. El Chef sabe qué has tomado y lo incorpora en sus respuestas sobre proteína, recuperación o micronutrientes."
+        />
       </div>
 
-      <TipStrip text="El Chef sabe qué suplementos has tomado hoy. Si le preguntas sobre proteína o recuperación, tiene ese contexto." />
+      <TipStrip text="El Chef y el motor de calibración se alimentan de tu perfil. Cuanto más completo lo tengas, mejor te entienden y mejor funciona Caliro." />
     </>
   );
 }
 
 /* ─── Main Modal ─── */
 
-const PAGES = [Page1, Page2, Page3, Page4, Page5, Page6];
+const PAGES = [Page1, Page2, Page3, Page4, Page5];
 const PAGE_TITLES = [
   'Registrar comidas',
   'Motor de calibración',
   'Chef Caliro',
-  'Historial',
   'Progreso',
-  'Suplementos',
+  'Tu perfil',
 ];
 
 export default function HelpModal({ onClose }) {
