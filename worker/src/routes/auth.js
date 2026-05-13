@@ -456,3 +456,151 @@ function welcomeEmailHTML(name, email) {
 </body>
 </html>`;
 }
+
+// Email día 3 — chequeo personal + recordatorio de features no descubiertas.
+// Se envía automáticamente desde scheduled.js (cron daily) a users registrados
+// hace exactamente 3 días que aún no lo han recibido.
+export function day3EmailHTML(name) {
+  const safeName = (name && String(name).trim()) || 'amigo';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>¿Qué tal va tu primera semana con Caliro?</title>
+  <style>
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    body { margin: 0; padding: 0; background-color: #F5F2EE; }
+    a { color: inherit; text-decoration: none; }
+    @media only screen and (max-width: 600px) {
+      .card { padding: 32px 24px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#F5F2EE;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F5F2EE;">
+    <tr>
+      <td align="center" style="padding: 44px 20px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="560" style="max-width:560px;width:100%;">
+          <tr>
+            <td align="center" style="padding-bottom: 28px;">
+              <span style="font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:32px;color:#22c55e;letter-spacing:-0.5px;">Caliro</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="card" style="background-color:#ffffff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.07);border:0.5px solid #E8E4DE;padding:44px 48px;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="padding-bottom:16px;">
+                    <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:20px;font-weight:500;color:#111111;line-height:1.3;">Hola ${safeName},</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:32px;">
+                    <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:15px;color:#444444;line-height:1.75;">
+                      Han pasado tres días desde que te uniste a Caliro. Quería saber qué tal va — y de paso contarte tres cosas que suelen pasar a estas alturas y que conviene saber.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:28px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr><td style="border-top:1px solid #EEEBE6;font-size:0;line-height:0;">&nbsp;</td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:8px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td width="44" valign="top" style="padding-right:16px;padding-top:2px;">
+                          <div style="width:36px;height:36px;background-color:#F0FAF4;border-radius:10px;text-align:center;line-height:36px;font-size:17px;">💬</div>
+                        </td>
+                        <td valign="top">
+                          <p style="margin:0 0 3px;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:14px;font-weight:500;color:#111111;">El Chef ya conoce tus datos</p>
+                          <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:13px;color:#888888;line-height:1.6;">
+                            Si le preguntas "¿qué cenar para llegar a mi proteína?" o "¿por qué no bajo de peso?", contesta con tu historial real — no consejos genéricos. Está en la pestaña Chef.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:8px;padding-top:16px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td width="44" valign="top" style="padding-right:16px;padding-top:2px;">
+                          <div style="width:36px;height:36px;background-color:#F0FAF4;border-radius:10px;text-align:center;line-height:36px;font-size:17px;">📊</div>
+                        </td>
+                        <td valign="top">
+                          <p style="margin:0 0 3px;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:14px;font-weight:500;color:#111111;">Este domingo: tu primer resumen semanal</p>
+                          <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:13px;color:#888888;line-height:1.6;">
+                            Si has registrado al menos 5 días, el Chef te envía un análisis: adherencia, patrón de finde vs entre semana, áreas a mejorar. Sin metáforas, solo números.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:32px;padding-top:16px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td width="44" valign="top" style="padding-right:16px;padding-top:2px;">
+                          <div style="width:36px;height:36px;background-color:#F0FAF4;border-radius:10px;text-align:center;line-height:36px;font-size:17px;">⚡</div>
+                        </td>
+                        <td valign="top">
+                          <p style="margin:0 0 3px;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:14px;font-weight:500;color:#111111;">Tus comidas habituales se van llenando solas</p>
+                          <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:13px;color:#888888;line-height:1.6;">
+                            Cuando registras la misma comida 2-3 veces, aparece como sugerencia rápida al ir a registrar. Un toque y listo — sin foto ni IA. Acelera mucho el día a día.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:32px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr><td style="border-top:1px solid #EEEBE6;font-size:0;line-height:0;">&nbsp;</td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <a href="https://caliro.dev/app/" target="_blank"
+                       style="display:inline-block;background-color:#111111;color:#ffffff;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:15px;font-weight:500;text-decoration:none;padding:14px 40px;border-radius:9999px;letter-spacing:0.1px;">
+                      Abrir Caliro
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color:#F5F2EE;border-radius:12px;padding:20px 22px;">
+                    <p style="margin:0 0 10px;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:13px;color:#555555;line-height:1.75;">
+                      ¿Algo se ha quedado a medias? ¿Una estimación muy fuera, un registro raro, una feature que no encuentras? Responde directamente a este email. Lo leo yo y te contesto personalmente.
+                    </p>
+                    <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:13px;color:#777777;">
+                      — Luca
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0;font-family:'DM Sans',Helvetica,Arial,sans-serif;font-size:12px;color:#BBBBBB;">
+                Recibes este email porque te uniste a Caliro hace 3 días en <a href="https://caliro.dev" style="color:#BBBBBB;text-decoration:underline;">caliro.dev</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
