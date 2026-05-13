@@ -40,7 +40,7 @@ const MACRO_META = [
 
 export default function History() {
   usePageTitle('Historial');
-  const { token } = useAuth();
+  const { user, token, updateUser } = useAuth();
   const PAGE_SIZE = 90;
   const [entries,    setEntries]    = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -51,6 +51,8 @@ export default function History() {
   const [hasMore,    setHasMore]    = useState(true);
   const [addingForDate, setAddingForDate] = useState(null);
   const [loadError,  setLoadError]  = useState(false);
+  // Onboarding silencioso — tooltip one-shot al entrar a Historial primera vez
+  const [showHistoryTooltip, setShowHistoryTooltip] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -64,6 +66,29 @@ export default function History() {
   }
 
   useEffect(() => { load(); }, [token]);
+
+  // Tooltip one-shot — solo si el user no lo ha visto antes Y hay al menos una
+  // comida en historial (si no hay nada, "Toca + para añadir" carece de contexto).
+  // Delay de 600ms para que se sienta natural, no simultaneo al fade-in de la página.
+  useEffect(() => {
+    if (loading) return;
+    if (!user || user.onboarding_state?.history_tooltip_seen) return;
+    if (entries.length === 0) return;
+    const t = setTimeout(() => setShowHistoryTooltip(true), 600);
+    return () => clearTimeout(t);
+  }, [user, loading, entries.length]);
+
+  function dismissHistoryTooltip() {
+    setShowHistoryTooltip(false);
+    if (user && token) {
+      api.updateOnboardingState('history_tooltip_seen', true, token)
+        .catch(err => console.warn('[onboarding] history_tooltip_seen persist failed:', err));
+      updateUser({
+        ...user,
+        onboarding_state: { ...(user.onboarding_state || {}), history_tooltip_seen: true },
+      });
+    }
+  }
 
   function startEdit(entry) {
     setDeletingId(null);
@@ -122,6 +147,9 @@ export default function History() {
   // Rellenamos últimos 7 días con huecos vacíos para dar continuidad.
   // El helper es idempotente si ya no faltan días.
   const groups = fillDateGaps(groupByDate(entries));
+  // Primer índice de grupo con comidas — donde aparece el tooltip onboarding.
+  // Si todos están vacíos, no se muestra (la guard del effect ya lo evita).
+  const firstDayWithEntriesIdx = groups.findIndex(([, dEntries]) => dEntries.length > 0);
 
   if (loading && entries.length === 0) return <HistorySkeleton />;
 
@@ -251,7 +279,7 @@ export default function History() {
                       </span>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
                     <span style={{
                       fontSize: 13, color: 'var(--text-secondary)',
                       fontFamily: 'var(--font-sans)', fontWeight: 500,
@@ -259,18 +287,29 @@ export default function History() {
                       {dayTotal.toLocaleString('es')} kcal
                     </span>
                     <button
-                      onClick={() => setAddingForDate(date)}
+                      onClick={() => {
+                        setAddingForDate(date);
+                        // Si el tooltip onboarding estaba visible, descubrir el "+"
+                        // implica que el user ya entendió — dismissamos y persistimos.
+                        if (showHistoryTooltip) dismissHistoryTooltip();
+                      }}
                       aria-label="Añadir comida"
                       style={{
                         width: 22, height: 22, background: 'var(--accent)',
                         border: 'none', borderRadius: '50%', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        boxShadow: (showHistoryTooltip && groupIdx === firstDayWithEntriesIdx)
+                          ? '0 0 0 4px rgba(22, 163, 74, 0.18)' : 'none',
+                        transition: 'box-shadow 0.3s',
                       }}
                     >
                       <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
                         <path d="M4.5 1v7M1 4.5h7" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
                       </svg>
                     </button>
+                    {showHistoryTooltip && groupIdx === firstDayWithEntriesIdx && (
+                      <HistoryTooltip onDismiss={dismissHistoryTooltip} />
+                    )}
                   </div>
                 </div>
 
@@ -518,6 +557,91 @@ export default function History() {
           }}
         />
       )}
+
+      {/* Keyframes para el tooltip onboarding — fadeIn + slideDown sutil */}
+      <style>{`
+        @keyframes historyTooltipIn {
+          from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes historyTooltipPulse {
+          0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 0 0 0 rgba(22,163,74,0); }
+          50%      { box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 0 0 6px rgba(22,163,74,0.10); }
+        }
+      `}</style>
     </section>
+  );
+}
+
+// ── Tooltip onboarding — one-shot al entrar a Historial primera vez ────
+// Anclado al botón "+" del primer día con comidas. Burbuja con flecha hacia
+// arriba, X explícita para dismiss, animación de entrada suave.
+function HistoryTooltip({ onDismiss }) {
+  return (
+    <div
+      role="dialog"
+      aria-label="Ayuda: añadir comidas a días pasados"
+      style={{
+        position: 'absolute',
+        top: 'calc(100% + 10px)',
+        right: -4,
+        width: 232,
+        background: 'var(--surface, #fff)',
+        border: '1px solid var(--accent)',
+        borderRadius: 12,
+        padding: '11px 28px 11px 13px',
+        fontSize: 12,
+        lineHeight: 1.55,
+        color: 'var(--text-primary)',
+        fontFamily: 'var(--font-sans)',
+        zIndex: 5,
+        animation: 'historyTooltipIn 0.42s cubic-bezier(0.16, 1, 0.3, 1), historyTooltipPulse 2.4s ease-in-out 0.5s infinite',
+      }}
+    >
+      {/* Flecha apuntando hacia el "+" (borde verde + relleno blanco) */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', top: -7, right: 12,
+        width: 0, height: 0,
+        borderLeft: '6px solid transparent',
+        borderRight: '6px solid transparent',
+        borderBottom: '7px solid var(--accent)',
+      }} />
+      <div aria-hidden="true" style={{
+        position: 'absolute', top: -5, right: 13,
+        width: 0, height: 0,
+        borderLeft: '5px solid transparent',
+        borderRight: '5px solid transparent',
+        borderBottom: '6px solid var(--surface, #fff)',
+      }} />
+
+      {/* Botón X discreto arriba a la derecha */}
+      <button
+        onClick={onDismiss}
+        aria-label="Cerrar ayuda"
+        style={{
+          position: 'absolute',
+          top: 4,
+          right: 4,
+          width: 22,
+          height: 22,
+          border: 'none',
+          background: 'transparent',
+          color: 'var(--text-tertiary)',
+          cursor: 'pointer',
+          fontSize: 12,
+          lineHeight: 1,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        ✕
+      </button>
+
+      <span>
+        Puedes editar comidas de cualquier día. Toca <strong style={{ color: 'var(--accent)' }}>+</strong> para añadir.
+      </span>
+    </div>
   );
 }
