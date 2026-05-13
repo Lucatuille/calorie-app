@@ -42,7 +42,9 @@ export default {
     headers.set('X-Frame-Options', 'DENY');
     headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-    headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+    // interest-cohort=() deshabilita FLoC/Topics de Google (privacy by default).
+    // Debe estar sincronizado con client/public/_headers (que aplica en DNS only).
+    headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), interest-cohort=()');
 
     return new Response(response.body, {
       status: response.status,

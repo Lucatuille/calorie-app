@@ -109,11 +109,16 @@ export async function handleProfile(request, env, path) {
     };
 
     // 1. Perfil (sin password_hash)
+    // Incluye TODOS los campos del user que son datos del usuario.
+    // Excluido: password (credencial). Incluye onboarding_state,
+    // day3_email_sent_at y dietary_preferences (datos del user GDPR).
     const userRow = await safeFirst(
       `SELECT id, name, email, age, weight, height, gender,
               target_calories, target_protein, target_carbs, target_fat,
               goal_weight, tdee, bmr, pal_factor, formula_used, tdee_calculated_at,
-              access_level, onboarding_completed, last_login, created_at
+              access_level, onboarding_completed, dietary_preferences,
+              onboarding_state, day3_email_sent_at,
+              last_login, created_at
        FROM users WHERE id = ?`,
       user.userId
     );
@@ -152,13 +157,17 @@ export async function handleProfile(request, env, path) {
       user.userId
     );
 
-    // 7. Uso de IA diario
+    // 7. Uso de IA — dos tablas: counter diario + token audit log
     const aiUsage = await safeAll(
       'SELECT * FROM ai_usage_log WHERE user_id = ? ORDER BY date DESC',
       user.userId
     );
+    const aiUsageLogs = await safeAll(
+      'SELECT * FROM ai_usage_logs WHERE user_id = ? ORDER BY created_at DESC',
+      user.userId
+    );
 
-    // 8. Conversaciones del asistente
+    // 8. Asistente — conversations, messages, digests, usage
     const assistantConversations = await safeAll(
       'SELECT * FROM assistant_conversations WHERE user_id = ? ORDER BY created_at DESC',
       user.userId
@@ -167,10 +176,37 @@ export async function handleProfile(request, env, path) {
       'SELECT * FROM assistant_messages WHERE user_id = ? ORDER BY created_at DESC',
       user.userId
     );
+    const assistantDigests = await safeAll(
+      'SELECT * FROM assistant_digests WHERE user_id = ? ORDER BY generated_at DESC',
+      user.userId
+    );
+    const assistantUsage = await safeAll(
+      'SELECT * FROM assistant_usage WHERE user_id = ? ORDER BY date DESC',
+      user.userId
+    );
+
+    // 9. Planner — histórico de planes generados (day + week)
+    const plannerHistory = await safeAll(
+      'SELECT * FROM planner_history WHERE user_id = ? ORDER BY created_at DESC',
+      user.userId
+    );
+
+    // 10. Upgrade events — funnel de conversión (datos del user)
+    const upgradeEvents = await safeAll(
+      'SELECT * FROM upgrade_events WHERE user_id = ? ORDER BY created_at DESC',
+      user.userId
+    );
+
+    // 11. Bedca tool data (solo para admins, vacío para resto). Aun así
+    // se incluye por completitud GDPR — son datos del user si existen.
+    const bedcaData = await safeFirst(
+      'SELECT * FROM user_bedca_data WHERE user_id = ?',
+      user.userId
+    );
 
     return jsonResponse({
       exported_at:  new Date().toISOString(),
-      format_version: '1.0',
+      format_version: '1.1',
       user:         userRow,
       entries,
       weight_logs:  weightLogs,
@@ -179,10 +215,16 @@ export async function handleProfile(request, env, path) {
       ai_corrections:  aiCorrections,
       calibration,
       ai_usage:        aiUsage,
+      ai_usage_logs:   aiUsageLogs,
       assistant: {
         conversations: assistantConversations,
         messages:      assistantMessages,
+        digests:       assistantDigests,
+        usage:         assistantUsage,
       },
+      planner_history: plannerHistory,
+      upgrade_events:  upgradeEvents,
+      bedca_data:      bedcaData,
     });
   }
 

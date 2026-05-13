@@ -4,7 +4,7 @@
 
 import { jsonResponse, errorResponse, authenticate } from '../utils.js';
 import { LEVEL_CONFIG } from '../utils/levels.js';
-import { runBackup } from '../scheduled.js';
+import { runBackup, runDay3Emails } from '../scheduled.js';
 
 async function requireAdmin(request, env) {
   const user = await authenticate(request, env);
@@ -564,6 +564,22 @@ export async function handleAdmin(request, env, path) {
       return jsonResponse(result);
     } catch (err) {
       return errorResponse('Error en backup: ' + (err?.message || err), 500);
+    }
+  }
+
+  // ── POST /api/admin/day3-emails/run — disparar el cron de emails día 3 ─
+  // Útil para validar el flow sin esperar al cron natural (03:00 UTC).
+  // El comportamiento es idempotente: users ya marcados con day3_email_sent_at
+  // no se reenvían. Misma función que ejecuta el cron diario.
+  if (path === '/api/admin/day3-emails/run' && request.method === 'POST') {
+    if (!env.RESEND_API_KEY) {
+      return errorResponse('RESEND_API_KEY no configurado', 500);
+    }
+    try {
+      const result = await runDay3Emails(env);
+      return jsonResponse(result);
+    } catch (err) {
+      return errorResponse('Error en day3-emails: ' + (err?.message || err), 500);
     }
   }
 
