@@ -75,9 +75,12 @@ Cinco items que están sangrando ahora mismo. Hacerlos en orden, todos hoy si es
 
 ## SPRINT 1 — Cloudflare / infra (días 1-2)
 
+**Estado: 7/7 completados ✅**
+**Fecha de cierre: 2026-05-14**
+
 Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un patrón de incidentes.
 
-### 1.1 ⚡ Activar HSTS + Always Use HTTPS
+### 1.1 ✅ HSTS + Always Use HTTPS — ambos activos
 
 - **Qué:** dos toggles en Cloudflare SSL/TLS
 - **Por qué:** resuelve 6 de los 13 security insights de CF que tienes pendientes
@@ -87,7 +90,11 @@ Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un 
 - **Coste:** 5 min cada uno + 24h de monitoreo HSTS antes de subir max-age
 - **Bloqueante iOS:** no, pero refuerza el security perfil
 
-### 1.2 Revisar los otros security insights de Cloudflare
+### 1.2 ✅ Security insights de Cloudflare — resueltos
+**Resolución 2026-05-14:** 5 insights total revisados.
+- DMARC Record Error: resuelto (DMARC añadido el 13-may, scan limpió el insight)
+- security.txt: implementado (commit `0c50e43`, RFC 9116 válido)
+- 3 anti-AI-bots (Block AI bots, Bot Fight Mode, AI Labyrinth): NO archivados por **decisión estratégica** — Caliro depende de crawlers AI (ChatGPT/Bard/Claude) para tráfico SEO. Bloquearlos sería contraproducente.
 
 - **Qué:** los 7 restantes que no resolvieron HSTS+HTTPS
 - **Por qué:** auditar cada uno, decidir cuáles aplican
@@ -95,7 +102,16 @@ Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un 
 - **Coste:** 30 min revisión + variable según fixes
 - **Bloqueante iOS:** depende del insight
 
-### 1.3 Pool pinning — mitigación permanente
+### 1.3 ✅ Pool pinning — RESUELTO con DNS only en apex
+**Resolución 2026-05-13/14:** tras 5+ incidentes documentados en 4 días y audit exhaustivo confirmando configuración limpia, adoptada solución libre y permanente:
+- `CNAME caliro.dev → calorie-app.pages.dev` en **DNS only** (sin Proxied)
+- Bypassa el routing anycast CF problemático del pool `188.114.96.0/23`
+- DNS resuelve directo a IPs de Pages (172.66.x.x, pool sano)
+- Security headers se preservan vía `client/public/_headers` (sincronizados con worker-proxy en commit `15d38e7`)
+- App estable >24h sin nuevos incidentes
+- **Coste $0**, cero migración, cero CF Pro necesario
+
+Worker-proxy queda inactivo (sin invocaciones). Si en futuro se necesita lógica dinámica (rate limit edge, A/B), volver a Proxied. Detalles completos en `project_cf_spanish_football_congestion.md` memoria.
 
 - **Qué:** decidir estrategia ante recurrencia (3 incidentes documentados ayer)
 - **Por qué:** cada deploy puede disparar pool pinning regional. No escala con más users
@@ -108,7 +124,12 @@ Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un 
 - **Coste:** (a) 5 min, (b) 30 min, (c) instantáneo + $25/mes
 - **Bloqueante iOS:** no estrictamente, pero impacta UX en lanzamiento iOS si pasa
 
-### 1.4 Verificar worker-proxy y security headers
+### 1.4 ✅ Worker-proxy security headers — sincronizados
+**Resolución 2026-05-13 (commit `15d38e7`):**
+- Audit confirmó que worker-proxy y `_headers` enviaban headers casi idénticos
+- Discrepancia única: `Permissions-Policy` en `_headers` incluía `interest-cohort=()` (anti-FLoC), worker-proxy no
+- Sincronizado: worker-proxy ahora incluye `interest-cohort=()` también
+- Headers cubiertos: CSP, HSTS (max-age 1 año + includeSubDomains + preload), X-Content-Type-Options nosniff, X-Frame-Options DENY, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy
 
 - **Qué:** auditar que `worker-proxy/` aplica CSP, HSTS, X-Frame-Options correctamente
 - **Por qué:** crítico per CLAUDE.md, es el sitio donde se sobrescriben headers
@@ -120,7 +141,13 @@ Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un 
 - **Coste:** 30 min audit + tiempo de fixes si los hay
 - **Bloqueante iOS:** no
 
-### 1.5 Verificar backups D1 a R2
+### 1.5 ✅ Backups D1 → R2 — verificados activos
+**Resolución 2026-05-14:**
+- Cron `0 3 * * *` (diario 03:00 UTC) confirmed en `worker/wrangler.toml`
+- Code `runBackup()` en `scheduled.js` verifica producción y subida a R2
+- R2 bucket `caliro-backups` verificado con backups `backup-YYYY-MM-DD.json` diarios
+- Retención 30 días automática
+- Endpoint admin `GET /api/admin/backups` disponible para listar (autenticación admin)
 
 - **Qué:** confirmar que el cron daily 03:00 UTC funciona y sube backups
 - **Por qué:** sin backups, un fallo de D1 = pérdida de datos completa
@@ -131,7 +158,27 @@ Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un 
 - **Coste:** 30 min audit + variable según test
 - **Bloqueante iOS:** no, pero crítico para survival
 
-### 1.6 Rate limiting audit
+### 1.6 ✅ Rate limiting audit — cobertura sólida
+**Resolución 2026-05-14:** auditados 20 usos de `rateLimit(env, ...)` distribuidos en endpoints sensibles:
+
+| Endpoint | Límite |
+|----------|--------|
+| auth/register | 10/h por IP |
+| auth/login | 20/15min IP + 10/15min email |
+| auth/forgot-password | 3/h por email |
+| analyze (foto) | 10/60s user + 60/60s IP |
+| analyze-text | 15/60s user + 60/60s IP |
+| profile/export | 5/h por user |
+| profile/preferences | 30/60s |
+| profile/onboarding-state | 30/60s |
+| profile PUT | 10/60s |
+| profile DELETE | 3/h (estricto) |
+| entries POST/PUT/DELETE | 30/60s |
+| bedca/data PUT | 30/60s |
+| calibration correction | 30/60s |
+| planner día/semana | 5/60s + 2/120s |
+
+Todo razonable. No hay endpoints sensibles sin rate limit.
 
 - **Qué:** revisar todos los endpoints sensibles tienen rate limit razonable
 - **Por qué:** spam/abuso/scraping potencial a medida que crece tráfico
@@ -145,7 +192,13 @@ Lo crítico de infra antes de cualquier otra cosa. Hay fallos documentados + un 
 - **Coste:** 1h
 - **Bloqueante iOS:** no
 
-### 1.7 Logs y observabilidad
+### 1.7 ✅ Logs y observabilidad — Sentry server-side activo
+**Resolución 2026-05-14:**
+- Sentry integrado en `worker/src/index.js` con `Sentry.captureException(err)` capturando todas las excepciones
+- Variable `SENTRY_DSN` configurada como secret en CF
+- Worker-side: errores se reportan automáticamente a Sentry dashboard
+- Workers Logs nativos de CF están disabled (decisión: no urgente; Sentry cubre lo crítico)
+- **Mejora opcional futura:** activar Workers Logs con sampling 1% para capturar incidentes específicos sin overhead
 
 - **Qué:** confirmar que Sentry está funcionando + logging consistente
 - **Por qué:** con más users, errores se multiplican; necesitas visibility
