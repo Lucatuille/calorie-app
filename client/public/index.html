@@ -473,6 +473,14 @@ details[open] .faq-q::after { transform: rotate(45deg); }
 
 /* Blog section */
 .blog-section { padding: 80px 0; }
+.blog-featured { display: block; background: #fff; border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: 18px; padding: 36px 40px; max-width: 1000px; margin: 0 auto 22px; text-decoration: none; color: inherit; transition: transform .2s, box-shadow .2s, border-color .2s; }
+.blog-featured:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -22px rgba(30,26,20,.2); color: inherit; border-color: var(--green); }
+.blog-featured-eyebrow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+.blog-featured-eyebrow .tag { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--green-ink); background: var(--green-soft); border-radius: 999px; padding: 4px 10px; font-weight: 500; }
+.blog-featured-meta { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); font-weight: 500; }
+.blog-featured-title { font-family: var(--font-display); font-style: italic; font-size: clamp(26px, 3vw, 34px); line-height: 1.1; color: var(--ink); letter-spacing: -0.01em; margin-bottom: 12px; font-weight: 400; }
+.blog-featured-desc { font-size: 15.5px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 18px; max-width: 720px; }
+.blog-featured-cta { font-size: 13.5px; color: var(--green-ink); font-weight: 500; }
 .blog-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; max-width: 1000px; margin: 0 auto; }
 .blog-card { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 22px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 10px; transition: transform .2s, box-shadow .2s; }
 .blog-card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px -18px rgba(30,26,20,.2); color: inherit; }
@@ -480,6 +488,9 @@ details[open] .faq-q::after { transform: rotate(45deg); }
 .blog-card .blog-title-card { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--ink); letter-spacing: -0.01em; line-height: 1.2; }
 .blog-card .blog-desc { font-size: 13.5px; color: var(--ink-muted); line-height: 1.5; }
 .blog-card .blog-read { font-size: 12.5px; color: var(--green-ink); margin-top: auto; font-weight: 500; }
+.blog-all-link { text-align: center; margin-top: 28px; }
+.blog-all-link a { font-size: 13.5px; color: var(--ink-muted); text-decoration: none; font-weight: 500; }
+.blog-all-link a:hover { color: var(--green-ink); }
 
 /* Social proof (beta privada) */
 .social { background: var(--cream-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -558,6 +569,8 @@ details[open] .faq-q::after { transform: rotate(45deg); }
   .final h2 { font-size: 36px; }
   .tdee-card { grid-template-columns: 1fr; padding: 28px; gap: 20px; }
   .blog-grid { grid-template-columns: 1fr; }
+  .blog-featured { padding: 24px; }
+  .blog-featured-eyebrow { gap: 6px; }
   .about-wrap { grid-template-columns: 1fr; text-align: center; gap: 20px; }
   .about-photo { margin: 0 auto; }
 }
@@ -1081,28 +1094,40 @@ details[open] .faq-q::after { transform: rotate(45deg); }
   <div class="container">
     <div class="section-head">
       <span class="eyebrow">Desde el blog</span>
-      <h2>Lecturas <em>sin humo.</em></h2>
-      <p>Comparativas honestas, guías prácticas y decisiones del producto. Sin afiliados, sin clickbait.</p>
+      <h2>Calorías reales de <em>la cocina española.</em></h2>
+      <p>Datos calculados ingrediente a ingrediente desde BEDCA. Sin estimaciones genéricas de apps americanas.</p>
     </div>
+    <a href="/blog/calorias-ensaladilla-rusa" class="blog-featured" data-umami-event="blog-ensaladilla">
+      <div class="blog-featured-eyebrow">
+        <span class="tag">Más reciente</span>
+        <span class="blog-featured-meta">Datos · Mayo 2026 · 7 min</span>
+      </div>
+      <h3 class="blog-featured-title">Calorías de la ensaladilla rusa: por qué no es una ensalada</h3>
+      <p class="blog-featured-desc">Una ración casera tiene 482 kcal. Una tapa de bar con mayonesa generosa puede llegar a 743 — más que una ración de canelones. La mayonesa pesa el 54 % del total: es el plato con mayor variabilidad calórica de la cocina española habitual.</p>
+      <div class="blog-featured-cta">Leer artículo →</div>
+    </a>
     <div class="blog-grid">
-      <a href="/blog/cal-ai-2026-opinion" class="blog-card" data-umami-event="blog-cal-ai">
-        <span class="tag">Comparativa</span>
-        <div class="blog-title-card">Cal AI en 2026: opinión honesta después de un mes</div>
-        <div class="blog-desc">La uso un mes antes de que la comprara MyFitnessPal. Lo que funciona, lo que no, y por qué cambié.</div>
+      <a href="/blog/calorias-canelones" class="blog-card" data-umami-event="blog-canelones">
+        <span class="tag">Datos</span>
+        <div class="blog-title-card">Calorías de los canelones</div>
+        <div class="blog-desc">262 kcal por canelón, 786 una ración — más que una paella. La bechamel pesa el 36 % del total, más que la pasta.</div>
         <div class="blog-read">Leer artículo →</div>
       </a>
-      <a href="/blog/contar-calorias-ia" class="blog-card" data-umami-event="blog-contar-calorias">
-        <span class="tag">Guía</span>
-        <div class="blog-title-card">Cómo contar calorías con IA en 2026</div>
-        <div class="blog-desc">Foto, voz o texto — la IA calcula en segundos. Pero no todas las IAs son iguales. Esto es lo que funciona.</div>
+      <a href="/blog/calorias-croquetas" class="blog-card" data-umami-event="blog-croquetas">
+        <span class="tag">Datos</span>
+        <div class="blog-title-card">Calorías de las croquetas</div>
+        <div class="blog-desc">155 kcal por croqueta casera, 664 una ración de bar. El aceite del rebozado pesa más que cualquier relleno.</div>
         <div class="blog-read">Leer artículo →</div>
       </a>
-      <a href="/blog/alternativa-myfitnesspal-espana" class="blog-card" data-umami-event="blog-mfp">
-        <span class="tag">Herramientas</span>
-        <div class="blog-title-card">Por qué dejé MyFitnessPal (y qué uso ahora)</div>
-        <div class="blog-desc">MyFitnessPal tiene 11 millones de alimentos y no sabe lo que es un bocadillo de lomo. Cuento qué pasó.</div>
+      <a href="/blog/calorias-tortilla-espanola" class="blog-card" data-umami-event="blog-tortilla">
+        <span class="tag">Datos</span>
+        <div class="blog-title-card">Calorías de la tortilla española</div>
+        <div class="blog-desc">381 kcal una ración casera, 150 por trozo de bar. El aceite absorbido cambia todo — no la cebolla.</div>
         <div class="blog-read">Leer artículo →</div>
       </a>
+    </div>
+    <div class="blog-all-link">
+      <a href="/blog/" data-umami-event="blog-ver-todo">Ver todo el blog (incluye opinión y herramientas) →</a>
     </div>
   </div>
 </section>
