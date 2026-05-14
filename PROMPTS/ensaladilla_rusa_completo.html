@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caliro — Ensaladilla rusa · Datos verificados BEDCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#f9f7f4;color:#1a1a1a;padding:24px;max-width:900px;margin:0 auto;font-size:14px;line-height:1.6}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.meta{font-size:13px;color:#888;margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap}
+.meta span{padding:2px 8px;border-radius:20px;font-size:12px;font-weight:500}
+.m-green{background:#EAF3DE;color:#3B6D11}
+.m-amber{background:#FAEEDA;color:#854F0B}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:8px;border:0.5px solid #ccc;font-size:13px;cursor:pointer;background:transparent;color:#666;transition:all .15s;font-family:inherit}
+.tab.active{background:#f0ede8;color:#1a1a1a;border-color:#888;font-weight:600}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:0.5px solid #e0ddd8;border-radius:12px;padding:16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:10px}
+.warn{background:#FAEEDA;border:0.5px solid #FAC775;border-radius:8px;padding:10px 14px;font-size:13px;color:#854F0B;margin-bottom:12px;line-height:1.5}
+.info{background:#E6F1FB;border:0.5px solid #B5D4F4;border-radius:8px;padding:10px 14px;font-size:13px;color:#185FA5;margin-bottom:12px;line-height:1.5}
+.ok{background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:8px;padding:10px 14px;font-size:13px;color:#3B6D11;margin-bottom:12px;line-height:1.5}
+.red-box{background:#FCEBEB;border:0.5px solid #F7C1C1;border-radius:8px;padding:10px 14px;font-size:13px;color:#A32D2D;margin-bottom:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+th{font-size:12px;font-weight:600;color:#666;text-align:left;padding:7px 10px;border-bottom:0.5px solid #e0ddd8;background:#fafaf8}
+td{padding:7px 10px;border-bottom:0.5px solid #f0ede8;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fdfcfa}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.bold{font-weight:600}
+.muted{color:#888;font-size:12px}
+.accent{color:#22c55e;font-weight:600}
+.orange{color:#854F0B;font-weight:600}
+.red-text{color:#A32D2D;font-weight:600}
+.hl{background:#f0ede8}
+.hl-red{background:#fef2f2}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-gray{background:#f0ede8;color:#555}
+.b-red{background:#FCEBEB;color:#A32D2D}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:0.5px solid #e0ddd8;border-radius:10px;padding:12px;text-align:center}
+.kpi-num{font-size:22px;font-weight:700}
+.kpi-label{font-size:11px;color:#888;margin-top:2px}
+.section-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:13px;color:#888;margin-bottom:14px}
+.hallazgo{background:#1a1a1a;color:#f0ede8;border-radius:12px;padding:16px;margin-bottom:12px}
+.hallazgo-title{font-size:13px;font-weight:700;color:#22c55e;margin-bottom:8px}
+.hallazgo-body{font-size:13px;line-height:1.7}
+.hallazgo-body strong{color:#fff}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-label{font-size:12px;width:200px;flex-shrink:0;color:#555}
+.bar-track{flex:1;height:10px;background:#f0ede8;border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px}
+.bar-val{font-size:12px;font-weight:600;width:40px;text-align:right}
+.db-entry{background:#1e1e1e;color:#d4d4d4;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;line-height:1.9;overflow-x:auto;white-space:pre}
+.k{color:#9cdcfe}.v{color:#ce9178}.n{color:#b5cea8}.t{color:#4ec9b0}
+.article-block{background:#fff;border-left:3px solid #22c55e;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:10px;border-top:0.5px solid #e0ddd8;border-right:0.5px solid #e0ddd8;border-bottom:0.5px solid #e0ddd8}
+.article-tag{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.article-content{font-size:13px;color:#333;line-height:1.8}
+</style>
+</head>
+<body>
+
+<h1>Ensaladilla rusa — Datos verificados BEDCA</h1>
+<div class="meta">
+  <span class="m-green">✓ BEDCA verificado</span>
+  <span class="m-green">Receta #4</span>
+  <span class="m-amber">Rango de variación extremo — mayonesa</span>
+  <span class="m-amber">Mayo 2026</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('hallazgos',this)">Hallazgos clave</button>
+  <button class="tab" onclick="show('calculo',this)">Cálculo</button>
+  <button class="tab" onclick="show('mayo',this)">El factor mayonesa</button>
+  <button class="tab" onclick="show('porciones',this)">Porciones</button>
+  <button class="tab" onclick="show('db',this)">Base de datos app</button>
+  <button class="tab" onclick="show('articulo',this)">Artículo listo</button>
+</div>
+
+<!-- HALLAZGOS -->
+<div id="hallazgos" class="section active">
+  <p class="section-title">Los hallazgos del cálculo</p>
+  <p class="section-sub">La ensaladilla rusa es el plato más subestimado de la cocina española. La gente la clasifica mentalmente como "ensalada". Los números dicen otra cosa.</p>
+
+  <div class="hallazgo">
+    <div class="hallazgo-title">Hallazgo 1 — La mayonesa es el 54% de las calorías</div>
+    <div class="hallazgo-body">200g de mayonesa (cantidad estándar en una receta de 6) aportan <strong>1.570 kcal</strong> — más que la patata, el atún y el huevo juntos. Sin mayonesa, la ensaladilla rusa tiene solo <strong>220 kcal por ración</strong>. Con mayonesa estándar: <strong>482 kcal</strong>. La mayonesa no acompaña el plato — es el plato.</div>
+  </div>
+
+  <div class="hallazgo">
+    <div class="hallazgo-title">Hallazgo 2 — La diferencia entre versión light y de bar: 458 kcal por ración</div>
+    <div class="hallazgo-body">Ensaladilla con poca mayo (50g en la receta): <strong>285 kcal/ración</strong>. Ensaladilla de bar con mayo generosa (400g): <strong>743 kcal/ración</strong>. La diferencia es de <strong>458 kcal</strong> — más que una ración de tortilla española entera. Mismo plato, mismos ingredientes, diferente cantidad de un solo ingrediente.</div>
+  </div>
+
+  <div class="hallazgo">
+    <div class="hallazgo-title">Hallazgo 3 — Es el plato con mayor incertidumbre de todos los calculados</div>
+    <div class="hallazgo-body">El rango real de una ración de ensaladilla va de <strong>285 a 743 kcal</strong> dependiendo de la cantidad de mayonesa. Ninguna app puede darte un número exacto porque la variabilidad es intrínseca al plato. Lo honesto es un rango, no un número único — y ese rango es más amplio que el de cualquier otro plato español que hayamos analizado.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Aportación de cada ingrediente (receta estándar)</div>
+    <div class="bar-row">
+      <span class="bar-label">Mayonesa (200g)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:54%;background:#A32D2D"></div></div>
+      <span class="bar-val" style="color:#A32D2D">54%</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Patata hervida (600g)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:16%;background:#22c55e"></div></div>
+      <span class="bar-val">16%</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Atún en aceite (200g)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:14%;background:#185FA5"></div></div>
+      <span class="bar-val">14%</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Huevo cocido (3 uds)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:9%;background:#854F0B"></div></div>
+      <span class="bar-val">9%</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Resto (zanahoria, guisantes, etc.)</span>
+      <div class="bar-track"><div class="bar-fill" style="width:7%;background:#ccc"></div></div>
+      <span class="bar-val">7%</span>
+    </div>
+    <p class="muted" style="margin-top:10px">La mayonesa (785 kcal/100g) supera al aceite de oliva en densidad calórica por volumen real utilizado en el plato.</p>
+  </div>
+</div>
+
+<!-- CÁLCULO -->
+<div id="calculo" class="section">
+  <p class="section-title">Cálculo ingrediente a ingrediente</p>
+  <p class="section-sub">Receta base: 6 raciones. 600g patata, 150g zanahoria, 100g guisantes, 200g atún, 3 huevos, 200g mayonesa, 60g pimiento, 40g aceitunas, 30g pepinillos.</p>
+
+  <div class="card">
+    <div class="card-title">Aportación por ingrediente</div>
+    <table>
+      <tr><th>Ingrediente</th><th class="num">Cantidad</th><th class="num">Kcal</th><th class="num">Proteína</th><th class="num">Carbos</th><th class="num">Grasa</th><th class="num">% kcal</th></tr>
+      <tr><td>Patata hervida</td><td class="num">600g</td><td class="num">450</td><td class="num">14.3g</td><td class="num">93.7g</td><td class="num">1.2g</td><td class="num">16%</td></tr>
+      <tr><td>Zanahoria</td><td class="num">150g</td><td class="num">51</td><td class="num">1.2g</td><td class="num">10.5g</td><td class="num">0.5g</td><td class="num">2%</td></tr>
+      <tr><td>Guisantes en conserva</td><td class="num">100g</td><td class="num">67</td><td class="num">5.6g</td><td class="num">9.7g</td><td class="num">0.5g</td><td class="num">2%</td></tr>
+      <tr><td>Atún en aceite vegetal</td><td class="num">200g</td><td class="num">410</td><td class="num">47.6g</td><td class="num">0g</td><td class="num">24.2g</td><td class="num">14%</td></tr>
+      <tr><td>Huevo cocido (3 uds)</td><td class="num">180g</td><td class="num">270</td><td class="num">22.5g</td><td class="num">0g</td><td class="num">20.0g</td><td class="num">9%</td></tr>
+      <tr class="hl-red"><td class="bold">Mayonesa</td><td class="num">200g</td><td class="num bold red-text">1.570</td><td class="num">4.2g</td><td class="num">0.2g</td><td class="num bold red-text">174.8g</td><td class="num bold red-text">54%</td></tr>
+      <tr><td>Pimiento morrón</td><td class="num">60g</td><td class="num">18</td><td class="num">0.7g</td><td class="num">3.1g</td><td class="num">0.2g</td><td class="num">1%</td></tr>
+      <tr><td>Aceitunas verdes</td><td class="num">40g</td><td class="num">48</td><td class="num">0.5g</td><td class="num">0.4g</td><td class="num">5.0g</td><td class="num">2%</td></tr>
+      <tr><td>Pepinillos en vinagre</td><td class="num">30g</td><td class="num">5</td><td class="num">0.3g</td><td class="num">0.8g</td><td class="num">0g</td><td class="num">0%</td></tr>
+      <tr class="hl"><td class="bold">TOTAL receta (6 raciones)</td><td class="num muted">1.560g</td><td class="num bold">2.889</td><td class="num bold">96.9g</td><td class="num bold">118.4g</td><td class="num bold">226.4g</td><td></td></tr>
+      <tr style="background:#f0ede8"><td class="bold">Por ración (~260g)</td><td></td><td class="num bold red-text">482 kcal</td><td class="num bold">16.2g</td><td class="num bold">19.7g</td><td class="num bold">37.7g</td><td></td></tr>
+    </table>
+    <p class="muted" style="margin-top:8px;padding:0 4px">Kcal/100g plato: ~185. Alta densidad para un plato que muchos clasifican mentalmente como "ensalada".</p>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Sin atún (versión vegetariana)</div>
+      <table>
+        <tr><th></th><th class="num">Por ración</th></tr>
+        <tr><td>Kcal</td><td class="num bold">413</td></tr>
+        <tr><td>Proteína</td><td class="num">8.2g</td></tr>
+        <tr><td>Carbos</td><td class="num">19.7g</td></tr>
+        <tr><td>Grasa</td><td class="num">33.7g</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px">Solo 69 kcal menos que con atún. El atún apenas mueve la aguja comparado con la mayonesa.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Kcal/100g por componente</div>
+      <table>
+        <tr><th>Ingrediente</th><th class="num">Kcal/100g</th></tr>
+        <tr><td>Mayonesa</td><td class="num bold red-text">785</td></tr>
+        <tr><td>Aceitunas</td><td class="num">120</td></tr>
+        <tr><td>Atún</td><td class="num">205</td></tr>
+        <tr><td>Huevo</td><td class="num">150</td></tr>
+        <tr><td>Patata hervida</td><td class="num">75</td></tr>
+        <tr><td>Guisantes</td><td class="num">67</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- FACTOR MAYONESA -->
+<div id="mayo" class="section">
+  <p class="section-title">El factor mayonesa</p>
+  <p class="section-sub">Es el ingrediente con mayor impacto calórico de todos los platos que hemos analizado en Caliro. 785 kcal/100g — más denso que el aceite de oliva en términos de impacto real por la cantidad usada.</p>
+
+  <div class="red-box"><strong>458 kcal de diferencia</strong> entre versión con poca mayo y versión de bar — solo cambiando la cantidad de mayonesa. Es la mayor variabilidad que hemos encontrado en cualquier plato español calculado hasta ahora.</div>
+
+  <div class="card">
+    <div class="card-title">Impacto según cantidad de mayonesa — misma receta, 6 raciones</div>
+    <table>
+      <tr><th>Versión</th><th class="num">Mayo usada</th><th class="num">Kcal totales</th><th class="num bold">Kcal/ración</th><th class="num">Mayo % total</th><th class="num">Grasa/ración</th></tr>
+      <tr><td>Sin mayo / muy poca</td><td class="num">50g</td><td class="num">1.711</td><td class="num bold accent">285</td><td class="num">23%</td><td class="num">15.9g</td></tr>
+      <tr><td>Light (mayonesa light o poca)</td><td class="num">100g</td><td class="num">2.104</td><td class="num bold">351</td><td class="num">37%</td><td class="num">23.2g</td></tr>
+      <tr class="hl"><td class="bold">Estándar (referencia)</td><td class="num">200g</td><td class="num">2.889</td><td class="num bold orange">482</td><td class="num bold">54%</td><td class="num">37.7g</td></tr>
+      <tr><td>Generosa</td><td class="num">300g</td><td class="num">3.674</td><td class="num bold">612</td><td class="num bold">64%</td><td class="num">52.3g</td></tr>
+      <tr class="hl-red"><td class="bold">De bar / restaurante</td><td class="num">400g</td><td class="num">4.459</td><td class="num bold red-text">743</td><td class="num bold red-text">70%</td><td class="num">66.9g</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Por qué la ensaladilla de bar es tan calórica</div>
+    <div style="font-size:13px;color:#555;line-height:1.7">
+      En un bar, la ensaladilla se prepara en grandes cantidades y la mayonesa se añade a ojo. La cantidad habitual en hostelería es de 300-400g por cada kilo de patata — el doble o el triple de lo que usaría alguien en casa. Además, suele llevar menos atún y más patata, lo que reduce proteína y aumenta la proporción de mayonesa por bocado.<br><br>
+      Un plato de bar con 200g de ensaladilla (porción pequeña) puede tener entre 300 y 500 kcal dependiendo de la mano del cocinero. Es el plato con mayor incertidumbre calórica de la tapa española.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cómo reducir calorías sin cambiar el plato</div>
+    <table>
+      <tr><th>Cambio</th><th class="num">Ahorro/ración</th></tr>
+      <tr><td>Reducir mayo de 200g a 100g</td><td class="num bold accent">−131 kcal</td></tr>
+      <tr><td>Usar mayonesa light (50% menos grasa)</td><td class="num bold accent">−131 kcal</td></tr>
+      <tr><td>Mezclar mayo con yogur griego (50/50)</td><td class="num bold">~−100 kcal</td></tr>
+      <tr><td>Añadir más atún (proteína, sacia más)</td><td class="num muted">+34 kcal</td></tr>
+      <tr><td>Quitar el atún</td><td class="num muted">−69 kcal</td></tr>
+    </table>
+    <p class="muted" style="margin-top:8px">La única palanca real es la mayonesa. El resto de cambios son marginales.</p>
+  </div>
+</div>
+
+<!-- PORCIONES -->
+<div id="porciones" class="section">
+  <p class="section-title">Porciones y situaciones reales</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-num" style="color:#3B6D11">220</div><div class="kpi-label">kcal sin mayonesa</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#854F0B">482</div><div class="kpi-label">kcal ración estándar</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#A32D2D">743</div><div class="kpi-label">kcal ración de bar (mayo generosa)</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#185FA5">185</div><div class="kpi-label">kcal/100g estándar</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tabla maestra — rango amplio por variación de mayonesa</div>
+    <table>
+      <tr><th>Situación</th><th class="num">Peso</th><th class="num">Kcal</th><th class="num">Rango real</th><th class="num">Prot</th><th class="num">Carb</th><th class="num">Grasa</th><th>Confianza</th></tr>
+      <tr><td><strong>Montadito / pincho</strong><br><span class="muted">Pan + ~30g ensaladilla</span></td><td class="num">~30g</td><td class="num bold">56</td><td class="num muted">45–100</td><td class="num">1.9g</td><td class="num">2.3g</td><td class="num">4.4g</td><td><span class="badge b-amber">Media</span></td></tr>
+      <tr><td><strong>Tapa pequeña de bar</strong><br><span class="muted">Platito de tapa</span></td><td class="num">~80g</td><td class="num bold">148</td><td class="num muted">118–250</td><td class="num">5.0g</td><td class="num">6.1g</td><td class="num">11.6g</td><td><span class="badge b-amber">Media</span></td></tr>
+      <tr><td><strong>Tapa estándar de bar</strong><br><span class="muted">Ración de tapa normal</span></td><td class="num">~130g</td><td class="num bold">241</td><td class="num muted">193–406</td><td class="num">8.1g</td><td class="num">9.9g</td><td class="num">18.9g</td><td><span class="badge b-amber">Media</span></td></tr>
+      <tr class="hl"><td><strong>Ración casera</strong><br><span class="muted">Primer plato, receta estándar</span></td><td class="num">~260g</td><td class="num bold orange">482</td><td class="num muted">361–626</td><td class="num">16.2g</td><td class="num">19.7g</td><td class="num">37.7g</td><td><span class="badge b-green">Alta</span></td></tr>
+      <tr><td><strong>Ración de restaurante</strong><br><span class="muted">Mayor cantidad de mayo</span></td><td class="num">~220g</td><td class="num bold">407–600</td><td class="num muted">amplio</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="badge b-red">Baja</span></td></tr>
+      <tr><td><strong>Plato único</strong><br><span class="muted">Como plato principal</span></td><td class="num">~300g</td><td class="num bold red-text">556</td><td class="num muted">445–720</td><td class="num">18.6g</td><td class="num">22.8g</td><td class="num">43.5g</td><td><span class="badge b-amber">Media</span></td></tr>
+    </table>
+    <p class="muted" style="margin-top:8px;padding:0 4px">El rango es el más amplio de todos los platos calculados. La mayonesa hace imposible un número exacto sin ver cómo está hecha.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Referencias visuales sin báscula</div>
+    <div style="font-size:13px;color:#555;line-height:1.9">
+      <div style="margin-bottom:8px"><strong>Montadito / pincho (~30g):</strong> una cucharada generosa sobre pan. La cantidad de ensaladilla cabe en una cuchara sopera. 56 kcal solo de la ensaladilla, sin contar el pan.</div>
+      <div style="margin-bottom:8px"><strong>Tapa pequeña (~80g):</strong> cubre el fondo de un platito de bar. Equivale a unas 3-4 cucharadas.</div>
+      <div style="margin-bottom:8px"><strong>Ración casera (~260g):</strong> un cuenco mediano lleno. Si el cuenco tiene el tamaño de los que se usan para cereales, estás en el rango.</div>
+      <div><strong>En un bar, estima siempre hacia arriba.</strong> La ensaladilla de bar tiene sistemáticamente más mayonesa que la casera. Si ves que brilla mucho o tiene una capa blanca visible, estás en el rango de 400-500 kcal por ración mediana.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BASE DE DATOS -->
+<div id="db" class="section">
+  <p class="section-title">Entradas para la base de datos de la app</p>
+  <p class="section-sub">Nota: este es el plato con mayor incertidumbre. El rango es amplio por diseño — es más honesto que un número falso.</p>
+
+  <div class="card">
+    <div class="card-title">Entrada principal — ración casera estándar</div>
+    <div class="db-entry"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"ensaladilla_rusa_casera"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Ensaladilla rusa casera"</span>,
+  <span class="k">"nombre_busqueda"</span>: [<span class="v">"ensaladilla rusa"</span>, <span class="v">"ensaladilla"</span>, <span class="v">"ensaladilla con atún"</span>],
+  <span class="k">"categoria"</span>: <span class="v">"ensaladas_tapas"</span>,
+  <span class="k">"tags"</span>: [<span class="v">"patata"</span>, <span class="v">"mayonesa"</span>, <span class="v">"atún"</span>, <span class="v">"tapa"</span>, <span class="v">"española"</span>, <span class="v">"fría"</span>],
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">260</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">482</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">361</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">626</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">16.2</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">19.7</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">37.7</span>
+  <span class="t">}</span>,
+  <span class="k">"macros_por_100g"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">185</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">6.2</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">7.6</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">14.5</span>
+  <span class="t">}</span>,
+  <span class="k">"fuente"</span>: <span class="v">"BEDCA — cálculo por ingredientes mayo 2026"</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"variabilidad_nota"</span>: <span class="v">"La mayonesa (54% kcal) es el factor dominante. Rango extremadamente amplio: 285 kcal (poca mayo) a 743 kcal (bar generoso) por ración de 260g."</span>,
+  <span class="k">"exclusion_tokens"</span>: [<span class="v">"ensalada verde"</span>, <span class="v">"ensalada mixta"</span>, <span class="v">"ensalada de pasta"</span>],
+  <span class="k">"variantes_ids"</span>: [<span class="v">"ensaladilla_tapa_bar"</span>, <span class="v">"ensaladilla_sin_atun"</span>, <span class="v">"ensaladilla_plato_unico"</span>],
+  <span class="k">"articulo_blog"</span>: <span class="v">"/blog/calorias-ensaladilla-rusa"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Variante: tapa de bar</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"ensaladilla_tapa_bar"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Ensaladilla rusa (tapa de bar)"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">130</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">300</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">193</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">450</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">8.1</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">9.9</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">23.0</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"baja"</span>,
+  <span class="k">"nota"</span>: <span class="v">"Rango amplio — bar usa más mayo que receta casera"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Variante: sin atún</div>
+      <div class="db-entry" style="font-size:11px"><span class="t">{</span>
+  <span class="k">"id"</span>: <span class="v">"ensaladilla_sin_atun"</span>,
+  <span class="k">"nombre_display"</span>: <span class="v">"Ensaladilla rusa sin atún"</span>,
+  <span class="k">"porcion_referencia_g"</span>: <span class="n">260</span>,
+  <span class="k">"macros_por_porcion"</span>: <span class="t">{</span>
+    <span class="k">"kcal"</span>: <span class="n">413</span>,
+    <span class="k">"kcal_min"</span>: <span class="n">310</span>,
+    <span class="k">"kcal_max"</span>: <span class="n">540</span>,
+    <span class="k">"proteina_g"</span>: <span class="n">8.2</span>,
+    <span class="k">"carbos_g"</span>: <span class="n">19.7</span>,
+    <span class="k">"grasa_g"</span>: <span class="n">33.7</span>
+  <span class="t">}</span>,
+  <span class="k">"confianza"</span>: <span class="v">"media"</span>,
+  <span class="k">"activado"</span>: <span class="v">false</span>
+<span class="t">}</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTÍCULO -->
+<div id="articulo" class="section">
+  <p class="section-title">Artículo — Texto listo para publicar</p>
+
+  <div class="article-block" style="border-left-color:#888">
+    <div class="article-tag">Meta SEO</div>
+    <div class="article-content">
+      <strong>Title:</strong> Calorías de la ensaladilla rusa: por qué no es una ensalada y cómo calcularla bien<br>
+      <strong>Meta description:</strong> Cuántas calorías tiene la ensaladilla rusa según la cantidad de mayonesa. La versión de bar puede triplicar la casera. Datos calculados desde BEDCA ingrediente a ingrediente.<br>
+      <strong>URL slug:</strong> /blog/calorias-ensaladilla-rusa<br>
+      <strong>Keyword principal:</strong> calorías ensaladilla rusa<br>
+      <strong>Secundarias:</strong> ensaladilla rusa calorías, ensaladilla rusa macros, cuántas calorías tiene la ensaladilla, ensaladilla rusa bar calorías
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H1</div>
+    <div class="article-content" style="font-size:16px;font-weight:700">
+      Calorías de la ensaladilla rusa: por qué no es una ensalada y cómo calcularla bien
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Intro + gancho</div>
+    <div class="article-content">
+      La ensaladilla rusa tiene un problema de percepción: la palabra "ensalada" hace que la gente la subestime sistemáticamente. Una ración casera tiene unas 482 kcal. Una tapa de bar con mayonesa generosa puede llegar a 743 kcal. La diferencia entre las dos versiones es de 458 kcal — más que una tortilla española entera.<br><br>
+      El motivo es uno solo: la mayonesa. A 785 kcal por 100g, representa el 54% de las calorías totales del plato. Sin mayonesa, la ensaladilla rusa tiene 220 kcal por ración — la mitad de lo que tiene con ella. No es una ensalada. Es un plato graso con patata dentro.<br><br>
+      Hemos calculado los valores ingrediente a ingrediente desde BEDCA, la base de datos oficial española de composición de alimentos del CSIC.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">Tabla principal — va aquí primero</div>
+    <div class="article-content">
+      <table style="margin-bottom:8px">
+        <tr><th>Situación</th><th class="num">Peso</th><th class="num">Kcal</th><th class="num">Rango real</th><th class="num">Prot</th><th class="num">Grasa</th></tr>
+        <tr><td>Montadito / pincho</td><td class="num">~30g</td><td class="num bold">56</td><td class="num muted">45–100</td><td class="num">1.9g</td><td class="num">4.4g</td></tr>
+        <tr><td>Tapa pequeña de bar</td><td class="num">~80g</td><td class="num bold">148</td><td class="num muted">118–250</td><td class="num">5.0g</td><td class="num">11.6g</td></tr>
+        <tr><td>Tapa estándar de bar</td><td class="num">~130g</td><td class="num bold">241</td><td class="num muted">193–406</td><td class="num">8.1g</td><td class="num">18.9g</td></tr>
+        <tr class="hl"><td><strong>Ración casera (referencia)</strong></td><td class="num">~260g</td><td class="num bold orange">482</td><td class="num muted">361–626</td><td class="num">16.2g</td><td class="num">37.7g</td></tr>
+        <tr><td>Plato único</td><td class="num">~300g</td><td class="num bold red-text">556</td><td class="num muted">445–720</td><td class="num">18.6g</td><td class="num">43.5g</td></tr>
+      </table>
+      <span class="muted">Fuente: BEDCA (CSIC). El rango es inusualmente amplio porque la cantidad de mayonesa varía enormemente entre recetas y establecimientos.</span>
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — El argumento central</div>
+    <div class="article-content">
+      <strong>La mayonesa: el 54% de las calorías de un plato que se llama "ensalada"</strong><br><br>
+      En una receta estándar para 6 personas, la mayonesa (200g) aporta 1.570 kcal — más que la patata (450 kcal), el atún (410 kcal) y los tres huevos (270 kcal) juntos. Todo el resto de la ensaladilla — zanahoria, guisantes, pimiento, aceitunas, pepinillos — suma 184 kcal. La mayonesa sola suma 1.570.<br><br>
+      La mayonesa de aceite de oliva tiene 785 kcal por 100g. Para ponerlo en contexto: el aceite de oliva tiene 888 kcal/100g, pero en la tortilla española usamos 57g por receta. En la ensaladilla usamos 200g de mayonesa, que tiene el 87% de la composición en grasa. La densidad calórica real que aporta al plato es mayor que cualquier otro ingrediente de cualquier plato que hayamos analizado.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2</div>
+    <div class="article-content">
+      <strong>Por qué la de bar tiene el doble de calorías que la casera</strong><br><br>
+      En hostelería, la ensaladilla se prepara en grandes cantidades y la mayonesa se añade a ojo — normalmente entre 300 y 400g por cada kilo de patata, el doble o el triple de lo que usaría alguien en casa. Además, la ensaladilla de bar suele tener menos atún y más patata, lo que reduce la proteína y aumenta la proporción de mayonesa por bocado.<br><br>
+      El resultado: una tapa de bar de 130g puede tener entre 193 y 406 kcal dependiendo de la cantidad de mayonesa. Es el plato con mayor variabilidad calórica de toda la tapa española. Si en la ensaladilla que tienes delante la mayonesa se ve brillante o tiene una capa blanca visible encima, estás en el rango alto.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2</div>
+    <div class="article-content">
+      <strong>Cómo reducir calorías sin cambiar el plato</strong><br><br>
+      La única palanca real es la mayonesa. Reducir de 200g a 100g en la receta ahorra 131 kcal por ración — sin cambiar el sabor de forma significativa. Usar mayonesa light (con un 50% menos de grasa) consigue el mismo ahorro. Mezclar la mayonesa con yogur griego al 50% ahorra unos 100 kcal con una textura similar.<br><br>
+      Cambiar el atún por otro ingrediente o quitarlo solo ahorra 69 kcal por ración. Añadir más verduras tampoco mueve la aguja: la zanahoria, los guisantes y el pimiento juntos suman apenas el 5% de las calorías. Si quieres reducir calorías en la ensaladilla, la única decisión que importa es cuánta mayonesa pones.
+    </div>
+  </div>
+
+  <div class="article-block">
+    <div class="article-tag">H2 — FAQ</div>
+    <div class="article-content">
+      <strong>¿Cuántas calorías tiene la ensaladilla rusa?</strong><br>
+      Depende casi exclusivamente de la cantidad de mayonesa. Una ración casera estándar (~260g) tiene unas 482 kcal. Con poca mayo puede bajar a 285. En un bar con mayo generosa puede llegar a 743 kcal. El dato único sin saber cómo está hecha no es fiable.<br><br>
+
+      <strong>¿Cuántas calorías tiene la ensaladilla rusa de bar?</strong><br>
+      Entre 193 y 406 kcal para una tapa de 130g, según la cantidad de mayonesa. Los bares usan sistemáticamente más mayonesa que las recetas caseras, así que redondea hacia el extremo alto del rango si no sabes cómo está hecha.<br><br>
+
+      <strong>¿La ensaladilla rusa sin atún tiene muchas menos calorías?</strong><br>
+      Solo 69 kcal menos por ración (413 vs 482 kcal). El atún no es el factor dominante — la mayonesa lo es. Quitar el atún reduce proteína sin reducir significativamente las calorías.<br><br>
+
+      <strong>¿Cuántas calorías tiene la ensaladilla rusa por 100g?</strong><br>
+      En la versión estándar, aproximadamente 185 kcal por 100g. Alta densidad calórica para un plato percibido como "ensalada" — comparable a muchas versiones de pizza o pasta.<br><br>
+
+      <strong>¿Cómo registro la ensaladilla en una app de calorías?</strong><br>
+      Si usas Caliro, fotografía el plato y el sistema estima la cantidad de mayonesa según el aspecto visual. Si corriges el resultado, aprende para la próxima vez. Para la ensaladilla de bar, recomendamos usar el rango alto.
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#185FA5">
+    <div class="article-tag">CTA final</div>
+    <div class="article-content">
+      La ensaladilla rusa es uno de los platos más difíciles de registrar correctamente porque la cantidad de mayonesa no se ve desde fuera. Caliro estima por foto y aprende tu versión habitual. Gratis, sin anuncios.<br><br>
+      <strong>→ Probar Caliro gratis</strong>
+    </div>
+  </div>
+
+  <div class="article-block" style="border-left-color:#aaa">
+    <div class="article-tag">Byline + Disclaimer</div>
+    <div class="article-content">
+      <em>Escrito por Luca — Desarrollador de Caliro. Datos calculados ingrediente a ingrediente desde BEDCA (CSIC). Última actualización: mayo 2026.</em><br><br>
+      <em>Los valores son estimaciones orientativas. La composición real varía significativamente según la cantidad de mayonesa utilizada. Esta información no sustituye el asesoramiento de un dietista-nutricionista colegiado.</em>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
