@@ -13,7 +13,7 @@ export default function Terms() {
           Términos de Uso
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 36 }}>
-          Caliro · Última actualización: abril 2026
+          Caliro · Última actualización: mayo 2026
         </p>
 
         <Section title="1. Descripción del servicio">
@@ -44,7 +44,7 @@ export default function Terms() {
 
         <Section title="4. Cuentas y suscripciones">
           <ul>
-            <li>Para usar Caliro debes tener al menos 17 años</li>
+            <li>Para usar Caliro debes tener al menos 16 años, de acuerdo con el artículo 8 del RGPD y la normativa española de protección de datos. Si tienes entre 14 y 16 años, necesitas el consentimiento de tus tutores legales.</li>
             <li>Las suscripciones Pro se facturan mensual o anualmente y pueden cancelarse en cualquier momento</li>
             <li>No se realizan reembolsos por períodos parciales salvo obligación legal</li>
             <li>Nos reservamos el derecho a suspender cuentas que incumplan estos términos</li>
@@ -74,6 +74,15 @@ export default function Terms() {
           <p>
             Podemos actualizar estos términos en cualquier momento. Los cambios significativos
             se comunicarán por email o mediante aviso en la aplicación.
+          </p>
+        </Section>
+
+        <Section title="6bis. Ley aplicable y jurisdicción">
+          <p style={{ marginBottom: 10 }}>
+            Estos términos se rigen por la legislación española. Cualquier controversia derivada del uso de Caliro se someterá a los tribunales de Barcelona, España.
+          </p>
+          <p>
+            Si eres consumidor residente en la Unión Europea, esta cláusula no afecta a los derechos imperativos que te reconozca la normativa de tu país de residencia ni a la posibilidad de acudir a los tribunales de tu domicilio.
           </p>
         </Section>
 

@@ -15,7 +15,7 @@ export default function Privacy() {
           Política de Privacidad
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 36 }}>
-          Caliro · Última actualización: abril 2026
+          Caliro · Última actualización: mayo 2026
         </p>
 
         <Section title="1. Qué datos recogemos">
@@ -80,6 +80,18 @@ export default function Privacy() {
           </p>
           <p>
             Caliro no garantiza la exactitud de los valores nutricionales proporcionados. Estas estimaciones <strong>no constituyen consejo médico ni nutricional profesional</strong> y no deben utilizarse para tomar decisiones críticas de salud. Si tienes condiciones médicas o necesitas precisión clínica, consulta con un profesional sanitario cualificado.
+          </p>
+        </Section>
+
+        <Section title="3quater. Tratamiento de fotos">
+          <p style={{ marginBottom: 10 }}>
+            Cuando usas la función de análisis por foto, la imagen capturada se envía cifrada (HTTPS) a la API de Anthropic exclusivamente para su procesamiento por IA. El análisis devuelve una estimación textual de calorías y macronutrientes asociada a tu entrada de comida.
+          </p>
+          <p style={{ marginBottom: 10 }}>
+            La foto <strong>no se almacena</strong> en los servidores de Anthropic una vez procesada ni se utiliza para entrenamiento de modelos. Tampoco se guarda en los servidores de Caliro: solo persistimos el resultado textual (kcal, macros, nombre del plato) asociado a tu historial.
+          </p>
+          <p>
+            No utilizamos las fotos para reconocimiento facial, identificación biométrica, publicidad ni perfilado. Si prefieres no usar el análisis por foto, puedes registrar tus comidas manualmente o por texto desde cualquier pantalla de la app.
           </p>
         </Section>
 
