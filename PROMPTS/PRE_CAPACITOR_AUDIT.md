@@ -705,7 +705,24 @@ Si paralelizas o saltas algún sprint no-bloqueante: **4-5 semanas viables.**
 - ✅ **0.2** Landing "9 → 52" — commit `85e8f5a`
 - ✅ **0.3** "Lucas → Luca" — commit `85e8f5a`
 - ✅ **0.4** DMARC configurado y propagado — `p=none; rua=mailto:contacto@caliro.dev`
-- ✅ **0.5** Email día 3 vía worker scheduled — commit `cb546ed`. Migración D1 + helper email + runner cron + anti-mass-send guard. Próxima ejecución cron 03:00 UTC.
+- ✅ **0.5** Email día 3 vía worker scheduled — commit `cb546ed`. Verificado: emails enviándose desde Resend.
 - ⏳ **0.1** Stripe live mode — pendiente (esperando gestor)
 
 **Hallazgo del Sprint 0:** Resend NO tiene "Automations" como drip campaigns nativas. Reimplementado como worker scheduled cron. Patrón documentado para futuras automations (welcome day N, etc.).
+
+### 2026-05-14 — Sprint 1 (Cloudflare/infra) — 100%
+
+- ✅ **1.1** HSTS + Always Use HTTPS — ambos activos (HSTS preloaded, redirect HTTP→HTTPS confirmed)
+- ✅ **1.2** Security insights CF — 2 de 5 resueltos vía configuración (DMARC, security.txt). 3 restantes (anti-AI-bots) NO archivados por decisión estratégica: dependemos de crawlers AI (ChatGPT/Bard) para tráfico SEO. security.txt en commit `0c50e43`.
+- ✅ **1.3** Pool pinning mitigación permanente — apex `caliro.dev` en DNS only. Funcional, estable >24h, security headers preservados vía `_headers` de Pages. **Solución definitiva sin coste $$$.**
+- ✅ **1.4** Worker-proxy security headers — sincronizados con `_headers` (interest-cohort=() añadido). Commit `15d38e7`.
+- ✅ **1.5** Backups D1 → R2 — cron `0 3 * * *` confirmed active, R2 bucket `caliro-backups` con backups diarios `backup-YYYY-MM-DD.json` verificados.
+- ✅ **1.6** Rate limiting audit — cobertura confirmada en endpoints sensibles (auth, analyze, profile, entries, bedca, calibration, planner, weight). 20 usos de `rateLimit(env, ...)` con configuraciones razonables.
+- ✅ **1.7** Observability — Sentry activo server-side (`Sentry.captureException` en `worker/src/index.js`). Workers Logs disabled pero no urgente (Sentry cubre lo crítico).
+
+**Hallazgos del Sprint 1:**
+- Pool pinning NO causado por código ni configuración del user. Pool `188.114.96.0/23` crónicamente degradado en algunos PoPs CF.
+- DNS only del apex es solución funcional permanente. Worker-proxy queda inactivo pero los headers son idénticos vía `_headers`.
+- Endpoint admin `POST /api/admin/day3-emails/run` añadido (commit `15d38e7`) para test manual del cron.
+- Export GDPR ampliado a format_version 1.1 (commit `15d38e7`) — incluye onboarding_state, day3_email_sent_at, dietary_preferences, ai_usage_logs, assistant_digests, assistant_usage, planner_history, upgrade_events, bedca_data.
+- security.txt RFC 9116 implementado — buena práctica para apps health-related.
